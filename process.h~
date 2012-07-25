@@ -1,0 +1,22 @@
+#ifndef DEF_PROCESS
+#define DEF_PROCESS
+
+#include "itkImage.h"
+#include "itkImageFileReader.h"
+#include "itkImageFileWriter.h"
+#include "itkThresholdImageFilter.h"
+#include "itkMaskImageFilter.h"
+#include "itkImageRegionIterator.h"
+#include "itkImageRegionIteratorWithIndex.h"
+
+#include <iostream>
+#include <string>
+
+class process
+{
+	public: /////this function returns 0 when the process is completed
+	void skull(std::string Image, std::string Label, int lower, std::string  type,int upper,int outside_value, std::string Output);
+
+	void skullwithit(std::string Image, std::string Label, int lower, std::string  type,int upper,int outside_value, std::string Output);
+};
+#endif
