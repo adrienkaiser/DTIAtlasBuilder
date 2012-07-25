@@ -1,0 +1,243 @@
+#include "itkImage.h"
+#include "itkImageFileReader.h"
+#include "itkImageFileWriter.h"
+#include "itkThresholdImageFilter.h"
+#include "itkMaskImageFilter.h"
+#include "itkImageSliceConstIteratorWithIndex.h"
+#include "itkImageLinearIteratorWithIndex.h"
+
+#include <iostream>
+#include <string>
+
+#include "process.h"
+
+void process::skull(std::string Image, std::string Label, int lower, std::string  type,int upper,int outside_value, std::string Output)
+{
+//////////Informative display
+	std::cout<<"()Image = "<<Image<<std::endl;
+	std::cout<<"()Label = "<<Label<<std::endl;
+	std::cout<<"()lower = "<<lower<<std::endl;
+	std::cout<<"()Type = "<<type<<std::endl;
+	std::cout<<"()Upper = "<<upper<<std::endl;
+	std::cout<<"()Outside value = "<<outside_value<<std::endl;
+	std::cout<<"()Output = "<<Output<<std::endl;
+	std::cout<<"Processing..."<<std::endl;
+
+//////////Types definitions (output type= <xx>)
+	typedef itk::Image < double , 3 > ImageType; //itk type for image
+	typedef itk::ImageFileReader <ImageType> ReaderType; //itk reader class to open an image
+	typedef itk::ImageFileWriter <ImageType> WriterType; //itk writer class to create an image
+	
+	typedef itk::ThresholdImageFilter <ImageType> ThType; //itk class for thresholding
+	ThType::Pointer thfilter=ThType::New(); //new pointer of thresholding filter class
+	
+	typedef itk::MaskImageFilter <ImageType, ImageType> MaskImageFilterType; //itk class for mask filter
+	MaskImageFilterType::Pointer maskfilter=MaskImageFilterType::New(); //new pointer of mask filter class
+
+//////////Objects creation (instantiation)
+	ImageType::Pointer mask=ImageType::New();
+	ReaderType::Pointer reader=ReaderType::New(), reader2=ReaderType::New(); //one reader for label and one for image
+	WriterType::Pointer writer=WriterType::New(), writer2=WriterType::New(); //one writer for label and one for image
+
+//////////Mask Creation using Thresholding
+	//Reader for label image
+	reader->SetFileName(Label); //Label is a path : "opening the image"
+	
+	//writer for mask image (2 cases if the output folder has been precised or not in GUI)
+	if(strcmp(Output.c_str(),"")==0) writer->SetFileName("mask.gipl.gz"); // out if nothing in Output (="")
+	else writer->SetFileName(Output + "/mask.gipl.gz"); // out if Output !=""
+	
+	//Thresholding parameters
+	thfilter->SetInput(reader->GetOutput()); //Label in input of Thresholding
+	thfilter->SetOutsideValue(outside_value); // value given to the pixels OUTSIDE THE THRESHOLD
+
+	if(type=="above")
+		thfilter->ThresholdAbove(lower);
+	else if(type=="below")
+		thfilter->ThresholdBelow(lower);
+	else if(type=="outside")
+		thfilter->ThresholdOutside(lower, upper);
+	else
+		std::cout<<"Wrong type parameters. Choose between : Above, Below and Outside"<<std::endl;
+		
+	//Mask generation
+	mask=thfilter->GetOutput(); // create mask
+	
+	//Write on the image file
+	writer->SetInput(mask);
+
+	// Saving the data on disk
+	try{ // not sure it works
+		writer->Update();
+	}
+	catch(itk::ExceptionObject & err)
+	{
+		std::cerr<<"ExceptionObject caught!" << std::endl;
+		std::cerr<<err<<std::endl;
+	}	//Reader for MRI T1 image
+	reader2->SetFileName(Image);
+
+//////////Output Image Creation using Mask Filtering
+	//Mask filtering parameters
+	maskfilter->SetInput1(reader2->GetOutput()); //the image on input 1
+	maskfilter->SetInput2(thfilter->GetOutput()); //the mask on input 2
+	
+	//Writer for output file (2 cases if the output folder has been precised or not in GUI)
+	if(strcmp(Output.c_str(),"")==0) writer2->SetFileName("out.gipl.gz"); 
+	else writer2->SetFileName(Output + "/out.gipl.gz");
+
+	//Masking
+	writer2->SetInput(maskfilter->GetOutput());
+
+	// Saving the data on disk
+	try{
+		writer2->Update();
+	}
+	catch(itk::ExceptionObject & err)
+	{
+		std::cerr<<"ExceptionObject caught!" << std::endl;
+		std::cerr<<err<<std::endl;
+	}	
+}
+
+void process::skullwithit(std::string Image, std::string Label, int lower, std::string  type,int upper,int outside_value, std::string Output) // with iterators
+{
+//////////Informative display
+	std::cout<<"()Image = "<<Image<<std::endl;
+	std::cout<<"()Label = "<<Label<<std::endl;
+	std::cout<<"()lower = "<<lower<<std::endl;
+	std::cout<<"()Type = "<<type<<std::endl;
+	std::cout<<"()Upper = "<<upper<<std::endl;
+	std::cout<<"()Outside value = "<<outside_value<<std::endl;
+	std::cout<<"()Output = "<<Output<<std::endl;
+	std::cout<<"Processing with iterators..."<<std::endl;
+
+//////////input/output images declaration
+	typedef itk::Image < double , 3 > ImageType; //itk type for image
+	typedef itk::ImageFileReader <ImageType> ReaderType; //itk reader class to open an image
+	typedef itk::ImageFileWriter <ImageType> WriterType; //itk writer class to create an image
+
+	ImageType::Pointer mask=ImageType::New();
+	ReaderType::Pointer reader=ReaderType::New(), reader2=ReaderType::New(); //one reader for label and one for image
+	WriterType::Pointer writer=WriterType::New(), writer2=WriterType::New(); //one writer for label and one for image
+
+//////////Iterators type p.702
+	typedef unsigned short PixelType; //simple integer between 0 and 255
+	typedef itk::Image< PixelType, 2 > ImageType2D;
+	typedef itk::Image< PixelType, 3 > ImageType3D;
+	typedef itk:ImageLinearIteratorWithIndex< ImageType2D > LinearIteratorType;
+	typedef itk:ImageSliceConstIteratorWithIndex< ImageType3D > SliceIteratorType;
+
+	unsigned int direction[2]={0,1}; // two directions that are NOT the projection direction
+
+//////////Output Image Size p.703
+	reader->SetFileName(Label); //Label is a path : "opening the image"
+
+	ImageType2D::RegionType region;
+	ImageType2D::RegionType::SizeType size;
+	ImageType2D::RegionType::IndexType index;
+
+	ImageType3D::RegionType requestedRegion = reader -> GetOutput() -> GetRequestedRegion();
+
+	index[ direction[0] ]    = requestedRegion.GetIndex()[ direction[0] ];
+	index[ 1- direction[0] ] = requestedRegion.GetIndex()[ direction[1] ];
+	size[ direction[0] ]     = requestedRegion.GetSize()[ direction[0] ];
+	size[ 1- direction[0] ]  = requestedRegion.GetSize()[ direction[1] ];
+
+	region.SetSize( size );
+	region.SetIndex( index );
+
+	ImageType3D::Pointer outputImage = ImageType3D::New();
+	
+	outputImage->SetRegions( region );
+	outputImage->Allocate
+
+//////////Iterators creation p.704
+	SliceIteratorType inputIt( reader -> GetOutput(), reader -> GetOutput() -> GetRequestedRegion() );
+	LinearIteratorType outputIt( outputImage, outputImage->GetRequestedRegion() );
+
+	inputIt.SetFirstDirection( direction[1] );
+	outputIt.SetFirstDirection( direction[0] );
+
+	outputIt.SetDirection( 1 - direction[0] );
+
+//////////Loop p.704
+	inputIt.GoToBegin();
+	outputIt.GoToBegin();
+
+	while( !inputIt.IsAtEnd() )
+	{
+		while ( !inputIt.IsAtEndOfSlice() )
+		{
+			while ( !inputIt.IsAtEndOfLine() )
+			{
+				outputIt.Set( (PixelType)0 ); //for the MIP (to change)
+				++inputIt;
+				++outputIt;
+			}
+			outputIt.NextLine();
+			inputIt.NextLine();
+		}
+		outputIt.NextSlice();
+		inputIt.NextSlice();
+	}
+
+	//writer for mask image (2 cases if the output folder has been precised or not in GUI)
+	if(strcmp(Output.c_str(),"")==0) writer->SetFileName("mask.gipl.gz"); // out if nothing in Output (="")
+	else writer->SetFileName(Output + "/mask.gipl.gz"); // out if Output !=""
+
+	//Write on the image file
+	writer->SetInput(outputImage);
+
+	// Saving the data on disk
+	try{ // not sure it works
+		writer->Update();
+	}
+	catch(itk::ExceptionObject & err)
+	{
+		std::cerr<<"ExceptionObject caught!" << std::endl;
+		std::cerr<<err<<std::endl;
+	}	
+/*
+//////////Mask Creation using Thresholding
+	//Thresholding parameters
+	thfilter->SetInput(reader->GetOutput()); //Label in input of Thresholding
+	thfilter->SetOutsideValue(outside_value); // value given to the pixels OUTSIDE THE THRESHOLD
+
+	if(type=="above")
+		thfilter->ThresholdAbove(lower);
+	else if(type=="below")
+		thfilter->ThresholdBelow(lower);
+	else if(type=="outside")
+		thfilter->ThresholdOutside(lower, upper);
+	else
+		std::cout<<"Wrong type parameters. Choose between : Above, Below and Outside"<<std::endl;
+		
+	//Mask generation
+	mask=thfilter->GetOutput(); // create mask
+	
+//Reader for MRI T1 image
+	reader2->SetFileName(Image);
+
+//////////Output Image Creation using Mask Filtering
+	//Mask filtering parameters
+	maskfilter->SetInput1(reader2->GetOutput()); //the image on input 1
+	maskfilter->SetInput2(thfilter->GetOutput()); //the mask on input 2
+	
+	//Writer for output file (2 cases if the output folder has been precised or not in GUI)
+	if(strcmp(Output.c_str(),"")==0) writer2->SetFileName("out.gipl.gz"); 
+	else writer2->SetFileName(Output + "/out.gipl.gz");
+
+	//Masking
+	writer2->SetInput(maskfilter->GetOutput());
+
+	// Saving the data on disk
+	try{
+		writer2->Update();
+	}
+	catch(itk::ExceptionObject & err)
+	{
+		std::cerr<<"ExceptionObject caught!" << std::endl;
+		std::cerr<<err<<std::endl;
+	}*/	
+}
