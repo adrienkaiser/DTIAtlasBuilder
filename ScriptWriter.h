@@ -30,6 +30,7 @@ class ScriptWriter
 		void setnbLoops(int nbLoops);
 		void setTemplatePath(std::string FAAtlasrefPath);
 		void setOverwrite(int Overwrite);
+		void setScaleLevels(std::vector< std::vector<int> > AtlasWerksScaleLevels);
 
 	private:
 		std::vector < std::string > m_CasesPath;
@@ -40,6 +41,7 @@ class ScriptWriter
 		int m_CropSize [3]; //x,y,z
 		int m_NeedToBeCropped; //=0 if not and =1 if need to be cropped
 		int m_Overwrite; //=0 if not and =1 if overwrite on existing files
+		std::vector< std::vector<int> > m_AtlasWerksScaleLevels; // contains X 2-int tables : [Scale,NbIter]
 	
 		std::string m_Script_Preprocess; //contains the whole Script for Pre processing
 		std::string m_Script_AtlasBuilding; //contains the whole Script for Atlas Building

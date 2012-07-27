@@ -4,7 +4,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QCloseEvent>
-
+#include <QSignalMapper>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,6 +29,7 @@ GUI::GUI() : QMainWindow() // constructor
 	QObject::connect(TemplateBrowsePushButton, SIGNAL(clicked()), this, SLOT(OpenTemplateBrowseWindow()));
 	QObject::connect(AddPushButton, SIGNAL(clicked()), this, SLOT(OpenAddCaseBrowseWindow()));
 	QObject::connect(RemovePushButton, SIGNAL(clicked()), this, SLOT(RemoveSelectedCases()));
+	QObject::connect(AddSLPushButton, SIGNAL(clicked()), this, SLOT(AddAWScaleLevel()));
 
 	QObject::connect(this, SIGNAL(runningcomplete()), this, SLOT(OpenRunningCompleteWindow()));
 	QObject::connect(this, SIGNAL(runningfail()), this, SLOT(OpenRunningFailWindow()));
@@ -44,6 +45,15 @@ GUI::GUI() : QMainWindow() // constructor
 	m_ParamFileHeader = QString("DTIAtlasBuilderParameterFileVersion");
 	m_CSVseparator = QString(",");
 	m_ParamSaved=0;
+	m_nbAWSL=0;
+	m_indexAWSL=-1;
+
+/* Initalizating Scale Levels */
+//	AddAWScaleLevel();
+
+/* Remove Scale Level Buttons */
+	m_SLRmButtonMapper = new QSignalMapper();
+	QObject::connect(m_SLRmButtonMapper, SIGNAL(mapped(int)), this, SLOT( RemoveAWScaleLevel(int) ));
 }
 
 void GUI::OpenAddCaseBrowseWindow()
@@ -71,6 +81,43 @@ void GUI::RemoveSelectedCases()
 	SelectCasesLabel->setText( QString("Select Cases :") );
 }
 
+void GUI::AddAWScaleLevel()
+{
+	m_nbAWSL++;
+	m_indexAWSL++;
+
+	QSpinBox * SLSpinBox=new QSpinBox;
+	SLFormLayout->addRow("Scale Level : ",SLSpinBox);
+
+	QSpinBox * IterSpinBox = new QSpinBox;
+	IterFormLayout->addRow("Nb of iterations : ",IterSpinBox);
+
+	QPushButton * RemSLButton = new QPushButton ("-", this);
+	QObject::connect(RemSLButton, SIGNAL(clicked()), m_SLRmButtonMapper, SLOT(map()));
+	m_SLRmButtonMapper->setMapping(RemSLButton, m_nbAWSL);
+	m_QFormIndexs.push_back(m_indexAWSL); // the nbAWSL is unique and the corresponding QForm index is in the vector : it can change if SL are removed.
+	ButtonFormLayout->addRow(RemSLButton);
+}
+
+void GUI::RemoveAWScaleLevel(int buttonNb)
+{
+	std::cout<<"Button removed : "<<buttonNb<<" | QForm row removed : "<<m_QFormIndexs[buttonNb-1]<<std::endl<<"Button nb    = 1";
+	for(int i=1;i< (int) m_QFormIndexs.size();i++) std::cout<<"  "<<i+1;
+	std::cout<<""<<std::endl<<"m_QFormIndexs=["<<m_QFormIndexs[0];
+	for(int i=1;i<(int) m_QFormIndexs.size();i++) std::cout<<", "<<m_QFormIndexs[i];
+	std::cout<<"]"<<std::endl;
+/////////removing the items
+	delete SLFormLayout->takeAt( m_QFormIndexs[buttonNb-1] );
+	delete IterFormLayout->takeAt( m_QFormIndexs[buttonNb-1] );
+	delete ButtonFormLayout->takeAt( m_QFormIndexs[buttonNb-1] );
+
+////////modify the vector :
+	m_indexAWSL--;
+	m_VecIt=m_QFormIndexs.begin();
+	m_QFormIndexs.insert(m_VecIt+buttonNb-1,m_QFormIndexs[buttonNb-1]);
+	// => insert a value at the place of the button so all the values get pushed on the right of the vector.
+}
+
 void GUI::OpenOutputBrowseWindow()
 {
 	QString OutputBrowse=QFileDialog::getExistingDirectory(this);
@@ -96,9 +143,9 @@ void GUI::OpenRunningCompleteWindow()
 		if (answer2 == QMessageBox::Yes)
 		{
 			QProcess * RemoveProcess = new QProcess;
-			program = "rm -r " + m_OutputPath.toStdString() + "/DTIAtlas/Affine_Registration " + m_OutputPath.toStdString() + "/DTIAtlas/Deform_Registration";
+			program = "rm -r " + m_OutputPath.toStdString() + "/DTIAtlas/Affine_Registration " + m_OutputPath.toStdString() + "/DTIAtlas/NonLinear_Registration";
 			//std::cout<<"| Removing command line : $ "<<program<<std::endl;
-			std::cout<<"| Removing folders : \'"<<m_OutputPath.toStdString() + "/DTIAtlas/Affine_Registration\' and \'" + m_OutputPath.toStdString() + "/DTIAtlas/Deform_Registration\'"<<std::endl;
+			std::cout<<"| Removing folders : \'"<<m_OutputPath.toStdString() + "/DTIAtlas/Affine_Registration\' and \'" + m_OutputPath.toStdString() + "/DTIAtlas/NonLinear_Registration\'"<<std::endl;
 			ExitCode = RemoveProcess->execute( program.c_str() );
 
 			if(ExitCode==0) QMessageBox::information(this, "Removing succesful", "Temporary files removed succesfully !");
@@ -244,26 +291,8 @@ void GUI::SaveCSVResults(int Crop, int nbLoops) // Crop = 0 if no cropping , 1 i
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/Affine_Registration/Case") << i+1 << QString(" _Loop ") << nbLoops << QString("_LinearTrans.tfm");
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/Affine_Registration/Case") << i+1 << QString(" _Loop ") << nbLoops << QString("_LinearTrans_DTI.nrrd");
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/Affine_Registration/Case") << i+1 << QString(" _Loop ") << nbLoops << QString("_FinalFA.nrrd");
-			if(i<10) 
-			{
-				stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/Deform_Registration/DeformedImage_0_000") << i << QString(".mhd");
-				stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/Deform_Registration/DeformationField_000") << i << QString(".mhd");
-			}
-			if( (i>10) && (i<100) )
-			{
-				stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/Deform_Registration/DeformedImage_0_00") << i << QString(".mhd");
-				stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/Deform_Registration/DeformationField_00") << i << QString(".mhd");
-			}
-			if( (i>100) && (i<1000) )
-			{
-				stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/Deform_Registration/DeformedImage_0_0") << i << QString(".mhd");
-				stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/Deform_Registration/DeformationField_0") << i << QString(".mhd");
-			}
-			if(i>1000)
-			{
-				stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/Deform_Registration/DeformedImage_0_") << i << QString(".mhd");
-				stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/Deform_Registration/DeformationField_") << i << QString(".mhd");
-			}
+			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/NonLinear_Registration/Case") << i+1 << QString("_NonLinearTrans_FA.mhd");
+			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/NonLinear_Registration/Case") << i+1 << QString("_DeformationField.mhd");
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/Final_Atlas/Case") << i+1 << QString(" _FinalDTI.nrrd");
 			stream << endl;
 		}
@@ -276,6 +305,12 @@ void GUI::SaveCSVResults(int Crop, int nbLoops) // Crop = 0 if no cropping , 1 i
 
 void GUI::SaveParameters()
 {
+	if(CaseListWidget->count()==0)
+	{
+		QMessageBox::critical(this, "No Dataset", "No Dataset");
+		return;
+	}
+
 	QString ParamBrowseName=QFileDialog::getSaveFileName(this, tr("Save Parameter File"),"./DTIAtlasBuilderParameters.txt",tr("Text File (*.txt)"));
 	QString CSVFileName = ParamBrowseName.split(".").at(0) + QString(".csv");
 	QFile file(ParamBrowseName);
@@ -295,11 +330,6 @@ void GUI::SaveParameters()
 
 		std::cout<<"| Parameters file generated"<<std::endl; // command line display
 
-		if(CaseListWidget->count()==0)
-		{
-			QMessageBox::critical(this, "No Dataset", "No Dataset");
-			return;
-		}
 		QFile filecsv(CSVFileName);
 		if ( filecsv.open( IO_WriteOnly | IO_Translate ) )
 		{
@@ -406,7 +436,7 @@ void GUI::LoadParameters()
 		if ( CaseListWidget->count()>0 ) RemovePushButton->setEnabled(true);
 
 	} 
-	else qDebug( "Could not open file");
+	else if ( !ParamBrowse.isEmpty() ) qDebug( "Could not open file");
 
 	m_ParamSaved=1;
 }
@@ -505,6 +535,26 @@ int GUI::LaunchScriptWriter()
 	else  m_scriptwriter->setOverwrite(0);
 
 	m_scriptwriter->setnbLoops(NbLoopsSpinBox->value());// QLineEdit.value() is an int
+
+//////////Scale Levels
+	std::vector< std::vector<int> > T2;
+	std::vector < int > T;
+	T.push_back(4);
+	T.push_back(100);
+	T2.push_back(T);
+	T.clear();
+std::cout<<"[0]"<<std::endl;
+	T.push_back(2);
+	T.push_back(50);
+	T2.push_back(T);
+	T.clear();
+
+	T.push_back(1);
+	T.push_back(25);
+	T2.push_back(T);
+	T.clear();
+
+	m_scriptwriter->setScaleLevels(T2);
 
 //////////Launch writing
 	if(m_scriptwriter->CheckVoxelSize()==1) 
