@@ -32,8 +32,8 @@ class GUI : public QMainWindow, public Ui::MainWindow
 //////////Layout Elements
 		void OpenAddCaseBrowseWindow();
 		void RemoveSelectedCases();
-		void AddAWScaleLevel();
-		void RemoveAWScaleLevel(int nb);
+//		void AddAWScaleLevel();
+//		void RemoveAWScaleLevel(int nb);
 		void OpenOutputBrowseWindow();
  		void OpenTemplateBrowseWindow();
 		void OpenRunningCompleteWindow();
@@ -44,6 +44,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		void SaveCSVResults(int Crop, int nbLoops);
 		void LoadParameters();
 		void SaveParameters();
+		void GenerateXMLForAW();
 
 	signals:
 		void runningcomplete(); //sent when the running is complete
@@ -57,10 +58,10 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		QString m_ParamFileHeader; // to check if the file to read is really a parameter file
 		QString m_CSVseparator;
 		ScriptWriter* m_scriptwriter; ////contains the writing pipeline
-		int m_nbAWSL; // number of AtlasWerks Scale Levels
-		int m_indexAWSL; // index of the current last SL in the QForm
-		std::vector<int> m_QFormIndexs; //contains the index numbers in the QForm for the corresponding nb of the remove Scale Level Button (change because of removing)
-		std::vector<int>::iterator m_VecIt;
+//		int m_nbAWSL; // number of AtlasWerks Scale Levels
+//		int m_indexAWSL; // index of the current last SL in the QForm
+//		std::vector<int> m_QFormIndexs; //contains the index numbers in the QForm for the corresponding nb of the remove Scale Level Button (change because of removing)
+//		std::vector<int>::iterator m_VecIt;
 
   ////////////////////////////////////////////
  //             LAYOUT ELEMENTS            //
@@ -74,7 +75,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		QString m_CSVPath;
 		QString m_OutputPath;
 		QString m_TemplatePath;
-		QSignalMapper * m_SLRmButtonMapper;
+//		QSignalMapper * m_SLRmButtonMapper;
 
 };
 #endif
