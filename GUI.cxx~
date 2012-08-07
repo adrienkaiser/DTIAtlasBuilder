@@ -29,7 +29,7 @@ GUI::GUI() : QMainWindow() // constructor
 	QObject::connect(TemplateBrowsePushButton, SIGNAL(clicked()), this, SLOT(OpenTemplateBrowseWindow()));
 	QObject::connect(AddPushButton, SIGNAL(clicked()), this, SLOT(OpenAddCaseBrowseWindow()));
 	QObject::connect(RemovePushButton, SIGNAL(clicked()), this, SLOT(RemoveSelectedCases()));
-	QObject::connect(AddSLPushButton, SIGNAL(clicked()), this, SLOT(AddAWScaleLevel()));
+//	QObject::connect(AddSLPushButton, SIGNAL(clicked()), this, SLOT(AddAWScaleLevel()));
 
 	QObject::connect(this, SIGNAL(runningcomplete()), this, SLOT(OpenRunningCompleteWindow()));
 	QObject::connect(this, SIGNAL(runningfail()), this, SLOT(OpenRunningFailWindow()));
@@ -45,15 +45,15 @@ GUI::GUI() : QMainWindow() // constructor
 	m_ParamFileHeader = QString("DTIAtlasBuilderParameterFileVersion");
 	m_CSVseparator = QString(",");
 	m_ParamSaved=0;
-	m_nbAWSL=0;
-	m_indexAWSL=-1;
+//	m_nbAWSL=0;
+//	m_indexAWSL=-1;
 
 /* Initalizating Scale Levels */
 //	AddAWScaleLevel();
 
 /* Remove Scale Level Buttons */
-	m_SLRmButtonMapper = new QSignalMapper();
-	QObject::connect(m_SLRmButtonMapper, SIGNAL(mapped(int)), this, SLOT( RemoveAWScaleLevel(int) ));
+//	m_SLRmButtonMapper = new QSignalMapper();
+//	QObject::connect(m_SLRmButtonMapper, SIGNAL(mapped(int)), this, SLOT( RemoveAWScaleLevel(int) ));
 }
 
 void GUI::OpenAddCaseBrowseWindow()
@@ -62,7 +62,7 @@ void GUI::OpenAddCaseBrowseWindow()
 	CaseListWidget->addItems(CaseListBrowse);
 	if ( CaseListWidget->count()>0 ) RemovePushButton->setEnabled(true);
 	m_ParamSaved=0;
-	SelectCasesLabel->setText( QString("Select Cases :") );
+	SelectCasesLabel->setText( QString("") );
 }
 
 void GUI::RemoveSelectedCases()
@@ -78,9 +78,9 @@ void GUI::RemoveSelectedCases()
 	}
 	if ( CaseListWidget->count()==0 ) RemovePushButton->setEnabled(false);
 	m_ParamSaved=0;
-	SelectCasesLabel->setText( QString("Select Cases :") );
+	SelectCasesLabel->setText( QString("") );
 }
-
+/*
 void GUI::AddAWScaleLevel()
 {
 	m_nbAWSL++;
@@ -117,7 +117,7 @@ void GUI::RemoveAWScaleLevel(int buttonNb)
 	m_QFormIndexs.insert(m_VecIt+buttonNb-1,m_QFormIndexs[buttonNb-1]);
 	// => insert a value at the place of the button so all the values get pushed on the right of the vector.
 }
-
+*/
 void GUI::OpenOutputBrowseWindow()
 {
 	QString OutputBrowse=QFileDialog::getExistingDirectory(this);
@@ -202,7 +202,7 @@ void GUI::ReadCSV()
 			if( list.at(0).at(0).toAscii() != '#' )  CaseListWidget->addItem( list.at(1) ); //display in the Widget so that some can be removed
 		}
 	
-		SelectCasesLabel->setText( QString("Select Cases : current CSV file : ") + CSVBrowse );
+		SelectCasesLabel->setText( QString("Current CSV file : ") + CSVBrowse );
 		m_ParamSaved=0;
 	} 
 	else qDebug( "Could not open csv file");
@@ -235,7 +235,7 @@ void GUI::SaveCSVDatasetBrowse()
 		for(int i=0; i < CaseListWidget->count() ;i++) stream << i+1 << m_CSVseparator << CaseListWidget->item(i)->text() << endl;
 		std::cout<<"| Dataset csv file generated"<<std::endl; // command line display
 	
-		SelectCasesLabel->setText( QString("Select Cases : current CSV file : ") + csvPath );
+		SelectCasesLabel->setText( QString("Current CSV file : ") + csvPath );
 		QMessageBox::information(this, "Saving succesful", "Dataset has been succesfully saved at" + CSVBrowsePath + "/DTIAtlasBuilderDataSet.csv");		
 	}
 	else qDebug( "Could not create file");
@@ -259,7 +259,7 @@ void GUI::SaveCSVDataset()
 		for(int i=0; i < CaseListWidget->count() ;i++) stream << i+1 << m_CSVseparator << CaseListWidget->item(i)->text() << endl;
 		std::cout<<"| Dataset csv file generated"<<std::endl; // command line display
 		
-		SelectCasesLabel->setText( QString("Select Cases : current CSV file : ") + csvPath );
+		SelectCasesLabel->setText( QString("Current CSV file : ") + csvPath );
 	}
 	else qDebug( "Could not create file");
 }
@@ -280,7 +280,7 @@ void GUI::SaveCSVResults(int Crop, int nbLoops) // Crop = 0 if no cropping , 1 i
 
 		stream << QString("#") << m_CSVseparator << QString("Original DTI Image");
 		if(Crop==1) stream << m_CSVseparator << QString("Cropped DTI");
-		stream << m_CSVseparator << QString("FA from original") << m_CSVseparator << QString("Affine registered FA") << m_CSVseparator << QString("Affine transform") << m_CSVseparator << QString("Affine registered DTI") << m_CSVseparator << QString("Final FA for AtlasWerks") << m_CSVseparator << QString("Deformed Image") << m_CSVseparator << QString("Deformation field") << m_CSVseparator << QString("Final DTI") << endl;
+		stream << m_CSVseparator << QString("FA from original") << m_CSVseparator << QString("Affine registered FA") << m_CSVseparator << QString("Affine transform") << m_CSVseparator << QString("Affine registered DTI") << m_CSVseparator << QString("Final FA for AtlasWerks") << m_CSVseparator << QString("Deformed Image") << m_CSVseparator << QString("Deformation field") << m_CSVseparator << QString("Deformation Inverse field") << m_CSVseparator << QString("Final DTI") << endl;
 
 		for(int i=0; i < CaseListWidget->count() ;i++) // for all cases
 		{
@@ -288,11 +288,12 @@ void GUI::SaveCSVResults(int Crop, int nbLoops) // Crop = 0 if no cropping , 1 i
 			if(Crop==1) stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/Affine_Registration/Case") << i+1 << QString("_croppedDTI.nrrd");
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/Affine_Registration/Case") << i+1 << QString("_FA.nrrd");
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/Affine_Registration/Case") << i+1 << QString(" _Loop ") << nbLoops << QString("_LinearTrans_FA.nrrd"); // only the last processing (last loop) is remembered
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/Affine_Registration/Case") << i+1 << QString(" _Loop ") << nbLoops << QString("_LinearTrans.tfm");
+			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/Affine_Registration/Case") << i+1 << QString(" _Loop ") << nbLoops << QString("_LinearTrans.txt");
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/Affine_Registration/Case") << i+1 << QString(" _Loop ") << nbLoops << QString("_LinearTrans_DTI.nrrd");
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/Affine_Registration/Case") << i+1 << QString(" _Loop ") << nbLoops << QString("_FinalFA.nrrd");
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/NonLinear_Registration/Case") << i+1 << QString("_NonLinearTrans_FA.mhd");
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/NonLinear_Registration/Case") << i+1 << QString("_DeformationField.mhd");
+			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/NonLinear_Registration/Case") << i+1 << QString("_InverseDeformationField.mhd");
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/Final_Atlas/Case") << i+1 << QString(" _FinalDTI.nrrd");
 			stream << endl;
 		}
@@ -327,6 +328,11 @@ void GUI::SaveParameters()
 		if(OverwritecheckBox->isChecked()) stream << "Overwrite=true" << endl;
 		else  stream << "Overwrite=false" << endl;
 		stream << "CSV Dataset File=" << CSVFileName << endl;
+		stream << "Scale Level 4= " << nbIter4SpinBox->value() << "," << alpha4DoubleSpinBox->value() << "," << beta4DoubleSpinBox->value() << "," << gamma4DoubleSpinBox->value() << "," << maxPerturbation4DoubleSpinBox->value() << endl;
+		stream << "Scale Level 2= " << nbIter2SpinBox->value() << "," << alpha2DoubleSpinBox->value() << "," << beta2DoubleSpinBox->value() << "," << gamma2DoubleSpinBox->value() << "," << maxPerturbation2DoubleSpinBox->value() << endl;
+		stream << "Scale Level 1= " << nbIter1SpinBox->value() << "," << alpha1DoubleSpinBox->value() << "," << beta1DoubleSpinBox->value() << "," << gamma1DoubleSpinBox->value() << "," << maxPerturbation1DoubleSpinBox->value() << endl;
+		stream << "Resampling Interpolation Algorithm=" << InterpolTypeComboBox->currentText() << endl;
+		stream << "DTI Average Statistics Method=" << averageStatMethodComboBox->currentText() << endl;
 
 		std::cout<<"| Parameters file generated"<<std::endl; // command line display
 
@@ -340,9 +346,11 @@ void GUI::SaveParameters()
 			for(int i=0; i < CaseListWidget->count() ;i++) streamcsv << i+1 << m_CSVseparator << CaseListWidget->item(i)->text() << endl;
 			std::cout<<"| Dataset csv file generated"<<std::endl; // command line display
 		
-			SelectCasesLabel->setText( QString("Select Cases : current CSV file : ") + CSVFileName );
+			SelectCasesLabel->setText( QString("Current CSV file : ") + CSVFileName );
 		}
 		else qDebug( "Could not create csv file");
+
+
 
 		QMessageBox::information(this, "Saving succesful", "Parameters have been succesfully saved at" + ParamBrowseName);
 		m_ParamSaved=1;
@@ -430,15 +438,275 @@ void GUI::LoadParameters()
 				QStringList CSVlist = CSVline.split(m_CSVseparator);
 				if( CSVlist.at(0).at(0).toAscii() != '#' )  CaseListWidget->addItem( CSVlist.at(1) ); //display in the Widget so that some can be removed
 			}
-			SelectCasesLabel->setText( QString("Select Cases : current CSV file : ") + CSVpath );
+			SelectCasesLabel->setText( QString("Current CSV file : ") + CSVpath );
 		} 
-		else qDebug( "Could not open csv file");
+		else 
+		{
+			SelectCasesLabel->setText( QString("Could not open CSV File"));
+			qDebug( "Could not open csv file");
+		}
 		if ( CaseListWidget->count()>0 ) RemovePushButton->setEnabled(true);
+
+/////////////////Scale Levels
+		line = stream.readLine();
+		list = line.split("=");
+		if(!list.at(0).contains(QString("Scale Level 4")))
+		{
+			QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+			return;
+		}
+		else
+		{
+			QStringList nbrs= list.at(1).split(",");
+			if( nbrs.size()!=5 )
+			{
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				return;
+			}
+			if( (nbrs.at(1).toDouble()==0) || (nbrs.at(2).toDouble()==0) || (nbrs.at(3).toDouble()==0) || (nbrs.at(4).toDouble()==0))
+			{
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				return;
+			}
+			nbIter4SpinBox->setValue(nbrs.at(0).toInt());
+			alpha4DoubleSpinBox->setValue(nbrs.at(1).toDouble());
+			beta4DoubleSpinBox->setValue(nbrs.at(2).toDouble());
+			gamma4DoubleSpinBox->setValue(nbrs.at(3).toDouble());
+			maxPerturbation4DoubleSpinBox->setValue(nbrs.at(4).toDouble());
+		}
+
+		line = stream.readLine();
+		list = line.split("=");
+		if(!list.at(0).contains(QString("Scale Level 2")))
+		{
+			QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+			return;
+		}
+		else
+		{
+			QStringList nbrs= list.at(1).split(",");
+			if( nbrs.size()!=5 )
+			{
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				return;
+			}
+			if( (nbrs.at(1).toDouble()==0) || (nbrs.at(2).toDouble()==0) || (nbrs.at(3).toDouble()==0) || (nbrs.at(4).toDouble()==0))
+			{
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				return;
+			}
+			nbIter2SpinBox->setValue(nbrs.at(0).toInt());
+			alpha2DoubleSpinBox->setValue(nbrs.at(1).toDouble());
+			beta2DoubleSpinBox->setValue(nbrs.at(2).toDouble());
+			gamma2DoubleSpinBox->setValue(nbrs.at(3).toDouble());
+			maxPerturbation2DoubleSpinBox->setValue(nbrs.at(4).toDouble());
+		}
+
+		line = stream.readLine();
+		list = line.split("=");
+		if(!list.at(0).contains(QString("Scale Level 1")))
+		{
+			QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+			return;
+		}
+		else
+		{
+			QStringList nbrs= list.at(1).split(",");
+			if( nbrs.size()!=5 )
+			{
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				return;
+			}
+			if( (nbrs.at(1).toDouble()==0) || (nbrs.at(2).toDouble()==0) || (nbrs.at(3).toDouble()==0) || (nbrs.at(4).toDouble()==0))
+			{
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				return;
+			}
+			nbIter1SpinBox->setValue(nbrs.at(0).toInt());
+			alpha1DoubleSpinBox->setValue(nbrs.at(1).toDouble());
+			beta1DoubleSpinBox->setValue(nbrs.at(2).toDouble());
+			gamma1DoubleSpinBox->setValue(nbrs.at(3).toDouble());
+			maxPerturbation1DoubleSpinBox->setValue(nbrs.at(4).toDouble());
+		}
+
+		line = stream.readLine();
+		list = line.split("=");
+		if(!list.at(0).contains(QString("Resampling Interpolation Algorithm")))
+		{
+			QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+			return;
+		}
+		if( list.at(1).contains(QString("Linear")) ) InterpolTypeComboBox->setCurrentIndex(0);
+		else if( list.at(1).contains(QString("Nearest Neighborhoor")) ) InterpolTypeComboBox->setCurrentIndex(1);
+		else if( list.at(1).contains(QString("Windowed Sinc")) ) InterpolTypeComboBox->setCurrentIndex(2);
+		else if( list.at(1).contains(QString("BSpline")) ) InterpolTypeComboBox->setCurrentIndex(3);
+		else
+		{
+			QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+			return;
+		}
+
+		line = stream.readLine();
+		list = line.split("=");
+		if(!list.at(0).contains(QString("DTI Average Statistics Method")))
+		{
+			QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+			return;
+		}
+		if( list.at(1).contains(QString("PGA")) ) averageStatMethodComboBox->setCurrentIndex(0);
+		if( list.at(1).contains(QString("Euclidean")) ) averageStatMethodComboBox->setCurrentIndex(1);
+		if( list.at(1).contains(QString("Log Euclidean")) ) averageStatMethodComboBox->setCurrentIndex(2);
+		else
+		{
+			QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+			return;
+		}
 
 	} 
 	else if ( !ParamBrowse.isEmpty() ) qDebug( "Could not open file");
 
 	m_ParamSaved=1;
+}
+
+void GUI::GenerateXMLForAW()
+{	
+	QString	xmlFileName = m_OutputPath + QString("/DTIAtlas/NonLinear_Registration/AtlasWerksParameters.xml");
+	QFile file(xmlFileName);
+	if ( file.open( IO_WriteOnly | IO_Translate ) )
+	{
+		std::cout<<"| Saving XML file for AtlasWerks..."<<std::endl; // command line display
+		QTextStream stream( &file );
+
+		stream <<"<!--top-level node-->"<< endl;
+		stream <<"<ParameterFile>"<< endl;
+			stream <<"\t<ScaleImageWeights val=\"true\"/>"<< endl;
+			stream <<"\t<WeightedImageSet>"<< endl;
+				stream <<"\t\t<InputImageFormatString>"<< endl;
+					stream <<"\t\t\t<FormatString val=\"\" />"<< endl;
+					stream <<"\t\t\t<Base val=\"0\" />"<< endl;
+					std::ostringstream out;
+					out << m_CasesPath.size();
+					std::string nbcases_str = out.str();
+					stream <<"\t\t\t<NumFiles val=\"" << nbcases_str.c_str() << "\" />"<< endl;
+					stream <<"\t\t\t<Weight val=\"1\" />"<< endl;
+				stream <<"\t\t</InputImageFormatString>"<< endl;
+			std::ostringstream out1;
+			out1 << NbLoopsSpinBox->value();
+			std::string nbLoops_str = out1.str();
+			for (unsigned int i=0;i<m_CasesPath.size();i++)
+			{
+				std::ostringstream outi;
+				outi << i+1;
+				std::string i_str = outi.str();
+				stream <<"\t\t<WeightedImage>"<< endl;
+					stream <<"\t\t\t<Filename val=\"" << m_OutputPath << "/DTIAtlas/Affine_Registration/Case" << i_str.c_str() << "_Loop" << nbLoops_str.c_str() << "_NormFA.nrrd\" />"<< endl;
+					stream <<"\t\t\t<Transform val=\"" << m_OutputPath << "/DTIAtlas/Affine_Registration/Case" << i_str.c_str() << "_Loop" << nbLoops_str.c_str() << "_LinearTrans_float.txt\" />"<< endl;
+					stream <<"\t\t\t<ItkTransform val=\"1\" />"<< endl;
+				stream <<"\t\t</WeightedImage>"<< endl;
+			}
+			stream <<"\t</WeightedImageSet>"<< endl;
+
+			stream <<"\t<GreedyAtlasScaleLevel>"<< endl;
+				stream <<"\t\t<ScaleLevel>"<< endl;
+					stream <<"\t\t\t<!--factor by which to downsample images-->"<< endl;
+					stream <<"\t\t\t<DownsampleFactor val=\"4\" />"<< endl;
+				stream <<"\t\t</ScaleLevel>"<< endl;
+				stream <<"\t\t<!--Scale factor on the maximum velocity in a given deformation for computing delta-->"<< endl;
+				std::ostringstream outSL4;
+				outSL4 << maxPerturbation4DoubleSpinBox->value();
+				std::string SL4_str = outSL4.str();
+				stream <<"\t\t<MaxPert val=\"" << SL4_str.c_str() << "\" />"<< endl;
+				std::ostringstream outSL42;
+				outSL42 << nbIter4SpinBox->value();
+				std::string SL42_str = outSL42.str();
+				stream <<"\t\t<NIterations val=\"" << SL42_str.c_str() << "\" />"<< endl;
+				stream <<"\t\t<DiffOper>"<< endl;
+					std::ostringstream outSL43;
+					outSL43 << alpha4DoubleSpinBox->value();
+					std::string SL43_str = outSL43.str();
+					stream <<"\t\t\t<Alpha val=\"" << SL43_str.c_str() << "\" />"<< endl;
+					std::ostringstream outSL44;
+					outSL44 << beta4DoubleSpinBox->value();
+					std::string SL44_str = outSL44.str();
+					stream <<"\t\t\t<Beta val=\"" << SL44_str.c_str() << "\" />"<< endl;
+					std::ostringstream outSL45;
+					outSL45 << gamma4DoubleSpinBox->value();
+					std::string SL45_str = outSL45.str();
+					stream <<"\t\t\t<Gamma val=\"" << SL45_str.c_str() << "\" />"<< endl;
+				stream <<"\t\t</DiffOper>"<< endl;
+			stream <<"\t</GreedyAtlasScaleLevel>"<< endl;
+
+			stream <<"\t<GreedyAtlasScaleLevel>"<< endl;
+				stream <<"\t\t<ScaleLevel>"<< endl;
+					stream <<"\t\t\t<!--factor by which to downsample images-->"<< endl;
+					stream <<"\t\t\t<DownsampleFactor val=\"2\" />"<< endl;
+				stream <<"\t\t</ScaleLevel>"<< endl;
+				stream <<"\t\t<!--Scale factor on the maximum velocity in a given deformation for computing delta-->"<< endl;
+				std::ostringstream outSL2;
+				outSL2 << maxPerturbation2DoubleSpinBox->value();
+				std::string SL2_str = outSL2.str();
+				stream <<"\t\t<MaxPert val=\"" << SL2_str.c_str() << "\" />"<< endl;
+				std::ostringstream outSL22;
+				outSL22 << nbIter2SpinBox->value();
+				std::string SL22_str = outSL22.str();
+				stream <<"\t\t<NIterations val=\"" << SL22_str.c_str() << "\" />"<< endl;
+				stream <<"\t\t<DiffOper>"<< endl;
+					std::ostringstream outSL23;
+					outSL23 << alpha2DoubleSpinBox->value();
+					std::string SL23_str = outSL23.str();
+					stream <<"\t\t\t<Alpha val=\"" << SL23_str.c_str() << "\" />"<< endl;
+					std::ostringstream outSL24;
+					outSL24 << beta2DoubleSpinBox->value();
+					std::string SL24_str = outSL24.str();
+					stream <<"\t\t\t<Beta val=\"" << SL24_str.c_str() << "\" />"<< endl;
+					std::ostringstream outSL25;
+					outSL25 << gamma2DoubleSpinBox->value();
+					std::string SL25_str = outSL25.str();
+					stream <<"\t\t\t<Gamma val=\"" << SL25_str.c_str() << "\" />"<< endl;
+				stream <<"\t\t</DiffOper>"<< endl;
+			stream <<"\t</GreedyAtlasScaleLevel>"<< endl;
+
+			stream <<"\t<GreedyAtlasScaleLevel>"<< endl;
+				stream <<"\t\t<ScaleLevel>"<< endl;
+					stream <<"\t\t\t<!--factor by which to downsample images-->"<< endl;
+					stream <<"\t\t\t<DownsampleFactor val=\"1\" />"<< endl;
+				stream <<"\t\t</ScaleLevel>"<< endl;
+				stream <<"\t\t<!--Scale factor on the maximum velocity in a given deformation for computing delta-->"<< endl;
+				std::ostringstream outSL1;
+				outSL1 << maxPerturbation1DoubleSpinBox->value();
+				std::string SL1_str = outSL1.str();
+				stream <<"\t\t<MaxPert val=\"" << SL1_str.c_str() << "\" />"<< endl;
+				std::ostringstream outSL12;
+				outSL12 << nbIter1SpinBox->value();
+				std::string SL12_str = outSL12.str();
+				stream <<"\t\t<NIterations val=\"" << SL12_str.c_str() << "\" />"<< endl;
+				stream <<"\t\t<DiffOper>"<< endl;
+					std::ostringstream outSL13;
+					outSL13 << alpha1DoubleSpinBox->value();
+					std::string SL13_str = outSL13.str();
+					stream <<"\t\t\t<Alpha val=\"" << SL13_str.c_str() << "\" />"<< endl;
+					std::ostringstream outSL14;
+					outSL14 << beta1DoubleSpinBox->value();
+					std::string SL14_str = outSL14.str();
+					stream <<"\t\t\t<Beta val=\"" << SL14_str.c_str() << "\" />"<< endl;
+					std::ostringstream outSL15;
+					outSL15 << gamma1DoubleSpinBox->value();
+					std::string SL15_str = outSL15.str();
+					stream <<"\t\t\t<Gamma val=\"" << SL15_str.c_str() << "\" />"<< endl;
+				stream <<"\t\t</DiffOper>"<< endl;
+			stream <<"\t</GreedyAtlasScaleLevel>"<< endl;
+
+			stream <<"\t<!--number of threads to use, 0=one per processor (only for CPU computation)-->"<< endl;
+			stream <<"\t<nThreads val=\"4\" />"<< endl;
+			stream <<"\t<OutputImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/NonLinear_Registration/AverageImage_\" />"<< endl;
+			stream <<"\t<OutputDeformedImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/NonLinear_Registration/DeformedImage_\" />"<< endl;
+			stream <<"\t<OutputHFieldImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/NonLinear_Registration/DeformationField_\" />"<< endl;
+			stream <<"\t<OutputInvHFieldImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/NonLinear_Registration/InverseDeformationField_\" />"<< endl;
+			stream <<"\t<OutputFileType val=\"mhd\" />"<< endl;
+
+		stream <<"</ParameterFile>"<< endl;
+	}
+	else qDebug( "Could not create xml file");
 }
 
 void GUI::Compute()
@@ -522,49 +790,79 @@ int GUI::LaunchScriptWriter()
 			QMessageBox::critical(this, "Template does not exist", QString(text.c_str()) );
 			return -1;
 		}
-///////////////////////////////
-/////// TO DO : test if FA image and not DTI
-/////////////////////////////		
 		m_scriptwriter->setRegType(0);
 		m_scriptwriter->setTemplatePath(TemplateLineEdit->text().toStdString());
 	}
 
 	else m_scriptwriter->setRegType(1); // default
+	
+	m_scriptwriter->setInterpolType(InterpolTypeComboBox->currentText().toStdString());
+	m_scriptwriter->setAverageStatMethod(averageStatMethodComboBox->currentText().toStdString());
 
 	if(OverwritecheckBox->isChecked()) m_scriptwriter->setOverwrite(1);
 	else  m_scriptwriter->setOverwrite(0);
 
 	m_scriptwriter->setnbLoops(NbLoopsSpinBox->value());// QLineEdit.value() is an int
 
-//////////Scale Levels
-	std::vector< std::vector<int> > T2;
-	std::vector < int > T;
-	T.push_back(4);
-	T.push_back(100);
-	T2.push_back(T);
-	T.clear();
-std::cout<<"[0]"<<std::endl;
-	T.push_back(2);
-	T.push_back(50);
+//////////Scale Levels :--scaleLevel=4 --numberOfIterations=150 --alpha=1 --beta=1 --gamma=0.0001 --maxPerturbation=0.001 --scaleLevel=2 --numberOfIterations=120 --alpha=1 --beta=1 --gamma=0.001 --maxPerturbation=0.01 --scaleLevel=1 --numberOfIterations=100 --alpha=0.1 --beta=0.1 --gamma=0.01 --maxPerturbation=0.1
+/* Default Parameters for AtlasWerks:
+Scale                 : 1
+alpha                 : 0.01
+beta                  : 0.01
+gamma                 : 0.001
+Max. Pert.            : 0.5
+Num. Iterations       : 50
+*/
+	std::vector< std::vector< double > > T2;
+	std::vector < double > T;
+	T.push_back(4); // scale level
+	T.push_back(nbIter4SpinBox->value()); //nb iterations
+	T.push_back(alpha4DoubleSpinBox->value()); //alpha
+	T.push_back(beta4DoubleSpinBox->value()); //beta
+	T.push_back(gamma4DoubleSpinBox->value()); //gamma
+	T.push_back(maxPerturbation4DoubleSpinBox->value()); //max perturbation
 	T2.push_back(T);
 	T.clear();
 
-	T.push_back(1);
-	T.push_back(25);
+	T.push_back(2); // scale level
+	T.push_back(nbIter2SpinBox->value()); //nb iterations
+	T.push_back(alpha2DoubleSpinBox->value()); //alpha
+	T.push_back(beta2DoubleSpinBox->value()); //beta
+	T.push_back(gamma2DoubleSpinBox->value()); //gamma
+	T.push_back(maxPerturbation2DoubleSpinBox->value()); //max perturbation
+	T2.push_back(T);
+	T.clear();
+
+	T.push_back(1); // scale level
+	T.push_back(nbIter1SpinBox->value()); //nb iterations
+	T.push_back(alpha1DoubleSpinBox->value()); //alpha
+	T.push_back(beta1DoubleSpinBox->value()); //beta
+	T.push_back(gamma1DoubleSpinBox->value()); //gamma
+	T.push_back(maxPerturbation1DoubleSpinBox->value()); //max perturbation
 	T2.push_back(T);
 	T.clear();
 
 	m_scriptwriter->setScaleLevels(T2);
+	T2.clear();
 
 //////////Launch writing
 	if(m_scriptwriter->CheckVoxelSize()==1) 
 	{
-		QMessageBox::critical(this, "Voxel Size", "Error: The voxel size of the images\nare not the same,\nplease change dataset"); // returns 0 if voxel size OK , otherwise 1		
+		QMessageBox::critical(this, "Different Voxel Sizes", "Error: The voxel size of the images\nare not the same,\nplease change dataset"); // returns 0 if voxel size OK , otherwise 1		
 		return -1;
+	}
+	if(m_scriptwriter->CheckSpaceDir()==1) 
+	{
+		int answer = QMessageBox::question(this, "Different Space Directions", "Warning: The space directions of the images are not the same\nDo you want to execute the script so they will be resampled ?", QMessageBox::Yes | QMessageBox::No);
+		if (answer == QMessageBox::No) return -1;
 	}
 	int Crop=m_scriptwriter->setCroppingSize(); // returns 0 if no cropping , 1 if cropping needed
 	if(Crop==1) QMessageBox::warning(this, "Cropping", "Warning: The images do not have the same size, \nso some of them will be cropped");
+
 	m_scriptwriter->WriteScript(); // Master Function
+
+////////// XML file for AtlasWerks
+	GenerateXMLForAW();
 
 //////////Save CSV
 	SaveCSVDataset();
