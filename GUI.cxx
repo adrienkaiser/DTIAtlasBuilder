@@ -5,6 +5,8 @@
 #include <QTextStream>
 #include <QCloseEvent>
 #include <QSignalMapper>
+#include <QDialog>
+#include <QLabel>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,6 +39,8 @@ GUI::GUI() : QMainWindow() // constructor
 	QObject::connect(actionLoad_parameters, SIGNAL(triggered()), this, SLOT(LoadParameters()));
 	QObject::connect(actionSave_parameters, SIGNAL(triggered()), this, SLOT(SaveParameters()));
 	QObject::connect(actionExit, SIGNAL(triggered()), qApp, SLOT(quit()));
+	QObject::connect(actionConfigure_Softwares, SIGNAL(triggered()), this, SLOT(Config()));
+	QObject::connect(actionRead_Me, SIGNAL(triggered()), this, SLOT(ReadMe()));
 
 /* Buttons */
 	RemovePushButton->setEnabled(false);
@@ -54,6 +58,10 @@ GUI::GUI() : QMainWindow() // constructor
 /* Remove Scale Level Buttons */
 //	m_SLRmButtonMapper = new QSignalMapper();
 //	QObject::connect(m_SLRmButtonMapper, SIGNAL(mapped(int)), this, SLOT( RemoveAWScaleLevel(int) ));
+
+/* Browse softwares path Buttons */
+	m_SoftButtonMapper = new QSignalMapper();
+	QObject::connect(m_SoftButtonMapper, SIGNAL(mapped(int)), this, SLOT( BrowseSoft(int) ));
 }
 
 void GUI::OpenAddCaseBrowseWindow()
@@ -218,13 +226,11 @@ void GUI::SaveCSVDatasetBrowse()
 		return;
 	}
 
-	QString CSVBrowsePath=QFileDialog::getExistingDirectory(this);
+	QString CSVBrowseName = QFileDialog::getSaveFileName(this, tr("Save Dataset"),"./DTIAtlasBuilderDataSet.csv",tr("CSV File (*.csv)"));
 
 	QString m_CSVseparator = QString(",");
 
-	QString csvPath;
-	csvPath = CSVBrowsePath + QString("/DTIAtlasBuilderDataSet.csv");
-	QFile file(csvPath);
+	QFile file(CSVBrowseName);
 
 	if ( file.open( IO_WriteOnly | IO_Translate ) )
 	{
@@ -235,8 +241,8 @@ void GUI::SaveCSVDatasetBrowse()
 		for(int i=0; i < CaseListWidget->count() ;i++) stream << i+1 << m_CSVseparator << CaseListWidget->item(i)->text() << endl;
 		std::cout<<"| Dataset csv file generated"<<std::endl; // command line display
 	
-		SelectCasesLabel->setText( QString("Current CSV file : ") + csvPath );
-		QMessageBox::information(this, "Saving succesful", "Dataset has been succesfully saved at" + CSVBrowsePath + "/DTIAtlasBuilderDataSet.csv");		
+		SelectCasesLabel->setText( QString("Current CSV file : ") + CSVBrowseName );
+		QMessageBox::information(this, "Saving succesful", "Dataset has been succesfully saved at" + CSVBrowseName);		
 	}
 	else qDebug( "Could not create file");
 
@@ -314,6 +320,7 @@ void GUI::SaveParameters()
 
 	QString ParamBrowseName=QFileDialog::getSaveFileName(this, tr("Save Parameter File"),"./DTIAtlasBuilderParameters.txt",tr("Text File (*.txt)"));
 	QString CSVFileName = ParamBrowseName.split(".").at(0) + QString(".csv");
+
 	QFile file(ParamBrowseName);
 	if ( file.open( IO_WriteOnly | IO_Translate ) )
 	{
@@ -570,6 +577,14 @@ void GUI::LoadParameters()
 
 void GUI::GenerateXMLForAW()
 {	
+	if( access((m_OutputPath.toStdString() + "/DTIAtlas/NonLinear_Registration").c_str(), F_OK) != 0 ) ///////Test if the main folder does not exists => unistd::access() returns 0 if F(file)_OK
+	{
+		std::cout<<"| Creating Non Linear Registration directory..."<<std::endl; // command line display
+		QProcess * mkdirMainProcess = new QProcess;
+		std::string program = "mkdir " + m_OutputPath.toStdString() + "/DTIAtlas/NonLinear_Registration"; //// Creates the directory
+		mkdirMainProcess->execute( program.c_str() );
+	}
+
 	QString	xmlFileName = m_OutputPath + QString("/DTIAtlas/NonLinear_Registration/AtlasWerksParameters.xml");
 	QFile file(xmlFileName);
 	if ( file.open( IO_WriteOnly | IO_Translate ) )
@@ -709,6 +724,302 @@ void GUI::GenerateXMLForAW()
 	else qDebug( "Could not create xml file");
 }
 
+void GUI::Config()
+{
+//////////GUI window creation
+	m_dlg = new QDialog(this);
+	m_dlg->setWindowTitle ("Configure Softwares");
+
+	QLabel *ImagemathLabel = new QLabel("ImageMath :", this);
+	m_ImagemathPath = new QLineEdit;
+	QPushButton *ImagemathButton = new QPushButton ("Browse", this);
+	QObject::connect(ImagemathButton, SIGNAL(clicked()), m_SoftButtonMapper, SLOT(map()));
+	m_SoftButtonMapper->setMapping(ImagemathButton,1);
+	QHBoxLayout *ImagemathLayout = new QHBoxLayout;
+	ImagemathLayout->addWidget(ImagemathLabel);
+	ImagemathLayout->addWidget(m_ImagemathPath);
+	ImagemathLayout->addWidget(ImagemathButton);
+
+	QLabel *ResampLabel = new QLabel("ResampleDTIlogEuclidean :", this);
+	m_ResampPath = new QLineEdit;
+	QPushButton *ResampButton = new QPushButton ("Browse", this);
+	QObject::connect(ResampButton, SIGNAL(clicked()), m_SoftButtonMapper, SLOT(map()));
+	m_SoftButtonMapper->setMapping(ResampButton,2);
+	QHBoxLayout *ResampLayout = new QHBoxLayout;
+	ResampLayout->addWidget(ResampLabel);
+	ResampLayout->addWidget(m_ResampPath);
+	ResampLayout->addWidget(ResampButton);
+
+	QLabel *CropDTILabel = new QLabel("CropDTI :", this);
+	m_CropDTIPath = new QLineEdit;
+	QPushButton *CropDTIButton = new QPushButton ("Browse", this);
+	QObject::connect(CropDTIButton, SIGNAL(clicked()), m_SoftButtonMapper, SLOT(map()));
+	m_SoftButtonMapper->setMapping(CropDTIButton,3);
+	QHBoxLayout *CropDTILayout = new QHBoxLayout;
+	CropDTILayout->addWidget(CropDTILabel);
+	CropDTILayout->addWidget(m_CropDTIPath);
+	CropDTILayout->addWidget(CropDTIButton);
+
+	QLabel *dtiprocLabel = new QLabel("dtiprocess :", this);
+	m_dtiprocPath = new QLineEdit;
+	QPushButton *dtiprocButton = new QPushButton ("Browse", this);
+	QObject::connect(dtiprocButton, SIGNAL(clicked()), m_SoftButtonMapper, SLOT(map()));
+	m_SoftButtonMapper->setMapping(dtiprocButton,4);
+	QHBoxLayout *dtiprocLayout = new QHBoxLayout;
+	dtiprocLayout->addWidget(dtiprocLabel);
+	dtiprocLayout->addWidget(m_dtiprocPath);
+	dtiprocLayout->addWidget(dtiprocButton);
+
+	QLabel *BRAINSFitLabel = new QLabel("BRAINSFit :", this);
+	m_BRAINSFitPath = new QLineEdit;
+	QPushButton *BRAINSFitButton = new QPushButton ("Browse", this);
+	QObject::connect(BRAINSFitButton, SIGNAL(clicked()), m_SoftButtonMapper, SLOT(map()));
+	m_SoftButtonMapper->setMapping(BRAINSFitButton,5);
+	QHBoxLayout *BRAINSFitLayout = new QHBoxLayout;
+	BRAINSFitLayout->addWidget(BRAINSFitLabel);
+	BRAINSFitLayout->addWidget(m_BRAINSFitPath);
+	BRAINSFitLayout->addWidget(BRAINSFitButton);
+
+	QLabel *AWLabel = new QLabel("AtlasWerks :", this);
+	m_AWPath = new QLineEdit;
+	QPushButton *AWButton = new QPushButton ("Browse", this);
+	QObject::connect(AWButton, SIGNAL(clicked()), m_SoftButtonMapper, SLOT(map()));
+	m_SoftButtonMapper->setMapping(AWButton,6);
+	QHBoxLayout *AWLayout = new QHBoxLayout;
+	AWLayout->addWidget(AWLabel);
+	AWLayout->addWidget(m_AWPath);
+	AWLayout->addWidget(AWButton);
+
+	QLabel *dtiavgLabel = new QLabel("dtiaverage :", this);
+	m_dtiavgPath = new QLineEdit;
+	QPushButton *dtiavgButton = new QPushButton ("Browse", this);
+	QObject::connect(dtiavgButton, SIGNAL(clicked()), m_SoftButtonMapper, SLOT(map()));
+	m_SoftButtonMapper->setMapping(dtiavgButton,7);
+	QHBoxLayout *dtiavgLayout = new QHBoxLayout;
+	dtiavgLayout->addWidget(dtiavgLabel);
+	dtiavgLayout->addWidget(m_dtiavgPath);
+	dtiavgLayout->addWidget(dtiavgButton);
+
+	QPushButton *OKButton = new QPushButton ("OK", this);
+	QObject::connect(OKButton, SIGNAL(clicked()), this, SLOT(ConfigOK()));
+	QPushButton *CancelButton = new QPushButton ("Cancel", this);
+	QObject::connect(CancelButton, SIGNAL(clicked()), this, SLOT(ConfigCancel()));
+	QHBoxLayout *ButtonsLayout = new QHBoxLayout();
+	ButtonsLayout->addWidget(OKButton);
+	ButtonsLayout->addWidget(CancelButton);
+
+	QLabel *InfoLabel = new QLabel ("Give the path to the following softwares.\nIf no path given, the program will look in the path environnement variable.", this);
+	QVBoxLayout *VLayout = new QVBoxLayout();
+	VLayout->addWidget(InfoLabel);
+	VLayout->addLayout(ImagemathLayout);
+	VLayout->addLayout(ResampLayout);
+	VLayout->addLayout(CropDTILayout);
+	VLayout->addLayout(dtiprocLayout);
+	VLayout->addLayout(BRAINSFitLayout);
+	VLayout->addLayout(AWLayout);
+	VLayout->addLayout(dtiavgLayout);
+	VLayout->addLayout(ButtonsLayout);
+
+	m_dlg->setLayout(VLayout);
+
+//////////getting the values
+	if( access("DTIAtlasBuilderSoftConfig.txt", F_OK) == 0 ) ///////Test if the config file already exists => unistd::access() returns 0 if F(file)_OK
+	{
+		std::cout<<"| Config file already exists, getting the paths..."<<std::endl; // command line display
+
+		///get the values from file
+		QFile file("DTIAtlasBuilderSoftConfig.txt");
+		if (file.open(QFile::ReadOnly))
+		{
+			QTextStream stream(&file);
+
+			QString line = stream.readLine();
+			QStringList list = line.split("=");
+			if(!list.at(0).contains(QString("ImageMath")))
+			{
+				QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
+				return;
+			}
+			m_ImagemathPath->setText(list.at(1));
+
+			line = stream.readLine();
+			list = line.split("=");
+			if(!list.at(0).contains(QString("ResampleDTIlogEuclidean")))
+			{
+				QMessageBox::critical(this, "Corrupt File", "The existing config file is corrupted");
+				return;
+			}
+			m_ResampPath->setText(list.at(1));
+
+			line = stream.readLine();
+			list = line.split("=");
+			if(!list.at(0).contains(QString("CropDTI")))
+			{
+				QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
+				return;
+			}
+			m_CropDTIPath->setText(list.at(1));
+
+			line = stream.readLine();
+			list = line.split("=");
+			if(!list.at(0).contains(QString("dtiprocess")))
+			{
+				QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
+				return;
+			}
+			m_dtiprocPath->setText(list.at(1));
+
+			line = stream.readLine();
+			list = line.split("=");
+			if(!list.at(0).contains(QString("BRAINSFit")))
+			{
+				QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
+				return;
+			}
+			m_BRAINSFitPath->setText(list.at(1));
+
+			line = stream.readLine();
+			list = line.split("=");
+			if(!list.at(0).contains(QString("AtlasWerks")))
+			{
+				QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
+				return;
+			}
+			m_AWPath->setText(list.at(1));
+
+			line = stream.readLine();
+			list = line.split("=");
+			if(!list.at(0).contains(QString("dtiaverage")))
+			{
+				QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
+				return;
+			}
+			m_dtiavgPath->setText(list.at(1));
+		} 
+		else qDebug( "Could not open file");
+	}
+
+	m_dlg->setVisible(!m_dlg->isVisible()); // display the window
+}
+
+void GUI::ConfigOK()
+{
+////////// checking if the given files are executable
+	if(!m_ImagemathPath->text().isEmpty() && access(m_ImagemathPath->text().toStdString().c_str(), X_OK)!=0 )
+	{
+		std::string text = "The file \'" + m_ImagemathPath->text().toStdString() + "\' is not executable";
+		QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+		return;
+	}
+	if(!m_ResampPath->text().isEmpty() && access(m_ResampPath->text().toStdString().c_str(), X_OK) != 0 )
+	{
+		std::string text = "The file \'" + m_ResampPath->text().toStdString() + "\' is not executable";
+		QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+		return;
+	}
+	if(!m_CropDTIPath->text().isEmpty() && access(m_CropDTIPath->text().toStdString().c_str(), X_OK) != 0 )
+	{
+		std::string text = "The file \'" + m_CropDTIPath->text().toStdString() + "\' is not executable";
+		QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+		return;
+	}
+	if(!m_dtiprocPath->text().isEmpty() && access(m_dtiprocPath->text().toStdString().c_str(), X_OK) != 0 )
+	{
+		std::string text = "The file \'" + m_dtiprocPath->text().toStdString() + "\' is not executable";
+		QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+		return;
+	}
+	if(!m_BRAINSFitPath->text().isEmpty() && access(m_BRAINSFitPath->text().toStdString().c_str(), X_OK) != 0 )
+	{
+		std::string text = "The file \'" + m_BRAINSFitPath->text().toStdString() + "\' is not executable";
+		QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+		return;
+	}
+	if(!m_AWPath->text().isEmpty() && access(m_AWPath->text().toStdString().c_str(), X_OK) != 0 )
+	{
+		std::string text = "The file \'" + m_AWPath->text().toStdString() + "\' is not executable";
+		QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+		return;
+	}
+	if(!m_dtiavgPath->text().isEmpty() && access(m_dtiavgPath->text().toStdString().c_str(), X_OK) != 0 )
+	{
+		std::string text = "The file \'" + m_dtiavgPath->text().toStdString() + "\' is not executable";
+		QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+		return;
+	}
+
+//////////getting the values and generating the config file
+	QFile file("DTIAtlasBuilderSoftConfig.txt");
+	if ( file.open( IO_WriteOnly | IO_Translate ) )
+	{
+		std::cout<<"| Generating config file..."<<std::endl; // command line display
+
+		QTextStream stream( &file );
+
+		stream << "ImageMath=" << m_ImagemathPath->text() << endl;
+		stream << "ResampleDTIlogEuclidean=" << m_ResampPath->text() << endl;
+		stream << "CropDTI=" << m_CropDTIPath->text() << endl;
+		stream << "dtiprocess=" << m_dtiprocPath->text() << endl;
+		stream << "BRAINSFit=" << m_BRAINSFitPath->text() << endl;
+		stream << "AtlasWerks=" << m_AWPath->text() << endl;
+		stream << "dtiaverage=" << m_dtiavgPath->text() << endl;
+
+		std::cout<<"| Config file generated"<<std::endl; // command line display
+	}
+	else qDebug( "Could not create config file");
+
+//////////closing the dialog window
+	m_dlg->setVisible(!m_dlg->isVisible());
+}
+
+void GUI::ConfigCancel()
+{	
+//////////closing the dialog window
+	m_dlg->setVisible(!m_dlg->isVisible());
+}
+
+void GUI::ReadMe() /////to improve !!
+{
+/*	QProcess * Process = new QProcess;
+	std::string program = "gedit /home/akaiser/Desktop/Projects/DTIAtlasBuilderGUI_07-12/DTIABGUIFinal_07-18-12/src/README.md";
+	Process->execute( program.c_str() );*/
+
+	QDialog *dlg = new QDialog(this);
+	dlg->setWindowTitle ("Read Me");
+
+	std::string info = "DTIAtlasBuilder\n===============\n\nA tool to create an atlas from several DTI images\n\nThese Softwares need to bee installed before executing the tool :\n= ImageMath\n= ResampleDTIlogEuclidean\n= CropDTI\n= dtiprocess\n= BRAINSFit\n= AtlasWerks\n= dtiaverage\n";
+	QLabel *InfoLabel = new QLabel (info.c_str(), this);
+	QVBoxLayout *VLayout = new QVBoxLayout();
+	VLayout->addWidget(InfoLabel);
+
+	dlg->setLayout(VLayout);
+
+	dlg->setVisible(!dlg->isVisible()); // display the window
+}
+
+void GUI::BrowseSoft(int soft) //soft: 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=AtlasWerks, 7=dtiaverage
+{
+	QString SoftBrowse = QFileDialog::getOpenFileName(this, "Open Software", QString(), "Executable Files (*)");
+
+	switch (soft)
+	{
+	case 1: m_ImagemathPath->setText(SoftBrowse);
+		break;
+	case 2: m_ResampPath->setText(SoftBrowse);
+		break;
+	case 3: m_CropDTIPath->setText(SoftBrowse);
+		break;
+	case 4: m_dtiprocPath->setText(SoftBrowse);
+		break;
+	case 5: m_BRAINSFitPath->setText(SoftBrowse);
+		break;
+	case 6: m_AWPath->setText(SoftBrowse);
+		break;
+	case 7: m_dtiavgPath->setText(SoftBrowse);
+		break;
+	}
+}
+
 void GUI::Compute()
 {
 	
@@ -844,6 +1155,102 @@ Num. Iterations       : 50
 
 	m_scriptwriter->setScaleLevels(T2);
 	T2.clear();
+
+////////// Software paths
+	std::vector < std::string > SoftPath;
+
+	if( access("DTIAtlasBuilderSoftConfig.txt", F_OK) == 0 ) ///////Test if the config file already exists => unistd::access() returns 0 if F(file)_OK
+	{
+		std::cout<<"| Config file exists, getting the paths..."<<std::endl; // command line display
+
+		///get the values from file
+		QFile file("DTIAtlasBuilderSoftConfig.txt");
+		if (file.open(QFile::ReadOnly))
+		{
+			QTextStream stream(&file);
+
+			QString line = stream.readLine();
+			QStringList list = line.split("=");
+			if(!list.at(0).contains(QString("ImageMath"))) QMessageBox::critical(this, "Corrupt File", "Config file corrupted: it will not be read");
+			else
+			{
+				SoftPath.push_back(list.at(1).toStdString());
+
+				line = stream.readLine();
+				list = line.split("=");
+				if(!list.at(0).contains(QString("ResampleDTIlogEuclidean"))) QMessageBox::critical(this, "Corrupt File", "Config file corrupted: it will not be read");
+				else
+				{
+					SoftPath.push_back(list.at(1).toStdString());
+
+					line = stream.readLine();
+					list = line.split("=");
+					if(!list.at(0).contains(QString("CropDTI"))) QMessageBox::critical(this, "Corrupt File", "Config file corrupted: it will not be read");
+					else
+					{
+						SoftPath.push_back(list.at(1).toStdString());
+
+						line = stream.readLine();
+						list = line.split("=");
+						if(!list.at(0).contains(QString("dtiprocess"))) QMessageBox::critical(this, "Corrupt File", "Config file corrupted: it will not be read");
+						else
+						{
+							SoftPath.push_back(list.at(1).toStdString());
+
+							line = stream.readLine();
+							list = line.split("=");
+							if(!list.at(0).contains(QString("BRAINSFit"))) QMessageBox::critical(this, "Corrupt File", "Config file corrupted: it will not be read");
+							else
+							{
+								SoftPath.push_back(list.at(1).toStdString());
+
+								line = stream.readLine();
+								list = line.split("=");
+								if(!list.at(0).contains(QString("AtlasWerks"))) QMessageBox::critical(this, "Corrupt File", "Config file corrupted: it will not be read");
+								else
+								{
+									SoftPath.push_back(list.at(1).toStdString());
+
+									line = stream.readLine();
+									list = line.split("=");
+									if(!list.at(0).contains(QString("dtiaverage"))) QMessageBox::critical(this, "Corrupt File", "Config file corrupted: it will not be read");
+									else
+									{
+										SoftPath.push_back(list.at(1).toStdString());
+									}
+
+								}
+							}
+						}
+					}
+				}
+			}
+		} 
+		else 
+		{
+			qDebug( "Could not open file");
+			SoftPath.push_back("");
+			SoftPath.push_back("");
+			SoftPath.push_back("");
+			SoftPath.push_back("");
+			SoftPath.push_back("");
+			SoftPath.push_back("");
+			SoftPath.push_back("");
+		}
+	}
+	else // if no config file -> empty strings
+	{
+		SoftPath.push_back("");
+		SoftPath.push_back("");
+		SoftPath.push_back("");
+		SoftPath.push_back("");
+		SoftPath.push_back("");
+		SoftPath.push_back("");
+		SoftPath.push_back("");
+	}
+
+	m_scriptwriter->setSoftPath(SoftPath);
+	SoftPath.clear();
 
 //////////Launch writing
 	if(m_scriptwriter->CheckVoxelSize()==1) 

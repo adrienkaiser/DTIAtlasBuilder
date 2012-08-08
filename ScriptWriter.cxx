@@ -57,11 +57,13 @@ void ScriptWriter::PreprocessCase ()
 	Script = Script + "case = 0\n";
 	Script = Script + "while case < len(allcases):\n";
 		Script = Script + "\tDTIOrig= OutputPath + \"/Case\" + str(case+1) + \"_DTIOrig.nrrd\"\n";
-		Script = Script + "\tChgOrigCommand = \"ImageMath \" + allcases[case] + \" -outfile \" + DTIOrig + \" -changeOrig 0,0,0 -type float\"\n";
+if(m_SoftPath[0].empty()) Script = Script + "\tChgOrigCommand = \"ImageMath \" + allcases[case] + \" -outfile \" + DTIOrig + \" -changeOrig 0,0,0 -type float\"\n";
+else		Script = Script + "\tChgOrigCommand = \"" + m_SoftPath[0] + " \" + allcases[case] + \" -outfile \" + DTIOrig + \" -changeOrig 0,0,0 -type float\"\n";
 		Script = Script + "\tprint(\"||Case \" + str(case+1) + \" => $ \" + ChgOrigCommand)\n";
 		if(m_NeedToBeResampled==1)
 		{
-		Script = Script + "\tChgSpaceDirCommand = \"ResampleDTIlogEuclidean \" + DTIOrig + \" \" + DTIOrig + \" -R \" + OutputPath + \"/Case1_DTIOrig.nrrd\"\n";
+if(m_SoftPath[1].empty()) Script = Script + "\tChgSpaceDirCommand = \"ResampleDTIlogEuclidean \" + DTIOrig + \" \" + DTIOrig + \" -R \" + OutputPath + \"/Case1_DTIOrig.nrrd\"\n";
+else		Script = Script + "\tChgSpaceDirCommand = \"" + m_SoftPath[1] + " \" + DTIOrig + \" \" + DTIOrig + \" -R \" + OutputPath + \"/Case1_DTIOrig.nrrd\"\n";
 		Script = Script + "\tif case>0 : print(\"||Case \" + str(case+1) + \" => $ \" + ChgSpaceDirCommand)\n";
 		}
 		if(m_Overwrite==1)
@@ -99,7 +101,8 @@ if(m_NeedToBeResampled==1) Script = Script + "\t\tos.system(ChgSpaceDirCommand)\
 	Script = Script + "while case < len(allcases):\n";
 		Script = Script + "\tcroppedDTI= OutputPath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
 		Script = Script + "\tDTIOrig= OutputPath + \"/Case\" + str(case+1) + \"_DTIOrig.nrrd\"\n";
-		Script = Script + "\tCropCommand=\"CropDTI \" + DTIOrig + \" -o \" + croppedDTI + \" -size \" + CropSize[0] + \",\" + CropSize[1] + \",\" + CropSize[2] + \" -v\"\n";
+if(m_SoftPath[2].empty()) Script = Script + "\tCropCommand=\"CropDTI \" + DTIOrig + \" -o \" + croppedDTI + \" -size \" + CropSize[0] + \",\" + CropSize[1] + \",\" + CropSize[2] + \" -v\"\n";
+else		Script = Script + "\tCropCommand=\"" + m_SoftPath[2] + " \" + DTIOrig + \" -o \" + croppedDTI + \" -size \" + CropSize[0] + \",\" + CropSize[1] + \",\" + CropSize[2] + \" -v\"\n";
 		Script = Script + "\tprint(\"||Case \" + str(case+1) + \" => $ \" + CropCommand)\n";
 if(m_Overwrite==1)Script = Script + "\tos.system(CropCommand)\n";
 		else
@@ -117,7 +120,8 @@ if(m_Overwrite==1)Script = Script + "\tos.system(CropCommand)\n";
 		if(m_NeedToBeCropped==1) Script = Script + "\tDTI= OutputPath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
 		else Script = Script + "\tDTI= OutputPath + \"/Case\" + str(case+1) + \"_DTIOrig.nrrd\"\n";
 		Script = Script + "\tFA= OutputPath + \"/Case\" + str(case+1) + \"_FA.nrrd\"\n";
-		Script = Script + "\tGeneFACommand=\"dtiprocess --dti_image \" + DTI + \" -f \" + FA\n";
+if(m_SoftPath[3].empty()) Script = Script + "\tGeneFACommand=\"dtiprocess --dti_image \" + DTI + \" -f \" + FA\n";
+else		Script = Script + "\tGeneFACommand=\"" + m_SoftPath[3] + " --dti_image \" + DTI + \" -f \" + FA\n";
 		Script = Script + "\tprint(\"||Case \" + str(case+1) + \" => $ \" + GeneFACommand)\n";
 if(m_Overwrite==1)Script = Script + "\tos.system(GeneFACommand)\n";
 		else
@@ -139,7 +143,8 @@ if(m_Overwrite==1)Script = Script + "\tos.system(GeneFACommand)\n";
 		Script = Script + "\twhile case < len(allcases):\n";
 			Script = Script + "\t\tFA= OutputPath + \"/Case\" + str(case+1) + \"_FA.nrrd\"\n";
 			Script = Script + "\t\tNormFA= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_NormFA.nrrd\"\n";
-			Script = Script + "\t\tNormFACommand=\"ImageMath \" + FA + \" -outfile \" + NormFA + \" -matchHistogram \" + AtlasFAref\n";
+if(m_SoftPath[0].empty()) Script = Script + "\t\tNormFACommand=\"ImageMath \" + FA + \" -outfile \" + NormFA + \" -matchHistogram \" + AtlasFAref\n";
+else			Script = Script + "\t\tNormFACommand=\"" + m_SoftPath[0] + " \" + FA + \" -outfile \" + NormFA + \" -matchHistogram \" + AtlasFAref\n";
 			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + NormFACommand)\n";
 if(m_Overwrite==1)	Script = Script + "\t\tos.system(NormFACommand)\n";
 			else
@@ -157,7 +162,8 @@ if(m_Overwrite==1)	Script = Script + "\t\tos.system(NormFACommand)\n";
 			Script = Script + "\t\tNormFA= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_NormFA.nrrd\"\n";
 			Script = Script + "\t\tLinearTranstfm= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans.txt\"\n";
 			Script = Script + "\t\tLinearTrans= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_FA.nrrd\"\n";
-			Script = Script + "\t\tAffineCommand=\"BRAINSFit --fixedVolume \" + AtlasFAref + \" --movingVolume \" + NormFA + \" --initializeTransformMode useCenterOfHeadAlign --useAffine --outputVolume \" + LinearTrans + \" --outputTransform \" + LinearTranstfm\n";
+if(m_SoftPath[4].empty()) Script = Script + "\t\tAffineCommand=\"BRAINSFit --fixedVolume \" + AtlasFAref + \" --movingVolume \" + NormFA + \" --initializeTransformMode useCenterOfHeadAlign --useAffine --outputVolume \" + LinearTrans + \" --outputTransform \" + LinearTranstfm\n";
+else			Script = Script + "\t\tAffineCommand=\"" + m_SoftPath[4] + " --fixedVolume \" + AtlasFAref + \" --movingVolume \" + NormFA + \" --initializeTransformMode useCenterOfHeadAlign --useAffine --outputVolume \" + LinearTrans + \" --outputTransform \" + LinearTranstfm\n";
 			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + AffineCommand)\n";
 if(m_Overwrite==1)		Script = Script + "\t\tif 1 :\n";
 else				Script = Script + "\t\tif not os.path.isfile(LinearTranstfm) or not os.path.isfile(LinearTrans) :\n";
@@ -186,7 +192,8 @@ if(m_Overwrite==0)	Script = Script + "\t\telif os.path.isfile(LinearTrans) : pri
 			Script = Script + "\t\tLinearTransDTI= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_DTI.nrrd\"\n";
 			if(m_NeedToBeCropped==1) Script = Script + "\t\toriginalDTI= OutputPath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
 			else Script = Script + "\t\toriginalDTI= OutputPath + \"/Case\" + str(case+1) + \"_DTIOrig.nrrd\"\n";
-			Script = Script + "\t\tImplementCommand=\"ResampleDTIlogEuclidean \" + originalDTI + \" \" + LinearTransDTI + \" -f \" + LinearTranstfm + \" -R \" + AtlasFAref\n";
+if(m_SoftPath[1].empty()) Script = Script + "\t\tImplementCommand=\"ResampleDTIlogEuclidean \" + originalDTI + \" \" + LinearTransDTI + \" -f \" + LinearTranstfm + \" -R \" + AtlasFAref\n";
+else			Script = Script + "\t\tImplementCommand=\"" + m_SoftPath[1] + " \" + originalDTI + \" \" + LinearTransDTI + \" -f \" + LinearTranstfm + \" -R \" + AtlasFAref\n";
 			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + ImplementCommand)\n";
 if(m_Overwrite==1)	Script = Script + "\t\tos.system(ImplementCommand)\n";
 			else
@@ -204,7 +211,8 @@ if(m_Overwrite==1)	Script = Script + "\t\tos.system(ImplementCommand)\n";
 			Script = Script + "\t\tLinearTransDTI= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_DTI.nrrd\"\n";
 			Script = Script + "\t\tif n == " + m_nbLoops_str + " : LoopFA= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_FinalFA.nrrd\" # the last FA will be the Final output\n";
 			Script = Script + "\t\telse : LoopFA= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_FA.nrrd\"\n";
-			Script = Script + "\t\tGeneLoopFACommand=\"dtiprocess --dti_image \" + LinearTransDTI + \" -f \" + LoopFA\n";
+if(m_SoftPath[3].empty()) Script = Script + "\t\tGeneLoopFACommand=\"dtiprocess --dti_image \" + LinearTransDTI + \" -f \" + LoopFA\n";
+else			Script = Script + "\t\tGeneLoopFACommand=\"" + m_SoftPath[3] + " --dti_image \" + LinearTransDTI + \" -f \" + LoopFA\n";
 			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + GeneLoopFACommand)\n";
 if(m_Overwrite==1)	Script = Script + "\t\tos.system(GeneLoopFACommand)\n";
 			else
@@ -220,7 +228,8 @@ if(m_Overwrite==1)	Script = Script + "\t\tos.system(GeneLoopFACommand)\n";
 			Script = Script + "\t\tFAAverage = OutputPath + \"/Loop\" + str(n) + \"_FAAverage.nrrd\"\n";
 			Script = Script + "\t\tif n == 0 : FAforAVG= OutputPath + \"/Case1_FA.nrrd\"\n";
 			Script = Script + "\t\telse : FAforAVG= OutputPath + \"/Case1_Loop\" + str(n) + \"_FA.nrrd\"\n";
-			Script = Script + "\t\tAverageCommand = \"ImageMath \" + FAforAVG + \" -outfile \" + FAAverage + \" -avg \"\n";
+if(m_SoftPath[0].empty()) Script = Script + "\t\tAverageCommand = \"ImageMath \" + FAforAVG + \" -outfile \" + FAAverage + \" -avg \"\n";
+else 			Script = Script + "\t\tAverageCommand = \"" + m_SoftPath[0] + " \" + FAforAVG + \" -outfile \" + FAAverage + \" -avg \"\n";
 			Script = Script + "\t\tcase = 1\n";
 			Script = Script + "\t\twhile case < len(allcases):\n";
 				Script = Script + "\t\t\tFAforAVG= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_FA.nrrd \"\n";
@@ -270,11 +279,13 @@ void ScriptWriter::PreprocessTemplate ()
 	Script = Script + "case = 0\n";
 	Script = Script + "while case < len(allcases):\n";
 		Script = Script + "\tDTIOrig= OutputPath + \"/Case\" + str(case+1) + \"_DTIOrig.nrrd\"\n";
-		Script = Script + "\tChgOrigCommand = \"ImageMath \" + allcases[case] + \" -outfile \" + DTIOrig + \" -changeOrig 0,0,0 -type float\"\n";
+if(m_SoftPath[0].empty()) Script = Script + "\tChgOrigCommand = \"ImageMath \" + allcases[case] + \" -outfile \" + DTIOrig + \" -changeOrig 0,0,0 -type float\"\n";
+else		Script = Script + "\tChgOrigCommand = \"" + m_SoftPath[0] + " \" + allcases[case] + \" -outfile \" + DTIOrig + \" -changeOrig 0,0,0 -type float\"\n";
 		Script = Script + "\tprint(\"||Case \" + str(case+1) + \" => $ \" + ChgOrigCommand)\n";
 		if(m_NeedToBeResampled==1)
 		{
-		Script = Script + "\tChgSpaceDirCommand = \"ResampleDTIlogEuclidean \" + DTIOrig + \" \" + DTIOrig + \" -R \" + OutputPath + \"/Case1_DTIOrig.nrrd\"\n";
+if(m_SoftPath[1].empty()) Script = Script + "\tChgSpaceDirCommand = \"ResampleDTIlogEuclidean \" + DTIOrig + \" \" + DTIOrig + \" -R \" + OutputPath + \"/Case1_DTIOrig.nrrd\"\n";
+else		Script = Script + "\tChgSpaceDirCommand = \"" + m_SoftPath[1] + " \" + DTIOrig + \" \" + DTIOrig + \" -R \" + OutputPath + \"/Case1_DTIOrig.nrrd\"\n";
 		Script = Script + "\tif case>0 : print(\"||Case \" + str(case+1) + \" => $ \" + ChgSpaceDirCommand)\n";
 		}
 		if(m_Overwrite==1)
@@ -312,7 +323,8 @@ if(m_NeedToBeResampled==1) Script = Script + "\t\tos.system(ChgSpaceDirCommand)\
 	Script = Script + "while case < len(allcases):\n";
 		Script = Script + "\tcroppedDTI= OutputPath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
 		Script = Script + "\tDTIOrig= OutputPath + \"/Case\" + str(case+1) + \"_DTIOrig.nrrd\"\n";
-		Script = Script + "\tCropCommand=\"CropDTI \" + DTIOrig + \" -o \" + croppedDTI + \" -size \" + CropSize[0] + \",\" + CropSize[1] + \",\" + CropSize[2] + \" -v\"\n";
+if(m_SoftPath[2].empty()) Script = Script + "\tCropCommand=\"CropDTI \" + DTIOrig + \" -o \" + croppedDTI + \" -size \" + CropSize[0] + \",\" + CropSize[1] + \",\" + CropSize[2] + \" -v\"\n";
+else		Script = Script + "\tCropCommand=\"" + m_SoftPath[2] + " \" + DTIOrig + \" -o \" + croppedDTI + \" -size \" + CropSize[0] + \",\" + CropSize[1] + \",\" + CropSize[2] + \" -v\"\n";
 		Script = Script + "\tprint(\"||Case \" + str(case+1) + \" => $ \" + CropCommand)\n";
 if(m_Overwrite==1)Script = Script + "\tos.system(CropCommand)\n";
 		else
@@ -330,7 +342,8 @@ if(m_Overwrite==1)Script = Script + "\tos.system(CropCommand)\n";
 		if(m_NeedToBeCropped==1) Script = Script + "\tDTI= OutputPath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
 		else Script = Script + "\tDTI= OutputPath + \"/Case\" + str(case+1) + \"_DTIOrig.nrrd\"\n";
 		Script = Script + "\tFA= OutputPath + \"/Case\" + str(case+1) + \"_FA.nrrd\"\n";
-		Script = Script + "\tGeneFACommand=\"dtiprocess --dti_image \" + DTI + \" -f \" + FA\n";
+if(m_SoftPath[3].empty()) Script = Script + "\tGeneFACommand=\"dtiprocess --dti_image \" + DTI + \" -f \" + FA\n";
+else		Script = Script + "\tGeneFACommand=\"" + m_SoftPath[3] + " --dti_image \" + DTI + \" -f \" + FA\n";
 		Script = Script + "\tprint(\"||Case \" + str(case+1) + \" => $ \" + GeneFACommand)\n";
 if(m_Overwrite==1)Script = Script + "\tos.system(GeneFACommand)\n";
 		else
@@ -350,7 +363,8 @@ if(m_Overwrite==1)Script = Script + "\tos.system(GeneFACommand)\n";
 		Script = Script + "\twhile case < len(allcases):\n";
 			Script = Script + "\t\tFA= OutputPath + \"/Case\" + str(case+1) + \"_FA.nrrd\"\n";
 			Script = Script + "\t\tNormFA= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_NormFA.nrrd\"\n";
-			Script = Script + "\t\tNormFACommand=\"ImageMath \" + FA + \" -outfile \" + NormFA + \" -matchHistogram \" + AtlasFAref\n";
+if(m_SoftPath[0].empty()) Script = Script + "\t\tNormFACommand=\"ImageMath \" + FA + \" -outfile \" + NormFA + \" -matchHistogram \" + AtlasFAref\n";
+else			Script = Script + "\t\tNormFACommand=\"" + m_SoftPath[0] + " \" + FA + \" -outfile \" + NormFA + \" -matchHistogram \" + AtlasFAref\n";
 			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + NormFACommand)\n";
 if(m_Overwrite==1)	Script = Script + "\t\tos.system(NormFACommand)\n";
 			else
@@ -367,7 +381,8 @@ if(m_Overwrite==1)	Script = Script + "\t\tos.system(NormFACommand)\n";
 			Script = Script + "\t\tNormFA= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_NormFA.nrrd\"\n";
 			Script = Script + "\t\tLinearTranstfm= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans.txt\"\n";
 			Script = Script + "\t\tLinearTrans= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_FA.nrrd\"\n";
-			Script = Script + "\t\tAffineCommand=\"BRAINSFit --fixedVolume \" + AtlasFAref + \" --movingVolume \" + NormFA + \" --initializeTransformMode useCenterOfHeadAlign --useAffine --outputVolume \" + LinearTrans + \" --outputTransform \" + LinearTranstfm\n";
+if(m_SoftPath[4].empty()) Script = Script + "\t\tAffineCommand=\"BRAINSFit --fixedVolume \" + AtlasFAref + \" --movingVolume \" + NormFA + \" --initializeTransformMode useCenterOfHeadAlign --useAffine --outputVolume \" + LinearTrans + \" --outputTransform \" + LinearTranstfm\n";
+else			Script = Script + "\t\tAffineCommand=\"" + m_SoftPath[4] + " --fixedVolume \" + AtlasFAref + \" --movingVolume \" + NormFA + \" --initializeTransformMode useCenterOfHeadAlign --useAffine --outputVolume \" + LinearTrans + \" --outputTransform \" + LinearTranstfm\n";
 			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + AffineCommand)\n";
 if(m_Overwrite==1)	Script = Script + "\t\tif 1 :\n";
 else			Script = Script + "\t\tif not os.path.isfile(LinearTranstfm) or not os.path.isfile(LinearTrans) :\n";
@@ -395,7 +410,8 @@ if(m_Overwrite==0)	Script = Script + "\t\telif os.path.isfile(LinearTrans) : pri
 			Script = Script + "\t\tLinearTransDTI= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_DTI.nrrd\"\n";
 			if(m_NeedToBeCropped==1) Script = Script + "\t\toriginalDTI= OutputPath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
 			else Script = Script + "\t\toriginalDTI= OutputPath + \"/Case\" + str(case+1) + \"_DTIOrig.nrrd\"\n";
-			Script = Script + "\t\tImplementCommand=\"ResampleDTIlogEuclidean \" + originalDTI + \" \" + LinearTransDTI + \" -f \" + LinearTranstfm + \" -R \" + AtlasFAref\n";
+if(m_SoftPath[1].empty()) Script = Script + "\t\tImplementCommand=\"ResampleDTIlogEuclidean \" + originalDTI + \" \" + LinearTransDTI + \" -f \" + LinearTranstfm + \" -R \" + AtlasFAref\n";
+else			Script = Script + "\t\tImplementCommand=\"" + m_SoftPath[1] + " \" + originalDTI + \" \" + LinearTransDTI + \" -f \" + LinearTranstfm + \" -R \" + AtlasFAref\n";
 			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + ImplementCommand)\n";
 if(m_Overwrite==1)	Script = Script + "\t\tos.system(ImplementCommand)\n";
 			else
@@ -412,7 +428,8 @@ if(m_Overwrite==1)	Script = Script + "\t\tos.system(ImplementCommand)\n";
 			Script = Script + "\t\tLinearTransDTI= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_DTI.nrrd\"\n";
 			Script = Script + "\t\tif n == " + m_nbLoops_str + " : LoopFA= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_FinalFA.nrrd\" # the last FA will be the Final output\n";
 			Script = Script + "\t\telse : LoopFA= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_FA.nrrd\"\n";
-			Script = Script + "\t\tGeneLoopFACommand=\"dtiprocess --dti_image \" + LinearTransDTI + \" -f \" + LoopFA\n";
+if(m_SoftPath[3].empty()) Script = Script + "\t\tGeneLoopFACommand=\"dtiprocess --dti_image \" + LinearTransDTI + \" -f \" + LoopFA\n";
+else			Script = Script + "\t\tGeneLoopFACommand=\"" + m_SoftPath[3] + " --dti_image \" + LinearTransDTI + \" -f \" + LoopFA\n";
 			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + GeneLoopFACommand)\n";
 if(m_Overwrite==1)	Script = Script + "\t\tos.system(GeneLoopFACommand)\n";
 			else
@@ -427,7 +444,8 @@ if(m_Overwrite==1)	Script = Script + "\t\tos.system(GeneLoopFACommand)\n";
 			Script = Script + "\t\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] ======== Computing FA Average of registered images =========\")\n";
 			Script = Script + "\t\tFAforAVG= OutputPath + \"/Case1_Loop\" + str(n) + \"_FA.nrrd\"\n";
 			Script = Script + "\t\tFAAverage = OutputPath + \"/Loop\" + str(n) + \"_FAAverage.nrrd\"\n";
-			Script = Script + "\t\tAverageCommand = \"ImageMath \" + FAforAVG + \" -outfile \" + FAAverage + \" -avg \"\n";
+if(m_SoftPath[0].empty()) Script = Script + "\t\tAverageCommand = \"ImageMath \" + FAforAVG + \" -outfile \" + FAAverage + \" -avg \"\n";
+else 			Script = Script + "\t\tAverageCommand = \"" + m_SoftPath[0] + " \" + FAforAVG + \" -outfile \" + FAAverage + \" -avg \"\n";
 			Script = Script + "\t\tcase = 1\n";
 			Script = Script + "\t\twhile case < len(allcases):\n";
 				Script = Script + "\t\t\tFAforAVG= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_FA.nrrd \"\n";
@@ -557,7 +575,8 @@ void ScriptWriter::AtlasBuilding()
 */
 	Script = Script + "XMLFile= DeformPath + \"/AtlasWerksParameters.xml\"\n";
 	Script = Script + "ParsedFile= DeformPath + \"/ParsedXML.xml\"\n";
-	Script = Script + "AtlasBCommand= \"/biomed-resimg/tools/AtlasWerks/AtlasWerks_0.1.4_linux64/AtlasWerks -f \" + XMLFile + \" -o \" + ParsedFile\n";
+if(m_SoftPath[5].empty()) Script = Script + "AtlasBCommand= \"AtlasWerks -f \" + XMLFile + \" -o \" + ParsedFile\n";
+else	Script = Script + "AtlasBCommand= \"" + m_SoftPath[5] + " -f \" + XMLFile + \" -o \" + ParsedFile\n";
 	Script = Script + "print(\"=> $ \" + AtlasBCommand)\n";
 if(m_Overwrite==1)Script = Script + "if 1 :\n";
 //else	Script = Script + "if not os.path.isfile(FinalAtlasPrefix + str( len(ScaleLevels)-1 ) + \".mhd\") :\n";
@@ -619,7 +638,8 @@ if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + FinalAtl
 		Script = Script + "\tRef = AffinePath + \"/Loop" + nbLoops1_str + "_FAAverage.nrrd\"\n"; // an average image has been generated in the loops of affine reg for reference
 		}
 		Script = Script + "\tHField= DeformPath + \"/Case\" + str(case+1) + \"_DeformationField.mhd\"\n";
-		Script = Script + "\tFinalReSampCommand=\"ResampleDTIlogEuclidean -R \" + Ref + \" -H \" + HField + \" \" + originalDTI + \" \" + FinalDTI\n";
+if(m_SoftPath[1].empty()) Script = Script + "\tFinalReSampCommand=\"ResampleDTIlogEuclidean -R \" + Ref + \" -H \" + HField + \" \" + originalDTI + \" \" + FinalDTI\n";
+else		Script = Script + "\tFinalReSampCommand=\"" + m_SoftPath[1] + " -R \" + Ref + \" -H \" + HField + \" \" + originalDTI + \" \" + FinalDTI\n";
 if(m_InterpolType.compare("Linear")==0)			Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -i linear\"\n";
 if(m_InterpolType.compare("Nearest Neighborhoor")==0)	Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -i nn\"\n";
 if(m_InterpolType.compare("Windowed Sinc")==0)		Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -i ws\"\n";
@@ -636,7 +656,8 @@ if(m_Overwrite==1)Script = Script + "\tos.system(FinalReSampCommand)\n";
 /////////// dtiaverage computing
 	Script = Script + "print(\"\\n======== Computing the final DTI average =========\")\n";
 	Script = Script + "DTIAverage = FinalPath + \"/FinalAtlasDTI.nrrd\"\n";
-	Script = Script + "AverageCommand = \"dtiaverage \"\n";
+if(m_SoftPath[6].empty()) Script = Script + "AverageCommand = \"dtiaverage \"\n";
+else	Script = Script + "AverageCommand = \"" + m_SoftPath[6] + " \"\n";
 	Script = Script + "case = 0\n";
 	Script = Script + "while case < len(allcases):\n";
 		Script = Script + "\tDTIforAVG= \"--inputs \" + FinalPath + \"/Case\" + str(case+1) + \"_FinalDTI.nrrd \"\n";
@@ -656,12 +677,13 @@ else	Script = Script + "if not os.path.isfile(DTIAverage) : \n";
 		Script = Script + "\tRD= FinalPath + \"/FinalAtlasRD.nrrd\"\n"; // Radial Diffusivity
 		Script = Script + "\tMD= FinalPath + \"/FinalAtlasMD.nrrd\"\n"; // Mean Diffusivity
 		Script = Script + "\tAD= FinalPath + \"/FinalAtlasAD.nrrd\"\n"; // Axial Diffusivity
-		Script = Script + "\tGeneFACommand=\"dtiprocess --dti_image \" + DTIAverage + \" -f \" + FA + \" -m \" + MD + \" --color_fa_output \" + cFA + \" --RD_output \" + RD + \" --lambda1_output \" + AD\n";
+if(m_SoftPath[3].empty()) Script = Script + "\tGeneFACommand=\"dtiprocess --dti_image \" + DTIAverage + \" -f \" + FA + \" -m \" + MD + \" --color_fa_output \" + cFA + \" --RD_output \" + RD + \" --lambda1_output \" + AD\n";
+else		Script = Script + "\tGeneFACommand=\"" + m_SoftPath[3] + " --dti_image \" + DTIAverage + \" -f \" + FA + \" -m \" + MD + \" --color_fa_output \" + cFA + \" --RD_output \" + RD + \" --lambda1_output \" + AD\n";
 		Script = Script + "\tprint(\"=> $ \" + GeneFACommand)\n";
 		Script = Script + "\tos.system(GeneFACommand)\n";
-		Script = Script + "\tDbleToFloatCommand=\"unu convert -t float -i \" + DTIAverage + \" | unu save -f nrrd -e gzip -o \" + FinalPath + \"/FinalAtlasDTI_float.nrrd\"\n";
+/*		Script = Script + "\tDbleToFloatCommand=\"unu convert -t float -i \" + DTIAverage + \" | unu save -f nrrd -e gzip -o \" + FinalPath + \"/FinalAtlasDTI_float.nrrd\"\n";
 		Script = Script + "\tprint(\"=> $ \" + DbleToFloatCommand)\n";
-		Script = Script + "\tos.system(DbleToFloatCommand)\n";
+		Script = Script + "\tos.system(DbleToFloatCommand)\n";*/
 if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + DTIAverage + \"\\' already exists so the command will not be executed\")\n\n";
 
 	Script = Script + "print(\"\\n============ End of Atlas Building =============\")\n\n";
@@ -877,5 +899,10 @@ void ScriptWriter::setInterpolType(std::string Type)
 void ScriptWriter::setAverageStatMethod(std::string Method)
 {
 	m_AverageStatMethod = Method;
+}
+
+void ScriptWriter::setSoftPath(std::vector < std::string > SoftPath) // 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=AtlasWerks, 7=dtiaverage
+{
+	for (unsigned int i=0;i<SoftPath.size();i++) m_SoftPath.push_back( SoftPath[i] );
 }
 
