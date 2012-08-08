@@ -34,6 +34,7 @@ class ScriptWriter
 		void setScaleLevels(std::vector< std::vector< double > > AtlasWerksScaleLevels);
 		void setInterpolType(std::string Type);
 		void setAverageStatMethod(std::string Method);
+		void setSoftPath(std::vector < std::string > SoftPath);
 
 	private:
 		std::vector < std::string > m_CasesPath;
@@ -53,6 +54,8 @@ class ScriptWriter
 		std::string m_Script_Preprocess; //contains the whole Script for Pre processing
 		std::string m_Script_AtlasBuilding; //contains the whole Script for Atlas Building
 		std::string m_Script_Main;//contains the whole Main Scrit
+
+		std::vector < std::string > m_SoftPath; // contains the path to the softwares: 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=AtlasWerks, 7=dtiaverage
 };
 #endif
 

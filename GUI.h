@@ -8,6 +8,8 @@
 #include <QTextStream>
 #include <QCloseEvent>
 #include <QSignalMapper>
+#include <QDialog>
+#include <QLabel>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,6 +47,11 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		void LoadParameters();
 		void SaveParameters();
 		void GenerateXMLForAW();
+		void Config();
+		void ConfigOK();
+		void ConfigCancel();
+		void ReadMe();
+		void BrowseSoft(int); //in the soft dialog window
 
 	signals:
 		void runningcomplete(); //sent when the running is complete
@@ -76,6 +83,17 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		QString m_OutputPath;
 		QString m_TemplatePath;
 //		QSignalMapper * m_SLRmButtonMapper;
+
+//////////Config Dialog Window
+		QDialog * m_dlg;
+		QLineEdit *m_ImagemathPath;
+		QLineEdit *m_ResampPath;
+		QLineEdit *m_CropDTIPath;
+		QLineEdit *m_dtiprocPath;
+		QLineEdit *m_BRAINSFitPath;
+		QLineEdit *m_AWPath;
+		QLineEdit *m_dtiavgPath;
+		QSignalMapper *m_SoftButtonMapper; // to avoid multiple browse functions
 
 };
 #endif
