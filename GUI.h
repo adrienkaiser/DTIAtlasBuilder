@@ -10,6 +10,8 @@
 #include <QSignalMapper>
 #include <QDialog>
 #include <QLabel>
+#include <QComboBox>
+#include <QStackedWidget>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,6 +54,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		void ConfigCancel();
 		void ReadMe();
 		void BrowseSoft(int); //in the soft dialog window
+		void InterpolTypeComboBoxChanged(int);
 
 	signals:
 		void runningcomplete(); //sent when the running is complete
@@ -82,6 +85,11 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		QString m_CSVPath;
 		QString m_OutputPath;
 		QString m_TemplatePath;
+		QString m_lastCasePath;
+
+		QComboBox *m_windowComboBox;
+		QComboBox *m_BSplineComboBox;
+		QStackedWidget *m_optionStackLayout;
 //		QSignalMapper * m_SLRmButtonMapper;
 
 //////////Config Dialog Window
