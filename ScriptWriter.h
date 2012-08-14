@@ -13,8 +13,7 @@ class ScriptWriter
 {
 	public:
 		void WriteScript();
-		void PreprocessCase();
-		void PreprocessTemplate();
+		void Preprocess();
 		void AtlasBuilding();
 		void MainScript();
 
