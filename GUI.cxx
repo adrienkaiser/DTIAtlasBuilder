@@ -7,6 +7,8 @@
 #include <QSignalMapper>
 #include <QDialog>
 #include <QLabel>
+#include <QComboBox>
+#include <QStackedWidget>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,6 +44,8 @@ GUI::GUI() : QMainWindow() // constructor
 	QObject::connect(actionConfigure_Softwares, SIGNAL(triggered()), this, SLOT(Config()));
 	QObject::connect(actionRead_Me, SIGNAL(triggered()), this, SLOT(ReadMe()));
 
+	QObject::connect(InterpolTypeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(InterpolTypeComboBoxChanged(int)));
+
 /* Buttons */
 	RemovePushButton->setEnabled(false);
 
@@ -49,6 +53,7 @@ GUI::GUI() : QMainWindow() // constructor
 	m_ParamFileHeader = QString("DTIAtlasBuilderParameterFileVersion");
 	m_CSVseparator = QString(",");
 	m_ParamSaved=0;
+	m_lastCasePath="";
 //	m_nbAWSL=0;
 //	m_indexAWSL=-1;
 
@@ -62,15 +67,62 @@ GUI::GUI() : QMainWindow() // constructor
 /* Browse softwares path Buttons */
 	m_SoftButtonMapper = new QSignalMapper();
 	QObject::connect(m_SoftButtonMapper, SIGNAL(mapped(int)), this, SLOT( BrowseSoft(int) ));
+
+/* Init options for AtlasBuilding param */
+	m_optionStackLayout = new QStackedWidget;
+	optionHLayout->addWidget(m_optionStackLayout);
+
+	QHBoxLayout *emptyLayout= new QHBoxLayout;
+	QWidget *emptyWidget= new QWidget;
+	emptyWidget->setLayout(emptyLayout);
+	m_optionStackLayout->addWidget(emptyWidget);
+
+	QLabel *windowLabel = new QLabel("Type:", this);
+	m_windowComboBox = new QComboBox(this);
+	m_windowComboBox->addItem("Hamming");
+	m_windowComboBox->addItem("Cosine");
+	m_windowComboBox->addItem("Welch");
+	m_windowComboBox->addItem("Lanczos");
+	m_windowComboBox->addItem("Blackman");
+	m_windowComboBox->setCurrentIndex(1);
+	QHBoxLayout *windowLayout= new QHBoxLayout;
+	windowLayout->addWidget(windowLabel);
+	windowLayout->addWidget(m_windowComboBox);
+	QWidget *windowWidget= new QWidget;
+	windowWidget->setLayout(windowLayout);
+	m_optionStackLayout->addWidget(windowWidget);
+
+	QLabel *BSplineLabel = new QLabel("Order:", this);
+	m_BSplineComboBox = new QComboBox(this);
+	m_BSplineComboBox->addItem("0");
+	m_BSplineComboBox->addItem("1");
+	m_BSplineComboBox->addItem("2");
+	m_BSplineComboBox->addItem("3");
+	m_BSplineComboBox->addItem("4");
+	m_BSplineComboBox->addItem("5");
+	m_BSplineComboBox->setCurrentIndex(3);
+	QHBoxLayout *BSplineLayout= new QHBoxLayout;
+	BSplineLayout->addWidget(BSplineLabel);
+	BSplineLayout->addWidget(m_BSplineComboBox);
+	QWidget *BSplineWidget= new QWidget;
+	BSplineWidget->setLayout(BSplineLayout);
+	m_optionStackLayout->addWidget(BSplineWidget);
+
+	m_optionStackLayout->setCurrentIndex(0);
+
 }
 
 void GUI::OpenAddCaseBrowseWindow()
 {
-	QStringList CaseListBrowse=QFileDialog::getOpenFileNames(this, "Open Cases", QString(), ".nrrd Images (*.nrrd)");
+	QStringList CaseListBrowse=QFileDialog::getOpenFileNames(this, "Open Cases", m_lastCasePath, "NERD Images (*.nrrd *.nhdr *.*)");
 	CaseListWidget->addItems(CaseListBrowse);
-	if ( CaseListWidget->count()>0 ) RemovePushButton->setEnabled(true);
-	m_ParamSaved=0;
-	SelectCasesLabel->setText( QString("") );
+	if(!CaseListBrowse.isEmpty())
+	{
+		if ( CaseListWidget->count()>0 ) RemovePushButton->setEnabled(true);
+		m_ParamSaved=0;
+		SelectCasesLabel->setText( QString("") );
+		m_lastCasePath = CaseListBrowse.last();
+	}
 }
 
 void GUI::RemoveSelectedCases()
@@ -134,7 +186,7 @@ void GUI::OpenOutputBrowseWindow()
 
 void GUI::OpenTemplateBrowseWindow()
 {
-	QString TemplateBrowse=QFileDialog::getOpenFileName(this, "Open Atlas Template", QString(), ".nrrd Image (*.nrrd)");
+	QString TemplateBrowse=QFileDialog::getOpenFileName(this, "Open Atlas Template", QString(), "NERD Image (*.nrrd *.nhdr *.*)");
 	TemplateLineEdit->setText(TemplateBrowse);
 }
 
@@ -183,13 +235,16 @@ void GUI::OpenRunningFailWindow()
 
 void GUI::closeEvent(QCloseEvent* event)
 {
-	if(m_ParamSaved==0)
+	if ( CaseListWidget->count()>0 )
 	{
-		int ret = QMessageBox::question(this,"Quit","Last parameters have not been saved.\nDo you want to save the last parameters ?",QMessageBox::Yes | QMessageBox::No);
-		if (ret == QMessageBox::Yes) SaveParameters();
-//		else event->ignore();
+		if(m_ParamSaved==0)
+		{
+			int ret = QMessageBox::question(this,"Quit","Last parameters have not been saved.\nDo you want to save the last parameters ?",QMessageBox::Yes | QMessageBox::No);
+			if (ret == QMessageBox::Yes) SaveParameters();
+//			else event->ignore();
+		}
+		event->accept();
 	}
-	event->accept();
 }
 
 void GUI::ReadCSV()
@@ -338,7 +393,10 @@ void GUI::SaveParameters()
 		stream << "Scale Level 4= " << nbIter4SpinBox->value() << "," << alpha4DoubleSpinBox->value() << "," << beta4DoubleSpinBox->value() << "," << gamma4DoubleSpinBox->value() << "," << maxPerturbation4DoubleSpinBox->value() << endl;
 		stream << "Scale Level 2= " << nbIter2SpinBox->value() << "," << alpha2DoubleSpinBox->value() << "," << beta2DoubleSpinBox->value() << "," << gamma2DoubleSpinBox->value() << "," << maxPerturbation2DoubleSpinBox->value() << endl;
 		stream << "Scale Level 1= " << nbIter1SpinBox->value() << "," << alpha1DoubleSpinBox->value() << "," << beta1DoubleSpinBox->value() << "," << gamma1DoubleSpinBox->value() << "," << maxPerturbation1DoubleSpinBox->value() << endl;
-		stream << "Resampling Interpolation Algorithm=" << InterpolTypeComboBox->currentText() << endl;
+		stream << "Resampling Interpolation Algorithm=" << InterpolTypeComboBox->currentText() ;
+		if( InterpolTypeComboBox->currentText()==QString("Windowed Sinc") ) stream << "=" << m_windowComboBox->currentText() << endl;
+		else if( InterpolTypeComboBox->currentText()==QString("BSpline") ) stream << "=" << m_BSplineComboBox->currentText() << endl;
+		else stream << endl;
 		stream << "DTI Average Statistics Method=" << averageStatMethodComboBox->currentText() << endl;
 
 		std::cout<<"| Parameters file generated"<<std::endl; // command line display
@@ -536,6 +594,7 @@ void GUI::LoadParameters()
 			maxPerturbation1DoubleSpinBox->setValue(nbrs.at(4).toDouble());
 		}
 
+///////////////Final Atlas Building parameters
 		line = stream.readLine();
 		list = line.split("=");
 		if(!list.at(0).contains(QString("Resampling Interpolation Algorithm")))
@@ -545,8 +604,30 @@ void GUI::LoadParameters()
 		}
 		if( list.at(1).contains(QString("Linear")) ) InterpolTypeComboBox->setCurrentIndex(0);
 		else if( list.at(1).contains(QString("Nearest Neighborhoor")) ) InterpolTypeComboBox->setCurrentIndex(1);
-		else if( list.at(1).contains(QString("Windowed Sinc")) ) InterpolTypeComboBox->setCurrentIndex(2);
-		else if( list.at(1).contains(QString("BSpline")) ) InterpolTypeComboBox->setCurrentIndex(3);
+		else if( list.at(1).contains(QString("Windowed Sinc")) ) 
+		{ 
+			InterpolTypeComboBox->setCurrentIndex(2);
+			if( list.at(2).contains(QString("Hamming")) ) m_windowComboBox->setCurrentIndex(0);
+			else if( list.at(2).contains(QString("Cosine")) ) m_windowComboBox->setCurrentIndex(1);
+			else if( list.at(2).contains(QString("Welch")) ) m_windowComboBox->setCurrentIndex(2);
+			else if( list.at(2).contains(QString("Lanczos")) ) m_windowComboBox->setCurrentIndex(3);
+			else if( list.at(2).contains(QString("Blackman")) ) m_windowComboBox->setCurrentIndex(4);
+			else
+			{
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				return;
+			}
+		}
+		else if( list.at(1).contains(QString("BSpline")) ) 
+		{ 
+			InterpolTypeComboBox->setCurrentIndex(3);
+			if( list.at(2).toInt()>=0 && list.at(2).toInt()<=5 ) m_BSplineComboBox->setCurrentIndex( list.at(2).toInt()-1 );
+			else
+			{
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				return;
+			}
+		}
 		else
 		{
 			QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
@@ -729,76 +810,80 @@ void GUI::Config()
 //////////GUI window creation
 	m_dlg = new QDialog(this);
 	m_dlg->setWindowTitle ("Configure Softwares");
+	m_dlg->setMinimumSize(800,300);
+	m_dlg->setSizeGripEnabled(true);
+
+	QVBoxLayout *TextLayout= new QVBoxLayout;
+	QVBoxLayout *LineEditLayout= new QVBoxLayout;
+	QVBoxLayout *ButtonLayout= new QVBoxLayout;
 
 	QLabel *ImagemathLabel = new QLabel("ImageMath :", this);
 	m_ImagemathPath = new QLineEdit;
 	QPushButton *ImagemathButton = new QPushButton ("Browse", this);
 	QObject::connect(ImagemathButton, SIGNAL(clicked()), m_SoftButtonMapper, SLOT(map()));
 	m_SoftButtonMapper->setMapping(ImagemathButton,1);
-	QHBoxLayout *ImagemathLayout = new QHBoxLayout;
-	ImagemathLayout->addWidget(ImagemathLabel);
-	ImagemathLayout->addWidget(m_ImagemathPath);
-	ImagemathLayout->addWidget(ImagemathButton);
+	TextLayout->addWidget(ImagemathLabel);
+	LineEditLayout->addWidget(m_ImagemathPath);
+	ButtonLayout->addWidget(ImagemathButton);
 
 	QLabel *ResampLabel = new QLabel("ResampleDTIlogEuclidean :", this);
 	m_ResampPath = new QLineEdit;
 	QPushButton *ResampButton = new QPushButton ("Browse", this);
 	QObject::connect(ResampButton, SIGNAL(clicked()), m_SoftButtonMapper, SLOT(map()));
 	m_SoftButtonMapper->setMapping(ResampButton,2);
-	QHBoxLayout *ResampLayout = new QHBoxLayout;
-	ResampLayout->addWidget(ResampLabel);
-	ResampLayout->addWidget(m_ResampPath);
-	ResampLayout->addWidget(ResampButton);
+	TextLayout->addWidget(ResampLabel);
+	LineEditLayout->addWidget(m_ResampPath);
+	ButtonLayout->addWidget(ResampButton);
 
 	QLabel *CropDTILabel = new QLabel("CropDTI :", this);
 	m_CropDTIPath = new QLineEdit;
 	QPushButton *CropDTIButton = new QPushButton ("Browse", this);
 	QObject::connect(CropDTIButton, SIGNAL(clicked()), m_SoftButtonMapper, SLOT(map()));
 	m_SoftButtonMapper->setMapping(CropDTIButton,3);
-	QHBoxLayout *CropDTILayout = new QHBoxLayout;
-	CropDTILayout->addWidget(CropDTILabel);
-	CropDTILayout->addWidget(m_CropDTIPath);
-	CropDTILayout->addWidget(CropDTIButton);
+	TextLayout->addWidget(CropDTILabel);
+	LineEditLayout->addWidget(m_CropDTIPath);
+	ButtonLayout->addWidget(CropDTIButton);
 
 	QLabel *dtiprocLabel = new QLabel("dtiprocess :", this);
 	m_dtiprocPath = new QLineEdit;
 	QPushButton *dtiprocButton = new QPushButton ("Browse", this);
 	QObject::connect(dtiprocButton, SIGNAL(clicked()), m_SoftButtonMapper, SLOT(map()));
 	m_SoftButtonMapper->setMapping(dtiprocButton,4);
-	QHBoxLayout *dtiprocLayout = new QHBoxLayout;
-	dtiprocLayout->addWidget(dtiprocLabel);
-	dtiprocLayout->addWidget(m_dtiprocPath);
-	dtiprocLayout->addWidget(dtiprocButton);
+	TextLayout->addWidget(dtiprocLabel);
+	LineEditLayout->addWidget(m_dtiprocPath);
+	ButtonLayout->addWidget(dtiprocButton);
 
 	QLabel *BRAINSFitLabel = new QLabel("BRAINSFit :", this);
 	m_BRAINSFitPath = new QLineEdit;
 	QPushButton *BRAINSFitButton = new QPushButton ("Browse", this);
 	QObject::connect(BRAINSFitButton, SIGNAL(clicked()), m_SoftButtonMapper, SLOT(map()));
 	m_SoftButtonMapper->setMapping(BRAINSFitButton,5);
-	QHBoxLayout *BRAINSFitLayout = new QHBoxLayout;
-	BRAINSFitLayout->addWidget(BRAINSFitLabel);
-	BRAINSFitLayout->addWidget(m_BRAINSFitPath);
-	BRAINSFitLayout->addWidget(BRAINSFitButton);
+	TextLayout->addWidget(BRAINSFitLabel);
+	LineEditLayout->addWidget(m_BRAINSFitPath);
+	ButtonLayout->addWidget(BRAINSFitButton);
 
 	QLabel *AWLabel = new QLabel("AtlasWerks :", this);
 	m_AWPath = new QLineEdit;
 	QPushButton *AWButton = new QPushButton ("Browse", this);
 	QObject::connect(AWButton, SIGNAL(clicked()), m_SoftButtonMapper, SLOT(map()));
 	m_SoftButtonMapper->setMapping(AWButton,6);
-	QHBoxLayout *AWLayout = new QHBoxLayout;
-	AWLayout->addWidget(AWLabel);
-	AWLayout->addWidget(m_AWPath);
-	AWLayout->addWidget(AWButton);
+	TextLayout->addWidget(AWLabel);
+	LineEditLayout->addWidget(m_AWPath);
+	ButtonLayout->addWidget(AWButton);
 
 	QLabel *dtiavgLabel = new QLabel("dtiaverage :", this);
 	m_dtiavgPath = new QLineEdit;
 	QPushButton *dtiavgButton = new QPushButton ("Browse", this);
 	QObject::connect(dtiavgButton, SIGNAL(clicked()), m_SoftButtonMapper, SLOT(map()));
 	m_SoftButtonMapper->setMapping(dtiavgButton,7);
-	QHBoxLayout *dtiavgLayout = new QHBoxLayout;
-	dtiavgLayout->addWidget(dtiavgLabel);
-	dtiavgLayout->addWidget(m_dtiavgPath);
-	dtiavgLayout->addWidget(dtiavgButton);
+	TextLayout->addWidget(dtiavgLabel);
+	LineEditLayout->addWidget(m_dtiavgPath);
+	ButtonLayout->addWidget(dtiavgButton);
+
+	QHBoxLayout *SoftHLayout = new QHBoxLayout();
+	SoftHLayout->addLayout(TextLayout);
+	SoftHLayout->addLayout(LineEditLayout);
+	SoftHLayout->addLayout(ButtonLayout);
 
 	QPushButton *OKButton = new QPushButton ("OK", this);
 	QObject::connect(OKButton, SIGNAL(clicked()), this, SLOT(ConfigOK()));
@@ -809,15 +894,10 @@ void GUI::Config()
 	ButtonsLayout->addWidget(CancelButton);
 
 	QLabel *InfoLabel = new QLabel ("Give the path to the following softwares.\nIf no path given, the program will look in the path environnement variable.", this);
+
 	QVBoxLayout *VLayout = new QVBoxLayout();
 	VLayout->addWidget(InfoLabel);
-	VLayout->addLayout(ImagemathLayout);
-	VLayout->addLayout(ResampLayout);
-	VLayout->addLayout(CropDTILayout);
-	VLayout->addLayout(dtiprocLayout);
-	VLayout->addLayout(BRAINSFitLayout);
-	VLayout->addLayout(AWLayout);
-	VLayout->addLayout(dtiavgLayout);
+	VLayout->addLayout(SoftHLayout);
 	VLayout->addLayout(ButtonsLayout);
 
 	m_dlg->setLayout(VLayout);
@@ -987,7 +1067,7 @@ void GUI::ReadMe() /////to improve !!
 	QDialog *dlg = new QDialog(this);
 	dlg->setWindowTitle ("Read Me");
 
-	std::string info = "DTIAtlasBuilder\n===============\n\nA tool to create an atlas from several DTI images\n\nThese Softwares need to bee installed before executing the tool :\n= ImageMath\n= ResampleDTIlogEuclidean\n= CropDTI\n= dtiprocess\n= BRAINSFit\n= AtlasWerks\n= dtiaverage\n";
+	std::string info = "DTIAtlasBuilder\n===============\n\nA tool to create an atlas from several DTI images\n\nThese Softwares need to be installed before executing the tool :\n= ImageMath\n= ResampleDTIlogEuclidean\n= CropDTI\n= dtiprocess\n= BRAINSFit\n= AtlasWerks\n= dtiaverage\n";
 	QLabel *InfoLabel = new QLabel (info.c_str(), this);
 	QVBoxLayout *VLayout = new QVBoxLayout();
 	VLayout->addWidget(InfoLabel);
@@ -1018,6 +1098,22 @@ void GUI::BrowseSoft(int soft) //soft: 1=ImageMath, 2=ResampleDTIlogEuclidean, 3
 	case 7: m_dtiavgPath->setText(SoftBrowse);
 		break;
 	}
+}
+
+void GUI::InterpolTypeComboBoxChanged(int index) // index: 0=Linear, 1=Nearest Neighborhoor, 2=Windowed Sinc, 3=BSpline
+{
+	switch (index)
+	{
+	case 0:	m_optionStackLayout->setCurrentIndex(0);
+		break;
+	case 1:	m_optionStackLayout->setCurrentIndex(0);
+		break;
+	case 2:	m_optionStackLayout->setCurrentIndex(1);
+		break;
+	case 3:	m_optionStackLayout->setCurrentIndex(2);
+		break;
+	}
+
 }
 
 void GUI::Compute()
@@ -1108,6 +1204,8 @@ int GUI::LaunchScriptWriter()
 	else m_scriptwriter->setRegType(1); // default
 	
 	m_scriptwriter->setInterpolType(InterpolTypeComboBox->currentText().toStdString());
+	if( InterpolTypeComboBox->currentText()==QString("Windowed Sinc") ) m_scriptwriter->setInterpolOption(m_windowComboBox->currentText().toStdString());
+	else if( InterpolTypeComboBox->currentText()==QString("BSpline") ) m_scriptwriter->setInterpolOption(m_BSplineComboBox->currentText().toStdString());
 	m_scriptwriter->setAverageStatMethod(averageStatMethodComboBox->currentText().toStdString());
 
 	if(OverwritecheckBox->isChecked()) m_scriptwriter->setOverwrite(1);

@@ -642,8 +642,21 @@ if(m_SoftPath[1].empty()) Script = Script + "\tFinalReSampCommand=\"ResampleDTIl
 else		Script = Script + "\tFinalReSampCommand=\"" + m_SoftPath[1] + " -R \" + Ref + \" -H \" + HField + \" \" + originalDTI + \" \" + FinalDTI\n";
 if(m_InterpolType.compare("Linear")==0)			Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -i linear\"\n";
 if(m_InterpolType.compare("Nearest Neighborhoor")==0)	Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -i nn\"\n";
-if(m_InterpolType.compare("Windowed Sinc")==0)		Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -i ws\"\n";
-if(m_InterpolType.compare("BSpline")==0)		Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -i bs\"\n";
+if(m_InterpolType.compare("Windowed Sinc")==0)
+{
+	if(m_InterpolOption.compare("Hamming")==0)	Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -i ws -W h\"\n";
+	if(m_InterpolOption.compare("Cosine")==0)	Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -i ws -W c\"\n";
+	if(m_InterpolOption.compare("Welch")==0)	Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -i ws -W w\"\n";
+	if(m_InterpolOption.compare("Lanczos")==0)	Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -i ws -W l\"\n";
+	if(m_InterpolOption.compare("Blackman")==0)	Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -i ws -W b\"\n";
+}
+if(m_InterpolType.compare("BSpline")==0)
+{
+	std::istringstream istr(m_InterpolOption);
+	int i;
+	istr >> i;
+	if(i>=0 && i<=5) Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -i bs -o " + m_InterpolOption + "\"\n";
+}
 		Script = Script + "\tprint(\"||Case \" + str(case+1) + \" => $ \" + FinalReSampCommand)\n";
 if(m_Overwrite==1)Script = Script + "\tos.system(FinalReSampCommand)\n";
 		else
@@ -894,6 +907,11 @@ void ScriptWriter::setScaleLevels(std::vector< std::vector<double> > AtlasWerksS
 void ScriptWriter::setInterpolType(std::string Type)
 {
 	m_InterpolType = Type;
+}
+
+void ScriptWriter::setInterpolOption(std::string Option)
+{
+	m_InterpolOption = Option;
 }
 
 void ScriptWriter::setAverageStatMethod(std::string Method)

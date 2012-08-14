@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>970</width>
-    <height>462</height>
+    <height>466</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -644,84 +644,139 @@
           <property name="title">
            <string>Final Atlas</string>
           </property>
-          <layout class="QFormLayout" name="formLayout">
-           <property name="fieldGrowthPolicy">
-            <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-           </property>
-           <item row="0" column="0">
-            <widget class="QLabel" name="resamplingInterpolationTypeLabel">
-             <property name="text">
-              <string>Resampling Interpolation Algorithm :</string>
-             </property>
-            </widget>
+          <layout class="QVBoxLayout" name="verticalLayout_11">
+           <item>
+            <layout class="QHBoxLayout" name="ResampParamHLayout">
+             <item>
+              <widget class="QLabel" name="resamplingInterpolationTypeLabel">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Resampling Interpolation Algorithm :</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="InterpolTypeComboBox">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="editable">
+                <bool>false</bool>
+               </property>
+               <property name="currentIndex">
+                <number>0</number>
+               </property>
+               <property name="duplicatesEnabled">
+                <bool>false</bool>
+               </property>
+               <item>
+                <property name="text">
+                 <string>Linear</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Nearest Neighborhoor</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Windowed Sinc</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>BSpline</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="optionHLayout"/>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_6">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Fixed</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>370</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
            </item>
-           <item row="0" column="1">
-            <widget class="QComboBox" name="InterpolTypeComboBox">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="editable">
-              <bool>false</bool>
-             </property>
-             <property name="duplicatesEnabled">
-              <bool>false</bool>
-             </property>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_6">
              <item>
-              <property name="text">
-               <string>Linear</string>
-              </property>
+              <widget class="QLabel" name="averageStatMethodLabel">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>DTI Average Statistics Method :</string>
+               </property>
+              </widget>
              </item>
              <item>
-              <property name="text">
-               <string>Nearest Neighborhoor</string>
-              </property>
+              <widget class="QComboBox" name="averageStatMethodComboBox">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <item>
+                <property name="text">
+                 <string>PGA</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Euclidean</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Log Euclidean</string>
+                </property>
+               </item>
+              </widget>
              </item>
              <item>
-              <property name="text">
-               <string>Windowed Sinc</string>
-              </property>
+              <spacer name="horizontalSpacer_3">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Expanding</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
              </item>
-             <item>
-              <property name="text">
-               <string>BSpline</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="averageStatMethodLabel">
-             <property name="text">
-              <string>DTI Average Statistics Method :</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QComboBox" name="averageStatMethodComboBox">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <item>
-              <property name="text">
-               <string>PGA</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Euclidean</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Log Euclidean</string>
-              </property>
-             </item>
-            </widget>
+            </layout>
            </item>
           </layout>
          </widget>
