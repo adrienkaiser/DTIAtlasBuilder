@@ -165,7 +165,7 @@ void ScriptWriter::Preprocess ()
 
 //////////Affine with BrainsFit registration
 		Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] ======== Affine with BrainsFit registration =========\")\n";
-	if(m_RegType==1) //use case as loop 1 ref
+	if(m_RegType==1) //use case 1 as loop 1 ref
 	{
 		Script = Script + "\tif n == 0 : case = 1\n";
 		Script = Script + "\telse : case = 0\n";
@@ -477,11 +477,11 @@ if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + FinalAtl
 			if(i>=0 && i<=5) Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -i bs -o " + m_InterpolOption + "\"\n";
 		}
 		Script = Script + "\tprint(\"||Case \" + str(case+1) + \" => $ \" + FinalReSampCommand)\n";
-		if(m_Overwrite==1) Script = Script + "\tif os.system(FinalReSampCommand)!=0 : ErrorList.append(\'ResampleDTIlogEuclidean: Applying deformation fields to original DTIs\')\n";
+		if(m_Overwrite==1) Script = Script + "\tif os.system(FinalReSampCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] ResampleDTIlogEuclidean: Applying deformation fields to original DTIs\')\n";
 		else
 		{
 			Script = Script + "\tif not os.path.isfile(FinalDTI) :\n";
-				Script = Script + "\t\tif os.system(FinalReSampCommand)!=0 : ErrorList.append(\'ResampleDTIlogEuclidean: Applying deformation fields to original DTIs\')\n";
+				Script = Script + "\t\tif os.system(FinalReSampCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] ResampleDTIlogEuclidean: Applying deformation fields to original DTIs\')\n";
 			Script = Script + "\telse : print(\"=> The file \\'\" + FinalDTI + \"\\' already exists so the command will not be executed\")\n";
 		}
 		Script = Script + "\tcase += 1\n\n";
@@ -524,7 +524,7 @@ if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + DTIAvera
 	Script = Script + "if len(ErrorList) >0 :\n";
 	Script = Script + "\tprint(\"\\n=> \" + len(ErrorList) + \" errors detected during the followind operations:\")\n";
 	Script = Script + "\tfor error in ErrorList : print(\'\\n\' + error)\n";
-	Script = Script + "else: print(\"\\n=> No errors detected during Atlas building")\n";
+	Script = Script + "else: print(\"\\n=> No errors detected during Atlas building\")\n";
 
 	m_Script_AtlasBuilding=Script;
 }

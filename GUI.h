@@ -26,12 +26,17 @@ class GUI : public QMainWindow, public Ui::MainWindow
 	Q_OBJECT
 
 	public:
-		GUI(); //constructor
+		GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile); //constructor
+		int LaunchScriptWriter(); //returns -1 if failed, otherwise 0
+		void LaunchScriptRunner();
+		void SaveCSVDataset();
+		void SaveCSVResults(int Crop, int nbLoops);
+		void GenerateXMLForAW();
+		void LoadParameters(QString paramFile);
+		void ReadCSV(QString CSVfile);
 
 	public slots:
 		void Compute();
-		int LaunchScriptWriter(); //returns -1 if failed, otherwise 0
-		void LaunchScriptRunner();
 
 //////////Layout Elements
 		void OpenAddCaseBrowseWindow();
@@ -42,13 +47,10 @@ class GUI : public QMainWindow, public Ui::MainWindow
  		void OpenTemplateBrowseWindow();
 		void OpenRunningCompleteWindow();
 		void OpenRunningFailWindow();
-		void ReadCSV();
+		void ReadCSVSlot();
 		void SaveCSVDatasetBrowse();
-		void SaveCSVDataset();
-		void SaveCSVResults(int Crop, int nbLoops);
-		void LoadParameters();
+		void LoadParametersSlot();
 		void SaveParameters();
-		void GenerateXMLForAW();
 		void Config();
 		void ConfigOK();
 		void ConfigCancel();

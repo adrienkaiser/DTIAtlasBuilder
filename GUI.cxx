@@ -18,8 +18,13 @@
 #include "GUI.h"
 #include "ScriptWriter.h"
 
-GUI::GUI() : QMainWindow() // constructor
+GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile) : QMainWindow() // constructor
 {
+/*	std::cout<<"Command Line parameter file :"<<ParamFile<<std::endl;
+	std::cout<<"Command Line configuration file :"<<ConfigFile<<std::endl;
+	std::cout<<"Command Line dataset file :"<<CSVFile<<std::endl;
+*/
+
 	setupUi(this);
 
 /* Script writing object */
@@ -27,7 +32,7 @@ GUI::GUI() : QMainWindow() // constructor
 
 /* Objects connections */
 	QObject::connect(ComputepushButton, SIGNAL(clicked()), this, SLOT(Compute()));
-	QObject::connect(BrowseCSVPushButton, SIGNAL(clicked()), this, SLOT(ReadCSV()));
+	QObject::connect(BrowseCSVPushButton, SIGNAL(clicked()), this, SLOT(ReadCSVSlot()));
 	QObject::connect(SaveCSVPushButton, SIGNAL(clicked()), this, SLOT(SaveCSVDatasetBrowse()));
 	QObject::connect(BrowseOutputPushButton, SIGNAL(clicked()), this, SLOT(OpenOutputBrowseWindow()));
 	QObject::connect(TemplateBrowsePushButton, SIGNAL(clicked()), this, SLOT(OpenTemplateBrowseWindow()));
@@ -38,10 +43,10 @@ GUI::GUI() : QMainWindow() // constructor
 	QObject::connect(this, SIGNAL(runningcomplete()), this, SLOT(OpenRunningCompleteWindow()));
 	QObject::connect(this, SIGNAL(runningfail()), this, SLOT(OpenRunningFailWindow()));
 
-	QObject::connect(actionLoad_parameters, SIGNAL(triggered()), this, SLOT(LoadParameters()));
+	QObject::connect(actionLoad_parameters, SIGNAL(triggered()), this, SLOT(LoadParametersSlot()));
 	QObject::connect(actionSave_parameters, SIGNAL(triggered()), this, SLOT(SaveParameters()));
 	QObject::connect(actionExit, SIGNAL(triggered()), qApp, SLOT(quit()));
-	QObject::connect(actionConfigure_Softwares, SIGNAL(triggered()), this, SLOT(Config()));
+	QObject::connect(actionSave_Software_Configuration, SIGNAL(triggered()), this, SLOT(Config()));
 	QObject::connect(actionRead_Me, SIGNAL(triggered()), this, SLOT(ReadMe()));
 
 	QObject::connect(InterpolTypeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(InterpolTypeComboBoxChanged(int)));
@@ -64,11 +69,11 @@ GUI::GUI() : QMainWindow() // constructor
 //	m_SLRmButtonMapper = new QSignalMapper();
 //	QObject::connect(m_SLRmButtonMapper, SIGNAL(mapped(int)), this, SLOT( RemoveAWScaleLevel(int) ));
 
-/* Browse softwares path Buttons */
+/* Browse software path Buttons */
 	m_SoftButtonMapper = new QSignalMapper();
 	QObject::connect(m_SoftButtonMapper, SIGNAL(mapped(int)), this, SLOT( BrowseSoft(int) ));
 
-/* Init options for AtlasBuilding param */
+/* Init options for Final AtlasBuilding param */
 	m_optionStackLayout = new QStackedWidget;
 	optionHLayout->addWidget(m_optionStackLayout);
 
@@ -110,6 +115,11 @@ GUI::GUI() : QMainWindow() // constructor
 
 	m_optionStackLayout->setCurrentIndex(0);
 
+
+/* Load Parameters from Command Line */
+	if( !ParamFile.empty() ) LoadParameters( QString(ParamFile.c_str()) );
+	if( !CSVFile.empty() ) ReadCSV( QString(CSVFile.c_str()) );
+// Config
 }
 
 void GUI::OpenAddCaseBrowseWindow()
@@ -128,7 +138,7 @@ void GUI::OpenAddCaseBrowseWindow()
 void GUI::RemoveSelectedCases()
 {
 	int NbOfSelectedItems = (CaseListWidget->selectedItems()).size();
-	int ItemRow;
+	int ItemRow=-1;
 	while(NbOfSelectedItems>0)
 	{
 		ItemRow = CaseListWidget->row( CaseListWidget->selectedItems().at(0) );
@@ -136,9 +146,12 @@ void GUI::RemoveSelectedCases()
 		delete CaseListWidget->selectedItems().at(0);
 		NbOfSelectedItems--;
 	}
-	if ( CaseListWidget->count()==0 ) RemovePushButton->setEnabled(false);
-	m_ParamSaved=0;
-	SelectCasesLabel->setText( QString("") );
+	if( ItemRow!=-1 ) // only if some items were removed
+	{
+		if ( CaseListWidget->count()==0 ) RemovePushButton->setEnabled(false);
+		m_ParamSaved=0;
+		SelectCasesLabel->setText( QString("") );
+	}
 }
 /*
 void GUI::AddAWScaleLevel()
@@ -247,11 +260,16 @@ void GUI::closeEvent(QCloseEvent* event)
 	}
 }
 
-void GUI::ReadCSV()
+void GUI::ReadCSVSlot()
 {	
 	QString CSVBrowse=QFileDialog::getOpenFileName(this, "Open CSV File", QString(), ".csv Files (*.csv)");
 
-	QFile file(CSVBrowse);
+	ReadCSV(CSVBrowse);
+}
+
+void GUI::ReadCSV(QString CSVfile)
+{	
+	QFile file(CSVfile);
 
 	if (file.open(QFile::ReadOnly))
 	{
@@ -265,10 +283,14 @@ void GUI::ReadCSV()
 			if( list.at(0).at(0).toAscii() != '#' )  CaseListWidget->addItem( list.at(1) ); //display in the Widget so that some can be removed
 		}
 	
-		SelectCasesLabel->setText( QString("Current CSV file : ") + CSVBrowse );
+		SelectCasesLabel->setText( QString("Current CSV file : ") + CSVfile );
 		m_ParamSaved=0;
 	} 
-	else qDebug( "Could not open csv file");
+	else
+	{
+		SelectCasesLabel->setText( QString("Could not open CSV File"));
+		qDebug( "Could not open csv file");
+	}
 
 	if ( CaseListWidget->count()>0 ) RemovePushButton->setEnabled(true);
 }
@@ -423,11 +445,16 @@ void GUI::SaveParameters()
 	else qDebug( "Could not create parameter file");
 }
 
-void GUI::LoadParameters()
+void GUI::LoadParametersSlot()
 {
 	QString ParamBrowse=QFileDialog::getOpenFileName(this, "Open Parameter File", QString(), ".txt Files (*.txt)");
 
-	QFile file(ParamBrowse);
+	LoadParameters(ParamBrowse);
+}
+
+void GUI::LoadParameters(QString paramFile)
+{
+	QFile file(paramFile);
 
 	if (file.open(QFile::ReadOnly))
 	{
@@ -491,26 +518,7 @@ void GUI::LoadParameters()
 		}
 		QString CSVpath = list.at(1);
 		CaseListWidget->clear();
-		QFile CSVfile(CSVpath);
-		if (CSVfile.open(QFile::ReadOnly))
-		{
-			std::cout<<"| Loading csv file..."<<std::endl; // command line display
-
-			QTextStream CSVstream(&CSVfile);
-			while(!CSVstream.atEnd()) //read all the lines
-			{
-				QString CSVline = CSVstream.readLine();
-				QStringList CSVlist = CSVline.split(m_CSVseparator);
-				if( CSVlist.at(0).at(0).toAscii() != '#' )  CaseListWidget->addItem( CSVlist.at(1) ); //display in the Widget so that some can be removed
-			}
-			SelectCasesLabel->setText( QString("Current CSV file : ") + CSVpath );
-		} 
-		else 
-		{
-			SelectCasesLabel->setText( QString("Could not open CSV File"));
-			qDebug( "Could not open csv file");
-		}
-		if ( CaseListWidget->count()>0 ) RemovePushButton->setEnabled(true);
+		ReadCSV(CSVpath);
 
 /////////////////Scale Levels
 		line = stream.readLine();
@@ -651,7 +659,7 @@ void GUI::LoadParameters()
 		}
 
 	} 
-	else if ( !ParamBrowse.isEmpty() ) qDebug( "Could not open file");
+	else if ( !paramFile.isEmpty() ) qDebug( "Could not open file");
 
 	m_ParamSaved=1;
 }
