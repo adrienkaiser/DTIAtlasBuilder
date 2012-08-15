@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<executable>
+	<title>DTI Atlas Builder</title>
+	<description>A tool to create an atlas from several DTI images</description>
+	<contributor>Adrien Kaiser</contributor>
+	<parameters>
+		<label>Inputs</label>
+		<description>Inputs of the program</description>
+		<string>
+			<name>ParamFile</name>
+			<flag>p</flag>
+			<longflag>parameter_file</longflag>
+			<description>Parameter file from this program</description>
+			<label>Parameter file</label>
+		</string>
+		<string>
+			<name>ConfigFile</name>
+			<flag>c</flag>
+			<longflag>configuration_file</longflag>
+			<description>Software configuration file</description>
+			<label>Configuration File</label>
+		</string>
+		<string>
+			<name>CSVFile</name>
+			<flag>d</flag>
+			<longflag>dataset_file</longflag>
+			<description>CSV file containing the dataset</description>
+			<label>Dataset File</label>
+		</string>
+	</parameters>
+</executable>
+			
