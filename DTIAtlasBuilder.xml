@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <executable>
 	<title>DTI Atlas Builder</title>
-	<description>A tool to create an atlas from several DTI images</description>
+	<description>A tool to create an atlas from several DTI images. For any suggestion or question, please contact akaiser@unc.edu</description>
 	<contributor>Adrien Kaiser</contributor>
 	<parameters>
 		<label>Inputs</label>

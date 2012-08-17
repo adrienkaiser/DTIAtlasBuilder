@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1045</width>
-    <height>490</height>
+    <height>507</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -289,7 +289,7 @@
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_3">
                <item>
-                <widget class="QCheckBox" name="checkBox">
+                <widget class="QCheckBox" name="SL4checkBox">
                  <property name="text">
                   <string>Scale Level:</string>
                  </property>
@@ -299,7 +299,7 @@
                 </widget>
                </item>
                <item>
-                <widget class="QSpinBox" name="spinBox">
+                <widget class="QSpinBox" name="SL4spinBox">
                  <property name="value">
                   <number>4</number>
                  </property>
@@ -321,7 +321,7 @@
                   <number>500</number>
                  </property>
                  <property name="value">
-                  <number>50</number>
+                  <number>150</number>
                  </property>
                 </widget>
                </item>
@@ -341,7 +341,7 @@
                   <number>4</number>
                  </property>
                  <property name="value">
-                  <double>0.010000000000000</double>
+                  <double>1.000000000000000</double>
                  </property>
                 </widget>
                </item>
@@ -367,7 +367,7 @@
                   <number>4</number>
                  </property>
                  <property name="value">
-                  <double>0.010000000000000</double>
+                  <double>1.000000000000000</double>
                  </property>
                 </widget>
                </item>
@@ -393,7 +393,7 @@
                   <number>4</number>
                  </property>
                  <property name="value">
-                  <double>0.001000000000000</double>
+                  <double>0.000100000000000</double>
                  </property>
                 </widget>
                </item>
@@ -419,7 +419,7 @@
                   <number>4</number>
                  </property>
                  <property name="value">
-                  <double>0.500000000000000</double>
+                  <double>0.001000000000000</double>
                  </property>
                 </widget>
                </item>
@@ -428,7 +428,7 @@
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_4">
                <item>
-                <widget class="QCheckBox" name="checkBox_2">
+                <widget class="QCheckBox" name="SL2checkBox">
                  <property name="text">
                   <string>Scale Level:</string>
                  </property>
@@ -438,7 +438,7 @@
                 </widget>
                </item>
                <item>
-                <widget class="QSpinBox" name="spinBox_2">
+                <widget class="QSpinBox" name="SL2spinBox">
                  <property name="value">
                   <number>2</number>
                  </property>
@@ -460,7 +460,7 @@
                   <number>500</number>
                  </property>
                  <property name="value">
-                  <number>50</number>
+                  <number>120</number>
                  </property>
                 </widget>
                </item>
@@ -480,7 +480,7 @@
                   <number>4</number>
                  </property>
                  <property name="value">
-                  <double>0.010000000000000</double>
+                  <double>1.000000000000000</double>
                  </property>
                 </widget>
                </item>
@@ -506,7 +506,7 @@
                   <number>4</number>
                  </property>
                  <property name="value">
-                  <double>0.010000000000000</double>
+                  <double>1.000000000000000</double>
                  </property>
                 </widget>
                </item>
@@ -558,7 +558,7 @@
                   <number>4</number>
                  </property>
                  <property name="value">
-                  <double>0.500000000000000</double>
+                  <double>0.010000000000000</double>
                  </property>
                 </widget>
                </item>
@@ -567,7 +567,7 @@
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_5">
                <item>
-                <widget class="QCheckBox" name="checkBox_3">
+                <widget class="QCheckBox" name="SL1checkBox">
                  <property name="text">
                   <string>Scale Level:</string>
                  </property>
@@ -577,7 +577,7 @@
                 </widget>
                </item>
                <item>
-                <widget class="QSpinBox" name="spinBox_3">
+                <widget class="QSpinBox" name="SL1spinBox">
                  <property name="value">
                   <number>1</number>
                  </property>
@@ -599,7 +599,7 @@
                   <number>500</number>
                  </property>
                  <property name="value">
-                  <number>50</number>
+                  <number>100</number>
                  </property>
                 </widget>
                </item>
@@ -619,7 +619,7 @@
                   <number>4</number>
                  </property>
                  <property name="value">
-                  <double>0.010000000000000</double>
+                  <double>0.100000000000000</double>
                  </property>
                 </widget>
                </item>
@@ -639,7 +639,7 @@
                   <number>4</number>
                  </property>
                  <property name="value">
-                  <double>0.010000000000000</double>
+                  <double>0.100000000000000</double>
                  </property>
                 </widget>
                </item>
@@ -659,7 +659,7 @@
                   <number>4</number>
                  </property>
                  <property name="value">
-                  <double>0.001000000000000</double>
+                  <double>0.010000000000000</double>
                  </property>
                 </widget>
                </item>
@@ -679,13 +679,26 @@
                   <number>4</number>
                  </property>
                  <property name="value">
-                  <double>0.500000000000000</double>
+                  <double>0.100000000000000</double>
                  </property>
                 </widget>
                </item>
               </layout>
              </item>
             </layout>
+           </item>
+           <item>
+            <spacer name="verticalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
            </item>
           </layout>
          </widget>
@@ -694,13 +707,13 @@
       </widget>
       <widget class="QWidget" name="ResampTab">
        <attribute name="title">
-        <string>Resampling Parameters</string>
+        <string>Final Atlas</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_12">
         <item>
          <widget class="QGroupBox" name="FinalAtlasgroupBox">
           <property name="title">
-           <string>Final Atlas</string>
+           <string>Resampling Parameters</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_13">
            <item>
@@ -766,11 +779,11 @@
                 <enum>Qt::Horizontal</enum>
                </property>
                <property name="sizeType">
-                <enum>QSizePolicy::Fixed</enum>
+                <enum>QSizePolicy::Expanding</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
-                 <width>370</width>
+                 <width>450</width>
                  <height>20</height>
                 </size>
                </property>
@@ -779,7 +792,7 @@
             </layout>
            </item>
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,0">
+            <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,0,0">
              <item>
               <widget class="QLabel" name="label_16">
                <property name="text">
@@ -788,12 +801,70 @@
               </widget>
              </item>
              <item>
-              <widget class="QComboBox" name="comboBox"/>
+              <widget class="QComboBox" name="TensInterpolComboBox">
+               <item>
+                <property name="text">
+                 <string>Log Euclidean</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Non Log Euclidean</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="logOptionHLayout"/>
              </item>
              <item>
               <spacer name="horizontalSpacer_7">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Expanding</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>500</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_9">
+             <item>
+              <widget class="QLabel" name="label_25">
+               <property name="text">
+                <string>Tensor Transformation :</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="TensTfmComboBox">
+               <item>
+                <property name="text">
+                 <string>PPD</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>FS</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_10">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Expanding</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -805,6 +876,15 @@
              </item>
             </layout>
            </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="groupBox">
+          <property name="title">
+           <string>Average computation</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_17">
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_6">
              <item>
@@ -871,9 +951,6 @@
              <property name="orientation">
               <enum>Qt::Vertical</enum>
              </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::Expanding</enum>
-             </property>
              <property name="sizeHint" stdset="0">
               <size>
                <width>20</width>
@@ -887,10 +964,152 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab">
+      <widget class="QWidget" name="Configtab">
        <attribute name="title">
         <string>Software Configuration</string>
        </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_11">
+        <item>
+         <widget class="QLabel" name="label_17">
+          <property name="text">
+           <string>Give the path to the following softwares.
+If no path given, the program will look in the path environnement variable.</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_15">
+            <item>
+             <widget class="QPushButton" name="ImagemathButton">
+              <property name="text">
+               <string>ImageMath</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="ResampButton">
+              <property name="text">
+               <string>ResampleDTIlogEuclidean</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="CropDTIButton">
+              <property name="text">
+               <string>CropDTI</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="dtiprocButton">
+              <property name="text">
+               <string>dtiprocess</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="BRAINSFitButton">
+              <property name="text">
+               <string>BRAINSFit</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="AWButton">
+              <property name="text">
+               <string>AtlasWerks</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="dtiavgButton">
+              <property name="text">
+               <string>dtiaverage</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_16">
+            <item>
+             <widget class="QLineEdit" name="ImagemathPath"/>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="ResampPath"/>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="CropDTIPath"/>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="dtiprocPath"/>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="BRAINSFitPath"/>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="AWPath"/>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="dtiavgPath"/>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_8">
+          <item>
+           <spacer name="horizontalSpacer_8">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="setenvButton">
+            <property name="toolTip">
+             <string>Set the environment variable with this configuration</string>
+            </property>
+            <property name="text">
+             <string>Set variable</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="DefaultButton">
+            <property name="toolTip">
+             <string>Use the program paths given by the system</string>
+            </property>
+            <property name="text">
+             <string>Default</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_9">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>
