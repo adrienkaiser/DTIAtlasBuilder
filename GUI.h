@@ -1,6 +1,7 @@
 #ifndef DEF_GUI
 #define DEF_GUI
 
+/*Qt classes*/
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QProcess>
@@ -13,12 +14,19 @@
 #include <QComboBox>
 #include <QStackedWidget>
 
+/*std classes*/
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h> // only for the function sleep()
+#include <unistd.h> // to get the access setup
 #include <vector>
 
+/*itk classes*/
+#include "itkImage.h"
+#include "itkImageFileReader.h"
+#include <itksys/SystemTools.hxx> // for FindProgram()
+
 #include "ui_GUIwindow.h"
+
 #include "ScriptWriter.h"
 
 class GUI : public QMainWindow, public Ui::MainWindow 
@@ -26,84 +34,87 @@ class GUI : public QMainWindow, public Ui::MainWindow
 	Q_OBJECT
 
 	public:
-		GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile); //constructor
-		int LaunchScriptWriter(); //returns -1 if failed, otherwise 0
-		void LaunchScriptRunner();
+		
+/*CONSTRUCTOR*/	GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile); //constructor
+
+/*DATASET*/	void ReadCSV(QString CSVfile);
 		void SaveCSVDataset();
 		void SaveCSVResults(int Crop, int nbLoops);
-		void GenerateXMLForAW();
-		void LoadParameters(QString paramFile);
-		void ReadCSV(QString CSVfile);
+
+/*PARAMETERS*/	void LoadParameters(QString paramFile);
+
+/*XML FILE*/	void GenerateXMLForAW();
+
+/*SOFT CONFIG*/	void LoadConfig(QString ConfigFile);
+		void SoftEnvSet(); // set the software paths from the env variable if it exists
+
+/*CHECK IMAGE*/	int checkImage(std::string Image); // returns 1 if not an image, 2 if not a dti, otherwise 0
+
+/*MAIN FUNCT*/	int LaunchScriptWriter(); // returns -1 if failed, otherwise 0
+		void LaunchScriptRunner();
 
 	public slots:
-		void Compute();
 
-//////////Layout Elements
-		void OpenAddCaseBrowseWindow();
+/*CASES*/	void OpenAddCaseBrowseWindow();
 		void RemoveSelectedCases();
-//		void AddAWScaleLevel();
-//		void RemoveAWScaleLevel(int nb);
-		void OpenOutputBrowseWindow();
- 		void OpenTemplateBrowseWindow();
-		void OpenRunningCompleteWindow();
+
+/*OUTPUT*/	void OpenOutputBrowseWindow();
+
+/*TEMPLATE*/	void OpenTemplateBrowseWindow();
+
+/*RUNNING*/	void OpenRunningCompleteWindow();
 		void OpenRunningFailWindow();
-		void ReadCSVSlot();
+
+/*DATASET*/	void ReadCSVSlot();
 		void SaveCSVDatasetBrowse();
-		void LoadParametersSlot();
+
+/*PARAMETERS*/	void LoadParametersSlot();
 		void SaveParameters();
-		void Config();
-		void ConfigOK();
-		void ConfigCancel();
-		void ReadMe();
+
+/*SOFT CONFIG*/	void LoadConfigSlot();
+		void SaveConfig();
+		void ConfigDefault();
+		void ConfigEnv();
 		void BrowseSoft(int); //in the soft dialog window
-		void InterpolTypeComboBoxChanged(int);
+
+/*READ ME*/	void ReadMe();
+
+/*RESAMP PARAM*/void InterpolTypeComboBoxChanged(int);
+		void TensorInterpolComboBoxChanged(int);
+
+/*WIDGETCHANGE*/void WidgetHasChangedParamNoSaved();
+
+/*MAIN FUNCT*/	void Compute();
 
 	signals:
 		void runningcomplete(); //sent when the running is complete
 		void runningfail(); //sent when the running has failed
 
 	protected :
-		void closeEvent(QCloseEvent* event);
+
+/*CLOSE WINDOW*/void closeEvent(QCloseEvent* event);
 
 	private:
-		int m_ParamSaved; // 0 if the last parameters have not been saved, 1 if the last have been saved
-		QString m_ParamFileHeader; // to check if the file to read is really a parameter file
-		QString m_CSVseparator;
-		ScriptWriter* m_scriptwriter; ////contains the writing pipeline
-//		int m_nbAWSL; // number of AtlasWerks Scale Levels
-//		int m_indexAWSL; // index of the current last SL in the QForm
-//		std::vector<int> m_QFormIndexs; //contains the index numbers in the QForm for the corresponding nb of the remove Scale Level Button (change because of removing)
-//		std::vector<int>::iterator m_VecIt;
 
-  ////////////////////////////////////////////
- //             LAYOUT ELEMENTS            //
-////////////////////////////////////////////
-
-		std::vector < QLineEdit* > m_CasesQ; // index begin at 0
+/*CASES*/	std::vector < QLineEdit* > m_CasesQ; // index begin at 0
 		std::vector < std::string > m_CasesPath; // index begin at 0
 
-////////////////////PARAMETERS
-//////////Text		
+/*DATASET*/	QString m_CSVseparator;
 		QString m_CSVPath;
 		QString m_OutputPath;
 		QString m_TemplatePath;
 		QString m_lastCasePath;
 
-		QComboBox *m_windowComboBox;
+/*PARAMETERS*/	int m_ParamSaved; // 0 if the last parameters have not been saved, 1 if the last have been saved
+		QString m_ParamFileHeader; // to check if the file to read is really a parameter file
+
+/*RESAMP PARAM*/QComboBox *m_windowComboBox;
 		QComboBox *m_BSplineComboBox;
 		QStackedWidget *m_optionStackLayout;
-//		QSignalMapper * m_SLRmButtonMapper;
+		QComboBox *m_nologComboBox;
+		QStackedWidget *m_logOptionStackLayout;
 
-//////////Config Dialog Window
-		QDialog * m_dlg;
-		QLineEdit *m_ImagemathPath;
-		QLineEdit *m_ResampPath;
-		QLineEdit *m_CropDTIPath;
-		QLineEdit *m_dtiprocPath;
-		QLineEdit *m_BRAINSFitPath;
-		QLineEdit *m_AWPath;
-		QLineEdit *m_dtiavgPath;
-		QSignalMapper *m_SoftButtonMapper; // to avoid multiple browse functions
+/*MAIN FUNCT*/	ScriptWriter* m_scriptwriter; ////contains the writing pipeline
 
 };
 #endif
