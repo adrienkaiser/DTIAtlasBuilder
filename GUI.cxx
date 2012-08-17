@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <unistd.h> // to get the access setup
 #include <vector>
+#include <cstdlib> // for getenv()
 
 /*itk classes*/
 #include "itkImage.h"
@@ -117,9 +118,10 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile) : Q
 	SoftButtonMapper->setMapping(AWButton,6);
 	QObject::connect(dtiavgButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
 	SoftButtonMapper->setMapping(dtiavgButton,7);
+	QObject::connect(DTIRegButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
+	SoftButtonMapper->setMapping(DTIRegButton,8);
 
 	QObject::connect(DefaultButton, SIGNAL(clicked()), this, SLOT(ConfigDefault()));
-	QObject::connect(setenvButton, SIGNAL(clicked()), this, SLOT(ConfigEnv()));
 
 /* Init options for Final AtlasBuilding param : Interpolation algo */
 	m_optionStackLayout = new QStackedWidget;
@@ -189,13 +191,15 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile) : Q
 	m_logOptionStackLayout->setCurrentIndex(0);
 
 /* SET the soft config from an env variable or look in the PATH */
-/*
-	if there is an env variable
-		then copy the paths from this variable SoftEnvSet();
-//////////// POP-UP window : "The following softwares weren't found: please give the path to these."
-	else ConfigDefault(); (look for the programs with the itk function)
-*/
-	ConfigDefault();
+	ConfigDefault(); // look for the programs with the itk function
+
+	const char * value = getenv("DTIAtlasBuilderSoftPath");
+	if (value!=NULL) 
+	{
+		printf ("| Environment variable read. The config file is \'%s\'\n",value);
+		LoadConfig( QString(value) ); // replace the paths by the pathys given in the config file
+	}
+	else std::cout<<"| No environment variable found"<<std::endl;
 
 /* Load Parameters from Command Line */
 	if( !ParamFile.empty() ) LoadParameters( QString(ParamFile.c_str()) );
@@ -1058,6 +1062,8 @@ void GUI::LoadConfig(QString configFile)
 	{
 		std::cout<<"| Loading Configuration file..."; // command line display
 
+		std::string notFound;
+
 		///get the values from file
 		QFile file(configFile);
 		if (file.open(QFile::ReadOnly))
@@ -1073,6 +1079,7 @@ void GUI::LoadConfig(QString configFile)
 				return;
 			}
 			if(!list.at(1).isEmpty()) ImagemathPath->setText(list.at(1));
+			else if(ImagemathPath->text().isEmpty()) notFound = notFound + "> ImageMath\n";	
 
 			line = stream.readLine();
 			list = line.split("=");
@@ -1083,6 +1090,7 @@ void GUI::LoadConfig(QString configFile)
 				return;
 			}
 			if(!list.at(1).isEmpty()) ResampPath->setText(list.at(1));
+			else if(ResampPath->text().isEmpty()) notFound = notFound + "> ResampleDTIlogEuclidean\n";
 
 			line = stream.readLine();
 			list = line.split("=");
@@ -1093,6 +1101,7 @@ void GUI::LoadConfig(QString configFile)
 				return;
 			}
 			if(!list.at(1).isEmpty()) CropDTIPath->setText(list.at(1));
+			else if(CropDTIPath->text().isEmpty()) notFound = notFound + "> CropDTI\n";
 
 			line = stream.readLine();
 			list = line.split("=");
@@ -1103,6 +1112,7 @@ void GUI::LoadConfig(QString configFile)
 				return;
 			}
 			if(!list.at(1).isEmpty()) dtiprocPath->setText(list.at(1));
+			else if(dtiprocPath->text().isEmpty()) notFound = notFound + "> dtiprocess\n";
 
 			line = stream.readLine();
 			list = line.split("=");
@@ -1113,6 +1123,7 @@ void GUI::LoadConfig(QString configFile)
 				return;
 			}
 			if(!list.at(1).isEmpty()) BRAINSFitPath->setText(list.at(1));
+			else if(BRAINSFitPath->text().isEmpty()) notFound = notFound + "> BRAINSFit\n";
 
 			line = stream.readLine();
 			list = line.split("=");
@@ -1123,6 +1134,7 @@ void GUI::LoadConfig(QString configFile)
 				return;
 			}
 			if(!list.at(1).isEmpty()) AWPath->setText(list.at(1));
+			else if(AWPath->text().isEmpty()) notFound = notFound + "> AtlasWerks\n";
 
 			line = stream.readLine();
 			list = line.split("=");
@@ -1133,8 +1145,26 @@ void GUI::LoadConfig(QString configFile)
 				return;
 			}
 			if(!list.at(1).isEmpty()) dtiavgPath->setText(list.at(1));
+			else if(dtiavgPath->text().isEmpty()) notFound = notFound + "> dtiaverage\n";
+
+			line = stream.readLine();
+			list = line.split("=");
+			if(!list.at(0).contains(QString("DTI-Reg")))
+			{
+				QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
+				std::cout<<"FAILED"<<std::endl; // command line display
+				return;
+			}
+			if(!list.at(1).isEmpty()) DTIRegPath->setText(list.at(1));
+			else if(DTIRegPath->text().isEmpty()) notFound = notFound + "> DTI-Reg\n";
 
 			std::cout<<"DONE"<<std::endl; // command line display
+
+			if( !notFound.empty() )
+			{
+				std::string text = "The following programs are missing.\nPlease enter the path manually:2222\n" + notFound;
+				QMessageBox::warning(this, "Program missing", QString(text.c_str()) ); // POP-UP window : "The following softwares weren't found: please give the path to these."
+			}
 		} 
 		else qDebug( "Could not open file");
 	}
@@ -1162,6 +1192,7 @@ void GUI::SaveConfig() /*SLOT*/
 			stream << "BRAINSFit=" << BRAINSFitPath->text() << endl;
 			stream << "AtlasWerks=" << AWPath->text() << endl;
 			stream << "dtiaverage=" << dtiavgPath->text() << endl;
+			stream << "DTI-Reg=" << DTIRegPath->text() << endl;
 
 			std::cout<<"DONE"<<std::endl; // command line display
 		}
@@ -1193,48 +1224,44 @@ void GUI::ConfigDefault() /*SLOT*/
 	std::string notFound;
 
 	program = itksys::SystemTools::FindProgram("ImageMath");
-	if(program.empty()) notFound = notFound + "> ImageMath\n";
+	if(program.empty() && ImagemathPath->text().isEmpty()) notFound = notFound + "> ImageMath\n";
 	else ImagemathPath->setText(QString(program.c_str()));
 
 	program = itksys::SystemTools::FindProgram("ResampleDTIlogEuclidean");
-	if(program.empty()) notFound = notFound + "> ResampleDTIlogEuclidean\n";
+	if(program.empty() && ResampPath->text().isEmpty()) notFound = notFound + "> ResampleDTIlogEuclidean\n";
 	else ResampPath->setText(QString(program.c_str()));
 
 	program = itksys::SystemTools::FindProgram("CropDTI");
-	if(program.empty()) notFound = notFound + "> CropDTI\n";
+	if(program.empty() && CropDTIPath->text().isEmpty()) notFound = notFound + "> CropDTI\n";
 	else CropDTIPath->setText(QString(program.c_str()));
 
 	program = itksys::SystemTools::FindProgram("dtiprocess");
-	if(program.empty()) notFound = notFound + "> dtiprocess\n";
+	if(program.empty() && dtiprocPath->text().isEmpty()) notFound = notFound + "> dtiprocess\n";
 	else dtiprocPath->setText(QString(program.c_str()));
 
 	program = itksys::SystemTools::FindProgram("BRAINSFit");
-	if(program.empty()) notFound = notFound + "> BRAINSFit\n";
+	if(program.empty() && BRAINSFitPath->text().isEmpty()) notFound = notFound + "> BRAINSFit\n";
 	else BRAINSFitPath->setText(QString(program.c_str()));
 
 	program = itksys::SystemTools::FindProgram("AtlasWerks");
-	if(program.empty()) notFound = notFound + "> AtlasWerks\n";
+	if(program.empty() && AWPath->text().isEmpty()) notFound = notFound + "> AtlasWerks\n";
 	else AWPath->setText(QString(program.c_str()));
 
 	program = itksys::SystemTools::FindProgram("dtiaverage");
-	if(program.empty()) notFound = notFound + "> dtiaverage\n";
+	if(program.empty() && dtiavgPath->text().isEmpty()) notFound = notFound + "> dtiaverage\n";
 	else dtiavgPath->setText(QString(program.c_str()));
+
+	program = itksys::SystemTools::FindProgram("DTI-Reg");
+	if(program.empty() && DTIRegPath->text().isEmpty()) notFound = notFound + "> DTI-Reg\n";
+	else DTIRegPath->setText(QString(program.c_str()));
 
 	std::cout<<"DONE"<<std::endl; // command line display
 
 	if( !notFound.empty() )
 	{
-		std::string text = "The following programs are missing.\nPlease enter the path manually:\n" + notFound;
+		std::string text = "The following programs are missing.\nPlease enter the path manually:333\n" + notFound;
 		QMessageBox::warning(this, "Program missing", QString(text.c_str()) ); // POP-UP window : "The following softwares weren't found: please give the path to these."
 	}
-}
-
-void GUI::ConfigEnv() /*SLOT*/
-{
-//create an env variable with the paths given in ths lineEdits
-
-	std::cout<<"| Setting the environment variable..."; // command line display
-	std::cout<<"DONE"<<std::endl; // command line display
 }
 
 void GUI::BrowseSoft(int soft)  /*SLOT*/ //softwares: 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=AtlasWerks, 7=dtiaverage
@@ -1257,12 +1284,9 @@ void GUI::BrowseSoft(int soft)  /*SLOT*/ //softwares: 1=ImageMath, 2=ResampleDTI
 		break;
 	case 7: dtiavgPath->setText(SoftBrowse);
 		break;
+	case 8: DTIRegPath->setText(SoftBrowse);
+		break;
 	}
-}
-
-void GUI::SoftEnvSet()
-{
-	// set the softwares with the env variable
 }
 
   /////////////////////////////////////////
@@ -1278,7 +1302,7 @@ void GUI::ReadMe()  /*SLOT*/ /////to enhance !!
 	QDialog *dlg = new QDialog(this);
 	dlg->setWindowTitle ("Read Me");
 
-	std::string info = "DTIAtlasBuilder\n===============\n\nA tool to create an atlas from several DTI images\n\nThese Softwares need to be installed before executing the tool :\n- ImageMath\n- ResampleDTIlogEuclidean\n- CropDTI\n- dtiprocess\n- BRAINSFit\n- AtlasWerks\n- dtiaverage\n";
+	std::string info = "DTIAtlasBuilder\n===============\n\nA tool to create an atlas from several DTI images\n\nThese Softwares need to be installed before executing the tool :\n- ImageMath\n- ResampleDTIlogEuclidean\n- CropDTI\n- dtiprocess\n- BRAINSFit\n- AtlasWerks\n- dtiaverage\n- DTI-Reg\n";
 	QLabel *InfoLabel = new QLabel (info.c_str(), this);
 	QVBoxLayout *VLayout = new QVBoxLayout();
 	VLayout->addWidget(InfoLabel);
@@ -1345,15 +1369,12 @@ int GUI::checkImage(std::string Image) // returns 1 if not an image, 2 if not a 
 	}
 	catch(itk::ExceptionObject & err)
 	{
-//		std::cerr<<"ExceptionObject caught! : " << Image << std::endl;
-//		std::cerr<<err<<std::endl;
-		return 1;
+		return 1; // image is not an image
 	}
-//std::cout<< reader-> GetOutput()->ImageDimension <<std::endl;
-	region = reader->GetOutput()->GetLargestPossibleRegion();
-//std::cout << region.GetSize()[0] << "," << region.GetSize()[1] << "," << region.GetSize()[2] << "," << region.GetSize()[3] << std::endl;
-	if( reader->GetOutput()->ImageDimension != 4 ) return 2;
-	return 0;
+
+	itk::ImageIOBase::IOPixelType pixel  = reader->GetImageIO()->GetPixelType() ;
+	if( pixel == itk::ImageIOBase::SYMMETRICSECONDRANKTENSOR || pixel == itk::ImageIOBase::DIFFUSIONTENSOR3D || pixel == itk::ImageIOBase::VECTOR ) return 0;
+	return 2;
 }
 
   /////////////////////////////////////////
@@ -1387,7 +1408,7 @@ void GUI::Compute() /*SLOT*/
 
 int GUI::LaunchScriptWriter()
 {
-//////////Variables for the QProcesses
+/* Variables for the QProcesses */
 	int ExitCode=0;
 	std::string program;
 
@@ -1548,60 +1569,70 @@ Num. Iterations       : 50
 */
 
 /* Software paths */
-	std::vector < std::string > SoftPath;
-
 /* Checking if all the programs have been given */
-	std::string programPath;
-	std::string notFound;
+	if(ImagemathPath->text().isEmpty() || ResampPath->text().isEmpty() || CropDTIPath->text().isEmpty() || dtiprocPath->text().isEmpty() || BRAINSFitPath->text().isEmpty() || AWPath->text().isEmpty() || dtiavgPath->text().isEmpty() || DTIRegPath->text().isEmpty() ) // if any path is missing => check in the config file and in the PATH
+	{
+		char * value = getenv("DTIAtlasBuilderSoftPath");
+		if (value) LoadConfig( QString(value) ); // replace the paths by the paths given in the config file
 
-	if(ImagemathPath->text().isEmpty()) // + Look in the env variable ?
-	{
-		programPath = itksys::SystemTools::FindProgram("ImageMath");
-		if(programPath.empty()) notFound = notFound + "> ImageMath\n";
-		else ImagemathPath->setText(QString(programPath.c_str()));
-	}
-	if(ResampPath->text().isEmpty())
-	{
-		programPath = itksys::SystemTools::FindProgram("ResampleDTIlogEuclidean");
-		if(programPath.empty()) notFound = notFound + "> ResampleDTIlogEuclidean\n";
-		else ImagemathPath->setText(QString(programPath.c_str()));
-	}
-	if(CropDTIPath->text().isEmpty())
-	{
-		programPath = itksys::SystemTools::FindProgram("CropDTI");
-		if(programPath.empty()) notFound = notFound + "> CropDTI\n";
-		else ImagemathPath->setText(QString(programPath.c_str()));
-	}
-	if(dtiprocPath->text().isEmpty())
-	{
-		programPath = itksys::SystemTools::FindProgram("dtiprocess");
-		if(programPath.empty()) notFound = notFound + "> dtiprocess\n";
-		else ImagemathPath->setText(QString(programPath.c_str()));
-	}
-	if(BRAINSFitPath->text().isEmpty())
-	{
-		programPath = itksys::SystemTools::FindProgram("BRAINSFit");
-		if(programPath.empty()) notFound = notFound + "> BRAINSFit\n";
-		else ImagemathPath->setText(QString(programPath.c_str()));
-	}
-	if(AWPath->text().isEmpty())
-	{
-		programPath = itksys::SystemTools::FindProgram("AtlasWerks");
-		if(programPath.empty()) notFound = notFound + "> AtlasWerks\n";
-		else ImagemathPath->setText(QString(programPath.c_str()));
-	}
-	if(dtiavgPath->text().isEmpty())
-	{
-		programPath = itksys::SystemTools::FindProgram("dtiaverage");
-		if(programPath.empty()) notFound = notFound + "> dtiaverage\n";
-		else ImagemathPath->setText(QString(programPath.c_str()));
-	}
+		std::string programPath;
+		std::string notFound;
 
-	if( !notFound.empty() )
-	{
-		std::string text = "The following programs are missing.\nPlease enter the path manually:\n" + notFound;
-		QMessageBox::critical(this, "Program missing", QString(text.c_str()) ); // POP-UP window : "The following softwares weren't found: please give the path to these."
-		return -1;
+		if(ImagemathPath->text().isEmpty())
+		{
+			programPath = itksys::SystemTools::FindProgram("ImageMath");
+			if(programPath.empty()) notFound = notFound + "> ImageMath\n";
+			else ImagemathPath->setText(QString(programPath.c_str()));
+		}
+		if(ResampPath->text().isEmpty())
+		{
+			programPath = itksys::SystemTools::FindProgram("ResampleDTIlogEuclidean");
+			if(programPath.empty()) notFound = notFound + "> ResampleDTIlogEuclidean\n";
+			else ResampPath->setText(QString(programPath.c_str()));
+		}
+		if(CropDTIPath->text().isEmpty())
+		{
+			programPath = itksys::SystemTools::FindProgram("CropDTI");
+			if(programPath.empty()) notFound = notFound + "> CropDTI\n";
+			else CropDTIPath->setText(QString(programPath.c_str()));
+		}
+		if(dtiprocPath->text().isEmpty())
+		{
+			programPath = itksys::SystemTools::FindProgram("dtiprocess");
+			if(programPath.empty()) notFound = notFound + "> dtiprocess\n";
+			else dtiprocPath->setText(QString(programPath.c_str()));
+		}
+		if(BRAINSFitPath->text().isEmpty())
+		{
+			programPath = itksys::SystemTools::FindProgram("BRAINSFit");
+			if(programPath.empty()) notFound = notFound + "> BRAINSFit\n";
+			else BRAINSFitPath->setText(QString(programPath.c_str()));
+		}
+		if(AWPath->text().isEmpty())
+		{
+			programPath = itksys::SystemTools::FindProgram("AtlasWerks");
+			if(programPath.empty()) notFound = notFound + "> AtlasWerks\n";
+			else AWPath->setText(QString(programPath.c_str()));
+		}
+		if(dtiavgPath->text().isEmpty())
+		{
+			programPath = itksys::SystemTools::FindProgram("dtiaverage");
+			if(programPath.empty()) notFound = notFound + "> dtiaverage\n";
+			else dtiavgPath->setText(QString(programPath.c_str()));
+		}
+		if(DTIRegPath->text().isEmpty())
+		{
+			programPath = itksys::SystemTools::FindProgram("DTI-Reg");
+			if(programPath.empty()) notFound = notFound + "> DTI-Reg\n";
+			else DTIRegPath->setText(QString(programPath.c_str()));
+		}
+
+		if( !notFound.empty() )
+		{
+			std::string text = "The following programs are missing.\nPlease enter the path manually:1111\n" + notFound;
+			QMessageBox::critical(this, "Program missing", QString(text.c_str()) ); // POP-UP window : "The following softwares weren't found: please give the path to these."
+			return -1;
+		}
 	}
 
 /* Checking if the given files are executable */
@@ -1647,6 +1678,14 @@ Num. Iterations       : 50
 		QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
 		return -1;
 	}
+	if(access(DTIRegPath->text().toStdString().c_str(), X_OK) != 0 )
+	{
+		std::string text = "The file \'" + DTIRegPath->text().toStdString() + "\' is not executable";
+		QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+		return -1;
+	}
+
+	std::vector < std::string > SoftPath;
 
 	SoftPath.push_back(ImagemathPath->text().toStdString());
 	SoftPath.push_back(ResampPath->text().toStdString());
@@ -1655,6 +1694,7 @@ Num. Iterations       : 50
 	SoftPath.push_back(BRAINSFitPath->text().toStdString());
 	SoftPath.push_back(AWPath->text().toStdString());
 	SoftPath.push_back(dtiavgPath->text().toStdString());
+	SoftPath.push_back(DTIRegPath->text().toStdString());
 
 	m_scriptwriter->setSoftPath(SoftPath);
 	SoftPath.clear();

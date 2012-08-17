@@ -482,14 +482,34 @@ if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + FinalAtl
 		Script = Script + "\tRD= FinalPath + \"/FinalAtlasRD.nrrd\"\n"; // Radial Diffusivity
 		Script = Script + "\tMD= FinalPath + \"/FinalAtlasMD.nrrd\"\n"; // Mean Diffusivity
 		Script = Script + "\tAD= FinalPath + \"/FinalAtlasAD.nrrd\"\n"; // Axial Diffusivity
-		Script = Script + "\tGeneFACommand=\"" + m_SoftPath[3] + " --dti_image \" + DTIAverage + \" -f \" + FA + \" -m \" + MD + \" --color_fa_output \" + cFA + \" --RD_output \" + RD + \" --lambda1_output \" + AD\n";
+		Script = Script + "\tGeneFACommand=\"" + m_SoftPath[3] + " --scalar_float --dti_image \" + DTIAverage + \" -f \" + FA + \" -m \" + MD + \" --color_fa_output \" + cFA + \" --RD_output \" + RD + \" --lambda1_output \" + AD\n";
 		Script = Script + "\tprint(\"=> $ \" + GeneFACommand)\n";
 		Script = Script + "\tif os.system(GeneFACommand)!=0 : ErrorList.append(\'dtiprocess: Computing final FA, color FA, MD, RD and AD\')\n";
-		Script = Script + "\tDbleToFloatCommand=\"unu convert -t float -i \" + DTIAverage + \" | unu save -f nrrd -e gzip -o \" + FinalPath + \"/FinalAtlasDTI_float.nrrd\"\n";
+		Script = Script + "\tDbleToFloatCommand=\"/tools/Slicer4/Slicer-4.0.1.2012-01-19-linux-amd64_localBuild//bin/unu convert -t float -i \" + DTIAverage + \" | /tools/Slicer4/Slicer-4.0.1.2012-01-19-linux-amd64_localBuild//bin/unu save -f nrrd -e gzip -o \" + FinalPath + \"/FinalAtlasDTI_float.nrrd\"\n";
 		Script = Script + "\tprint(\"=> $ \" + DbleToFloatCommand)\n";
-//		Script = Script + "\tif os.system(DbleToFloatCommand)!=0 : ErrorList.append(\'unu: Converting the final DTI atlas from double to float DTI\')\n";
+		Script = Script + "\tif os.system(DbleToFloatCommand)!=0 : ErrorList.append(\'unu: Converting the final DTI atlas from double to float DTI\')\n";
 
 if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + DTIAverage + \"\\' already exists so the command will not be executed\")\n\n";
+
+/* Computing global deformation fields */
+	Script = Script + "print(\"\\n======== Computing global deformation fields =========\")\n";
+	Script = Script + "case = 0\n";
+	Script = Script + "while case < len(allcases):\n";
+		if(m_NeedToBeCropped==1) Script = Script + "\torigDTI= AffinePath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
+		else Script = Script + "\torigDTI= allcases[case]\n";
+		Script = Script + "\tGlobalDefField = FinalPath + \"/Case\" + str(case+1) + \"_GlobalDeformationField.nrrd\"\n";
+		Script = Script + "\tFinalDef = FinalPath + \"/Case\" + str(case+1) + \"_FinalDeformedDTI.nrrd\"\n";
+/* --method <useScalar-BRAINS|useScalar-ANTS> (default: useScalar-BRAINS) */
+		Script = Script + "\tGlobalDefFieldCommand= \"" + m_SoftPath[7] + " --fixedVolume \" + DTIAverage + \" --movingVolume \" + origDTI + \" --outputDeformationFieldVolume \" + GlobalDefField + \" --outputVolume \" + FinalDef\n";
+		Script = Script + "\tprint(\"||Case \" + str(case+1) + \" => $ \" + GlobalDefFieldCommand)\n";
+		if(m_Overwrite==1) Script = Script + "\tif os.system(GlobalDefFieldCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] DTI-Reg: Computing global deformation fields\')\n";
+		else
+		{
+			Script = Script + "\tif not os.path.isfile(FinalDef) :\n";
+				Script = Script + "\t\tif os.system(GlobalDefFieldCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] DTI-Reg: Computing global deformation fields\')\n";
+			Script = Script + "\telse : print(\"=> The file \\'\" + FinalDef + \"\\' already exists so the command will not be executed\")\n";
+		}
+		Script = Script + "\tcase += 1\n\n";
 
 	Script = Script + "print(\"\\n============ End of Atlas Building =============\")\n\n";
 
@@ -710,7 +730,7 @@ void ScriptWriter::setAverageStatMethod(std::string Method)
 	m_AverageStatMethod = Method;
 }
 
-void ScriptWriter::setSoftPath(std::vector < std::string > SoftPath) // 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=AtlasWerks, 7=dtiaverage
+void ScriptWriter::setSoftPath(std::vector < std::string > SoftPath) // 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=AtlasWerks, 7=dtiaverage, 8=DTI-Reg
 {
 	for (unsigned int i=0;i<SoftPath.size();i++) m_SoftPath.push_back( SoftPath[i] );
 }

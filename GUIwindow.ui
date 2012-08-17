@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1045</width>
-    <height>507</height>
+    <height>508</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -970,14 +970,6 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_11">
         <item>
-         <widget class="QLabel" name="label_17">
-          <property name="text">
-           <string>Give the path to the following softwares.
-If no path given, the program will look in the path environnement variable.</string>
-          </property>
-         </widget>
-        </item>
-        <item>
          <layout class="QHBoxLayout" name="horizontalLayout_7">
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_15">
@@ -1030,6 +1022,13 @@ If no path given, the program will look in the path environnement variable.</str
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QPushButton" name="DTIRegButton">
+              <property name="text">
+               <string>DTI-Reg</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
           <item>
@@ -1055,6 +1054,9 @@ If no path given, the program will look in the path environnement variable.</str
             <item>
              <widget class="QLineEdit" name="dtiavgPath"/>
             </item>
+            <item>
+             <widget class="QLineEdit" name="DTIRegPath"/>
+            </item>
            </layout>
           </item>
          </layout>
@@ -1073,16 +1075,6 @@ If no path given, the program will look in the path environnement variable.</str
              </size>
             </property>
            </spacer>
-          </item>
-          <item>
-           <widget class="QPushButton" name="setenvButton">
-            <property name="toolTip">
-             <string>Set the environment variable with this configuration</string>
-            </property>
-            <property name="text">
-             <string>Set variable</string>
-            </property>
-           </widget>
           </item>
           <item>
            <widget class="QPushButton" name="DefaultButton">
@@ -1108,6 +1100,31 @@ If no path given, the program will look in the path environnement variable.</str
            </spacer>
           </item>
          </layout>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_17">
+          <property name="text">
+           <string>You can set an environment variable manually with the name &quot;DTIAtlasBuilderSoftPath&quot; and contaning the path to a configuration file.
+It will be read at the beginning of the program.
+setenv DTIAtlasBuilderSoftPath [your config file]</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
         </item>
        </layout>
       </widget>

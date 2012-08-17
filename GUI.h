@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <unistd.h> // to get the access setup
 #include <vector>
+#include <cstdlib> // for getenv()
 
 /*itk classes*/
 #include "itkImage.h"
@@ -46,7 +47,6 @@ class GUI : public QMainWindow, public Ui::MainWindow
 /*XML FILE*/	void GenerateXMLForAW();
 
 /*SOFT CONFIG*/	void LoadConfig(QString ConfigFile);
-		void SoftEnvSet(); // set the software paths from the env variable if it exists
 
 /*CHECK IMAGE*/	int checkImage(std::string Image); // returns 1 if not an image, 2 if not a dti, otherwise 0
 
@@ -74,7 +74,6 @@ class GUI : public QMainWindow, public Ui::MainWindow
 /*SOFT CONFIG*/	void LoadConfigSlot();
 		void SaveConfig();
 		void ConfigDefault();
-		void ConfigEnv();
 		void BrowseSoft(int); //in the soft dialog window
 
 /*READ ME*/	void ReadMe();
