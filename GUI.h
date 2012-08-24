@@ -20,6 +20,7 @@
 #include <unistd.h> // to get the access setup
 #include <vector>
 #include <cstdlib> // for getenv()
+#include <ctime> // for clock()
 
 /*itk classes*/
 #include "itkImage.h"
@@ -37,6 +38,8 @@ class GUI : public QMainWindow, public Ui::MainWindow
 	public:
 		
 /*CONSTRUCTOR*/	GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile); //constructor
+
+/*INIT*/	void InitOptions();
 
 /*DATASET*/	void ReadCSV(QString CSVfile);
 		void SaveCSVDataset();
@@ -75,11 +78,15 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		void SaveConfig();
 		void ConfigDefault();
 		void BrowseSoft(int); //in the soft dialog window
+		void ResetSoft(int);
+		void testAW();
 
 /*READ ME*/	void ReadMe();
 
 /*RESAMP PARAM*/void InterpolTypeComboBoxChanged(int);
 		void TensorInterpolComboBoxChanged(int);
+
+/*DTI-REG*/	void RegMethodComboBoxChanged(int);
 
 /*WIDGETCHANGE*/void WidgetHasChangedParamNoSaved();
 
@@ -112,6 +119,22 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		QStackedWidget *m_optionStackLayout;
 		QComboBox *m_nologComboBox;
 		QStackedWidget *m_logOptionStackLayout;
+
+/*DTI-REG*/	QStackedWidget *m_DTIRegOptionStackLayout;
+		/*BRAINS*/
+		QComboBox *m_BRegTypeComboBox;
+		QComboBox *m_TfmModeComboBox;
+		QDoubleSpinBox *m_SigmaDble;
+		QSpinBox *m_NbPyrLevSpin;
+		QLineEdit *m_PyrLevItLine;
+		/*ANTS*/
+		QComboBox *m_ARegTypeComboBox;
+		QLineEdit *m_TfmStepLine;
+		QLineEdit *m_IterLine;
+		QComboBox *m_SimMetComboBox;
+		QDoubleSpinBox *m_SimParamDble;
+		QDoubleSpinBox *m_GSigmaDble;
+		QCheckBox *m_SmoothOffCheck;
 
 /*MAIN FUNCT*/	ScriptWriter* m_scriptwriter; ////contains the writing pipeline
 
