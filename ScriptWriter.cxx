@@ -23,7 +23,7 @@ void ScriptWriter::WriteScript()
 	if(m_RegType==1) std::cout<<"| Using Case 1 as reference in the first Registration Loop"<<std::endl; // command line display
 	else std::cout<<"| Using Template as reference for the Registration: "<<m_TemplatePath<<std::endl; // command line display
 	std::cout<<"| Number of loops in the Registration Loop : "<<m_nbLoops<<std::endl; // command line display
-	std::cout<<"| Writing begin: "; // command line display
+	std::cout<<"| Writing begin: "; // command line display (no endl)
 
 	std::ostringstream out;
 	out << m_nbLoops;
@@ -485,10 +485,10 @@ if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + FinalAtl
 		Script = Script + "\tGeneFACommand=\"" + m_SoftPath[3] + " --scalar_float --dti_image \" + DTIAverage + \" -f \" + FA + \" -m \" + MD + \" --color_fa_output \" + cFA + \" --RD_output \" + RD + \" --lambda1_output \" + AD\n";
 		Script = Script + "\tprint(\"=> $ \" + GeneFACommand)\n";
 		Script = Script + "\tif os.system(GeneFACommand)!=0 : ErrorList.append(\'dtiprocess: Computing final FA, color FA, MD, RD and AD\')\n";
-		Script = Script + "\tDbleToFloatCommand=\"/tools/Slicer4/Slicer-4.0.1.2012-01-19-linux-amd64_localBuild//bin/unu convert -t float -i \" + DTIAverage + \" | /tools/Slicer4/Slicer-4.0.1.2012-01-19-linux-amd64_localBuild//bin/unu save -f nrrd -e gzip -o \" + FinalPath + \"/FinalAtlasDTI_float.nrrd\"\n";
+/*		Script = Script + "\tDbleToFloatCommand=\"/tools/Slicer4/Slicer-4.0.1.2012-01-19-linux-amd64_localBuild//bin/unu convert -t float -i \" + DTIAverage + \" | /tools/Slicer4/Slicer-4.0.1.2012-01-19-linux-amd64_localBuild//bin/unu save -f nrrd -e gzip -o \" + FinalPath + \"/FinalAtlasDTI_float.nrrd\"\n";
 		Script = Script + "\tprint(\"=> $ \" + DbleToFloatCommand)\n";
 		Script = Script + "\tif os.system(DbleToFloatCommand)!=0 : ErrorList.append(\'unu: Converting the final DTI atlas from double to float DTI\')\n";
-
+*/
 if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + DTIAverage + \"\\' already exists so the command will not be executed\")\n\n";
 
 /* Computing global deformation fields */
@@ -499,8 +499,44 @@ if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + DTIAvera
 		else Script = Script + "\torigDTI= allcases[case]\n";
 		Script = Script + "\tGlobalDefField = FinalPath + \"/Case\" + str(case+1) + \"_GlobalDeformationField.nrrd\"\n";
 		Script = Script + "\tFinalDef = FinalPath + \"/Case\" + str(case+1) + \"_FinalDeformedDTI.nrrd\"\n";
-/* --method <useScalar-BRAINS|useScalar-ANTS> (default: useScalar-BRAINS) */
 		Script = Script + "\tGlobalDefFieldCommand= \"" + m_SoftPath[7] + " --fixedVolume \" + DTIAverage + \" --movingVolume \" + origDTI + \" --outputDeformationFieldVolume \" + GlobalDefField + \" --outputVolume \" + FinalDef\n";
+/* m_DTIRegOptions[]
+0	RegMethod
+	ANTS
+	1	ARegType
+	2	TfmStep
+	3	Iter
+	4	SimMet
+	5	SimParam
+	6	GSigma
+	7	SmoothOff
+	BRAINS
+	1	BRegType
+	2	TfmMode
+	3	Sigma
+	4	NbPyrLev
+	5	PyrLevIt
+*/
+		if( m_DTIRegOptions[0].compare("BRAINS")==0 )
+		{
+			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --method useScalar-BRAINS\"\n";
+			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSRegistrationType " + m_DTIRegOptions[1] + "\"\n";
+			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSinitializeTransformMode " + m_DTIRegOptions[2] + "\"\n";
+			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSSmoothDefFieldSigma " + m_DTIRegOptions[3] + "\"\n";
+			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSnumberOfPyramidLevels " + m_DTIRegOptions[4] + "\"\n";
+			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSarrayOfPyramidLevelIterations " + m_DTIRegOptions[5] + "\"\n";
+		}
+		if( m_DTIRegOptions[0].compare("ANTS")==0 )
+		{
+			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --method useScalar-ANTS\"\n";
+			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSRegistrationType " + m_DTIRegOptions[1] + "\"\n";
+			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSTransformationStep " + m_DTIRegOptions[2] + "\"\n";
+			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSIterations " + m_DTIRegOptions[3] + "\"\n";
+			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSSimilarityMetric " + m_DTIRegOptions[4] + "\"\n";
+			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSSimilarityParameter " + m_DTIRegOptions[5] + "\"\n";
+			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSGaussianSigma " + m_DTIRegOptions[6] + "\"\n";
+			if( m_DTIRegOptions[7].compare("1")==0 ) Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSGaussianSmoothingOff\"\n";
+		}
 		Script = Script + "\tprint(\"||Case \" + str(case+1) + \" => $ \" + GlobalDefFieldCommand)\n";
 		if(m_Overwrite==1) Script = Script + "\tif os.system(GlobalDefFieldCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] DTI-Reg: Computing global deformation fields\')\n";
 		else
@@ -529,26 +565,35 @@ void ScriptWriter::MainScript()
 
 	Script = Script + "#!/usr/bin/python\n\n";
 	Script = Script + "import os\n\n"; ///// To run a shell command : os.system("[shell command]")
+	Script = Script + "import time\n\n";
 	Script = Script + "print(\"\\n=============== Main Script ================\")\n\n";
 
 	Script = Script + "OutputPath= \"" + m_OutputPath + "/DTIAtlas\"\n";
 
 	Script = Script + "ErrorList=[] #empty list\n\n";
 
+	Script = Script + "time1=time.time()\n\n";
+
 /* Call the other scripts */
 	Script = Script + "PrePScriptCommand= OutputPath + \"/Script/DTIAtlasBuilder_Preprocess.script\"\n";
 	Script = Script + "print(\"\\n=> $ \" + PrePScriptCommand)\n";
-	Script = Script + "if os.system(PrePScriptCommand)!=0 : ErrorList.append(\'=> Errors detected in preprocessing\')\n";
+	Script = Script + "if os.system(PrePScriptCommand)!=0 : ErrorList.append(\'=> Errors detected in preprocessing\')\n\n";
 
 	Script = Script + "AtlasBuildingCommand= OutputPath + \"/Script/DTIAtlasBuilder_AtlasBuilding.script\"\n";
 	Script = Script + "print(\"\\n=> $ \" + AtlasBuildingCommand)\n";
-	Script = Script + "if os.system(AtlasBuildingCommand)!=0 : ErrorList.append(\'=> Errors detected in atlas building\')\n";
+	Script = Script + "if os.system(AtlasBuildingCommand)!=0 : ErrorList.append(\'=> Errors detected in atlas building\')\n\n";
 
-	Script = Script + "print(\"\\n============ End of execution =============\\n\")\n";
+	Script = Script + "print(\"\\n============ End of execution =============\\n\")\n\n";
 
 	Script = Script + "for error in ErrorList : print(error + \'\\n\')\n";
-	Script = Script + "if len(ErrorList)==0 : print(\"=> No errors detected during execution\\n\")\n";
+	Script = Script + "if len(ErrorList)==0 : print(\"=> No errors detected during execution\\n\")\n\n";
 
+
+	Script = Script + "time2=time.time()\n";
+	Script = Script + "timeTot=time2-time1\n";
+	Script = Script + "if timeTot<60 : print(\"| Execution time = \" + str(int(timeTot)) + \"s\")\n";
+	Script = Script + "elif timeTot<3600 : print(\"| Execution time = \" + str(int(timeTot)) + \"s = \" + str(int(timeTot/60)) + \"m \" + str( int(timeTot) - (int(timeTot/60)*60) ) + \"s\")\n";
+	Script = Script + "else : print(\"| Execution time = \" + str(int(timeTot)) + \"s = \" + str(int(timeTot/3600)) + \"h \" + str( int( (int(timeTot) - int(timeTot/3600)*3600) /60) ) + \"m \" + str( int(timeTot) - (int(timeTot/60)*60) ) + \"s\")\n\n";
 
 	m_Script_Main=Script;
 }
@@ -733,5 +778,27 @@ void ScriptWriter::setAverageStatMethod(std::string Method)
 void ScriptWriter::setSoftPath(std::vector < std::string > SoftPath) // 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=AtlasWerks, 7=dtiaverage, 8=DTI-Reg
 {
 	for (unsigned int i=0;i<SoftPath.size();i++) m_SoftPath.push_back( SoftPath[i] );
+}
+void ScriptWriter::setDTIRegOptions(std::vector < std::string > DTIRegOptions)
+{
+	for (unsigned int i=0;i<DTIRegOptions.size();i++) m_DTIRegOptions.push_back( DTIRegOptions[i] );
+/*
+	RegMethod
+	ANTS
+		ARegType
+		TfmStep
+		Iter
+		SimMet
+		SimParam
+		GSigma
+		SmoothOff
+
+	BRAINS
+		BRegType
+		TfmMode
+		Sigma
+		NbPyrLev
+		PyrLevIt
+*/
 }
 

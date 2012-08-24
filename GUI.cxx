@@ -17,6 +17,7 @@
 #include <unistd.h> // to get the access setup
 #include <vector>
 #include <cstdlib> // for getenv()
+#include <ctime> // for clock()
 
 /*itk classes*/
 #include "itkImage.h"
@@ -61,9 +62,13 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile) : Q
 
 	QObject::connect(InterpolTypeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(InterpolTypeComboBoxChanged(int)));
 	QObject::connect(TensInterpolComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(TensorInterpolComboBoxChanged(int)));
+	QObject::connect(RegMethodcomboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(RegMethodComboBoxChanged(int)));
 
 	QObject::connect(this, SIGNAL(runningcomplete()), this, SLOT(OpenRunningCompleteWindow()));
 	QObject::connect(this, SIGNAL(runningfail()), this, SLOT(OpenRunningFailWindow()));
+
+	QObject::connect(DefaultButton, SIGNAL(clicked()), this, SLOT(ConfigDefault()));
+//	QObject::connect(AWPath, SIGNAL(textChanged(QString)), this, SLOT(testAW())); // test the version of AtlasWerks
 
 /* When any value changed, the value of m_ParamSaved is set to 0 */
 	QObject::connect(TemplateLineEdit, SIGNAL(textChanged(QString)), this, SLOT(WidgetHasChangedParamNoSaved()));
@@ -121,15 +126,58 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile) : Q
 	QObject::connect(DTIRegButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
 	SoftButtonMapper->setMapping(DTIRegButton,8);
 
-	QObject::connect(DefaultButton, SIGNAL(clicked()), this, SLOT(ConfigDefault()));
+/* Default software path Buttons */
+	QSignalMapper *ResetSoftButtonMapper = new QSignalMapper();
+	QObject::connect(ResetSoftButtonMapper, SIGNAL(mapped(int)), this, SLOT( ResetSoft(int) ));
 
+	QObject::connect(ImagemathResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
+	ResetSoftButtonMapper->setMapping(ImagemathResetButton,1);
+	QObject::connect(ResampResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
+	ResetSoftButtonMapper->setMapping(ResampResetButton,2);
+	QObject::connect(CropDTIResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
+	ResetSoftButtonMapper->setMapping(CropDTIResetButton,3);
+	QObject::connect(dtiprocResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
+	ResetSoftButtonMapper->setMapping(dtiprocResetButton,4);
+	QObject::connect(BRAINSFitResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
+	ResetSoftButtonMapper->setMapping(BRAINSFitResetButton,5);
+	QObject::connect(AWResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
+	ResetSoftButtonMapper->setMapping(AWResetButton,6);
+	QObject::connect(dtiavgResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
+	ResetSoftButtonMapper->setMapping(dtiavgResetButton,7);
+	QObject::connect(DTIRegResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
+	ResetSoftButtonMapper->setMapping(DTIRegResetButton,8);
+
+/* Initialize the options */
+	InitOptions();
+
+/* SET the soft config from an env variable or look in the PATH */
+	ConfigDefault(); // look for the programs with the itk function
+
+	const char * value = getenv("DTIAtlasBuilderSoftPath");
+	if (value!=NULL) 
+	{
+		printf ("| Environment variable read. The config file is \'%s\'\n",value);
+		LoadConfig( QString(value) ); // replace the paths by the paths given in the config file
+	}
+	else std::cout<<"| No environment variable found"<<std::endl;
+
+/* Load Parameters from Command Line */
+	if( !ParamFile.empty() ) LoadParameters( QString(ParamFile.c_str()) );
+	if( !CSVFile.empty() ) ReadCSV( QString(CSVFile.c_str()) );
+	if( !ConfigFile.empty() ) LoadConfig( QString(ConfigFile.c_str()) );
+}
+
+  /////////////////////////////////////////
+ //           INITIALIZATIONS           //
+/////////////////////////////////////////
+
+void GUI::InitOptions()
+{
 /* Init options for Final AtlasBuilding param : Interpolation algo */
 	m_optionStackLayout = new QStackedWidget;
 	optionHLayout->addWidget(m_optionStackLayout);
 
-	QHBoxLayout *emptyLayout= new QHBoxLayout;
 	QWidget *emptyWidget= new QWidget;
-	emptyWidget->setLayout(emptyLayout);
 	m_optionStackLayout->addWidget(emptyWidget);
 
 	QLabel *windowLabel = new QLabel("Type:", this);
@@ -169,9 +217,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile) : Q
 	m_logOptionStackLayout = new QStackedWidget;
 	logOptionHLayout->addWidget(m_logOptionStackLayout);
 
-	QHBoxLayout *logEmptyLayout= new QHBoxLayout;
 	QWidget *logEmptyWidget= new QWidget;
-	logEmptyWidget->setLayout(logEmptyLayout);
 	m_logOptionStackLayout->addWidget(logEmptyWidget);
 
 	QLabel *nologLabel = new QLabel("Correction:", this);
@@ -190,21 +236,127 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile) : Q
 
 	m_logOptionStackLayout->setCurrentIndex(0);
 
-/* SET the soft config from an env variable or look in the PATH */
-	ConfigDefault(); // look for the programs with the itk function
+/* Init options for DTI-Reg: Reg Method */
+	m_DTIRegOptionStackLayout = new QStackedWidget;
+	DTIRegOptionsVLayout->addWidget(m_DTIRegOptionStackLayout);
 
-	const char * value = getenv("DTIAtlasBuilderSoftPath");
-	if (value!=NULL) 
-	{
-		printf ("| Environment variable read. The config file is \'%s\'\n",value);
-		LoadConfig( QString(value) ); // replace the paths by the pathys given in the config file
-	}
-	else std::cout<<"| No environment variable found"<<std::endl;
+	/*BRAINS*/
+	QHBoxLayout *BRAINSHLayout = new QHBoxLayout;
+	QVBoxLayout *BRAINSLabelVLayout = new QVBoxLayout;
+	BRAINSHLayout->addLayout(BRAINSLabelVLayout);
+	QVBoxLayout *BRAINSWidgetVLayout = new QVBoxLayout;
+	BRAINSHLayout->addLayout(BRAINSWidgetVLayout);
 
-/* Load Parameters from Command Line */
-	if( !ParamFile.empty() ) LoadParameters( QString(ParamFile.c_str()) );
-	if( !CSVFile.empty() ) ReadCSV( QString(CSVFile.c_str()) );
-	if( !ConfigFile.empty() ) LoadConfig( QString(ConfigFile.c_str()) );
+	QLabel *BRegTypeLabel = new QLabel("Registration Type:", this);
+	BRAINSLabelVLayout->addWidget(BRegTypeLabel);
+	m_BRegTypeComboBox = new QComboBox(this);
+	m_BRegTypeComboBox->addItem("None");
+	m_BRegTypeComboBox->addItem("Rigid");
+	m_BRegTypeComboBox->addItem("Affine");
+	m_BRegTypeComboBox->addItem("BSpline");
+	m_BRegTypeComboBox->addItem("Diffeomorphic");
+	m_BRegTypeComboBox->addItem("Demons");
+	m_BRegTypeComboBox->addItem("LogDemons");
+	m_BRegTypeComboBox->addItem("SymmetricLogDemons");
+	m_BRegTypeComboBox->setCurrentIndex(6);
+	BRAINSWidgetVLayout->addWidget(m_BRegTypeComboBox);
+
+	QLabel *TfmModeLabel = new QLabel("Transform Mode:", this);
+	BRAINSLabelVLayout->addWidget(TfmModeLabel);
+	m_TfmModeComboBox = new QComboBox(this);
+	m_TfmModeComboBox->addItem("Off");
+	m_TfmModeComboBox->addItem("useMomentsAlign");
+	m_TfmModeComboBox->addItem("useCenterOfHeadAlign");
+	m_TfmModeComboBox->addItem("useGeometryAlign");
+	m_TfmModeComboBox->setCurrentIndex(2);
+	BRAINSWidgetVLayout->addWidget(m_TfmModeComboBox);
+
+	QLabel *SigmaLabel = new QLabel("Smooth Deformation Field Sigma:", this);
+	BRAINSLabelVLayout->addWidget(SigmaLabel);
+	m_SigmaDble = new QDoubleSpinBox(this);
+	m_SigmaDble->setValue(1);
+	BRAINSWidgetVLayout->addWidget(m_SigmaDble);
+
+	QLabel *NbPyrLevLabel = new QLabel("Number Of Pyramid Levels:", this);
+	BRAINSLabelVLayout->addWidget(NbPyrLevLabel);
+	m_NbPyrLevSpin = new QSpinBox(this);
+	m_NbPyrLevSpin->setValue(5);
+	BRAINSWidgetVLayout->addWidget(m_NbPyrLevSpin);
+
+	QLabel *PyrLevItLabel = new QLabel("Number Of Iterations for the Pyramid Levels:", this);
+	BRAINSLabelVLayout->addWidget(PyrLevItLabel);
+	m_PyrLevItLine = new QLineEdit(this);
+	m_PyrLevItLine->setText("300,50,30,20,15");
+	BRAINSWidgetVLayout->addWidget(m_PyrLevItLine);
+
+	QWidget *BRAINSWidget = new QWidget;
+	BRAINSWidget->setLayout(BRAINSHLayout);
+	m_DTIRegOptionStackLayout->addWidget(BRAINSWidget);
+
+	/*ANTS*/
+	QHBoxLayout *ANTSHLayout = new QHBoxLayout;
+	QVBoxLayout *ANTSLabelVLayout = new QVBoxLayout;
+	ANTSHLayout->addLayout(ANTSLabelVLayout);
+	QVBoxLayout *ANTSWidgetVLayout = new QVBoxLayout;
+	ANTSHLayout->addLayout(ANTSWidgetVLayout);
+
+	QLabel *ARegTypeLabel = new QLabel("Registration Type:", this);
+	ANTSLabelVLayout->addWidget(ARegTypeLabel);
+	m_ARegTypeComboBox = new QComboBox(this);
+	m_ARegTypeComboBox->addItem("None");
+	m_ARegTypeComboBox->addItem("Rigid");
+	m_ARegTypeComboBox->addItem("Affine");
+	m_ARegTypeComboBox->addItem("GreedyDiffeo");
+	m_ARegTypeComboBox->addItem("SpatioTempDiffeo");
+	m_ARegTypeComboBox->setCurrentIndex(3);
+	ANTSWidgetVLayout->addWidget(m_ARegTypeComboBox);
+
+	QLabel *TfmStepLabel = new QLabel("Transformation Step:", this);
+	ANTSLabelVLayout->addWidget(TfmStepLabel);
+	m_TfmStepLine = new QLineEdit(this);
+	m_TfmStepLine->setText("0.25");
+	ANTSWidgetVLayout->addWidget(m_TfmStepLine);
+
+	QLabel *IterLabel = new QLabel("Iterations:", this);
+	ANTSLabelVLayout->addWidget(IterLabel);
+	m_IterLine = new QLineEdit(this);
+	m_IterLine->setText("100x50x25");
+	ANTSWidgetVLayout->addWidget(m_IterLine);
+
+	QLabel *SimMetLabel = new QLabel("Similarity Metric:", this);
+	ANTSLabelVLayout->addWidget(SimMetLabel);
+	m_SimMetComboBox = new QComboBox(this);
+	m_SimMetComboBox->addItem("CC");
+	m_SimMetComboBox->addItem("MI");
+	m_SimMetComboBox->addItem("MSQ");
+	m_SimMetComboBox->setCurrentIndex(0);
+	ANTSWidgetVLayout->addWidget(m_SimMetComboBox);
+
+	QLabel *SimParamLabel = new QLabel("Similarity Parameter:", this);
+	ANTSLabelVLayout->addWidget(SimParamLabel);
+	m_SimParamDble = new QDoubleSpinBox(this);
+	m_SimParamDble->setValue(2);
+	ANTSWidgetVLayout->addWidget(m_SimParamDble);
+
+	QLabel *GSigmaLabel = new QLabel("Gaussian Sigma:", this);
+	ANTSLabelVLayout->addWidget(GSigmaLabel);
+	m_GSigmaDble = new QDoubleSpinBox(this);
+	m_GSigmaDble->setValue(3);
+	ANTSWidgetVLayout->addWidget(m_GSigmaDble);
+
+	m_SmoothOffCheck = new QCheckBox("Gaussian Smoothing Off", this);
+	m_SmoothOffCheck->setChecked(false);
+	m_SmoothOffCheck->setLayoutDirection(Qt::RightToLeft);
+	ANTSLabelVLayout->addWidget(m_SmoothOffCheck);
+	QLabel *emptyL = new QLabel("", this);
+	ANTSWidgetVLayout->addWidget(emptyL);
+
+	QWidget *ANTSWidget = new QWidget;
+	ANTSWidget->setLayout(ANTSHLayout);
+	m_DTIRegOptionStackLayout->addWidget(ANTSWidget);
+
+
+	m_DTIRegOptionStackLayout->setCurrentIndex(0); //BRAINS is the default
 }
 
   /////////////////////////////////////////
@@ -343,7 +495,6 @@ void GUI::ReadCSVSlot() /*SLOT*/
 	{
 		ReadCSV(CSVBrowse);
 	}
-	else std::cout<<"| No file given"<<std::endl;
 }
 
 void GUI::ReadCSV(QString CSVfile)
@@ -351,32 +502,37 @@ void GUI::ReadCSV(QString CSVfile)
 	if(!CSVfile.isEmpty())
 	{
 
-	QFile file(CSVfile);
-
-	if (file.open(QFile::ReadOnly))
-	{
-		std::cout<<"| Loading csv file..."; // command line display
-
-		QTextStream stream(&file);
-		while(!stream.atEnd()) //read all the lines
+		if( access(CSVfile.toStdString().c_str(), F_OK) == 0 ) // Test if the csv file exists => unistd::access() returns 0 if F(file)_OK
 		{
-			QString line = stream.readLine();
-			QStringList list = line.split(m_CSVseparator);
-			if( list.at(0).at(0).toAscii() != '#' )  CaseListWidget->addItem( list.at(1) ); //display in the Widget so that some can be removed
-		}
+
+			QFile file(CSVfile);
+
+			if (file.open(QFile::ReadOnly))
+			{
+				std::cout<<"| Loading csv file..."; // command line display
+
+				QTextStream stream(&file);
+				while(!stream.atEnd()) //read all the lines
+				{
+					QString line = stream.readLine();
+					QStringList list = line.split(m_CSVseparator);
+					if( list.at(0).at(0).toAscii() != '#' )  CaseListWidget->addItem( list.at(1) ); //display in the Widget so that some can be removed
+				}
 	
-		SelectCasesLabel->setText( QString("Current CSV file : ") + CSVfile );
-		m_ParamSaved=0;
-		std::cout<<"DONE"<<std::endl; // command line display
-	} 
-	else
-	{
-		SelectCasesLabel->setText( QString("Could not open CSV File"));
-		qDebug( "Could not open csv file");
-	}
+				SelectCasesLabel->setText( QString("Current CSV file : ") + CSVfile );
+				m_ParamSaved=0;
+				std::cout<<"DONE"<<std::endl; // command line display
+			} 
+			else
+			{
+				SelectCasesLabel->setText( QString("Could not open CSV File"));
+				qDebug( "Could not open csv file");
+			}
 
-	if ( CaseListWidget->count()>0 ) RemovePushButton->setEnabled(true);
+			if ( CaseListWidget->count()>0 ) RemovePushButton->setEnabled(true);
 
+		}
+		else std::cout<<"| The given file does not exist"<<std::endl; // command line display
 	}
 }
 
@@ -412,7 +568,6 @@ void GUI::SaveCSVDatasetBrowse() /*SLOT*/
 	else qDebug( "Could not create file");
 
 	}
-	else std::cout<<"| No file given"<<std::endl;
 }
 
 void GUI::SaveCSVDataset()
@@ -490,7 +645,7 @@ void GUI::SaveParameters() /*SLOT*/
 	}
 
 	QString ParamBrowseName=QFileDialog::getSaveFileName(this, tr("Save Parameter File"),"./DTIAtlasBuilderParameters.txt",tr("Text File (*.txt)"));
-	QString CSVFileName = ParamBrowseName.split(".").at(0) + QString(".csv");
+	QString CSVFileName = ParamBrowseName.split(".").at(0) + QString(".csv"); // [Name].txt => [Name].csv
 
 	if(!ParamBrowseName.isEmpty())
 	{
@@ -508,6 +663,7 @@ void GUI::SaveParameters() /*SLOT*/
 		stream << "Loops for the registration=" << NbLoopsSpinBox->value() << endl;
 		if(OverwritecheckBox->isChecked()) stream << "Overwrite=true" << endl;
 		else  stream << "Overwrite=false" << endl;
+
 		int SL4,SL2,SL1;
 		if(SL4checkBox->isChecked()) SL4=1;
 		else SL4=0;
@@ -518,15 +674,28 @@ void GUI::SaveParameters() /*SLOT*/
 		if(SL1checkBox->isChecked()) SL1=1;
 		else SL1=0;
 		stream << "Scale Level =" << SL1 << ","  << SL1spinBox->value() << "," << nbIter1SpinBox->value() << "," << alpha1DoubleSpinBox->value() << "," << beta1DoubleSpinBox->value() << "," << gamma1DoubleSpinBox->value() << "," << maxPerturbation1DoubleSpinBox->value() << endl;
+
 		stream << "Resampling Interpolation Algorithm=" << InterpolTypeComboBox->currentText() ;
 		if( InterpolTypeComboBox->currentText()==QString("Windowed Sinc") ) stream << "=" << m_windowComboBox->currentText() << endl;
 		else if( InterpolTypeComboBox->currentText()==QString("BSpline") ) stream << "=" << m_BSplineComboBox->currentText() << endl;
 		else stream << endl;
+
 		stream << "Tensor interpolation=" << TensInterpolComboBox->currentText() ;
 		if( TensInterpolComboBox->currentText()==QString("Non Log Euclidean") ) stream << "=" << m_nologComboBox->currentText() << endl;
 		else stream << endl;
+
 		stream << "Tensor transformation=" << TensTfmComboBox->currentText()<< endl;
 		stream << "DTI Average Statistics Method=" << averageStatMethodComboBox->currentText() << endl;
+
+		stream << "DTIRegMethod=" << RegMethodcomboBox->currentText() ;
+		if( RegMethodcomboBox->currentText()==QString("ANTS") ) 
+		{
+			stream << "=" << m_ARegTypeComboBox->currentText() << ";" << m_TfmStepLine->text() << ";" << m_IterLine->text() << ";" << m_SimMetComboBox->currentText() << ";" << m_SimParamDble->value() << ";" << m_GSigmaDble->value() ;
+			if(m_SmoothOffCheck->isChecked()) stream << ";1" << endl;
+			else stream << ";0" << endl;
+		}
+		else stream << "=" << m_BRegTypeComboBox->currentText() << ";" << m_TfmModeComboBox->currentText() << ";" << m_SigmaDble->value() << ";" << m_NbPyrLevSpin->value() << ";" << m_PyrLevItLine->text() << endl;
+
 		stream << "CSV Dataset File=" << CSVFileName << endl;
 
 		std::cout<<"DONE"<<std::endl; // command line display
@@ -555,7 +724,6 @@ void GUI::SaveParameters() /*SLOT*/
 	else qDebug( "Could not create parameter file");
 
 	}
-	else std::cout<<"| No file given"<<std::endl;
 }
 
 void GUI::LoadParametersSlot() /*SLOT*/
@@ -566,12 +734,11 @@ void GUI::LoadParametersSlot() /*SLOT*/
 	{
 		LoadParameters(ParamBrowse);
 	}
-	else std::cout<<"| No file given"<<std::endl;
 }
 
 void GUI::LoadParameters(QString paramFile)
 {
-	if( access(paramFile.toStdString().c_str(), F_OK) == 0 ) // Test if the config file already exists => unistd::access() returns 0 if F(file)_OK
+	if( access(paramFile.toStdString().c_str(), F_OK) == 0 ) // Test if the config file exists => unistd::access() returns 0 if F(file)_OK
 	{
 
 	QFile file(paramFile);
@@ -847,6 +1014,103 @@ void GUI::LoadParameters(QString paramFile)
 			return;
 		}
 
+/* Final Resampling parameters */
+		line = stream.readLine();
+		list = line.split("=");
+		if(!list.at(0).contains(QString("DTIRegMethod")))
+		{
+			QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+			std::cout<<"FAILED"<<std::endl; // command line display
+			return;
+		}
+		if( list.at(1).contains(QString("BRAINS")) )
+		{
+			InterpolTypeComboBox->setCurrentIndex(0);
+			QStringList param= list.at(2).split(";");
+			if( param.size()!=5 )
+			{
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				std::cout<<"FAILED"<<std::endl; // command line display
+				return;
+			}
+
+			if( param.at(0).contains(QString("None")) ) m_BRegTypeComboBox->setCurrentIndex(0);
+			else if( param.at(0).contains(QString("Rigid")) ) m_BRegTypeComboBox->setCurrentIndex(1);
+			else if( param.at(0).contains(QString("Affine")) ) m_BRegTypeComboBox->setCurrentIndex(2);
+			else if( param.at(0).contains(QString("BSpline")) ) m_BRegTypeComboBox->setCurrentIndex(3);
+			else if( param.at(0).contains(QString("Diffeomorphic")) ) m_BRegTypeComboBox->setCurrentIndex(4);
+			else if( param.at(0).contains(QString("Demons")) ) m_BRegTypeComboBox->setCurrentIndex(5);
+			else if( param.at(0).contains(QString("LogDemons")) ) m_BRegTypeComboBox->setCurrentIndex(6);
+			else if( param.at(0).contains(QString("SymmetricLogDemons")) ) m_BRegTypeComboBox->setCurrentIndex(7);
+			else
+			{
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				std::cout<<"FAILED"<<std::endl; // command line display
+				return;
+			}
+
+			if( param.at(1).contains(QString("Off")) ) m_TfmModeComboBox->setCurrentIndex(0);
+			else if( param.at(1).contains(QString("useMomentsAlign")) ) m_TfmModeComboBox->setCurrentIndex(1);
+			else if( param.at(1).contains(QString("useCenterOfHeadAlign")) ) m_TfmModeComboBox->setCurrentIndex(2);
+			else if( param.at(1).contains(QString("useGeometryAlign")) ) m_TfmModeComboBox->setCurrentIndex(3);
+			else
+			{
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				std::cout<<"FAILED"<<std::endl; // command line display
+				return;
+			}
+
+			m_SigmaDble->setValue( param.at(2).toDouble() );
+			m_NbPyrLevSpin->setValue( param.at(3).toInt() );
+			m_PyrLevItLine->setText( param.at(4) );
+		}
+		else if( list.at(1).contains(QString("ANTS")) )
+		{
+			RegMethodcomboBox->setCurrentIndex(1);
+			QStringList param= list.at(2).split(";");
+			if( param.size()!=7 )
+			{
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				std::cout<<"FAILED"<<std::endl; // command line display
+				return;
+			}
+
+			if( param.at(0).contains(QString("None")) ) m_ARegTypeComboBox->setCurrentIndex(0);
+			else if( param.at(0).contains(QString("Rigid")) ) m_ARegTypeComboBox->setCurrentIndex(1);
+			else if( param.at(0).contains(QString("Affine")) ) m_ARegTypeComboBox->setCurrentIndex(2);
+			else if( param.at(0).contains(QString("GreedyDiffeo")) ) m_ARegTypeComboBox->setCurrentIndex(3);
+			else if( param.at(0).contains(QString("SpatioTempoDiffeo")) ) m_ARegTypeComboBox->setCurrentIndex(3);
+			else
+			{
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				std::cout<<"FAILED"<<std::endl; // command line display
+				return;
+			}
+
+			m_TfmStepLine->setText( param.at(1) );
+			m_IterLine->setText( param.at(2) );
+
+			if( param.at(3).contains(QString("CC")) ) m_SimMetComboBox->setCurrentIndex(0);
+			else if( param.at(3).contains(QString("MI")) ) m_SimMetComboBox->setCurrentIndex(1);
+			else if( param.at(3).contains(QString("MSQ")) ) m_SimMetComboBox->setCurrentIndex(2);
+			else
+			{
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				std::cout<<"FAILED"<<std::endl; // command line display
+				return;
+			}
+
+			m_SimParamDble->setValue( param.at(4).toDouble() );
+			m_GSigmaDble->setValue( param.at(5).toDouble() );
+			if ( param.at(6).toInt()==1 ) m_SmoothOffCheck->setChecked(true);
+		}
+		else
+		{
+			QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+			std::cout<<"FAILED"<<std::endl; // command line display
+			return;
+		}
+
 		std::cout<<"DONE"<<std::endl; // command line display
 
 /* Opening CSV File */
@@ -868,6 +1132,7 @@ void GUI::LoadParameters(QString paramFile)
 	else if ( !paramFile.isEmpty() ) qDebug( "Could not open file");
 
 	}
+	else std::cout<<"| The given file does not exist"<<std::endl; // command line display
 }
 
   /////////////////////////////////////////
@@ -1052,13 +1317,11 @@ void GUI::LoadConfigSlot() /*SLOT*/
 	{
 		LoadConfig(ConfigBrowse);
 	}
-	else std::cout<<"| No file given"<<std::endl;
 }
 
 void GUI::LoadConfig(QString configFile)
 {
-/* getting the values */
-	if( access(configFile.toStdString().c_str(), F_OK) == 0 ) // Test if the config file already exists => unistd::access() returns 0 if F(file)_OK
+	if( access(configFile.toStdString().c_str(), F_OK) == 0 ) // Test if the config file exists => unistd::access() returns 0 if F(file)_OK
 	{
 		std::cout<<"| Loading Configuration file..."; // command line display
 
@@ -1162,12 +1425,13 @@ void GUI::LoadConfig(QString configFile)
 
 			if( !notFound.empty() )
 			{
-				std::string text = "The following programs are missing.\nPlease enter the path manually:2222\n" + notFound;
+				std::string text = "The following programs are missing.\nPlease enter the path manually:\n" + notFound;
 				QMessageBox::warning(this, "Program missing", QString(text.c_str()) ); // POP-UP window : "The following softwares weren't found: please give the path to these."
 			}
 		} 
 		else qDebug( "Could not open file");
 	}
+	else std::cout<<"| The given file does not exist"<<std::endl; // command line display
 }
 
 void GUI::SaveConfig() /*SLOT*/
@@ -1202,7 +1466,6 @@ void GUI::SaveConfig() /*SLOT*/
 			qDebug( "Could not create config file");
 		}
 	}
-	else std::cout<<"| No file given"<<std::endl;
 }
 
 void GUI::ConfigDefault() /*SLOT*/
@@ -1251,7 +1514,7 @@ void GUI::ConfigDefault() /*SLOT*/
 	if(program.empty() && dtiavgPath->text().isEmpty()) notFound = notFound + "> dtiaverage\n";
 	else dtiavgPath->setText(QString(program.c_str()));
 
-	program = itksys::SystemTools::FindProgram("DTI-Reg");
+	program = itksys::SystemTools::FindProgram("DTI-Reg_1.1.1");
 	if(program.empty() && DTIRegPath->text().isEmpty()) notFound = notFound + "> DTI-Reg\n";
 	else DTIRegPath->setText(QString(program.c_str()));
 
@@ -1259,7 +1522,7 @@ void GUI::ConfigDefault() /*SLOT*/
 
 	if( !notFound.empty() )
 	{
-		std::string text = "The following programs are missing.\nPlease enter the path manually:333\n" + notFound;
+		std::string text = "The following programs are missing.\nPlease enter the path manually:\n" + notFound;
 		QMessageBox::warning(this, "Program missing", QString(text.c_str()) ); // POP-UP window : "The following softwares weren't found: please give the path to these."
 	}
 }
@@ -1289,11 +1552,76 @@ void GUI::BrowseSoft(int soft)  /*SLOT*/ //softwares: 1=ImageMath, 2=ResampleDTI
 	}
 }
 
+void GUI::ResetSoft(int softindex) /*SLOT*/
+{
+	std::string soft;
+
+	switch (softindex)
+	{
+	case 1: soft="ImageMath";
+		break;
+	case 2: soft="ResampleDTIlogEuclidean";
+		break;
+	case 3: soft="CropDTI";
+		break;
+	case 4: soft="dtiprocess";
+		break;
+	case 5:	soft="BRAINSFit";
+		break;
+	case 6: soft="AtlasWerks";
+		break;
+	case 7: soft="dtiaverage";
+		break;
+	case 8: soft="DTI-Reg_1.1.1";
+		break;
+	}
+
+	std::cout<<"| Searching the software \'"<< soft <<"\'..."; // command line display
+
+	std::string program = itksys::SystemTools::FindProgram(soft.c_str());
+
+	if(program.empty()) 
+	{
+		std::string text = "The program " + soft + "is missing.\nPlease enter the path manually.\n";
+		QMessageBox::warning(this, "Program missing", QString(text.c_str()) );
+	}
+	else 
+	{
+		if(softindex==1) ImagemathPath->setText(QString(program.c_str()));
+		else if(softindex==2) ResampPath->setText(QString(program.c_str()));
+		else if(softindex==3) CropDTIPath->setText(QString(program.c_str()));
+		else if(softindex==4) dtiprocPath->setText(QString(program.c_str()));
+		else if(softindex==5) BRAINSFitPath->setText(QString(program.c_str()));
+		else if(softindex==6) AWPath->setText(QString(program.c_str()));
+		else if(softindex==7) dtiavgPath->setText(QString(program.c_str()));
+		else if(softindex==8) DTIRegPath->setText(QString(program.c_str()));
+	}
+
+	std::cout<<"DONE"<<std::endl; // command line display
+}
+
+void GUI::testAW() /*SLOT*/
+{
+	QProcess * Process = new QProcess;
+	std::string program;
+	program = AWPath->text().toStdString() + " --version";
+	int ExitCode=0;
+
+	ExitCode = Process->execute( program.c_str() ); // try to find the version => fails if not the right version
+
+	std::cout<<"> ExitCode= "<<ExitCode<<std::endl;
+	if(ExitCode!=0) // if execution not ok, '--version' does not exists so it is not the right version
+	{
+		std::string text = "The version of AtlasWerks \'" + AWPath->text().toStdString() + "\' is not the right one.\nPlease enter the path manually.\n";
+		QMessageBox::warning(this, "Wrong version", QString(text.c_str()) );
+	}
+}
+
   /////////////////////////////////////////
  //               READ ME               //
 /////////////////////////////////////////
 
-void GUI::ReadMe()  /*SLOT*/ /////to enhance !!
+void GUI::ReadMe()  /*SLOT*/ /////to UPDATE
 {
 /*	QProcess * Process = new QProcess;
 	std::string program = "gedit /home/akaiser/Desktop/Projects/DTIAtlasBuilderGUI_07-12/DTIABGUIFinal_07-18-12/src/README.md";
@@ -1341,6 +1669,22 @@ void GUI::TensorInterpolComboBoxChanged(int index) /*SLOT*/ // 0= log, 1= nolog
 		break;
 	}
 }
+
+  /////////////////////////////////////////
+ //               DTI-REG               //
+/////////////////////////////////////////
+
+void GUI::RegMethodComboBoxChanged(int index)
+{
+	switch (index)
+	{
+	case 0:	m_DTIRegOptionStackLayout->setCurrentIndex(0);
+		break;
+	case 1:	m_DTIRegOptionStackLayout->setCurrentIndex(1);
+		break;
+	}
+}
+
 
   /////////////////////////////////////////
  //         WIDGET CHANGE SLOT          //
@@ -1513,7 +1857,54 @@ int GUI::LaunchScriptWriter()
 	if(OverwritecheckBox->isChecked()) m_scriptwriter->setOverwrite(1);
 	else  m_scriptwriter->setOverwrite(0);
 
-	m_scriptwriter->setnbLoops(NbLoopsSpinBox->value());// QLineEdit.value() is an int
+	m_scriptwriter->setnbLoops(NbLoopsSpinBox->value());
+
+/* Final Resamp options */
+
+	std::vector < std::string > DTIRegOptions;
+
+	DTIRegOptions.push_back(RegMethodcomboBox->currentText().toStdString());
+
+	if( RegMethodcomboBox->currentText()==QString("ANTS") ) 
+	{
+		DTIRegOptions.push_back(m_ARegTypeComboBox->currentText().toStdString());
+		DTIRegOptions.push_back(m_TfmStepLine->text().toStdString());
+		DTIRegOptions.push_back(m_IterLine->text().toStdString());
+		DTIRegOptions.push_back(m_SimMetComboBox->currentText().toStdString());
+
+		std::ostringstream out;
+		out << m_SimParamDble->value();
+		std::string SimParam_str = out.str();
+		DTIRegOptions.push_back(SimParam_str);
+
+		std::ostringstream out1;
+		out1 << m_GSigmaDble->value();
+		std::string GSigma_str = out1.str();
+		DTIRegOptions.push_back(GSigma_str);
+
+		if(m_SmoothOffCheck->isChecked()) DTIRegOptions.push_back("1");
+		else DTIRegOptions.push_back("0");
+	}
+	else 
+	{
+		DTIRegOptions.push_back(m_BRegTypeComboBox->currentText().toStdString());
+		DTIRegOptions.push_back(m_TfmModeComboBox->currentText().toStdString());
+
+		std::ostringstream out;
+		out << m_SigmaDble->value();
+		std::string Sigma_str = out.str();
+		DTIRegOptions.push_back(Sigma_str);
+
+		std::ostringstream out1;
+		out1 << m_NbPyrLevSpin->value();
+		std::string NbPyrLev_str = out1.str();
+		DTIRegOptions.push_back(NbPyrLev_str);
+
+		DTIRegOptions.push_back(m_PyrLevItLine->text().toStdString());
+	}
+
+	m_scriptwriter->setDTIRegOptions(DTIRegOptions);
+	DTIRegOptions.clear();
 
 /* Scale Levels */
 /* Aditya :--scaleLevel=4 --numberOfIterations=150 --alpha=1 --beta=1 --gamma=0.0001 --maxPerturbation=0.001 --scaleLevel=2 --numberOfIterations=120 --alpha=1 --beta=1 --gamma=0.001 --maxPerturbation=0.01 --scaleLevel=1 --numberOfIterations=100 --alpha=0.1 --beta=0.1 --gamma=0.01 --maxPerturbation=0.1 */
@@ -1622,14 +2013,14 @@ Num. Iterations       : 50
 		}
 		if(DTIRegPath->text().isEmpty())
 		{
-			programPath = itksys::SystemTools::FindProgram("DTI-Reg");
+			programPath = itksys::SystemTools::FindProgram("DTI-Reg_1.1.1");
 			if(programPath.empty()) notFound = notFound + "> DTI-Reg\n";
 			else DTIRegPath->setText(QString(programPath.c_str()));
 		}
 
 		if( !notFound.empty() )
 		{
-			std::string text = "The following programs are missing.\nPlease enter the path manually:1111\n" + notFound;
+			std::string text = "The following programs are missing.\nPlease enter the path manually:\n" + notFound;
 			QMessageBox::critical(this, "Program missing", QString(text.c_str()) ); // POP-UP window : "The following softwares weren't found: please give the path to these."
 			return -1;
 		}
@@ -1783,6 +2174,7 @@ void GUI::LaunchScriptRunner()
 	program = m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Main.script";
 
 	int ExitCode=0;
+
 	ExitCode = ScriptProcess->execute( program.c_str() );
 
 /* When we are here the running is finished : emit signal to display the "Running Completed" Window: */

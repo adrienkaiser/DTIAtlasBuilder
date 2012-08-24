@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1045</width>
-    <height>508</height>
+    <height>511</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -964,6 +964,112 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tab">
+       <attribute name="title">
+        <string>Final Resampling</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_14">
+        <item>
+         <widget class="QGroupBox" name="groupBox_2">
+          <property name="title">
+           <string>DTI-Reg</string>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_11">
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout_20">
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_10">
+               <item>
+                <widget class="QLabel" name="label_18">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Registration Method:</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="RegMethodcomboBox">
+                 <item>
+                  <property name="text">
+                   <string>BRAINS</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>ANTS</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QVBoxLayout" name="DTIRegOptionsVLayout"/>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_13">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_11">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_12">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_5">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="Configtab">
        <attribute name="title">
         <string>Software Configuration</string>
@@ -1059,6 +1165,96 @@
             </item>
            </layout>
           </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_19">
+            <item>
+             <widget class="QPushButton" name="ImagemathResetButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>Reset Software Path</string>
+              </property>
+              <property name="text">
+               <string>R</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="ResampResetButton">
+              <property name="toolTip">
+               <string>Reset Software Path</string>
+              </property>
+              <property name="text">
+               <string>R</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="CropDTIResetButton">
+              <property name="toolTip">
+               <string>Reset Software Path</string>
+              </property>
+              <property name="text">
+               <string>R</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="dtiprocResetButton">
+              <property name="toolTip">
+               <string>Reset Software Path</string>
+              </property>
+              <property name="text">
+               <string>R</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="BRAINSFitResetButton">
+              <property name="toolTip">
+               <string>Reset Software Path</string>
+              </property>
+              <property name="text">
+               <string>R</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="AWResetButton">
+              <property name="toolTip">
+               <string>Reset Software Path</string>
+              </property>
+              <property name="text">
+               <string>R</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="dtiavgResetButton">
+              <property name="toolTip">
+               <string>Reset Software Path</string>
+              </property>
+              <property name="text">
+               <string>R</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="DTIRegResetButton">
+              <property name="toolTip">
+               <string>Reset Software Path</string>
+              </property>
+              <property name="text">
+               <string>R</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
          </layout>
         </item>
         <item>
@@ -1105,26 +1301,34 @@
          <widget class="QLabel" name="label_17">
           <property name="text">
            <string>You can set an environment variable manually with the name &quot;DTIAtlasBuilderSoftPath&quot; and contaning the path to a configuration file.
-It will be read at the beginning of the program.
-setenv DTIAtlasBuilderSoftPath [your config file]</string>
+It will be read at the beginning of the program.</string>
           </property>
           <property name="alignment">
-           <set>Qt::AlignCenter</set>
+           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>
         <item>
-         <spacer name="verticalSpacer_4">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
+         <widget class="QLabel" name="label_20">
+          <property name="font">
+           <font>
+            <family>Courier 10 Pitch</family>
+            <pointsize>11</pointsize>
+           </font>
           </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
+          <property name="text">
+           <string>setenv DTIAtlasBuilderSoftPath [your config file]</string>
           </property>
-         </spacer>
+          <property name="textFormat">
+           <enum>Qt::LogText</enum>
+          </property>
+          <property name="margin">
+           <number>0</number>
+          </property>
+          <property name="textInteractionFlags">
+           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>
