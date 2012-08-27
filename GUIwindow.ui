@@ -1004,6 +1004,11 @@
                    <string>ANTS</string>
                   </property>
                  </item>
+                 <item>
+                  <property name="text">
+                   <string>DTI-TK (coming soon)</string>
+                  </property>
+                 </item>
                 </widget>
                </item>
               </layout>
@@ -1317,7 +1322,7 @@ It will be read at the beginning of the program.</string>
            </font>
           </property>
           <property name="text">
-           <string>setenv DTIAtlasBuilderSoftPath [your config file]</string>
+           <string>$ setenv DTIAtlasBuilderSoftPath [your config file]</string>
           </property>
           <property name="textFormat">
            <enum>Qt::LogText</enum>

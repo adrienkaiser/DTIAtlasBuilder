@@ -37,7 +37,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 
 	public:
 		
-/*CONSTRUCTOR*/	GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile); //constructor
+/*CONSTRUCTOR*/	GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, std::string DTItype, bool noGUI); //constructor
 
 /*INIT*/	void InitOptions();
 
@@ -114,6 +114,8 @@ class GUI : public QMainWindow, public Ui::MainWindow
 /*PARAMETERS*/	int m_ParamSaved; // 0 if the last parameters have not been saved, 1 if the last have been saved
 		QString m_ParamFileHeader; // to check if the file to read is really a parameter file
 
+/*SOFT CONFIG*/	int m_FromConstructor; // do not test AW path if 'Default' called from constructor
+
 /*RESAMP PARAM*/QComboBox *m_windowComboBox;
 		QComboBox *m_BSplineComboBox;
 		QStackedWidget *m_optionStackLayout;
@@ -137,6 +139,8 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		QCheckBox *m_SmoothOffCheck;
 
 /*MAIN FUNCT*/	ScriptWriter* m_scriptwriter; ////contains the writing pipeline
+		std::string m_DTItype; // double or float
+		bool m_noGUI;
 
 };
 #endif
