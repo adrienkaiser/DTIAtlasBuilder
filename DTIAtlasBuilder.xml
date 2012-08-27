@@ -28,5 +28,27 @@
 			<label>Dataset File</label>
 		</string>
 	</parameters>
+	<parameters>
+		<label>Options</label>
+		<description>Options for the program</description>
+		<string-enumeration>
+			<name>DTItype</name>
+			<flag>t</flag>
+			<longflag>type</longflag>
+			<description>Type of DTI output image. You should select float if you want to open the images with Slicer</description>
+			<label>DTI type</label>
+			<default>double</default>
+			<element>double</element>
+			<element>float</element>
+		</string-enumeration> 
+		<boolean>
+			<name>noGUI</name>
+			<flag>g</flag>
+			<longflag>nogui</longflag>
+			<description>If you do not need the GUI</description>
+			<label>No GUI</label>
+			<default>false</default>
+		</boolean>
+	</parameters>
 </executable>
 			

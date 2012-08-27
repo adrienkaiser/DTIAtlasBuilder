@@ -113,7 +113,10 @@ void ScriptWriter::Preprocess ()
 /* Affine Registration and Normalization Loop */
 	Script = Script + "n = 0\n";
 	Script = Script + "while n <= " + m_nbLoops_str + " :\n";
-	//Script = Script + "\tif n == " + m_nbLoops_str + " : OutputPath= \"" + m_OutputPath + "/DTIAtlas/Affine_Registration\" # this will not be done for the last lap\n";
+
+	Script = Script + "\tif not os.path.isdir(OutputPath + \"/Loop\" + str(n)):\n";
+		Script = Script + "\t\tprint(\"\\n => Creation of the Output directory for Loop \" + str(n) + \" = \" + OutputPath + \"/Loop\" + str(n))\n";
+		Script = Script + "\t\tos.mkdir(OutputPath + \"/Loop\" + str(n))\n\n";
 
 /* Normalization */
 		Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] ======== Normalization =========\")\n";
@@ -125,7 +128,7 @@ void ScriptWriter::Preprocess ()
 	else 	Script = Script + "\tcase = 0\n";
 		Script = Script + "\twhile case < len(allcases):\n";
 			Script = Script + "\t\tFA= OutputPath + \"/Case\" + str(case+1) + \"_FA.nrrd\"\n";
-			Script = Script + "\t\tNormFA= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_NormFA.nrrd\"\n";
+			Script = Script + "\t\tNormFA= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_NormFA.nrrd\"\n";
 			Script = Script + "\t\tNormFACommand=\"" + m_SoftPath[0] + " \" + FA + \" -outfile \" + NormFA + \" -matchHistogram \" + AtlasFAref\n";
 			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + NormFACommand)\n";
 			if(m_Overwrite==1) Script = Script + "\t\tif os.system(NormFACommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] ImageMath: Normalizing FA image\')\n";
@@ -146,9 +149,9 @@ void ScriptWriter::Preprocess ()
 	}
 	else 	Script = Script + "\tcase = 0\n";
 		Script = Script + "\twhile case < len(allcases):\n";
-			Script = Script + "\t\tNormFA= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_NormFA.nrrd\"\n";
-			Script = Script + "\t\tLinearTranstfm= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans.txt\"\n";
-			Script = Script + "\t\tLinearTrans= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_FA.nrrd\"\n";
+			Script = Script + "\t\tNormFA= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_NormFA.nrrd\"\n";
+			Script = Script + "\t\tLinearTranstfm= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans.txt\"\n";
+			Script = Script + "\t\tLinearTrans= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_FA.nrrd\"\n";
 			Script = Script + "\t\tAffineCommand=\"" + m_SoftPath[4] + " --fixedVolume \" + AtlasFAref + \" --movingVolume \" + NormFA + \" --initializeTransformMode useCenterOfHeadAlign --useAffine --outputVolume \" + LinearTrans + \" --outputTransform \" + LinearTranstfm\n";
 			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + AffineCommand)\n";
 			if(m_Overwrite==1) Script = Script + "\t\tif os.system(AffineCommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] BRAINSFit: Affine Registration of FA image\')\n";
@@ -171,8 +174,8 @@ void ScriptWriter::Preprocess ()
 	}
 	else 	Script = Script + "\tcase = 0\n";
 		Script = Script + "\twhile case < len(allcases):\n";
-			Script = Script + "\t\tLinearTranstfm= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans.txt\"\n";
-			Script = Script + "\t\tLinearTransDTI= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_DTI.nrrd\"\n";
+			Script = Script + "\t\tLinearTranstfm= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans.txt\"\n";
+			Script = Script + "\t\tLinearTransDTI= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_DTI.nrrd\"\n";
 			if(m_NeedToBeCropped==1) Script = Script + "\t\toriginalDTI= OutputPath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
 			else Script = Script + "\t\toriginalDTI= allcases[case]\n";
 			Script = Script + "\t\tImplementCommand=\"" + m_SoftPath[1] + " \" + originalDTI + \" \" + LinearTransDTI + \" -f \" + LinearTranstfm + \" -R \" + AtlasFAref\n";
@@ -195,9 +198,9 @@ void ScriptWriter::Preprocess ()
 	}
 	else 	Script = Script + "\tcase = 0\n";
 		Script = Script + "\twhile case < len(allcases):\n";
-			Script = Script + "\t\tLinearTransDTI= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_DTI.nrrd\"\n";
-			Script = Script + "\t\tif n == " + m_nbLoops_str + " : LoopFA= OutputPath + \"/Case\" + str(case+1) + \"_Loop" + m_nbLoops_str + "_FinalFA.nrrd\" # the last FA will be the Final output\n";
-			Script = Script + "\t\telse : LoopFA= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_FA.nrrd\"\n";
+			Script = Script + "\t\tLinearTransDTI= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_DTI.nrrd\"\n";
+			Script = Script + "\t\tif n == " + m_nbLoops_str + " : LoopFA= OutputPath + \"/Loop" + m_nbLoops_str + "/Case\" + str(case+1) + \"_Loop" + m_nbLoops_str + "_FinalFA.nrrd\" # the last FA will be the Final output\n";
+			Script = Script + "\t\telse : LoopFA= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_FA.nrrd\"\n";
 			Script = Script + "\t\tGeneLoopFACommand=\"" + m_SoftPath[3] + " --dti_image \" + LinearTransDTI + \" -f \" + LoopFA\n";
 			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + GeneLoopFACommand)\n";
 			if(m_Overwrite==1) Script = Script + "\t\tif os.system(GeneLoopFACommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] dtiprocess: Generating FA of affine registered images\')\n";
@@ -212,17 +215,17 @@ void ScriptWriter::Preprocess ()
 /* FA Average of registered images with ImageMath */
 		Script = Script + "\tif n != " + m_nbLoops_str + " : # this will not be done for the last lap\n";
 			Script = Script + "\t\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] ======== Computing FA Average of registered images =========\")\n";
-			Script = Script + "\t\tFAAverage = OutputPath + \"/Loop\" + str(n) + \"_FAAverage.nrrd\"\n";
+			Script = Script + "\t\tFAAverage = OutputPath + \"/Loop\" + str(n) + \"/Loop\" + str(n) + \"_FAAverage.nrrd\"\n";
 		if(m_RegType==1) //use case as loop 1 ref
 		{
 			Script = Script + "\t\tif n == 0 : FAforAVG= OutputPath + \"/Case1_FA.nrrd\"\n";
-			Script = Script + "\t\telse : FAforAVG= OutputPath + \"/Case1_Loop\" + str(n) + \"_FA.nrrd\"\n";
+			Script = Script + "\t\telse : FAforAVG= OutputPath + \"/Loop\" + str(n) + \"/Case1_Loop\" + str(n) + \"_FA.nrrd\"\n";
 		}
-		else 	Script = Script + "\t\tFAforAVG= OutputPath + \"/Case1_Loop\" + str(n) + \"_FA.nrrd\"\n";
+		else 	Script = Script + "\t\tFAforAVG= OutputPath + \"/Loop\" + str(n) + \"/Case1_Loop\" + str(n) + \"_FA.nrrd\"\n";
 			Script = Script + "\t\tAverageCommand = \"" + m_SoftPath[0] + " \" + FAforAVG + \" -outfile \" + FAAverage + \" -avg \"\n";
 			Script = Script + "\t\tcase = 1\n";
 			Script = Script + "\t\twhile case < len(allcases):\n";
-				Script = Script + "\t\t\tFAforAVG= OutputPath + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_FA.nrrd \"\n";
+				Script = Script + "\t\t\tFAforAVG= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_FA.nrrd \"\n";
 				Script = Script + "\t\t\tAverageCommand= AverageCommand + FAforAVG\n";
 				Script = Script + "\t\t\tcase += 1\n";
 			Script = Script + "\t\tprint(\"=> $ \" + AverageCommand)\n";
@@ -260,6 +263,7 @@ void ScriptWriter::AtlasBuilding()
 	Script = Script + "DeformPath= \"" + m_OutputPath + "/DTIAtlas/NonLinear_Registration\"\n";
 	Script = Script + "AffinePath= \"" + m_OutputPath + "/DTIAtlas/Affine_Registration\"\n";
 	Script = Script + "FinalPath= \"" + m_OutputPath + "/DTIAtlas/Final_Atlas\"\n";
+	Script = Script + "FinalResampPath= \"" + m_OutputPath + "/DTIAtlas/Final_Atlas/Final_Resampling\"\n";
 
 	Script = Script + "ErrorList=[] #empty list\n";
 
@@ -301,25 +305,28 @@ void ScriptWriter::AtlasBuilding()
 	Script = Script + "if not os.path.isdir(FinalPath):\n";
 		Script = Script + "\tprint(\"\\n => Creation of the Final Atlas directory = \" + FinalPath)\n";
 		Script = Script + "\tos.mkdir(FinalPath)\n\n";
+	Script = Script + "if not os.path.isdir(FinalResampPath):\n";
+		Script = Script + "\tprint(\"\\n => Creation of the Final Resampling directory = \" + FinalResampPath)\n";
+		Script = Script + "\tos.mkdir(FinalResampPath)\n\n";
 
 /* Cases variables: */
-/*	Script = Script + "allFAs = [AffinePath + \"/Case1_Loop" + m_nbLoops_str + "_FinalFA.nrrd\"";
+/*	Script = Script + "allFAs = [AffinePath + \"/Loop" + m_nbLoops_str + "/Case1_Loop" + m_nbLoops_str + "_FinalFA.nrrd\"";
 	for (unsigned int i=1;i<m_CasesPath.size();i++) 
 	{
 		std::ostringstream outi;
 		outi << i+1;
 		std::string i_str = outi.str();
-		Script = Script + ", AffinePath + \"/Case" + i_str + "_Loop" + m_nbLoops_str + "_FinalFA.nrrd\"";
+		Script = Script + ", AffinePath + \"/Loop" + m_nbLoops_str + "/Case" + i_str + "_Loop" + m_nbLoops_str + "_FinalFA.nrrd\"";
 	}	
 	Script = Script+ "]\n\n";
 */
-	Script = Script + "alltfms = [AffinePath + \"/Case1_Loop" + m_nbLoops_str + "_LinearTrans.txt\"";
+	Script = Script + "alltfms = [AffinePath + \"/Loop" + m_nbLoops_str + "/Case1_Loop" + m_nbLoops_str + "_LinearTrans.txt\"";
 	for (unsigned int i=1;i<m_CasesPath.size();i++) 
 	{
 		std::ostringstream outi0;
 		outi0 << i+1;
 		std::string i0_str = outi0.str();
-		Script = Script + ", AffinePath + \"/Case" + i0_str + "_Loop" + m_nbLoops_str + "_LinearTrans.txt\"";
+		Script = Script + ", AffinePath + \"/Loop" + m_nbLoops_str + "/Case" + i0_str + "_Loop" + m_nbLoops_str + "_LinearTrans.txt\"";
 	}	
 	Script = Script+ "]\n\n";
 
@@ -402,7 +409,7 @@ if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + FinalAtl
 	Script = Script + "print(\"\\n======== Applying deformation fields to original DTIs =========\")\n";
 	Script = Script + "case = 0\n";
 	Script = Script + "while case < len(allcases):\n";
-		Script = Script + "\ttfm= AffinePath + \"/Case\" + str(case+1) + \"_Loop" + m_nbLoops_str + "_LinearTrans.txt\"\n";
+		Script = Script + "\ttfm= AffinePath + \"/Loop" + m_nbLoops_str + "/Case\" + str(case+1) + \"_Loop" + m_nbLoops_str + "_LinearTrans.txt\"\n";
 		Script = Script + "\tFinalDTI= FinalPath + \"/Case\" + str(case+1) + \"_FinalDTI.nrrd\"\n";
 		if(m_NeedToBeCropped==1) Script = Script + "\toriginalDTI= AffinePath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
 		else Script = Script + "\toriginalDTI= allcases[case]\n";
@@ -416,7 +423,7 @@ if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + FinalAtl
 			std::ostringstream out;
 			out << m_nbLoops-1;
 			std::string nbLoops1_str = out.str();
-		Script = Script + "\tRef = AffinePath + \"/Loop" + nbLoops1_str + "_FAAverage.nrrd\"\n"; // an average image has been generated in the loops of affine reg for reference
+		Script = Script + "\tRef = AffinePath + \"/Loop" + nbLoops1_str + "/Loop" + nbLoops1_str + "_FAAverage.nrrd\"\n"; // an average image has been generated in the loops of affine reg for reference
 		}
 		Script = Script + "\tHField= DeformPath + \"/Case\" + str(case+1) + \"_DeformationField.mhd\"\n";
 		Script = Script + "\tFinalReSampCommand=\"" + m_SoftPath[1] + " -R \" + Ref + \" -H \" + HField + \" \" + originalDTI + \" \" + FinalDTI\n";
@@ -497,8 +504,8 @@ if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + DTIAvera
 	Script = Script + "while case < len(allcases):\n";
 		if(m_NeedToBeCropped==1) Script = Script + "\torigDTI= AffinePath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
 		else Script = Script + "\torigDTI= allcases[case]\n";
-		Script = Script + "\tGlobalDefField = FinalPath + \"/Case\" + str(case+1) + \"_GlobalDeformationField.nrrd\"\n";
-		Script = Script + "\tFinalDef = FinalPath + \"/Case\" + str(case+1) + \"_FinalDeformedDTI.nrrd\"\n";
+		Script = Script + "\tGlobalDefField = FinalResampPath + \"/Case\" + str(case+1) + \"_GlobalDeformationField.nrrd\"\n";
+		Script = Script + "\tFinalDef = FinalResampPath + \"/Case\" + str(case+1) + \"_FinalDeformedDTI.nrrd\"\n";
 		Script = Script + "\tGlobalDefFieldCommand= \"" + m_SoftPath[7] + " --fixedVolume \" + DTIAverage + \" --movingVolume \" + origDTI + \" --outputDeformationFieldVolume \" + GlobalDefField + \" --outputVolume \" + FinalDef\n";
 /* m_DTIRegOptions[]
 0	RegMethod
@@ -537,7 +544,7 @@ if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + DTIAvera
 			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSGaussianSigma " + m_DTIRegOptions[6] + "\"\n";
 			if( m_DTIRegOptions[7].compare("1")==0 ) Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSGaussianSmoothingOff\"\n";
 		}
-		Script = Script + "\tprint(\"||Case \" + str(case+1) + \" => $ \" + GlobalDefFieldCommand)\n";
+		Script = Script + "\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GlobalDefFieldCommand)\n";
 		if(m_Overwrite==1) Script = Script + "\tif os.system(GlobalDefFieldCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] DTI-Reg: Computing global deformation fields\')\n";
 		else
 		{
