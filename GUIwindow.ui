@@ -1083,7 +1083,7 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_7">
           <item>
-           <layout class="QVBoxLayout" name="verticalLayout_15">
+           <layout class="QVBoxLayout" name="ButtonverticalLayout">
             <item>
              <widget class="QPushButton" name="ImagemathButton">
               <property name="text">
@@ -1143,7 +1143,7 @@
            </layout>
           </item>
           <item>
-           <layout class="QVBoxLayout" name="verticalLayout_16">
+           <layout class="QVBoxLayout" name="PathverticalLayout">
             <item>
              <widget class="QLineEdit" name="ImagemathPath"/>
             </item>
@@ -1171,7 +1171,7 @@
            </layout>
           </item>
           <item>
-           <layout class="QVBoxLayout" name="verticalLayout_19">
+           <layout class="QVBoxLayout" name="ResetverticalLayout">
             <item>
              <widget class="QPushButton" name="ImagemathResetButton">
               <property name="sizePolicy">

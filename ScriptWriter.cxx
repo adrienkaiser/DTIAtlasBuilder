@@ -19,7 +19,7 @@ void ScriptWriter::WriteScript()
 {
 	std::cout<<"|"<<std::endl; // command line display
 	std::cout<<"| Number of Cases: "<<m_CasesPath.size()<<std::endl; // command line display
-	std::cout<<"| Output Directory : "<<m_OutputPath<<"/DTIAtlas/Affine_Registration"<<std::endl; // command line display
+	std::cout<<"| Output Directory : "<<m_OutputPath<<"/DTIAtlas/1_Affine_Registration"<<std::endl; // command line display
 	if(m_RegType==1) std::cout<<"| Using Case 1 as reference in the first Registration Loop"<<std::endl; // command line display
 	else std::cout<<"| Using Template as reference for the Registration: "<<m_TemplatePath<<std::endl; // command line display
 	std::cout<<"| Number of loops in the Registration Loop : "<<m_nbLoops<<std::endl; // command line display
@@ -48,7 +48,7 @@ void ScriptWriter::Preprocess ()
 	for (unsigned int i=1;i<m_CasesPath.size();i++) Script = Script + "\", \"" + m_CasesPath[i];
 	Script = Script+ "\"]\n";
 	
-	Script = Script + "OutputPath= \"" + m_OutputPath + "/DTIAtlas/Affine_Registration\"\n";
+	Script = Script + "OutputPath= \"" + m_OutputPath + "/DTIAtlas/1_Affine_Registration\"\n";
 
 	if(m_RegType==1) Script = Script + "AtlasFAref= OutputPath + \"/Case1_FA.nrrd\" #the reference will be the first case for the first loop\n";
 	else Script = Script + "AtlasFAref= \"" + m_TemplatePath + "\" #the reference will be the given template for the first loop\n";
@@ -260,10 +260,10 @@ void ScriptWriter::AtlasBuilding()
 	Script = Script + "import os\n\n"; ///// To run a shell command : os.system("[shell command]")
 	Script = Script + "print(\"\\n============ Atlas Building =============\")\n\n";
 
-	Script = Script + "DeformPath= \"" + m_OutputPath + "/DTIAtlas/NonLinear_Registration\"\n";
-	Script = Script + "AffinePath= \"" + m_OutputPath + "/DTIAtlas/Affine_Registration\"\n";
-	Script = Script + "FinalPath= \"" + m_OutputPath + "/DTIAtlas/Final_Atlas\"\n";
-	Script = Script + "FinalResampPath= \"" + m_OutputPath + "/DTIAtlas/Final_Atlas/Final_Resampling\"\n";
+	Script = Script + "DeformPath= \"" + m_OutputPath + "/DTIAtlas/2_NonLinear_Registration\"\n";
+	Script = Script + "AffinePath= \"" + m_OutputPath + "/DTIAtlas/1_Affine_Registration\"\n";
+	Script = Script + "FinalPath= \"" + m_OutputPath + "/DTIAtlas/3_Final_Atlas\"\n";
+	Script = Script + "FinalResampPath= \"" + m_OutputPath + "/DTIAtlas/4_Final_Resampling\"\n";
 
 	Script = Script + "ErrorList=[] #empty list\n";
 
@@ -457,13 +457,17 @@ if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + FinalAtl
 		if(m_TensTfm.compare("FS")==0)	Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -T FS\"\n";
 
 		Script = Script + "\tprint(\"||Case \" + str(case+1) + \" => $ \" + FinalReSampCommand)\n";
-		if(m_Overwrite==1) Script = Script + "\tif os.system(FinalReSampCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] ResampleDTIlogEuclidean: Applying deformation fields to original DTIs\')\n";
-		else
-		{
-			Script = Script + "\tif not os.path.isfile(FinalDTI) :\n";
-				Script = Script + "\t\tif os.system(FinalReSampCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] ResampleDTIlogEuclidean: Applying deformation fields to original DTIs\')\n";
-			Script = Script + "\telse : print(\"=> The file \\'\" + FinalDTI + \"\\' already exists so the command will not be executed\")\n";
-		}
+		if(m_Overwrite==1) Script = Script + "\tif 1 :\n";
+		else Script = Script + "\tif not os.path.isfile(FinalDTI) :\n";
+			Script = Script + "\t\tif os.system(FinalReSampCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] ResampleDTIlogEuclidean: Applying deformation fields to original DTIs\')\n";
+			if(m_DTItype=="float")
+			{
+			Script = Script + "\t\tCaseDbleToFloatCommand=\"" + m_SoftPath[8] + " convert -t float -i \" + FinalDTI + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalPath + \"/Case\" + str(case+1) + \"_FinalDTI_float.nrrd\"\n";
+			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + CaseDbleToFloatCommand)\n";
+			Script = Script + "\t\tif os.system(CaseDbleToFloatCommand)!=0 : ErrorList.append(\'unu: Converting the final DTI images from double to float DTI\')\n";
+			}
+if(m_Overwrite==0) Script = Script + "\telse : print(\"=> The file \\'\" + FinalDTI + \"\\' already exists so the command will not be executed\")\n";
+
 		Script = Script + "\tcase += 1\n\n";
 
 /* dtiaverage computing */
@@ -492,10 +496,13 @@ if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + FinalAtl
 		Script = Script + "\tGeneFACommand=\"" + m_SoftPath[3] + " --scalar_float --dti_image \" + DTIAverage + \" -f \" + FA + \" -m \" + MD + \" --color_fa_output \" + cFA + \" --RD_output \" + RD + \" --lambda1_output \" + AD\n";
 		Script = Script + "\tprint(\"=> $ \" + GeneFACommand)\n";
 		Script = Script + "\tif os.system(GeneFACommand)!=0 : ErrorList.append(\'dtiprocess: Computing final FA, color FA, MD, RD and AD\')\n";
-/*		Script = Script + "\tDbleToFloatCommand=\"/tools/Slicer4/Slicer-4.0.1.2012-01-19-linux-amd64_localBuild//bin/unu convert -t float -i \" + DTIAverage + \" | /tools/Slicer4/Slicer-4.0.1.2012-01-19-linux-amd64_localBuild//bin/unu save -f nrrd -e gzip -o \" + FinalPath + \"/FinalAtlasDTI_float.nrrd\"\n";
+		if(m_DTItype=="float")
+		{
+		Script = Script + "\tDbleToFloatCommand=\"" + m_SoftPath[8] + " convert -t float -i \" + DTIAverage + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalPath + \"/FinalAtlasDTI_float.nrrd\"\n";
 		Script = Script + "\tprint(\"=> $ \" + DbleToFloatCommand)\n";
 		Script = Script + "\tif os.system(DbleToFloatCommand)!=0 : ErrorList.append(\'unu: Converting the final DTI atlas from double to float DTI\')\n";
-*/
+		}
+
 if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + DTIAverage + \"\\' already exists so the command will not be executed\")\n\n";
 
 /* Computing global deformation fields */
@@ -545,13 +552,16 @@ if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + DTIAvera
 			if( m_DTIRegOptions[7].compare("1")==0 ) Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSGaussianSmoothingOff\"\n";
 		}
 		Script = Script + "\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GlobalDefFieldCommand)\n";
-		if(m_Overwrite==1) Script = Script + "\tif os.system(GlobalDefFieldCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] DTI-Reg: Computing global deformation fields\')\n";
-		else
-		{
-			Script = Script + "\tif not os.path.isfile(FinalDef) :\n";
-				Script = Script + "\t\tif os.system(GlobalDefFieldCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] DTI-Reg: Computing global deformation fields\')\n";
-			Script = Script + "\telse : print(\"=> The file \\'\" + FinalDef + \"\\' already exists so the command will not be executed\")\n";
-		}
+		if(m_Overwrite==1) Script = Script + "\tif 1 :\n";
+		else Script = Script + "\tif not os.path.isfile(FinalDef) :\n";
+			Script = Script + "\t\tif os.system(GlobalDefFieldCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] DTI-Reg: Computing global deformation fields\')\n";
+			if(m_DTItype=="float")
+			{
+			Script = Script + "\t\tGlobDbleToFloatCommand=\"" + m_SoftPath[8] + " convert -t float -i \" + FinalDef + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalResampPath + \"/Case\" + str(case+1) + \"_FinalDeformedDTI_float.nrrd\"\n";
+			Script = Script + "\t\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GlobDbleToFloatCommand)\n";
+			Script = Script + "\t\tif os.system(GlobDbleToFloatCommand)!=0 : ErrorList.append(\'unu: Converting the final deformed images from double to float DTI\')\n";
+			}
+if(m_Overwrite==0) Script = Script + "\telse : print(\"=> The file \\'\" + FinalDef + \"\\' already exists so the command will not be executed\")\n";
 		Script = Script + "\tcase += 1\n\n";
 
 	Script = Script + "print(\"\\n============ End of Atlas Building =============\")\n\n";
@@ -571,8 +581,8 @@ void ScriptWriter::MainScript()
 	std::cout<<"[Main]"<<std::endl; // command line display (no endl)
 
 	Script = Script + "#!/usr/bin/python\n\n";
-	Script = Script + "import os\n\n"; ///// To run a shell command : os.system("[shell command]")
-	Script = Script + "import time\n\n";
+	Script = Script + "import os\n"; ///// To run a shell command : os.system("[shell command]")
+	Script = Script + "import time\n\n"; // to compute the execution time
 	Script = Script + "print(\"\\n=============== Main Script ================\")\n\n";
 
 	Script = Script + "OutputPath= \"" + m_OutputPath + "/DTIAtlas\"\n";
@@ -782,7 +792,7 @@ void ScriptWriter::setAverageStatMethod(std::string Method)
 	m_AverageStatMethod = Method;
 }
 
-void ScriptWriter::setSoftPath(std::vector < std::string > SoftPath) // 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=AtlasWerks, 7=dtiaverage, 8=DTI-Reg
+void ScriptWriter::setSoftPath(std::vector < std::string > SoftPath) // 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=AtlasWerks, 7=dtiaverage, 8=DTI-Reg, 9=unu
 {
 	for (unsigned int i=0;i<SoftPath.size();i++) m_SoftPath.push_back( SoftPath[i] );
 }
@@ -807,5 +817,10 @@ void ScriptWriter::setDTIRegOptions(std::vector < std::string > DTIRegOptions)
 		NbPyrLev
 		PyrLevIt
 */
+}
+
+void ScriptWriter::setDTItype(std::string DTItype) // double or float
+{
+	m_DTItype=DTItype;
 }
 

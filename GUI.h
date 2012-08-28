@@ -115,6 +115,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		QString m_ParamFileHeader; // to check if the file to read is really a parameter file
 
 /*SOFT CONFIG*/	int m_FromConstructor; // do not test AW path if 'Default' called from constructor
+		QLineEdit *m_unuPath;
 
 /*RESAMP PARAM*/QComboBox *m_windowComboBox;
 		QComboBox *m_BSplineComboBox;

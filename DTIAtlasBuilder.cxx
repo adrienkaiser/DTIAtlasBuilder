@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 
 	QApplication app(argc, argv);
 
-	GUI AtlasGUI(ParamFile,ConfigFile,CSVFile,DTItype,noGUI); //type QWidget
+	GUI AtlasGUI(ParamFile,ConfigFile,CSVFile,DTItype,noGUI);
 
 	if(noGUI) AtlasGUI.Compute();
 	else AtlasGUI.show();
