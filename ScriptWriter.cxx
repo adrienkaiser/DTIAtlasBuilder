@@ -319,6 +319,12 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"\\n => Creation of the Final Atlas di
 	Script = Script + "if not os.path.isdir(FinalResampPath):\n";
 if(!m_Quiet) 	Script = Script + "\tprint(\"\\n => Creation of the Final Resampling directory = \" + FinalResampPath)\n";
 		Script = Script + "\tos.mkdir(FinalResampPath)\n\n";
+	Script = Script + "if not os.path.isdir(FinalResampPath + \"/First_Resampling\"):\n";
+if(!m_Quiet) 	Script = Script + "\tprint(\"\\n => Creation of the First Final Resampling directory = \" + FinalResampPath + \"/First_Resampling\")\n";
+		Script = Script + "\tos.mkdir(FinalResampPath + \"/First_Resampling\")\n\n";
+	Script = Script + "if not os.path.isdir(FinalResampPath + \"/Second_Resampling\"):\n";
+if(!m_Quiet) 	Script = Script + "\tprint(\"\\n => Creation of the Second Final Resampling directory = \" + FinalResampPath + \"/Second_Resampling\")\n";
+		Script = Script + "\tos.mkdir(FinalResampPath + \"/Second_Resampling\")\n\n";
 
 /* Cases variables: */
 /*	Script = Script + "allFAs = [AffinePath + \"/Loop" + m_nbLoops_str + "/Case1_Loop" + m_nbLoops_str + "_FinalFA.nrrd\"";
@@ -516,8 +522,8 @@ if(!m_Quiet) Script = Script + "print(\"\\n======== Computing global deformation
 	Script = Script + "while case < len(allcases):\n";
 		if(m_NeedToBeCropped==1) Script = Script + "\torigDTI= AffinePath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
 		else Script = Script + "\torigDTI= allcases[case]\n";
-		Script = Script + "\tGlobalDefField = FinalResampPath + \"/Case\" + str(case+1) + \"_GlobalDeformationField.nrrd\"\n";
-		Script = Script + "\tFinalDef = FinalResampPath + \"/Case\" + str(case+1) + \"_FinalDeformedDTI.nrrd\"\n";
+		Script = Script + "\tGlobalDefField = FinalResampPath + \"/First_Resampling/Case\" + str(case+1) + \"_GlobalDeformationField.nrrd\"\n";
+		Script = Script + "\tFinalDef = FinalResampPath + \"/First_Resampling/Case\" + str(case+1) + \"_FinalDeformedDTI.nrrd\"\n";
 		Script = Script + "\tGlobalDefFieldCommand= \"" + m_SoftPath[7] + " --fixedVolume \" + DTIAverage + \" --movingVolume \" + origDTI + \" --outputDeformationFieldVolume \" + GlobalDefField + \" --outputVolume \" + FinalDef\n";
 /* m_DTIRegOptions[]
 0	RegMethod
@@ -560,11 +566,100 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"\\n||Case \" + str(case+1) + \" => $ 
 		if(m_Overwrite==1) Script = Script + "\tif 1 :\n";
 		else Script = Script + "\tif not os.path.isfile(FinalDef) :\n";
 			Script = Script + "\t\tif os.system(GlobalDefFieldCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] DTI-Reg: Computing global deformation fields\')\n";
-			Script = Script + "\t\tGlobDbleToFloatCommand=\"" + m_SoftPath[8] + " convert -t float -i \" + FinalDef + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalResampPath + \"/Case\" + str(case+1) + \"_FinalDeformedDTI_float.nrrd\"\n";
+			Script = Script + "\t\tGlobDbleToFloatCommand=\"" + m_SoftPath[8] + " convert -t float -i \" + FinalDef + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalResampPath + \"/First_Resampling/Case\" + str(case+1) + \"_FinalDeformedDTI_float.nrrd\"\n";
 if(!m_Quiet) 		Script = Script + "\t\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GlobDbleToFloatCommand)\n";
 			Script = Script + "\t\tif os.system(GlobDbleToFloatCommand)!=0 : ErrorList.append(\'unu: Converting the final deformed images from double to float DTI\')\n";
 if(!m_Quiet) if(m_Overwrite==0) Script = Script + "\telse : print(\"=> The file \\'\" + FinalDef + \"\\' already exists so the command will not be executed\")\n";
 		Script = Script + "\tcase += 1\n\n";
+
+/* dtiaverage recomputing */
+if(!m_Quiet) Script = Script + "print(\"\\n======== Recomputing the final DTI average =========\")\n";
+	Script = Script + "DTIAverage2 = FinalResampPath + \"/FinalAtlasDTI.nrrd\"\n";
+	Script = Script + "AverageCommand2 = \"" + m_SoftPath[6] + " \"\n";
+	Script = Script + "case = 0\n";
+	Script = Script + "while case < len(allcases):\n";
+		Script = Script + "\tDTIforAVG2= \"--inputs \" + FinalResampPath + \"/First_Resampling/Case\" + str(case+1) + \"_FinalDeformedDTI.nrrd \"\n";
+		Script = Script + "\tAverageCommand2 = AverageCommand2 + DTIforAVG2\n";
+		Script = Script + "\tcase += 1\n";
+	Script = Script + "AverageCommand2 = AverageCommand2 + \"--tensor_output \" + DTIAverage2\n";
+	if(m_AverageStatMethod.compare("PGA")==0)		Script = Script + "AverageCommand2 = AverageCommand2 + \" -m pga\"\n";
+	if(m_AverageStatMethod.compare("Euclidean")==0) 	Script = Script + "AverageCommand2 = AverageCommand2 + \" -m euclidean\"\n";
+	if(m_AverageStatMethod.compare("Log Euclidean")==0)	Script = Script + "AverageCommand2 = AverageCommand2 + \" -m log-euclidean\"\n";
+if(!m_Quiet) Script = Script + "print(\"=> $ \" + AverageCommand2)\n";
+	if(m_Overwrite==1)Script = Script + "if 1 : \n";
+	else Script = Script + "if not os.path.isfile(DTIAverage2) : \n";
+		Script = Script + "\tif os.system(AverageCommand2)!=0 : ErrorList.append(\'dtiaverage: Recomputing the final DTI average\')\n";
+/* Computing some images from the final DTI with dtiprocess */
+		Script = Script + "\tFA2= FinalResampPath + \"/FinalAtlasFA.nrrd\"\n";
+		Script = Script + "\tcFA2= FinalResampPath + \"/FinalAtlasColorFA.nrrd\"\n";
+		Script = Script + "\tRD2= FinalResampPath + \"/FinalAtlasRD.nrrd\"\n"; // Radial Diffusivity
+		Script = Script + "\tMD2= FinalResampPath + \"/FinalAtlasMD.nrrd\"\n"; // Mean Diffusivity
+		Script = Script + "\tAD2= FinalResampPath + \"/FinalAtlasAD.nrrd\"\n"; // Axial Diffusivity
+		Script = Script + "\tGeneFACommand2=\"" + m_SoftPath[3] + " --scalar_float --dti_image \" + DTIAverage2 + \" -f \" + FA2 + \" -m \" + MD2 + \" --color_fa_output \" + cFA2 + \" --RD_output \" + RD2 + \" --lambda1_output \" + AD2\n";
+if(!m_Quiet) 	Script = Script + "\tprint(\"=> $ \" + GeneFACommand2)\n";
+		Script = Script + "\tif os.system(GeneFACommand2)!=0 : ErrorList.append(\'dtiprocess: Recomputing final FA, color FA, MD, RD and AD\')\n";
+		Script = Script + "\tDbleToFloatCommand2=\"" + m_SoftPath[8] + " convert -t float -i \" + DTIAverage2 + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalResampPath + \"/FinalAtlasDTI_float.nrrd\"\n";
+if(!m_Quiet) 	Script = Script + "\tprint(\"=> $ \" + DbleToFloatCommand2)\n";
+		Script = Script + "\tif os.system(DbleToFloatCommand2)!=0 : ErrorList.append(\'unu: Converting the final resampled DTI atlas from double to float DTI\')\n";
+
+if(!m_Quiet) if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + DTIAverage2 + \"\\' already exists so the command will not be executed\")\n\n";
+
+/* Recomputing global deformation fields */
+if(!m_Quiet) Script = Script + "print(\"\\n======== Recomputing global deformation fields =========\")\n";
+	Script = Script + "case = 0\n";
+	Script = Script + "while case < len(allcases):\n";
+		if(m_NeedToBeCropped==1) Script = Script + "\torigDTI2= AffinePath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
+		else Script = Script + "\torigDTI2= allcases[case]\n";
+		Script = Script + "\tGlobalDefField2 = FinalResampPath + \"/Second_Resampling/Case\" + str(case+1) + \"_GlobalDeformationField.nrrd\"\n";
+		Script = Script + "\tFinalDef2 = FinalResampPath + \"/Second_Resampling/Case\" + str(case+1) + \"_FinalDeformedDTI.nrrd\"\n";
+		Script = Script + "\tGlobalDefFieldCommand2= \"" + m_SoftPath[7] + " --fixedVolume \" + DTIAverage2 + \" --movingVolume \" + origDTI2 + \" --outputDeformationFieldVolume \" + GlobalDefField2 + \" --outputVolume \" + FinalDef2\n";
+/* m_DTIRegOptions[]
+0	RegMethod
+	ANTS
+	1	ARegType
+	2	TfmStep
+	3	Iter
+	4	SimMet
+	5	SimParam
+	6	GSigma
+	7	SmoothOff
+	BRAINS
+	1	BRegType
+	2	TfmMode
+	3	Sigma
+	4	NbPyrLev
+	5	PyrLevIt
+*/
+		if( m_DTIRegOptions[0].compare("BRAINS")==0 )
+		{
+			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --method useScalar-BRAINS\"\n";
+			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSRegistrationType " + m_DTIRegOptions[1] + "\"\n";
+			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSinitializeTransformMode " + m_DTIRegOptions[2] + "\"\n";
+			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSSmoothDefFieldSigma " + m_DTIRegOptions[3] + "\"\n";
+			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSnumberOfPyramidLevels " + m_DTIRegOptions[4] + "\"\n";
+			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSarrayOfPyramidLevelIterations " + m_DTIRegOptions[5] + "\"\n";
+		}
+		if( m_DTIRegOptions[0].compare("ANTS")==0 )
+		{
+			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --method useScalar-ANTS\"\n";
+			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSRegistrationType " + m_DTIRegOptions[1] + "\"\n";
+			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSTransformationStep " + m_DTIRegOptions[2] + "\"\n";
+			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSIterations " + m_DTIRegOptions[3] + "\"\n";
+			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSSimilarityMetric " + m_DTIRegOptions[4] + "\"\n";
+			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSSimilarityParameter " + m_DTIRegOptions[5] + "\"\n";
+			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSGaussianSigma " + m_DTIRegOptions[6] + "\"\n";
+			if( m_DTIRegOptions[7].compare("1")==0 ) Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSGaussianSmoothingOff\"\n";
+		}
+if(!m_Quiet) 	Script = Script + "\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GlobalDefFieldCommand2)\n";
+		if(m_Overwrite==1) Script = Script + "\tif 1 :\n";
+		else Script = Script + "\tif not os.path.isfile(FinalDef2) :\n";
+			Script = Script + "\t\tif os.system(GlobalDefFieldCommand2)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] DTI-Reg: Recomputing global deformation fields\')\n";
+			Script = Script + "\t\tGlobDbleToFloatCommand2=\"" + m_SoftPath[8] + " convert -t float -i \" + FinalDef2 + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalResampPath + \"/Second_Resampling/Case\" + str(case+1) + \"_FinalDeformedDTI_float.nrrd\"\n";
+if(!m_Quiet) 		Script = Script + "\t\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GlobDbleToFloatCommand2)\n";
+			Script = Script + "\t\tif os.system(GlobDbleToFloatCommand2)!=0 : ErrorList.append(\'unu: Converting the final redeformed images from double to float DTI\')\n";
+if(!m_Quiet) if(m_Overwrite==0) Script = Script + "\telse : print(\"=> The file \\'\" + FinalDef2 + \"\\' already exists so the command will not be executed\")\n";
+		Script = Script + "\tcase += 1\n\n";
+
 
 if(!m_Quiet) 	Script = Script + "print(\"\\n============ End of Atlas Building =============\")\n\n";
 
