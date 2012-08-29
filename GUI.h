@@ -94,6 +94,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 
 /*DTI-REG*/	void RegMethodComboBoxChanged(int);
 		void SimMetChanged(int);
+		void ANTSRegTypeChanged(int);
 
 /*WIDGETCHANGE*/void WidgetHasChangedParamNoSaved();
 

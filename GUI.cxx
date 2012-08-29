@@ -343,7 +343,8 @@ void GUI::InitOptions()
 	m_ARegTypeComboBox->addItem("Rigid");
 	m_ARegTypeComboBox->addItem("GreedyDiffeo");
 	m_ARegTypeComboBox->addItem("SpatioTempDiffeo");
-	m_ARegTypeComboBox->setCurrentIndex(3);
+	m_ARegTypeComboBox->setCurrentIndex(2);
+	QObject::connect(m_ARegTypeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(ANTSRegTypeChanged( int )));
 	ANTSWidgetVLayout->addWidget(m_ARegTypeComboBox);
 
 	QLabel *TfmStepLabel = new QLabel("Transformation Step:", this);
@@ -572,8 +573,9 @@ void GUI::DisplayResampQC() /*SLOT*/
 		std::ostringstream outi;
 		outi << i;
 		std::string outi_str = outi.str();
-		program = program +  " " + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/Case" + outi_str + "_FinalDeformedDTI.nrrd";
+		program = program +  " " + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/Second_Resampling/Case" + outi_str + "_FinalDeformedDTI.nrrd";
 	}
+	program = program + " " + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/FinalAtlasDTI.nrrd";
 
 	if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
 	QCProcess->execute( program.c_str() );
@@ -764,7 +766,7 @@ void GUI::SaveCSVResults(int Crop, int nbLoops) // Crop = 0 if no cropping , 1 i
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/Case") << i+1 << QString("_DeformationField.mhd");
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/Case") << i+1 << QString("_InverseDeformationField.mhd");
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/3_Final_Atlas/Case") << i+1 << QString("_FinalDTI.nrrd");
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/4_Final_Resampling/Case") << i+1 << QString("_GlobalDeformationField.nrrd");
+			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/4_Final_Resampling/Second_Resampling/Case") << i+1 << QString("_GlobalDeformationField.nrrd");
 			stream << endl;
 		}
 
@@ -2078,7 +2080,7 @@ void GUI::TensorInterpolComboBoxChanged(int index) /*SLOT*/ // 0= log, 1= nolog
  //               DTI-REG               //
 /////////////////////////////////////////
 
-void GUI::RegMethodComboBoxChanged(int index)
+void GUI::RegMethodComboBoxChanged(int index) /*SLOT*/
 {
 	switch (index)
 	{
@@ -2089,7 +2091,7 @@ void GUI::RegMethodComboBoxChanged(int index)
 	}
 }
 
-void GUI::SimMetChanged(int index)
+void GUI::SimMetChanged(int index) /*SLOT*/
 {
 	switch (index)
 	{
@@ -2104,6 +2106,17 @@ void GUI::SimMetChanged(int index)
 		}
 		break;
 	case 2: m_SimParamLabel->setText(QString("Similarity Parameter:")); //MSQ
+		break;
+	}
+}
+
+void GUI::ANTSRegTypeChanged(int index) /*SLOT*/
+{
+	switch (index)
+	{
+	case 2:	m_TfmStepLine->setText("0.25"); //GreedyDiffeo
+		break;
+	case 3:	m_TfmStepLine->setText("0.25,5,0.01"); //SpatioTempDiffeo
 		break;
 	}
 }
