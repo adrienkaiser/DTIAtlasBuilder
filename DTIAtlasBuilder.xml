@@ -48,7 +48,7 @@
 		<boolean>
 			<name>Quiet</name>
 			<longflag>quiet</longflag>
-			<description>If you do not want any command line display</description>
+			<description>If you do not want any command line display (some programs with no quiet option called by this tool may display informations anyway)</description>
 			<label>Quiet</label>
 			<default>false</default>
 		</boolean>

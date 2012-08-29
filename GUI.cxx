@@ -1,4 +1,4 @@
-/*Qt classes*///BFAffineTfmModecomboBox
+/*Qt classes*/
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QProcess>
@@ -17,7 +17,6 @@
 /*std classes*/
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h> // to get the access setup
 #include <vector>
 #include <cstdlib> // for getenv()
 #include <ctime> // for clock()
@@ -369,8 +368,8 @@ void GUI::InitOptions()
 	QObject::connect(m_SimMetComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(SimMetChanged( int )));
 	ANTSWidgetVLayout->addWidget(m_SimMetComboBox);
 
-	QLabel *SimParamLabel = new QLabel("Similarity Parameter:", this);
-	ANTSLabelVLayout->addWidget(SimParamLabel);
+	m_SimParamLabel = new QLabel("Region Radius:", this);
+	ANTSLabelVLayout->addWidget(m_SimParamLabel);
 	m_SimParamDble = new QDoubleSpinBox(this);
 	m_SimParamDble->setValue(2);
 	ANTSWidgetVLayout->addWidget(m_SimParamDble);
@@ -469,8 +468,9 @@ void GUI::OpenRunningCompleteWindow() /*SLOT*/
 {
 	if(!m_noGUI)
 	{
-		QDialog *dlg = new QDialog(this);
-		dlg->setWindowTitle ("Running Completed");
+		m_Rundlg = new QDialog(this);
+		m_Rundlg->setWindowTitle ("Running Completed");
+		QObject::connect(m_Rundlg, SIGNAL(finished(int)), this, SLOT(RunningCompleteWindowClosed()));
 		QVBoxLayout *VLayout = new QVBoxLayout();
 
 		std::string info = "Running Completed !";
@@ -493,31 +493,26 @@ void GUI::OpenRunningCompleteWindow() /*SLOT*/
 		QObject::connect(OpenFButton, SIGNAL(clicked()), this, SLOT(OpenFolder()));
 		VLayout->addWidget(OpenFButton);
 
+		QPushButton *CloseButton = new QPushButton("Close",this);
+		QObject::connect(CloseButton, SIGNAL(clicked()), this, SLOT(Close()));
+		VLayout->addWidget(CloseButton);
+
 		QPushButton *ExitButton = new QPushButton("Exit",this);
-		QObject::connect(ExitButton, SIGNAL(clicked()), qApp, SLOT(quit()));
+		QObject::connect(ExitButton, SIGNAL(clicked()), this, SLOT(Exit()));
 		VLayout->addWidget(ExitButton);
 
-		dlg->setLayout(VLayout);
-		dlg->setVisible(!dlg->isVisible()); // display the window
+		m_Rundlg->setLayout(VLayout);
+		m_Rundlg->setVisible(!m_Rundlg->isVisible()); // display the window
 	}
 
-	else
-	{
-		char answer;
-	 	if(!m_Quiet)
-		{
-			std::cout<<"| Enter 'o' to open the Atlas containing folder and exit or enter 'e' to exit ? (o/e) ";
-	 		std::cin>>answer;
+	else Exit();
+}
 
-			if (answer == 'o')
-			{
-				OpenFolder();
-			}
-		}
- 		qApp->quit(); //end of Application: close the main window
-	}
-
-	delete m_scriptwriter;
+void GUI::RunningCompleteWindowClosed() /*SLOT*/ //Closed but the program is not finished
+{
+	if(!m_Quiet) std::cout<<"| Clearing previous cases in vectors..."<<std::endl; // command line display
+	m_CasesPath.clear();
+	m_scriptwriter->clearCasesPath();
 }
 
 void GUI::OpenRunningFailWindow() /*SLOT*/
@@ -527,48 +522,81 @@ void GUI::OpenRunningFailWindow() /*SLOT*/
  	qApp->quit(); //end of Application: close the main window
 }
 
-void GUI::DisplayAffineQC()
+void GUI::DisplayAffineQC() /*SLOT*/
 {
 	std::ostringstream out;
 	out << NbLoopsSpinBox->value();
 	std::string nbLoops_str = out.str();
 
 	QProcess * QCProcess = new QProcess;
-	std::string program = MriWatcherPath->text().toStdString() + "/DTIAtlas/1_Affine_Registration/Loop" + nbLoops_str + "/*FinalFA.nrrd";
+	std::string program = MriWatcherPath->text().toStdString();
+	for(int i=1; i <= CaseListWidget->count() ;i++) 
+	{
+		std::ostringstream outi;
+		outi << i;
+		std::string outi_str = outi.str();
+		program = program + " " + m_OutputPath.toStdString() + "/DTIAtlas/1_Affine_Registration/Loop" + nbLoops_str + "/Case" + outi_str + "_Loop" + nbLoops_str + "_FinalFA.nrrd";
+	}
+	std::ostringstream out1;
+	out1 << NbLoopsSpinBox->value()-1;
+	std::string nbLoops1_str = out1.str();
+	program = program + " " + m_OutputPath.toStdString() + "/DTIAtlas/1_Affine_Registration/Loop" + nbLoops1_str + "/Loop" + nbLoops1_str + "_FAAverage.nrrd";
+
 	if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
 	QCProcess->execute( program.c_str() );
 }
 
-void GUI::DisplayDeformQC()
+void GUI::DisplayDeformQC() /*SLOT*/
 {
-	std::ostringstream out;
-	out << NbLoopsSpinBox->value();
-	std::string nbLoops_str = out.str();
-
 	QProcess * QCProcess = new QProcess;
-	std::string program = MriWatcherPath->text().toStdString() + " " + m_OutputPath.toStdString() + "/DTIAtlas/3_Final_Atlas/*FinalDTI.nrrd" + " " + m_OutputPath.toStdString() + "/DTIAtlas/3_Final_Atlas/FinalAtlasDTI.nrrd";
+	std::string program = MriWatcherPath->text().toStdString();
+	for(int i=1; i <= CaseListWidget->count() ;i++) 
+	{
+		std::ostringstream outi;
+		outi << i;
+		std::string outi_str = outi.str();
+		program = program +  " " + m_OutputPath.toStdString() + "/DTIAtlas/3_Final_Atlas/Case" + outi_str + "_FinalDTI.nrrd";
+	}
+	program = program + " " + m_OutputPath.toStdString() + "/DTIAtlas/3_Final_Atlas/FinalAtlasDTI.nrrd";
+
 	if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
 	QCProcess->execute( program.c_str() );
 }
 
-void GUI::DisplayResampQC()
+void GUI::DisplayResampQC() /*SLOT*/
 {
-	std::ostringstream out;
-	out << NbLoopsSpinBox->value();
-	std::string nbLoops_str = out.str();
-
 	QProcess * QCProcess = new QProcess;
-	std::string program = MriWatcherPath->text().toStdString() + " " + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/*FinalDeformedDTI.nrrd";
+	std::string program = MriWatcherPath->text().toStdString();
+	for(int i=1; i <= CaseListWidget->count() ;i++) 
+	{
+		std::ostringstream outi;
+		outi << i;
+		std::string outi_str = outi.str();
+		program = program +  " " + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/Case" + outi_str + "_FinalDeformedDTI.nrrd";
+	}
+
 	if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
 	QCProcess->execute( program.c_str() );
 }
 
-void GUI::OpenFolder()
+void GUI::OpenFolder() /*SLOT*/
 {
 	QProcess * OpenProcess = new QProcess;
 	std::string program = "nautilus " + m_OutputPath.toStdString() + "/DTIAtlas";
+
 	if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
 	OpenProcess->execute( program.c_str() );
+}
+
+void GUI::Close() /*SLOT*/
+{
+	m_Rundlg->done(0);
+}
+
+void GUI::Exit() /*SLOT*/
+{
+	delete m_scriptwriter;
+	qApp->quit(); //end of Application: close the main window
 }
 
   /////////////////////////////////////////
@@ -588,6 +616,7 @@ void GUI::closeEvent(QCloseEvent* event)
 			return;
 		}
 	}
+	delete m_scriptwriter;
 	event->accept();
 }
 
@@ -774,6 +803,7 @@ void GUI::SaveParameters() /*SLOT*/
 		stream << "Output Folder=" << OutputFolderLineEdit->text() << endl;
 		stream << "Atlas Template=" << TemplateLineEdit->text() << endl;
 		stream << "Loops for the registration=" << NbLoopsSpinBox->value() << endl;
+		stream << "BRAINSFit Affine Tfm Mode=" << BFAffineTfmModecomboBox->currentText() << endl;
 		if(OverwritecheckBox->isChecked()) stream << "Overwrite=true" << endl;
 		else  stream << "Overwrite=false" << endl;
 
@@ -886,7 +916,6 @@ void GUI::LoadParameters(QString paramFile)
 		}
 		OutputFolderLineEdit->setText(list.at(1));
 
-
 		line = stream.readLine();
 		list = line.split("=");
 		if(!list.at(0).contains(QString("Atlas Template")))
@@ -914,6 +943,23 @@ void GUI::LoadParameters(QString paramFile)
 			return;
 		}
 		NbLoopsSpinBox->setValue( list.at(1).toInt() );
+
+		line = stream.readLine();
+		list = line.split("=");
+		if(!list.at(0).contains(QString("BRAINSFit Affine Tfm Mode")))
+		{
+			if(!m_noGUI) 
+			{
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
+			}
+			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			return;
+		}
+		if( list.at(1).contains(QString("Off")) ) BFAffineTfmModecomboBox->setCurrentIndex(0);
+		else if( list.at(1).contains(QString("useMomentsAlign")) ) BFAffineTfmModecomboBox->setCurrentIndex(1);
+		else if( list.at(1).contains(QString("useCenterOfHeadAlign")) ) BFAffineTfmModecomboBox->setCurrentIndex(2);
+		else if( list.at(1).contains(QString("useGeometryAlign")) ) BFAffineTfmModecomboBox->setCurrentIndex(3);
 
 		line = stream.readLine();
 		list = line.split("=");
@@ -2047,9 +2093,17 @@ void GUI::SimMetChanged(int index)
 {
 	switch (index)
 	{
-	case 0:	m_SimParamDble->setValue(2); //CC
+	case 0:	{
+		m_SimParamDble->setValue(2); //CC
+		m_SimParamLabel->setText(QString("Region Radius:"));
+		}
 		break;
-	case 1:	m_SimParamDble->setValue(32); //MI
+	case 1:	{
+		m_SimParamDble->setValue(32); //MI
+		m_SimParamLabel->setText(QString("Number of bins:"));
+		}
+		break;
+	case 2: m_SimParamLabel->setText(QString("Similarity Parameter:")); //MSQ
 		break;
 	}
 }
@@ -2563,6 +2617,8 @@ Num. Iterations       : 50
 	m_scriptwriter->setnbLoops(NbLoopsSpinBox->value());
 
 	m_scriptwriter->setQuiet(m_Quiet);
+
+	m_scriptwriter->setBFAffineTfmMode(BFAffineTfmModecomboBox->currentText().toStdString());
 	
 /* Launch writing */
 	m_scriptwriter->WriteScript(); // Master Function
