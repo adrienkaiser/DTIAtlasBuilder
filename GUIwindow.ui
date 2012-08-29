@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1045</width>
-    <height>511</height>
+    <height>577</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -217,7 +217,7 @@
       </widget>
       <widget class="QWidget" name="ParametersTab">
        <attribute name="title">
-        <string>Advanced Parameters</string>
+        <string>Affine Atlas</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_8">
         <item>
@@ -269,9 +269,89 @@
              </item>
             </layout>
            </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_12">
+             <item>
+              <widget class="QLabel" name="label_19">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Transform Mode :</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="BFAffineTfmModecomboBox">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <item>
+                <property name="text">
+                 <string>Off</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>useMomentsAlign</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>useCenterOfHeadAlign</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>useGeometryAlign</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_14">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
           </layout>
          </widget>
         </item>
+        <item>
+         <spacer name="verticalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="ResampTab">
+       <attribute name="title">
+        <string>AtlasWerks Atlas</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_12">
         <item>
          <widget class="QGroupBox" name="AWGroupBox">
           <property name="sizePolicy">
@@ -687,29 +767,9 @@
              </item>
             </layout>
            </item>
-           <item>
-            <spacer name="verticalSpacer_3">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
           </layout>
          </widget>
         </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="ResampTab">
-       <attribute name="title">
-        <string>Final Atlas</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_12">
         <item>
          <widget class="QGroupBox" name="FinalAtlasgroupBox">
           <property name="title">
@@ -946,21 +1006,21 @@
              </item>
             </layout>
            </item>
-           <item>
-            <spacer name="verticalSpacer_2">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
           </layout>
          </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
         </item>
        </layout>
       </widget>
@@ -1002,11 +1062,6 @@
                  <item>
                   <property name="text">
                    <string>ANTS</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>DTI-TK (coming soon)</string>
                   </property>
                  </item>
                 </widget>
@@ -1140,6 +1195,20 @@
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QPushButton" name="unuButton">
+              <property name="text">
+               <string>unu</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="MriWatcherButton">
+              <property name="text">
+               <string>MriWatcher</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
           <item>
@@ -1167,6 +1236,12 @@
             </item>
             <item>
              <widget class="QLineEdit" name="DTIRegPath"/>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="unuPath"/>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="MriWatcherPath"/>
             </item>
            </layout>
           </item>
@@ -1250,6 +1325,26 @@
             </item>
             <item>
              <widget class="QPushButton" name="DTIRegResetButton">
+              <property name="toolTip">
+               <string>Reset Software Path</string>
+              </property>
+              <property name="text">
+               <string>R</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="unuResetButton">
+              <property name="toolTip">
+               <string>Reset Software Path</string>
+              </property>
+              <property name="text">
+               <string>R</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="MriWatcherResetButton">
               <property name="toolTip">
                <string>Reset Software Path</string>
               </property>

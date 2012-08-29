@@ -37,7 +37,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 
 	public:
 		
-/*CONSTRUCTOR*/	GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, std::string DTItype, bool noGUI); //constructor
+/*CONSTRUCTOR*/	GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, bool overwrite, bool noGUI, bool Quiet); //constructor
 
 /*INIT*/	void InitOptions();
 
@@ -67,6 +67,10 @@ class GUI : public QMainWindow, public Ui::MainWindow
 
 /*RUNNING*/	void OpenRunningCompleteWindow();
 		void OpenRunningFailWindow();
+		void DisplayAffineQC();
+		void DisplayDeformQC();
+		void DisplayResampQC();
+		void OpenFolder();
 
 /*DATASET*/	void ReadCSVSlot();
 		void SaveCSVDatasetBrowse();
@@ -87,6 +91,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		void TensorInterpolComboBoxChanged(int);
 
 /*DTI-REG*/	void RegMethodComboBoxChanged(int);
+		void SimMetChanged(int);
 
 /*WIDGETCHANGE*/void WidgetHasChangedParamNoSaved();
 
@@ -102,6 +107,9 @@ class GUI : public QMainWindow, public Ui::MainWindow
 
 	private:
 
+		bool m_noGUI;
+		bool m_Quiet;
+
 /*CASES*/	std::vector < QLineEdit* > m_CasesQ; // index begin at 0
 		std::vector < std::string > m_CasesPath; // index begin at 0
 
@@ -115,7 +123,6 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		QString m_ParamFileHeader; // to check if the file to read is really a parameter file
 
 /*SOFT CONFIG*/	int m_FromConstructor; // do not test AW path if 'Default' called from constructor
-		QLineEdit *m_unuPath;
 
 /*RESAMP PARAM*/QComboBox *m_windowComboBox;
 		QComboBox *m_BSplineComboBox;
@@ -140,8 +147,6 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		QCheckBox *m_SmoothOffCheck;
 
 /*MAIN FUNCT*/	ScriptWriter* m_scriptwriter; ////contains the writing pipeline
-		std::string m_DTItype; // double or float
-		bool m_noGUI;
 
 };
 #endif

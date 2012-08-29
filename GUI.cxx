@@ -1,4 +1,4 @@
-/*Qt classes*/
+/*Qt classes*///BFAffineTfmModecomboBox
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QProcess>
@@ -33,12 +33,12 @@
   /////////////////////////////////////////
  //            CONSTRUCTOR              //
 /////////////////////////////////////////
-
-GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, std::string DTItype, bool noGUI) : QMainWindow()
+	
+GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, bool overwrite, bool noGUI, bool Quiet) : QMainWindow()
 {
-/*	std::cout<<"Command Line parameter file :"<<ParamFile<<std::endl;
-	std::cout<<"Command Line configuration file :"<<ConfigFile<<std::endl;
-	std::cout<<"Command Line dataset file :"<<CSVFile<<std::endl;
+/*	if(!m_Quiet) std::cout<<"Command Line parameter file :"<<ParamFile<<std::endl;
+	if(!m_Quiet) std::cout<<"Command Line configuration file :"<<ConfigFile<<std::endl;
+	if(!m_Quiet) std::cout<<"Command Line dataset file :"<<CSVFile<<std::endl;
 */
 
 	setupUi(this);
@@ -55,6 +55,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, std
 	QObject::connect(AddPushButton, SIGNAL(clicked()), this, SLOT(OpenAddCaseBrowseWindow()));
 	QObject::connect(RemovePushButton, SIGNAL(clicked()), this, SLOT(RemoveSelectedCases()));
 	RemovePushButton->setEnabled(false);
+	ComputepushButton->setEnabled(false);
 
 	QObject::connect(actionLoad_parameters, SIGNAL(triggered()), this, SLOT(LoadParametersSlot()));
 	QObject::connect(actionSave_parameters, SIGNAL(triggered()), this, SLOT(SaveParameters()));
@@ -78,8 +79,9 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, std
 	m_CSVseparator = QString(",");
 	m_ParamSaved=1;
 	m_lastCasePath="";
-	m_DTItype=DTItype;
 	m_noGUI=noGUI;
+	m_Quiet=Quiet;
+	if( overwrite ) OverwritecheckBox->setChecked(true);
 
 /* Browse software path Buttons */
 	QSignalMapper *SoftButtonMapper = new QSignalMapper();
@@ -101,6 +103,10 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, std
 	SoftButtonMapper->setMapping(dtiavgButton,7);
 	QObject::connect(DTIRegButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
 	SoftButtonMapper->setMapping(DTIRegButton,8);
+	QObject::connect(unuButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
+	SoftButtonMapper->setMapping(unuButton,9);
+	QObject::connect(MriWatcherButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
+	SoftButtonMapper->setMapping(unuButton,10);
 
 /* Reset software path Buttons */
 	QSignalMapper *ResetSoftButtonMapper = new QSignalMapper();
@@ -122,24 +128,10 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, std
 	ResetSoftButtonMapper->setMapping(dtiavgResetButton,7);
 	QObject::connect(DTIRegResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
 	ResetSoftButtonMapper->setMapping(DTIRegResetButton,8);
-
-/* unu */
-	if(DTItype=="float")
-	{
-		QPushButton *unuButton= new QPushButton("unu",this);
-		QObject::connect(unuButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
-		SoftButtonMapper->setMapping(unuButton,9);
-		ButtonverticalLayout->addWidget(unuButton);
-
-		m_unuPath= new QLineEdit(this);
-		PathverticalLayout->addWidget(m_unuPath);
-
-		QPushButton *unuResetButton= new QPushButton("R",this);
-		unuResetButton->setToolTip(QString("Reset Software Path"));
-		QObject::connect(unuResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
-		ResetSoftButtonMapper->setMapping(unuResetButton,9);
-		ResetverticalLayout->addWidget(unuResetButton);
-	}
+	QObject::connect(unuResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
+	ResetSoftButtonMapper->setMapping(unuResetButton,9);
+	QObject::connect(MriWatcherResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
+	ResetSoftButtonMapper->setMapping(unuResetButton,10);
 
 /* Initialize the options */
 	InitOptions();
@@ -199,10 +191,10 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, std
 	const char * value = getenv("DTIAtlasBuilderSoftPath");
 	if (value!=NULL) 
 	{
-		printf ("| Environment variable read. The config file is \'%s\'\n",value);
+		if(!m_Quiet) printf ("| Environment variable read. The config file is \'%s\'\n",value);
 		LoadConfig( QString(value) ); // replace the paths by the paths given in the config file
 	}
-	else std::cout<<"| No environment variable found"<<std::endl;
+	else if(!m_Quiet) std::cout<<"| No environment variable found"<<std::endl;
 
 /* Load Parameters from Command Line */
 	if( !ParamFile.empty() ) LoadParameters( QString(ParamFile.c_str()) );
@@ -350,7 +342,6 @@ void GUI::InitOptions()
 	m_ARegTypeComboBox = new QComboBox(this);
 	m_ARegTypeComboBox->addItem("None");
 	m_ARegTypeComboBox->addItem("Rigid");
-	m_ARegTypeComboBox->addItem("Affine");
 	m_ARegTypeComboBox->addItem("GreedyDiffeo");
 	m_ARegTypeComboBox->addItem("SpatioTempDiffeo");
 	m_ARegTypeComboBox->setCurrentIndex(3);
@@ -375,6 +366,7 @@ void GUI::InitOptions()
 	m_SimMetComboBox->addItem("MI");
 	m_SimMetComboBox->addItem("MSQ");
 	m_SimMetComboBox->setCurrentIndex(0);
+	QObject::connect(m_SimMetComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(SimMetChanged( int )));
 	ANTSWidgetVLayout->addWidget(m_SimMetComboBox);
 
 	QLabel *SimParamLabel = new QLabel("Similarity Parameter:", this);
@@ -414,7 +406,11 @@ void GUI::OpenAddCaseBrowseWindow() /*SLOT*/
 	CaseListWidget->addItems(CaseListBrowse);
 	if(!CaseListBrowse.isEmpty())
 	{
-		if ( CaseListWidget->count()>0 ) RemovePushButton->setEnabled(true);
+		if ( CaseListWidget->count()>0 )
+		{
+			RemovePushButton->setEnabled(true);
+			ComputepushButton->setEnabled(true);
+		}
 		m_ParamSaved=0;
 		SelectCasesLabel->setText( QString("") );
 		m_lastCasePath = CaseListBrowse.last();
@@ -435,7 +431,11 @@ void GUI::RemoveSelectedCases() /*SLOT*/
 	}
 	if( NB>0 ) // only if some items were removed
 	{
-		if ( CaseListWidget->count()==0 ) RemovePushButton->setEnabled(false);
+		if ( CaseListWidget->count()==0 )		
+		{
+			RemovePushButton->setEnabled(false);
+			ComputepushButton->setEnabled(false);
+		}
 		m_ParamSaved=0;
 		SelectCasesLabel->setText( QString("") );
 	}
@@ -467,74 +467,57 @@ void GUI::OpenTemplateBrowseWindow() /*SLOT*/
 
 void GUI::OpenRunningCompleteWindow() /*SLOT*/
 {
-	std::string program;
-	int ExitCode=0;
-
 	if(!m_noGUI)
 	{
-	/* Remove temp files ? */
-	 	int answer = QMessageBox::question(this, "Running Complete", "Running completed !\nDo you want to remove the temporary files ?", QMessageBox::Yes | QMessageBox::No);
-		if (answer == QMessageBox::Yes)
-		{
-			int answer2 = QMessageBox::question(this, "Remove temp files", "Are you sure you want to remove the temporary files ?", QMessageBox::Yes | QMessageBox::No);
-			if (answer2 == QMessageBox::Yes)
-			{
-				QProcess * RemoveProcess = new QProcess;
-				program = "rm -r " + m_OutputPath.toStdString() + "/DTIAtlas/1_Affine_Registration " + m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration";
-				//std::cout<<"| Removing command line : $ "<<program<<std::endl;
-				std::cout<<"| Removing folders : \'"<<m_OutputPath.toStdString() + "/DTIAtlas/1_Affine_Registration\' and \'" + m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration\'"<<std::endl;
-				ExitCode = RemoveProcess->execute( program.c_str() );
+		QDialog *dlg = new QDialog(this);
+		dlg->setWindowTitle ("Running Completed");
+		QVBoxLayout *VLayout = new QVBoxLayout();
 
-				if(ExitCode==0) QMessageBox::information(this, "Removing succesful", "Temporary files removed succesfully !");
-			}
-		}
+		std::string info = "Running Completed !";
+		QLabel *InfoLabel = new QLabel (info.c_str(), this);
+		VLayout->addWidget(InfoLabel);
 
-	/* open containing Folder ? */
-	 	answer = QMessageBox::question(this, "Running Complete", "Click Open to open the Atlas containing folder and exit\nClick Close to exit", QMessageBox::Open | QMessageBox::Close);
-	 
-		if (answer == QMessageBox::Open)
-		{
-			QProcess * OpenProcess = new QProcess;
-			program = "nautilus " + m_OutputPath.toStdString() + "/DTIAtlas";
-			ExitCode = OpenProcess->execute( program.c_str() );
-		}
+		QPushButton *AffineQCButton = new QPushButton("Affine QC",this);
+		QObject::connect(AffineQCButton, SIGNAL(clicked()), this, SLOT(DisplayAffineQC()));
+		VLayout->addWidget(AffineQCButton);
+
+		QPushButton *DeformQCButton = new QPushButton("Deformable QC",this);
+		QObject::connect(DeformQCButton, SIGNAL(clicked()), this, SLOT(DisplayDeformQC()));
+		VLayout->addWidget(DeformQCButton);
+
+		QPushButton *ResampQCButton = new QPushButton("Final QC",this);
+		QObject::connect(ResampQCButton, SIGNAL(clicked()), this, SLOT(DisplayResampQC()));
+		VLayout->addWidget(ResampQCButton);
+
+		QPushButton *OpenFButton = new QPushButton("Open Containing Folder",this);
+		QObject::connect(OpenFButton, SIGNAL(clicked()), this, SLOT(OpenFolder()));
+		VLayout->addWidget(OpenFButton);
+
+		QPushButton *ExitButton = new QPushButton("Exit",this);
+		QObject::connect(ExitButton, SIGNAL(clicked()), qApp, SLOT(quit()));
+		VLayout->addWidget(ExitButton);
+
+		dlg->setLayout(VLayout);
+		dlg->setVisible(!dlg->isVisible()); // display the window
 	}
+
 	else
 	{
-	/* Remove temp files ? */
 		char answer;
-	 	std::cout<<"| Do you want to remove the temporary files ? (y/n) ";
-		std::cin>>answer;
-		if (answer == 'y')
+	 	if(!m_Quiet)
 		{
-			char answer2;
-			std::cout<<"| Are you sure you want to remove the temporary files ? (y/n) ";
-			std::cin>>answer2;
-			if (answer2 == 'y')
-			{
-				QProcess * RemoveProcess = new QProcess;
-				program = "rm -r " + m_OutputPath.toStdString() + "/DTIAtlas/1_Affine_Registration " + m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration";
-				//std::cout<<"| Removing command line : $ "<<program<<std::endl;
-				std::cout<<"| Removing folders : \'"<<m_OutputPath.toStdString() + "/DTIAtlas/1_Affine_Registration\' and \'" + m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration\'"<<std::endl;
-				ExitCode = RemoveProcess->execute( program.c_str() );
+			std::cout<<"| Enter 'o' to open the Atlas containing folder and exit or enter 'e' to exit ? (o/e) ";
+	 		std::cin>>answer;
 
-				if(ExitCode==0) std::cout<<"| Temporary files removed succesfully !"<<std::endl;
+			if (answer == 'o')
+			{
+				OpenFolder();
 			}
 		}
-
-	/* open containing Folder ? */
-	 	std::cout<<"| Enter 'o' to open the Atlas containing folder and exit or enter 'e' to exit ? (o/e) ";
- 		std::cin>>answer;
-
-		if (answer == 'o')
-		{
-			QProcess * OpenProcess = new QProcess;
-			program = "nautilus " + m_OutputPath.toStdString() + "/DTIAtlas";
-			ExitCode = OpenProcess->execute( program.c_str() );
-		}
+ 		qApp->quit(); //end of Application: close the main window
 	}
+
 	delete m_scriptwriter;
- 	qApp->quit(); //end of Application: close the main window
 }
 
 void GUI::OpenRunningFailWindow() /*SLOT*/
@@ -542,6 +525,50 @@ void GUI::OpenRunningFailWindow() /*SLOT*/
 	if(!m_noGUI) QMessageBox::critical(this, "Running Fail", "Running Failed...\nClick OK to exit");
 	delete m_scriptwriter;
  	qApp->quit(); //end of Application: close the main window
+}
+
+void GUI::DisplayAffineQC()
+{
+	std::ostringstream out;
+	out << NbLoopsSpinBox->value();
+	std::string nbLoops_str = out.str();
+
+	QProcess * QCProcess = new QProcess;
+	std::string program = MriWatcherPath->text().toStdString() + "/DTIAtlas/1_Affine_Registration/Loop" + nbLoops_str + "/*FinalFA.nrrd";
+	if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
+	QCProcess->execute( program.c_str() );
+}
+
+void GUI::DisplayDeformQC()
+{
+	std::ostringstream out;
+	out << NbLoopsSpinBox->value();
+	std::string nbLoops_str = out.str();
+
+	QProcess * QCProcess = new QProcess;
+	std::string program = MriWatcherPath->text().toStdString() + " " + m_OutputPath.toStdString() + "/DTIAtlas/3_Final_Atlas/*FinalDTI.nrrd" + " " + m_OutputPath.toStdString() + "/DTIAtlas/3_Final_Atlas/FinalAtlasDTI.nrrd";
+	if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
+	QCProcess->execute( program.c_str() );
+}
+
+void GUI::DisplayResampQC()
+{
+	std::ostringstream out;
+	out << NbLoopsSpinBox->value();
+	std::string nbLoops_str = out.str();
+
+	QProcess * QCProcess = new QProcess;
+	std::string program = MriWatcherPath->text().toStdString() + " " + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/*FinalDeformedDTI.nrrd";
+	if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
+	QCProcess->execute( program.c_str() );
+}
+
+void GUI::OpenFolder()
+{
+	QProcess * OpenProcess = new QProcess;
+	std::string program = "nautilus " + m_OutputPath.toStdString() + "/DTIAtlas";
+	if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
+	OpenProcess->execute( program.c_str() );
 }
 
   /////////////////////////////////////////
@@ -590,7 +617,7 @@ void GUI::ReadCSV(QString CSVfile)
 
 			if (file.open(QFile::ReadOnly))
 			{
-				std::cout<<"| Loading csv file..."; // command line display
+				if(!m_Quiet) std::cout<<"| Loading csv file..."; // command line display
 
 				QTextStream stream(&file);
 				while(!stream.atEnd()) //read all the lines
@@ -602,7 +629,7 @@ void GUI::ReadCSV(QString CSVfile)
 	
 				SelectCasesLabel->setText( QString("Current CSV file : ") + CSVfile );
 				m_ParamSaved=0;
-				std::cout<<"DONE"<<std::endl; // command line display
+				if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
 			} 
 			else
 			{
@@ -610,10 +637,14 @@ void GUI::ReadCSV(QString CSVfile)
 				qDebug( "Could not open csv file");
 			}
 
-			if ( CaseListWidget->count()>0 ) RemovePushButton->setEnabled(true);
+			if ( CaseListWidget->count()>0 )
+			{
+				RemovePushButton->setEnabled(true);
+				ComputepushButton->setEnabled(true);
+			}
 
 		}
-		else std::cout<<"| The given file does not exist"<<std::endl; // command line display
+		else if(!m_Quiet) std::cout<<"| The given file does not exist"<<std::endl; // command line display
 	}
 }
 
@@ -636,12 +667,12 @@ void GUI::SaveCSVDatasetBrowse() /*SLOT*/
 
 	if ( file.open( IO_WriteOnly | IO_Translate ) )
 	{
-		std::cout<<"| Generating Dataset csv file..."; // command line display
+		if(!m_Quiet) std::cout<<"| Generating Dataset csv file..."; // command line display
 
 		QTextStream stream( &file );
 		stream << QString("#") << m_CSVseparator << QString("Original DTI Image") << endl;
 		for(int i=0; i < CaseListWidget->count() ;i++) stream << i+1 << m_CSVseparator << CaseListWidget->item(i)->text() << endl;
-		std::cout<<"DONE"<<std::endl; // command line display
+		if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
 	
 		SelectCasesLabel->setText( QString("Current CSV file : ") + CSVBrowseName );
 		QMessageBox::information(this, "Saving succesful", "Dataset has been succesfully saved at" + CSVBrowseName);		
@@ -661,12 +692,12 @@ void GUI::SaveCSVDataset()
 
 	if ( file.open( IO_WriteOnly | IO_Translate ) )
 	{
-		std::cout<<"| Generating Dataset csv file..."; // command line display
+		if(!m_Quiet) std::cout<<"| Generating Dataset csv file..."; // command line display
 
 		QTextStream stream( &file );
 		stream << QString("#") << m_CSVseparator << QString("Original DTI Image") << endl;
 		for(int i=0; i < CaseListWidget->count() ;i++) stream << i+1 << m_CSVseparator << CaseListWidget->item(i)->text() << endl;
-		std::cout<<"DONE"<<std::endl; // command line display
+		if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
 		
 		SelectCasesLabel->setText( QString("Current CSV file : ") + csvPath );
 	}
@@ -683,7 +714,7 @@ void GUI::SaveCSVResults(int Crop, int nbLoops) // Crop = 0 if no cropping , 1 i
 
 	if ( file.open( IO_WriteOnly | IO_Translate ) )
 	{
-		std::cout<<"| Generating Results csv file..."; // command line display
+		if(!m_Quiet) std::cout<<"| Generating Results csv file..."; // command line display
 
 		QTextStream stream( &file );
 
@@ -708,7 +739,7 @@ void GUI::SaveCSVResults(int Crop, int nbLoops) // Crop = 0 if no cropping , 1 i
 			stream << endl;
 		}
 
-		std::cout<<"DONE"<<std::endl; // command line display
+		if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
 		
 	}
 	else qDebug( "Could not create file");
@@ -735,7 +766,7 @@ void GUI::SaveParameters() /*SLOT*/
 	QFile file(ParamBrowseName);
 	if ( file.open( IO_WriteOnly | IO_Translate ) )
 	{
-		std::cout<<"| Saving Parameters file..."; // command line display
+		if(!m_Quiet) std::cout<<"| Saving Parameters file..."; // command line display
 
 		QTextStream stream( &file );
 
@@ -780,23 +811,23 @@ void GUI::SaveParameters() /*SLOT*/
 
 		stream << "CSV Dataset File=" << CSVFileName << endl;
 
-		std::cout<<"DONE"<<std::endl; // command line display
+		if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
 
 		QFile filecsv(CSVFileName);
 		if ( filecsv.open( IO_WriteOnly | IO_Translate ) )
 		{
-			std::cout<<"| Generating Dataset csv file..."; // command line display
+			if(!m_Quiet) std::cout<<"| Generating Dataset csv file..."; // command line display
 
 			QTextStream streamcsv( &filecsv );
 			streamcsv << QString("#") << m_CSVseparator << QString("Original DTI Image") << endl;
 			for(int i=0; i < CaseListWidget->count() ;i++) streamcsv << i+1 << m_CSVseparator << CaseListWidget->item(i)->text() << endl;
-			std::cout<<"DONE"<<std::endl; // command line display
+			if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
 		
 			SelectCasesLabel->setText( QString("Current CSV file : ") + CSVFileName );
 		}
 		else 
 		{
-			std::cout<<"FAILED"<<std::endl; // command line display
+			if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 			qDebug( "Could not create csv file");
 		}
 
@@ -834,11 +865,11 @@ void GUI::LoadParameters(QString paramFile)
 		if( ! list.at(0).contains(m_ParamFileHeader) )
 		{
 			if(!m_noGUI) QMessageBox::critical(this, "No parameter file", "This file is not a parameter file\nfor this program");
-			else std::cout<<"| This file is not a parameter file for this program"<<std::endl;
+			else if(!m_Quiet) std::cout<<"| This file is not a parameter file for this program"<<std::endl;
 			return;
 		}
 
-		std::cout<<"| Loading Parameters file..."; // command line display
+		if(!m_Quiet) std::cout<<"| Loading Parameters file..."; // command line display
 
 /* Other Parameters */
 		line = stream.readLine();
@@ -848,9 +879,9 @@ void GUI::LoadParameters(QString paramFile)
 			if(!m_noGUI) 
 			{
 				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
+				if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 			return;
 		}
 		OutputFolderLineEdit->setText(list.at(1));
@@ -863,9 +894,9 @@ void GUI::LoadParameters(QString paramFile)
 			if(!m_noGUI) 
 			{
 				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
+				if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 			return;
 		}
 		TemplateLineEdit->setText(list.at(1));
@@ -877,9 +908,9 @@ void GUI::LoadParameters(QString paramFile)
 			if(!m_noGUI) 
 			{
 				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
+				if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 			return;
 		}
 		NbLoopsSpinBox->setValue( list.at(1).toInt() );
@@ -891,9 +922,9 @@ void GUI::LoadParameters(QString paramFile)
 			if(!m_noGUI) 
 			{
 				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
+				if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 			return;
 		}
 		if( list.at(1) == QString("true") ) OverwritecheckBox->setChecked(true);
@@ -906,9 +937,9 @@ void GUI::LoadParameters(QString paramFile)
 			if(!m_noGUI) 
 			{
 				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
+				if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 			return;
 		}
 		else
@@ -919,9 +950,9 @@ void GUI::LoadParameters(QString paramFile)
 				if(!m_noGUI) 
 				{
 					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
+					if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+				else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 				return;
 			}
 			if(nbrs.at(0).toInt()==1)
@@ -931,9 +962,9 @@ void GUI::LoadParameters(QString paramFile)
 					if(!m_noGUI) 
 					{
 						QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-						std::cout<<"FAILED"<<std::endl; // command line display
+						if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 					}
-					else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+					else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 					return;
 				}
 				SL4checkBox->setChecked(true);
@@ -953,9 +984,9 @@ void GUI::LoadParameters(QString paramFile)
 			if(!m_noGUI) 
 			{
 				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
+				if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 			return;
 		}
 		else
@@ -966,9 +997,9 @@ void GUI::LoadParameters(QString paramFile)
 				if(!m_noGUI) 
 				{
 					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
+					if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+				else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 				return;
 			}
 			if(nbrs.at(0).toInt()==1)
@@ -978,9 +1009,9 @@ void GUI::LoadParameters(QString paramFile)
 					if(!m_noGUI) 
 					{
 						QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-						std::cout<<"FAILED"<<std::endl; // command line display
+						if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 					}
-					else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+					else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 					return;
 				}
 				SL2checkBox->setChecked(true);
@@ -1000,9 +1031,9 @@ void GUI::LoadParameters(QString paramFile)
 			if(!m_noGUI) 
 			{
 				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
+				if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 			return;
 		}
 		else
@@ -1013,9 +1044,9 @@ void GUI::LoadParameters(QString paramFile)
 				if(!m_noGUI) 
 				{
 					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
+					if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+				else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 				return;
 			}
 			if(nbrs.at(0).toInt()==1)
@@ -1025,9 +1056,9 @@ void GUI::LoadParameters(QString paramFile)
 					if(!m_noGUI) 
 					{
 						QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-						std::cout<<"FAILED"<<std::endl; // command line display
+						if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 					}
-					else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+					else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 					return;
 				}
 				SL1checkBox->setChecked(true);
@@ -1048,9 +1079,9 @@ void GUI::LoadParameters(QString paramFile)
 			if(!m_noGUI) 
 			{
 				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
+				if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 			return;
 		}
 		if( list.at(1).contains(QString("Linear")) ) InterpolTypeComboBox->setCurrentIndex(0);
@@ -1068,9 +1099,9 @@ void GUI::LoadParameters(QString paramFile)
 				if(!m_noGUI) 
 				{
 					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
+					if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+				else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 				return;
 			}
 		}
@@ -1083,9 +1114,9 @@ void GUI::LoadParameters(QString paramFile)
 			if(!m_noGUI) 
 			{
 				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
+				if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 				return;
 			}
 		}
@@ -1094,9 +1125,9 @@ void GUI::LoadParameters(QString paramFile)
 			if(!m_noGUI) 
 			{
 				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
+				if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 			return;
 		}
 
@@ -1107,9 +1138,9 @@ void GUI::LoadParameters(QString paramFile)
 			if(!m_noGUI) 
 			{
 				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
+				if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 			return;
 		}
 		if( list.at(1).contains(QString("Non Log Euclidean")) )
@@ -1124,9 +1155,9 @@ void GUI::LoadParameters(QString paramFile)
 				if(!m_noGUI) 
 				{
 					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
+					if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+				else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 				return;
 			}
 		}
@@ -1136,9 +1167,9 @@ void GUI::LoadParameters(QString paramFile)
 			if(!m_noGUI) 
 			{
 				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
+				if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 			return;
 		}
 
@@ -1149,9 +1180,9 @@ void GUI::LoadParameters(QString paramFile)
 			if(!m_noGUI) 
 			{
 				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
+				if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 			return;
 		}
 		if( list.at(1).contains(QString("PPD")) ) TensTfmComboBox->setCurrentIndex(0);
@@ -1161,9 +1192,9 @@ void GUI::LoadParameters(QString paramFile)
 			if(!m_noGUI) 
 			{
 				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
+				if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 			return;
 		}
 
@@ -1174,9 +1205,9 @@ void GUI::LoadParameters(QString paramFile)
 			if(!m_noGUI) 
 			{
 				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
+				if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 			return;
 		}
 		if( list.at(1).contains(QString("PGA")) ) averageStatMethodComboBox->setCurrentIndex(0);
@@ -1187,9 +1218,9 @@ void GUI::LoadParameters(QString paramFile)
 			if(!m_noGUI) 
 			{
 				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
+				if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 			return;
 		}
 
@@ -1201,9 +1232,9 @@ void GUI::LoadParameters(QString paramFile)
 			if(!m_noGUI) 
 			{
 				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
+				if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 			return;
 		}
 		if( list.at(1).contains(QString("BRAINS")) )
@@ -1215,9 +1246,9 @@ void GUI::LoadParameters(QString paramFile)
 				if(!m_noGUI) 
 				{
 					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
+					if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+				else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 				return;
 			}
 
@@ -1234,9 +1265,9 @@ void GUI::LoadParameters(QString paramFile)
 				if(!m_noGUI) 
 				{
 					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
+					if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+				else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 				return;
 			}
 
@@ -1249,9 +1280,9 @@ void GUI::LoadParameters(QString paramFile)
 				if(!m_noGUI) 
 				{
 					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
+					if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+				else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 				return;
 			}
 
@@ -1268,9 +1299,9 @@ void GUI::LoadParameters(QString paramFile)
 				if(!m_noGUI) 
 				{
 					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
+					if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+				else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 				return;
 			}
 
@@ -1284,9 +1315,9 @@ void GUI::LoadParameters(QString paramFile)
 				if(!m_noGUI) 
 				{
 					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
+					if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+				else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 				return;
 			}
 
@@ -1301,9 +1332,9 @@ void GUI::LoadParameters(QString paramFile)
 				if(!m_noGUI) 
 				{
 					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
+					if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+				else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 				return;
 			}
 
@@ -1316,13 +1347,13 @@ void GUI::LoadParameters(QString paramFile)
 			if(!m_noGUI) 
 			{
 				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
+				if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 			return;
 		}
 
-		std::cout<<"DONE"<<std::endl; // command line display
+		if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
 
 /* Opening CSV File */
 		line = stream.readLine();
@@ -1332,9 +1363,9 @@ void GUI::LoadParameters(QString paramFile)
 			if(!m_noGUI) 
 			{
 				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
+				if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 			return;
 		}
 		QString CSVpath = list.at(1);
@@ -1347,7 +1378,7 @@ void GUI::LoadParameters(QString paramFile)
 	else if ( !paramFile.isEmpty() ) qDebug( "Could not open file");
 
 	}
-	else std::cout<<"| The given file does not exist"<<std::endl; // command line display
+	else if(!m_Quiet) std::cout<<"| The given file does not exist"<<std::endl; // command line display
 }
 
   /////////////////////////////////////////
@@ -1358,9 +1389,10 @@ void GUI::GenerateXMLForAW()
 {	
 	if( access((m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration").c_str(), F_OK) != 0 ) // Test if the main folder does not exists => unistd::access() returns 0 if F(file)_OK
 	{
-		std::cout<<"| Creating Non Linear Registration directory..."<<std::endl; // command line display
+		if(!m_Quiet) std::cout<<"| Creating Non Linear Registration directory..."<<std::endl; // command line display
 		QProcess * mkdirMainProcess = new QProcess;
 		std::string program = "mkdir " + m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration"; //// Creates the directory
+		if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
 		mkdirMainProcess->execute( program.c_str() );
 	}
 
@@ -1368,7 +1400,7 @@ void GUI::GenerateXMLForAW()
 	QFile file(xmlFileName);
 	if ( file.open( IO_WriteOnly | IO_Translate ) )
 	{
-		std::cout<<"| Saving XML file for AtlasWerks..."<<std::endl; // command line display
+		if(!m_Quiet) std::cout<<"| Saving XML file for AtlasWerks..."<<std::endl; // command line display
 		QTextStream stream( &file );
 
 		stream <<"<!--top-level node-->"<< endl;
@@ -1538,7 +1570,7 @@ void GUI::LoadConfig(QString configFile)
 {
 	if( access(configFile.toStdString().c_str(), F_OK) == 0 ) // Test if the config file exists => unistd::access() returns 0 if F(file)_OK
 	{
-		std::cout<<"| Loading Configuration file..."; // command line display
+		if(!m_Quiet) std::cout<<"| Loading Configuration file..."; // command line display
 
 		std::string notFound;
 
@@ -1555,9 +1587,9 @@ void GUI::LoadConfig(QString configFile)
 				if(!m_noGUI) 
 				{
 					QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
+					if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
+				else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
 				return;
 			}
 			if(!list.at(1).isEmpty()) ImagemathPath->setText(list.at(1));
@@ -1570,9 +1602,9 @@ void GUI::LoadConfig(QString configFile)
 				if(!m_noGUI) 
 				{
 					QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
+					if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
+				else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
 				return;
 			}
 			if(!list.at(1).isEmpty()) ResampPath->setText(list.at(1));
@@ -1585,9 +1617,9 @@ void GUI::LoadConfig(QString configFile)
 				if(!m_noGUI) 
 				{
 					QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
+					if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
+				else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
 				return;
 			}
 			if(!list.at(1).isEmpty()) CropDTIPath->setText(list.at(1));
@@ -1600,9 +1632,9 @@ void GUI::LoadConfig(QString configFile)
 				if(!m_noGUI) 
 				{
 					QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
+					if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
+				else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
 				return;
 			}
 			if(!list.at(1).isEmpty()) dtiprocPath->setText(list.at(1));
@@ -1615,9 +1647,9 @@ void GUI::LoadConfig(QString configFile)
 				if(!m_noGUI) 
 				{
 					QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
+					if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
+				else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
 				return;
 			}
 			if(!list.at(1).isEmpty()) BRAINSFitPath->setText(list.at(1));
@@ -1630,9 +1662,9 @@ void GUI::LoadConfig(QString configFile)
 				if(!m_noGUI) 
 				{
 					QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
+					if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
+				else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
 				return;
 			}
 			if(!list.at(1).isEmpty()) AWPath->setText(list.at(1));
@@ -1645,9 +1677,9 @@ void GUI::LoadConfig(QString configFile)
 				if(!m_noGUI) 
 				{
 					QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
+					if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
+				else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
 				return;
 			}
 			if(!list.at(1).isEmpty()) dtiavgPath->setText(list.at(1));
@@ -1660,9 +1692,9 @@ void GUI::LoadConfig(QString configFile)
 				if(!m_noGUI) 
 				{
 					QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
+					if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
+				else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
 				return;
 			}
 			if(!list.at(1).isEmpty()) DTIRegPath->setText(list.at(1));
@@ -1675,15 +1707,30 @@ void GUI::LoadConfig(QString configFile)
 				if(!m_noGUI) 
 				{
 					QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
+					if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
+				else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
 				return;
 			}
-			if(!list.at(1).isEmpty()) m_unuPath->setText(list.at(1));
-			else if(m_unuPath->text().isEmpty()) notFound = notFound + "> unu\n";
+			if(!list.at(1).isEmpty()) unuPath->setText(list.at(1));
+			else if(unuPath->text().isEmpty()) notFound = notFound + "> unu\n";
 
-			std::cout<<"DONE"<<std::endl; // command line display
+			line = stream.readLine();
+			list = line.split("=");
+			if(!list.at(0).contains(QString("MriWatcher")))
+			{
+				if(!m_noGUI) 
+				{
+					QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
+					if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
+				}
+				else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
+				return;
+			}
+			if(!list.at(1).isEmpty()) MriWatcherPath->setText(list.at(1));
+			else if(MriWatcherPath->text().isEmpty()) notFound = notFound + "> MriWatcher\n";
+
+			if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
 
 			if( !notFound.empty() )
 			{
@@ -1692,12 +1739,12 @@ void GUI::LoadConfig(QString configFile)
 					std::string text = "The following programs are missing.\nPlease enter the path manually:\n" + notFound;
 					QMessageBox::warning(this, "Program missing", QString(text.c_str()) );
 				}
-				else std::cout<<"| The following programs are missing. Please modify the configuration file or enter the path manually in the GUI:\n"<< notFound <<std::endl;
+				else if(!m_Quiet) std::cout<<"| The following programs are missing. Please modify the configuration file or enter the path manually in the GUI:\n"<< notFound <<std::endl;
 			}
 		} 
 		else qDebug( "Could not open file");
 	}
-	else std::cout<<"| The given file does not exist"<<std::endl; // command line display
+	else if(!m_Quiet) std::cout<<"| The given file does not exist"<<std::endl; // command line display
 }
 
 void GUI::SaveConfig() /*SLOT*/
@@ -1711,7 +1758,7 @@ void GUI::SaveConfig() /*SLOT*/
 		QFile file(ConfigBrowseName);
 		if ( file.open( IO_WriteOnly | IO_Translate ) )
 		{
-			std::cout<<"| Generating config file..."; // command line display
+			if(!m_Quiet) std::cout<<"| Generating config file..."; // command line display
 
 			QTextStream stream( &file );
 
@@ -1723,13 +1770,14 @@ void GUI::SaveConfig() /*SLOT*/
 			stream << "AtlasWerks=" << AWPath->text() << endl;
 			stream << "dtiaverage=" << dtiavgPath->text() << endl;
 			stream << "DTI-Reg=" << DTIRegPath->text() << endl;
-			stream << "unu=" << m_unuPath->text() << endl;
+			stream << "unu=" << unuPath->text() << endl;
+			stream << "MriWatcher=" << unuPath->text() << endl;
 
-			std::cout<<"DONE"<<std::endl; // command line display
+			if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
 		}
 		else 
 		{
-			std::cout<<"FAILED"<<std::endl; // command line display
+			if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
 			qDebug( "Could not create config file");
 		}
 	}
@@ -1748,7 +1796,7 @@ void GUI::ConfigDefault() /*SLOT*/
     bool no_system_path = false);
 */
 
-	std::cout<<"| Searching the softwares..."; // command line display
+	if(!m_Quiet) std::cout<<"| Searching the softwares..."; // command line display
 
 	std::string program;
 	std::string notFound;
@@ -1789,14 +1837,15 @@ void GUI::ConfigDefault() /*SLOT*/
 	if(program.empty() && DTIRegPath->text().isEmpty()) notFound = notFound + "> DTI-Reg_1.1.1\n";
 	else DTIRegPath->setText(QString(program.c_str()));
 
-	if(m_DTItype=="float")
-	{
-		program = itksys::SystemTools::FindProgram("unu");
-		if(program.empty() && m_unuPath->text().isEmpty()) notFound = notFound + "> unu\n";
-		else m_unuPath->setText(QString(program.c_str()));
-	}
+	program = itksys::SystemTools::FindProgram("unu");
+	if(program.empty() && unuPath->text().isEmpty()) notFound = notFound + "> unu\n";
+	else unuPath->setText(QString(program.c_str()));
 
-	std::cout<<"DONE"<<std::endl; // command line display
+	program = itksys::SystemTools::FindProgram("MriWatcher");
+	if(program.empty() && MriWatcherPath->text().isEmpty()) notFound = notFound + "> MriWatcher\n";
+	else MriWatcherPath->setText(QString(program.c_str()));
+
+	if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
 
 	if( !notFound.empty() )
 	{
@@ -1805,11 +1854,11 @@ void GUI::ConfigDefault() /*SLOT*/
 			std::string text = "The following programs have not been found.\nPlease enter the path manually or open a configuration file:\n" + notFound;
 			QMessageBox::warning(this, "Program missing", QString(text.c_str()) );
 		}
-		else std::cout<<"| The following programs have not been found. Please give a configuration file or modify it or enter the path manually in the GUI:\n"<< notFound <<std::endl;
+		else if(!m_Quiet) std::cout<<"| The following programs have not been found. Please give a configuration file or modify it or enter the path manually in the GUI:\n"<< notFound <<std::endl;
 	}
 }
 
-void GUI::BrowseSoft(int soft)  /*SLOT*/ //softwares: 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=AtlasWerks, 7=dtiaverage, 8=DTI-Reg
+void GUI::BrowseSoft(int soft)  /*SLOT*/ //softwares: 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=AtlasWerks, 7=dtiaverage, 8=DTI-Reg, 9=unu, 10=MriWatcher
 {
 	QString SoftBrowse = QFileDialog::getOpenFileName(this, "Open Software", QString(), "Executable Files (*)");
 
@@ -1836,13 +1885,15 @@ void GUI::BrowseSoft(int soft)  /*SLOT*/ //softwares: 1=ImageMath, 2=ResampleDTI
 			break;
 		case 8: DTIRegPath->setText(SoftBrowse);
 			break;
-		case 9: m_unuPath->setText(SoftBrowse);
+		case 9: unuPath->setText(SoftBrowse);
+			break;
+		case 10: MriWatcherPath->setText(SoftBrowse);
 			break;
 		}
 	}
 }
 
-void GUI::ResetSoft(int softindex) /*SLOT*/ //softwares: 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=AtlasWerks, 7=dtiaverage, 8=DTI-Reg
+void GUI::ResetSoft(int softindex) /*SLOT*/ //softwares: 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=AtlasWerks, 7=dtiaverage, 8=DTI-Reg, 9=unu, 10=MriWatcher
 {
 	std::string soft;
 
@@ -1866,9 +1917,11 @@ void GUI::ResetSoft(int softindex) /*SLOT*/ //softwares: 1=ImageMath, 2=Resample
 		break;
 	case 9: soft="unu";
 		break;
+	case 10: soft="MriWatcher";
+		break;
 	}
 
-	std::cout<<"| Searching the software \'"<< soft <<"\'..."; // command line display
+	if(!m_Quiet) std::cout<<"| Searching the software \'"<< soft <<"\'..."; // command line display
 
 	std::string program = itksys::SystemTools::FindProgram(soft.c_str());
 
@@ -1891,10 +1944,11 @@ void GUI::ResetSoft(int softindex) /*SLOT*/ //softwares: 1=ImageMath, 2=Resample
 		}
 		else if(softindex==7) dtiavgPath->setText(QString(program.c_str()));
 		else if(softindex==8) DTIRegPath->setText(QString(program.c_str()));
-		else if(softindex==9) m_unuPath->setText(QString(program.c_str()));
+		else if(softindex==9) unuPath->setText(QString(program.c_str()));
+		else if(softindex==10) MriWatcherPath->setText(QString(program.c_str()));
 	}
 
-	std::cout<<"DONE"<<std::endl; // command line display
+	if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
 }
 
 void GUI::testAW() /*SLOT*/
@@ -1907,7 +1961,7 @@ void GUI::testAW() /*SLOT*/
 
 	Process->waitForReadyRead();
 	QByteArray BA =  Process->readAllStandardOutput();
-//	std::cout<< BA.size() <<std::endl;
+//	if(!m_Quiet) std::cout<< BA.size() <<std::endl;
 
 	if(BA.size()==0) // if notinh displayed in std output, '--version' does not exists so it is not the right version
 	{
@@ -1916,7 +1970,7 @@ void GUI::testAW() /*SLOT*/
 			std::string text = "The version of AtlasWerks \'" + AWPath->text().toStdString() + "\' is not the right one.\nPlease give a version supporting --xml.\n";
 			QMessageBox::warning(this, "Wrong version", QString(text.c_str()) );
 		}
-		else std::cout<<"| The version of AtlasWerks \'" << AWPath->text().toStdString() << "\' is not the right one. Please give a version supporting --xml."<<std::endl;
+		else if(!m_Quiet) std::cout<<"| The version of AtlasWerks \'" << AWPath->text().toStdString() << "\' is not the right one. Please give a version supporting --xml."<<std::endl;
 	}
 }
 
@@ -1928,12 +1982,13 @@ void GUI::ReadMe()  /*SLOT*/ /////to UPDATE
 {
 /*	QProcess * Process = new QProcess;
 	std::string program = "gedit /home/akaiser/Desktop/Projects/DTIAtlasBuilderGUI_07-12/DTIABGUIFinal_07-18-12/src/README.md";
+	if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
 	Process->execute( program.c_str() );
 */
 	QDialog *dlg = new QDialog(this);
 	dlg->setWindowTitle ("Read Me");
 
-	std::string info = "DTIAtlasBuilder\n===============\n\nA tool to create an atlas from several DTI images\n\nThese Softwares need to be installed before executing the tool :\n- ImageMath\n- ResampleDTIlogEuclidean\n- CropDTI\n- dtiprocess\n- BRAINSFit\n- AtlasWerks\n- dtiaverage\n- DTI-Reg\n";
+	std::string info = "DTIAtlasBuilder\n===============\n\nA tool to create an atlas from several DTI images\n\nThese Softwares need to be installed before executing the tool :\n- ImageMath\n- ResampleDTIlogEuclidean\n- CropDTI\n- dtiprocess\n- BRAINSFit\n- AtlasWerks\n- dtiaverage\n- DTI-Reg\n- unu\n- MriWatcher\n";
 	QLabel *InfoLabel = new QLabel (info.c_str(), this);
 	QVBoxLayout *VLayout = new QVBoxLayout();
 	VLayout->addWidget(InfoLabel);
@@ -1988,6 +2043,16 @@ void GUI::RegMethodComboBoxChanged(int index)
 	}
 }
 
+void GUI::SimMetChanged(int index)
+{
+	switch (index)
+	{
+	case 0:	m_SimParamDble->setValue(2); //CC
+		break;
+	case 1:	m_SimParamDble->setValue(32); //MI
+		break;
+	}
+}
 
   /////////////////////////////////////////
  //         WIDGET CHANGE SLOT          //
@@ -2033,7 +2098,7 @@ void GUI::Compute() /*SLOT*/
 	if(CaseListWidget->count()==0)
 	{
 		if(!m_noGUI) QMessageBox::critical(this, "No Cases", "Please give at least one case");
-		else std::cout<<"| No Cases: Please give at least one case"<<std::endl;
+		else if(!m_Quiet) std::cout<<"| No Cases: Please give at least one case"<<std::endl;
 	}
 	else // OK Case
 	{
@@ -2041,14 +2106,14 @@ void GUI::Compute() /*SLOT*/
 	if(OutputFolderLineEdit->text().isEmpty())
 	{
 		if(!m_noGUI) QMessageBox::critical(this, "No Output Folder", "Please give an output folder");
-		else std::cout<<"| No Output Folder: Please give an output folder"<<std::endl;
+		else if(!m_Quiet) std::cout<<"| No Output Folder: Please give an output folder"<<std::endl;
 	}
 	else // OK Output
 	{
 
 		if(LaunchScriptWriter()==-1) 
 		{
-			std::cout<<"| Clearing previous cases in vectors..."<<std::endl; // command line display
+			if(!m_Quiet) std::cout<<"| Clearing previous cases in vectors..."<<std::endl; // command line display
 			m_CasesPath.clear();
 			m_scriptwriter->clearCasesPath();
 			if(m_noGUI) qApp->quit(); // no possibility to change because no GUI so QUIT
@@ -2079,7 +2144,7 @@ int GUI::LaunchScriptWriter()
 				std::string text = "This file does not exist :\n" + CaseListWidget->item(i)->text().toStdString();
 				QMessageBox::critical(this, "Case does not exist", QString(text.c_str()) );
 			}
-			else std::cout<<"| This file does not exist : " << CaseListWidget->item(i)->text().toStdString() <<std::endl;
+			else if(!m_Quiet) std::cout<<"| This file does not exist : " << CaseListWidget->item(i)->text().toStdString() <<std::endl;
 			return -1;
 		}
 		int checkIm = checkImage(CaseListWidget->item(i)->text().toStdString()); // returns 1 if not an image, 2 if not a dti, otherwise 0
@@ -2090,7 +2155,7 @@ int GUI::LaunchScriptWriter()
 				std::string text = "This file is not an image :\n" + CaseListWidget->item(i)->text().toStdString();
 				QMessageBox::critical(this, "No image", QString(text.c_str()) );
 			}
-			else std::cout<<"| This file is not an image : " << CaseListWidget->item(i)->text().toStdString() <<std::endl;
+			else if(!m_Quiet) std::cout<<"| This file is not an image : " << CaseListWidget->item(i)->text().toStdString() <<std::endl;
 			return -1;
 		}
 		if( checkIm == 2 ) // returns 1 if not an image, 2 if not a dti, otherwise 0
@@ -2100,7 +2165,7 @@ int GUI::LaunchScriptWriter()
 				std::string text = "This image is not a DTI :\n" + CaseListWidget->item(i)->text().toStdString();
 				QMessageBox::critical(this, "No DTI", QString(text.c_str()) );
 			}
-			else std::cout<<"| This image is not a DTI : " << CaseListWidget->item(i)->text().toStdString() <<std::endl;
+			else if(!m_Quiet) std::cout<<"| This image is not a DTI : " << CaseListWidget->item(i)->text().toStdString() <<std::endl;
 			return -1;
 		}
 		m_CasesPath.push_back( CaseListWidget->item(i)->text().toStdString() );
@@ -2112,30 +2177,32 @@ int GUI::LaunchScriptWriter()
 	if( access(m_OutputPath.toStdString().c_str(), F_OK) != 0 ) // Test if the folder exists => unistd::access() returns 0 if F(file)_OK
 	{
 		if(!m_noGUI) QMessageBox::critical(this, "No Output Folder", "The output folder does not exist");
-		else std::cout<<"| The output folder does not exist"<<std::endl;
+		else if(!m_Quiet) std::cout<<"| The output folder does not exist"<<std::endl;
 		return -1;
 	}
 	if( access(m_OutputPath.toStdString().c_str(), W_OK) != 0 ) // Test if the program can write in the output folder => unistd::access() returns 0 if W(write)_OK
 	{
 		if(!m_noGUI) QMessageBox::critical(this, "Output Folder Unwritable", "Please give an output folder authorized in reading");
-		else std::cout<<"| Please give an output folder authorized in reading"<<std::endl;
+		else if(!m_Quiet) std::cout<<"| Please give an output folder authorized in reading"<<std::endl;
 		return -1;
 	}
 	m_scriptwriter->setOutputPath(m_OutputPath.toStdString());
 
 	if( access((m_OutputPath.toStdString() + "/DTIAtlas").c_str(), F_OK) != 0 ) // Test if the main folder does not exists => unistd::access() returns 0 if F(file)_OK
 	{
-		std::cout<<"| Creating Main directory..."<<std::endl; // command line display
+		if(!m_Quiet) std::cout<<"| Creating Main directory..."<<std::endl; // command line display
 		QProcess * mkdirMainProcess = new QProcess;
 		program = "mkdir " + m_OutputPath.toStdString() + "/DTIAtlas"; //  Creates the directory
+		if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
 		ExitCode = mkdirMainProcess->execute( program.c_str() );
 	}
 
 	if( access((m_OutputPath.toStdString() + "/DTIAtlas/Script").c_str(), F_OK) != 0 ) // Test if the script folder does not exists => unistd::access() returns 0 if F(file)_OK
 	{
-		std::cout<<"| Creating Script directory..."<<std::endl; // command line display
+		if(!m_Quiet) std::cout<<"| Creating Script directory..."<<std::endl; // command line display
 		QProcess * mkdirScriptProcess = new QProcess;
 		program = "mkdir " + m_OutputPath.toStdString() + "/DTIAtlas/Script";
+		if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
 		ExitCode = mkdirScriptProcess->execute( program.c_str() );
 	}
 
@@ -2149,7 +2216,7 @@ int GUI::LaunchScriptWriter()
 				std::string text = "This template file does not exist :\n" + TemplateLineEdit->text().toStdString();
 				QMessageBox::critical(this, "Template does not exist", QString(text.c_str()) );
 			}
-			else std::cout<<"| This template file does not exist : " << TemplateLineEdit->text().toStdString() <<std::endl;
+			else if(!m_Quiet) std::cout<<"| This template file does not exist : " << TemplateLineEdit->text().toStdString() <<std::endl;
 			return -1;
 		}
 		int checkImTemp = checkImage(TemplateLineEdit->text().toStdString()); // returns 1 if not an image, 2 if not a dti, otherwise 0
@@ -2160,7 +2227,7 @@ int GUI::LaunchScriptWriter()
 				std::string text = "This template file is not an image :\n" + TemplateLineEdit->text().toStdString();
 				QMessageBox::critical(this, "No image", QString(text.c_str()) );
 			}
-			else std::cout<<"| This template file is not an image : " << TemplateLineEdit->text().toStdString() <<std::endl;
+			else if(!m_Quiet) std::cout<<"| This template file is not an image : " << TemplateLineEdit->text().toStdString() <<std::endl;
 			return -1;
 		}
 		if( checkImTemp == 0 ) // returns 1 if not an image, 2 if not a dti, otherwise 0 //the template has to be a FA image !!
@@ -2170,7 +2237,7 @@ int GUI::LaunchScriptWriter()
 				std::string text = "This template image is not a FA :\n" + TemplateLineEdit->text().toStdString();
 				QMessageBox::critical(this, "No FA", QString(text.c_str()) );
 			}
-			else std::cout<<"| This template image is not a FA : " << TemplateLineEdit->text().toStdString() <<std::endl;
+			else if(!m_Quiet) std::cout<<"| This template image is not a FA : " << TemplateLineEdit->text().toStdString() <<std::endl;
 			return -1;
 		}
 		m_scriptwriter->setRegType(0);
@@ -2349,11 +2416,11 @@ Num. Iterations       : 50
 			if(programPath.empty()) notFound = notFound + "> DTI-Reg_1.1.1\n";
 			else DTIRegPath->setText(QString(programPath.c_str()));
 		}
-		if(m_unuPath->text().isEmpty())
+		if(unuPath->text().isEmpty())
 		{
 			programPath = itksys::SystemTools::FindProgram("unu");
 			if(programPath.empty()) notFound = notFound + "> unu\n";
-			else m_unuPath->setText(QString(programPath.c_str()));
+			else unuPath->setText(QString(programPath.c_str()));
 		}
 
 		if( !notFound.empty() )
@@ -2363,7 +2430,7 @@ Num. Iterations       : 50
 				std::string text = "The following programs are missing.\nPlease enter the path manually:\n" + notFound;
 				QMessageBox::critical(this, "Program missing", QString(text.c_str()) );
 			}
-			else std::cout<<"| The following programs are missing. Please modify the configuration file or enter the path manually in the GUI:\n" << notFound <<std::endl;
+			else if(!m_Quiet) std::cout<<"| The following programs are missing. Please modify the configuration file or enter the path manually in the GUI:\n" << notFound <<std::endl;
 			return -1;
 		}
 	}
@@ -2374,89 +2441,89 @@ Num. Iterations       : 50
 		if(!m_noGUI)
 		{
 			std::string text = "The file \'" + ImagemathPath->text().toStdString() + "\' is not executable";
-		QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
 		}
-		else std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
+		else if(!m_Quiet) std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
 	if(access(ResampPath->text().toStdString().c_str(), X_OK) != 0 )
 	{
 		if(!m_noGUI)
 		{
-			std::string text = "The file \'" + ImagemathPath->text().toStdString() + "\' is not executable";
-		QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+			std::string text = "The file \'" + ResampPath->text().toStdString() + "\' is not executable";
+			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
 		}
-		else std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
+		else if(!m_Quiet) std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
 	if(access(CropDTIPath->text().toStdString().c_str(), X_OK) != 0 )
 	{
 		if(!m_noGUI)
 		{
-			std::string text = "The file \'" + ImagemathPath->text().toStdString() + "\' is not executable";
-		QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+			std::string text = "The file \'" + CropDTIPath->text().toStdString() + "\' is not executable";
+			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
 		}
-		else std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
+		else if(!m_Quiet) std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
 	if(access(dtiprocPath->text().toStdString().c_str(), X_OK) != 0 )
 	{
 		if(!m_noGUI)
 		{
-			std::string text = "The file \'" + ImagemathPath->text().toStdString() + "\' is not executable";
-		QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+			std::string text = "The file \'" + dtiprocPath->text().toStdString() + "\' is not executable";
+			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
 		}
-		else std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
+		else if(!m_Quiet) std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
 	if(access(BRAINSFitPath->text().toStdString().c_str(), X_OK) != 0 )
 	{
 		if(!m_noGUI)
 		{
-			std::string text = "The file \'" + ImagemathPath->text().toStdString() + "\' is not executable";
-		QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+			std::string text = "The file \'" + BRAINSFitPath->text().toStdString() + "\' is not executable";
+			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
 		}
-		else std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
+		else if(!m_Quiet) std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
 	if(access(AWPath->text().toStdString().c_str(), X_OK) != 0 )
 	{
 		if(!m_noGUI)
 		{
-			std::string text = "The file \'" + ImagemathPath->text().toStdString() + "\' is not executable";
-		QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+			std::string text = "The file \'" + AWPath->text().toStdString() + "\' is not executable";
+			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
 		}
-		else std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
+		else if(!m_Quiet) std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
 	if(access(dtiavgPath->text().toStdString().c_str(), X_OK) != 0 )
 	{
 		if(!m_noGUI)
 		{
-			std::string text = "The file \'" + ImagemathPath->text().toStdString() + "\' is not executable";
-		QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+			std::string text = "The file \'" + dtiavgPath->text().toStdString() + "\' is not executable";
+			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
 		}
-		else std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
+		else if(!m_Quiet) std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
 	if(access(DTIRegPath->text().toStdString().c_str(), X_OK) != 0 )
 	{
 		if(!m_noGUI)
 		{
-			std::string text = "The file \'" + ImagemathPath->text().toStdString() + "\' is not executable";
-		QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+			std::string text = "The file \'" + DTIRegPath->text().toStdString() + "\' is not executable";
+			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
 		}
-		else std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
+		else if(!m_Quiet) std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
-	if(access(m_unuPath->text().toStdString().c_str(), X_OK) != 0 )
+	if(access(unuPath->text().toStdString().c_str(), X_OK) != 0 )
 	{
 		if(!m_noGUI)
 		{
-			std::string text = "The file \'" + m_unuPath->text().toStdString() + "\' is not executable";
-		QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+			std::string text = "The file \'" + unuPath->text().toStdString() + "\' is not executable";
+			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
 		}
-		else std::cout<<"| The file \'" << m_unuPath->text().toStdString() << "\' is not executable" << std::endl;
+		else if(!m_Quiet) std::cout<<"| The file \'" << unuPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
 
@@ -2470,7 +2537,7 @@ Num. Iterations       : 50
 	SoftPath.push_back(AWPath->text().toStdString());
 	SoftPath.push_back(dtiavgPath->text().toStdString());
 	SoftPath.push_back(DTIRegPath->text().toStdString());
-	SoftPath.push_back(m_unuPath->text().toStdString());
+	SoftPath.push_back(unuPath->text().toStdString());
 
 	m_scriptwriter->setSoftPath(SoftPath);
 	SoftPath.clear();
@@ -2479,14 +2546,14 @@ Num. Iterations       : 50
 	if(m_scriptwriter->CheckVoxelSize()==1) 
 	{
 		if(!m_noGUI) QMessageBox::critical(this, "Different Voxel Sizes", "Error: The voxel size of the images\nare not the same,\nplease change dataset"); // returns 0 if voxel size OK , otherwise 1
-		else std::cout<<"| Error: The voxel size of the images are not the same, please change dataset" << std::endl;
+		else if(!m_Quiet) std::cout<<"| Error: The voxel size of the images are not the same, please change dataset" << std::endl;
 		return -1;
 	}
 	int Crop=m_scriptwriter->setCroppingSize(); // returns 0 if no cropping , 1 if cropping needed
 	if(Crop==1) 
 	{
 		if(!m_noGUI) QMessageBox::warning(this, "Cropping", "Warning: The images do not have the same size, \nso some of them will be cropped");
-		else std::cout<<"| Warning: The images do not have the same size, so some of them will be cropped" << std::endl;
+		else if(!m_Quiet) std::cout<<"| Warning: The images do not have the same size, so some of them will be cropped" << std::endl;
 	}
 
 /* Other Options */
@@ -2494,9 +2561,9 @@ Num. Iterations       : 50
 	else  m_scriptwriter->setOverwrite(0);
 
 	m_scriptwriter->setnbLoops(NbLoopsSpinBox->value());
-	
-	m_scriptwriter->setDTItype(m_DTItype); // double or float
 
+	m_scriptwriter->setQuiet(m_Quiet);
+	
 /* Launch writing */
 	m_scriptwriter->WriteScript(); // Master Function
 
@@ -2508,7 +2575,7 @@ Num. Iterations       : 50
 	SaveCSVResults(Crop,NbLoopsSpinBox->value());
 
 /* Generate Preprocess script file */
-	std::cout<<"| Generating Pre processing script file..."; // command line display
+	if(!m_Quiet) std::cout<<"| Generating Pre processing script file..."; // command line display
 
 	QString ScriptPath;
 	ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/DTIAtlasBuilder_Preprocess.script");
@@ -2519,12 +2586,12 @@ Num. Iterations       : 50
 		//file.setPermissions(QFile::ExeOwner); //make the file executable for the owner
 		QTextStream stream( &filePreP );
 		stream << QString((m_scriptwriter->getScript_Preprocess()).c_str()) << endl;
-		std::cout<<"DONE"<<std::endl; // command line display
+		if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
 	}
 	else qDebug( "Could not create file");
 
 /* Generate Atlas Building script file */
-	std::cout<<"| Generating Atlas Building script file..."; // command line display
+	if(!m_Quiet) std::cout<<"| Generating Atlas Building script file..."; // command line display
 
 	ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/DTIAtlasBuilder_AtlasBuilding.script");
 	QFile fileAtlas(ScriptPath);
@@ -2534,12 +2601,12 @@ Num. Iterations       : 50
 		//file.setPermissions(QFile::ExeOwner); //make the file executable for the owner
 		QTextStream stream( &fileAtlas );
 		stream << QString((m_scriptwriter->getScript_AtlasBuilding()).c_str()) << endl;
-		std::cout<<"DONE"<<std::endl; // command line display
+		if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
 	}
 	else qDebug( "Could not create file");
 
 /* Generate Main script file */
-	std::cout<<"| Generating Main script file..."; // command line display
+	if(!m_Quiet) std::cout<<"| Generating Main script file..."; // command line display
 
 	ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/DTIAtlasBuilder_Main.script");
 	QFile fileMain(ScriptPath);
@@ -2549,13 +2616,14 @@ Num. Iterations       : 50
 		//file.setPermissions(QFile::ExeOwner); // make the file executable for the owner
 		QTextStream stream( &fileMain );
 		stream << QString((m_scriptwriter->getScript_Main()).c_str()) << endl;
-		std::cout<<"DONE"<<std::endl; // command line display
+		if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
 	}
 	else qDebug( "Could not create file");
 
 /* Give the right to user to execute the scripts */
 	QProcess * chmodProcess = new QProcess;
 	program = "chmod u+x " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Preprocess.script " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_AtlasBuilding.script " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Main.script"; // 'chmod u+x = user+execute'
+	if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
 	ExitCode = chmodProcess->execute( program.c_str() );
 	
 	return 0;
@@ -2563,7 +2631,7 @@ Num. Iterations       : 50
 
 void GUI::LaunchScriptRunner()
 {
-	std::cout<<"| Script Running..."<<std::endl; // command line display
+	if(!m_Quiet) std::cout<<"| Script Running..."<<std::endl; // command line display
 
 /* Running the Script: */
 	QProcess * ScriptProcess = new QProcess;
@@ -2573,18 +2641,19 @@ void GUI::LaunchScriptRunner()
 
 	int ExitCode=0;
 
+	if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
 	ExitCode = ScriptProcess->execute( program.c_str() );
 
 /* When we are here the running is finished : emit signal to display the "Running Completed" Window: */
 	if(ExitCode==0)
 	{
-		std::cout<<"| Running Completed !"<<std::endl; // command line display
+		if(!m_Quiet) std::cout<<"| Running Completed !"<<std::endl; // command line display
 		emit runningcomplete();
 	}
 
 	else
 	{
-		std::cout<<"| Running Failed..."<<std::endl; // command line display
+		if(!m_Quiet) std::cout<<"| Running Failed..."<<std::endl; // command line display
 		emit runningfail();
 	}
 }
