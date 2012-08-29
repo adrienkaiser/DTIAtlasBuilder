@@ -292,6 +292,9 @@
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
+               <property name="currentIndex">
+                <number>2</number>
+               </property>
                <item>
                 <property name="text">
                  <string>Off</string>
@@ -328,6 +331,14 @@
               </spacer>
              </item>
             </layout>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_21">
+             <property name="text">
+              <string>If you put a transformation file named CaseX_InitLinearTrans.nrrd in the foler [Output Folder]/DTIAtlas/1_Affine_Registration/
+as an Affine transform already computed, it will be used as an input for the Affine registration with BRAINSFit</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>

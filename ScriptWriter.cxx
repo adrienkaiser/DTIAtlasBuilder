@@ -155,7 +155,12 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoo
 			Script = Script + "\t\tNormFA= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_NormFA.nrrd\"\n";
 			Script = Script + "\t\tLinearTranstfm= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans.txt\"\n";
 			Script = Script + "\t\tLinearTrans= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_FA.nrrd\"\n";
-			Script = Script + "\t\tAffineCommand=\"" + m_SoftPath[4] + " --fixedVolume \" + AtlasFAref + \" --movingVolume \" + NormFA + \" --initializeTransformMode useCenterOfHeadAlign --useAffine --outputVolume \" + LinearTrans + \" --outputTransform \" + LinearTranstfm\n";
+			Script = Script + "\t\tAffineCommand=\"" + m_SoftPath[4] + " --fixedVolume \" + AtlasFAref + \" --movingVolume \" + NormFA + \" --useAffine --outputVolume \" + LinearTrans + \" --outputTransform \" + LinearTranstfm\n";
+			Script = Script + "\t\tInitLinearTrans= OutputPath + \"/Case\" + str(case+1) + \"_InitLinearTrans.nrrd\"\n";
+			Script = Script + "\t\tif n==0 and os.path.isfile(InitLinearTrans) :\n";
+				Script = Script + "\t\t\tAffineCommand= AffineCommand + \" --initialTransform \" + InitLinearTrans\n";
+				Script = Script + "\t\t\tAffineCommand= AffineCommand + \" --initializeTransformMode Off\"\n";
+			Script = Script + "\t\telse : AffineCommand= AffineCommand + \" --initializeTransformMode " + m_BFAffineTfmMode + "\"\n";
 if(!m_Quiet) 		Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + AffineCommand)\n";
 			if(m_Overwrite==1) Script = Script + "\t\tif os.system(AffineCommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] BRAINSFit: Affine Registration of FA image\')\n";
 			else 
@@ -828,4 +833,8 @@ void ScriptWriter::setQuiet(bool Quiet)
 	m_Quiet=Quiet;
 }
 
+void ScriptWriter::setBFAffineTfmMode(std::string BFAffineTfmMode)
+{
+	m_BFAffineTfmMode=BFAffineTfmMode;
+}
 

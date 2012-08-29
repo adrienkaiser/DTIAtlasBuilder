@@ -17,7 +17,6 @@
 /*std classes*/
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h> // to get the access setup
 #include <vector>
 #include <cstdlib> // for getenv()
 #include <ctime> // for clock()
@@ -66,11 +65,14 @@ class GUI : public QMainWindow, public Ui::MainWindow
 /*TEMPLATE*/	void OpenTemplateBrowseWindow();
 
 /*RUNNING*/	void OpenRunningCompleteWindow();
+		void RunningCompleteWindowClosed();
 		void OpenRunningFailWindow();
 		void DisplayAffineQC();
 		void DisplayDeformQC();
 		void DisplayResampQC();
 		void OpenFolder();
+		void Close();
+		void Exit();
 
 /*DATASET*/	void ReadCSVSlot();
 		void SaveCSVDatasetBrowse();
@@ -110,6 +112,8 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		bool m_noGUI;
 		bool m_Quiet;
 
+/* RUNNING */	QDialog *m_Rundlg; // dialog window that appears when running is done
+
 /*CASES*/	std::vector < QLineEdit* > m_CasesQ; // index begin at 0
 		std::vector < std::string > m_CasesPath; // index begin at 0
 
@@ -143,6 +147,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		QLineEdit *m_IterLine;
 		QComboBox *m_SimMetComboBox;
 		QDoubleSpinBox *m_SimParamDble;
+		QLabel *m_SimParamLabel;
 		QDoubleSpinBox *m_GSigmaDble;
 		QCheckBox *m_SmoothOffCheck;
 
