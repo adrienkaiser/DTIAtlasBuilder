@@ -40,15 +40,15 @@ class GUI : public QMainWindow, public Ui::MainWindow
 
 /*INIT*/	void InitOptions();
 
-/*DATASET*/	void ReadCSV(QString CSVfile);
-		void SaveCSVDataset();
+/*DATASET*/	int ReadCSV(QString CSVfile); // returns -1 if fails, otherwise 0
 		void SaveCSVResults(int Crop, int nbLoops);
 
-/*PARAMETERS*/	void LoadParameters(QString paramFile);
+/*PARAMETERS*/	int LoadParameters(QString paramFile); // returns -1 if fails, otherwise 0
+		void SaveParameters(QString ParamBrowseName,QString CSVFileName);
 
 /*XML FILE*/	void GenerateXMLForAW();
 
-/*SOFT CONFIG*/	void LoadConfig(QString ConfigFile);
+/*SOFT CONFIG*/	int LoadConfig(QString ConfigFile); // returns -1 if fails, otherwise 0
 
 /*CHECK IMAGE*/	int checkImage(std::string Image); // returns 1 if not an image, 2 if not a dti, otherwise 0
 
@@ -78,7 +78,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		void SaveCSVDatasetBrowse();
 
 /*PARAMETERS*/	void LoadParametersSlot();
-		void SaveParameters();
+		void SaveParametersSlot();
 
 /*SOFT CONFIG*/	void LoadConfigSlot();
 		void SaveConfig();
@@ -112,6 +112,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 
 		bool m_noGUI;
 		bool m_Quiet;
+		bool m_ErrorDetectedInConstructor; // useful in --nogui mode to exit the program without trying the compute function
 
 /* RUNNING */	QDialog *m_Rundlg; // dialog window that appears when running is done
 
