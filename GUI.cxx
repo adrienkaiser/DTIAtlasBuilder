@@ -55,6 +55,9 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	m_Quiet=Quiet;
 	if( overwrite ) OverwritecheckBox->setChecked(true);
 
+/* Initialize the options */
+	InitOptions();
+
 	if(!m_noGUI)
 	{
 /* Objects connections */
@@ -184,11 +187,8 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 
 	} //if(!m_noGUI)
 
-/* Initialize the options */
-	InitOptions();
-
 /* SET the soft config from an env variable or look in the PATH */
-	m_FromConstructor=1; // do not test AW path if 'Default' called from constructor
+	m_FromConstructor=1; // do not test AW path if 'Default' called from constructor -> test at the end of constructor
 	ConfigDefault(); // look for the programs with the itk function
 	m_FromConstructor=0;
 
@@ -201,7 +201,16 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	else if(!m_Quiet) std::cout<<"| No environment variable found"<<std::endl;
 
 /* Load Parameters from Command Line */
-	if( !ParamFile.empty() ) if( LoadParameters( QString(ParamFile.c_str())) == -1 ) m_ErrorDetectedInConstructor=true;
+	if( !ParamFile.empty() )
+	{
+		if( LoadParameters(QString(ParamFile.c_str())) == -1 ) m_ErrorDetectedInConstructor=true;
+	}
+	else if(m_noGUI) // no parameters and nogui => not possible
+	{
+		if(!m_Quiet) std::cout<<"| Please give a parameter file"<<std::endl; // command line display
+		m_ErrorDetectedInConstructor=true;
+	}
+
 	if( !CSVFile.empty() ) if( ReadCSV( QString(CSVFile.c_str())) == -1 ) m_ErrorDetectedInConstructor=true;
 	if( !ConfigFile.empty() ) if( LoadConfig( QString(ConfigFile.c_str())) == -1 ) m_ErrorDetectedInConstructor=true;
 
@@ -602,6 +611,7 @@ void GUI::Close() /*SLOT*/
 
 void GUI::Exit() /*SLOT*/
 {
+	if(!m_Quiet) std::cout<<"| End of the program"<<std::endl; // command line display
 	delete m_scriptwriter;
 	qApp->quit(); //end of Application: close the main window
 }
@@ -1872,7 +1882,7 @@ void GUI::ConfigDefault() /*SLOT*/
 	else 
 	{
 		AWPath->setText(QString(program.c_str()));
-		if(m_FromConstructor!=1) testAW();
+		if(m_FromConstructor!=1) testAW();  // do not test AW path if 'Default' called from constructor -> test at the end of constructor
 	}
 
 	program = itksys::SystemTools::FindProgram("dtiaverage");
@@ -2160,7 +2170,6 @@ int GUI::checkImage(std::string Image) // returns 1 if not an image, 2 if not a 
 
 void GUI::Compute() /*SLOT*/
 {
-
 	if( m_ErrorDetectedInConstructor && m_noGUI ) Exit();
 	else
 	{
@@ -2194,6 +2203,8 @@ void GUI::Compute() /*SLOT*/
 	} // else of if(OutputFolderLineEdit->text().isEmpty())
 
 	} // else of if[Case]
+
+	if(m_noGUI) Exit(); // Only 1 compute in nogui mode
 
 	} // else of if( m_ErrorDetectedInConstructor && m_noGUI )
 }
