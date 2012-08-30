@@ -17,8 +17,10 @@ int main(int argc, char* argv[])
 	GUI AtlasGUI(ParamFile,ConfigFile,CSVFile,Overwrite,noGUI,Quiet);
 
 	if(noGUI) AtlasGUI.Compute();
-	else AtlasGUI.show();
-
-	return app.exec();
+	else
+	{
+		AtlasGUI.show();
+		return app.exec();
+	}
 }
 
