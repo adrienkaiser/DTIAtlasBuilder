@@ -488,6 +488,8 @@ if(!m_Quiet) Script = Script + "print(\"\\n======== Computing global deformation
 			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSarrayOfPyramidLevelIterations " + m_DTIRegOptions[5] + "\"\n";
 			if(m_DTIRegOptions[2].compare("Use computed affine transform")==0) Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --initialAffine \" + alltfms[case]\n";
 			else Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSinitializeTransformMode " + m_DTIRegOptions[2] + "\"\n";
+			Script = Script + "\tBRAINSTempTfm = FinalResampPath + \"/First_Resampling/Case\" + str(case+1) + \"_FA_AffReg.txt\"\n"; // so that nothing is stored in the same dir than the Atlas
+			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --outputTransform \" + BRAINSTempTfm\n";
 		}
 		if( m_DTIRegOptions[0].compare("ANTS")==0 )
 		{
@@ -500,6 +502,8 @@ if(!m_Quiet) Script = Script + "print(\"\\n======== Computing global deformation
 			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSGaussianSigma " + m_DTIRegOptions[6] + "\"\n";
 			if( m_DTIRegOptions[7].compare("1")==0 ) Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSGaussianSmoothingOff\"\n";
 			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --initialAffine \" + alltfms[case]\n";
+			Script = Script + "\tANTSTempFileBase = FinalResampPath + \"/First_Resampling/Case\" + str(case+1) + \"_FA_\"\n"; // so that nothing is stored in the same dir than the Atlas
+			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSOutbase \" + ANTSTempFileBase\n"; // no --outputTfm for ANTS because --ANTSOutbase is used for the tfm
 		}
 if(!m_Quiet) 	Script = Script + "\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GlobalDefFieldCommand)\n";
 		if(m_Overwrite==1) Script = Script + "\tif 1 :\n";
@@ -580,6 +584,8 @@ if(!m_Quiet) Script = Script + "print(\"\\n======== Recomputing global deformati
 			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSarrayOfPyramidLevelIterations " + m_DTIRegOptions[5] + "\"\n";
 			if(m_DTIRegOptions[2].compare("Use computed affine transform")==0) Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --initialAffine \" + alltfms[case]\n";
 			else Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSinitializeTransformMode " + m_DTIRegOptions[2] + "\"\n";
+			Script = Script + "\tBRAINSTempTfm2 = FinalResampPath + \"/Second_Resampling/Case\" + str(case+1) + \"_FA_AffReg.txt\"\n"; // so that nothing is stored in the same dir than the Atlas
+			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --outputTransform \" + BRAINSTempTfm2\n";
 		}
 		if( m_DTIRegOptions[0].compare("ANTS")==0 )
 		{
@@ -592,6 +598,8 @@ if(!m_Quiet) Script = Script + "print(\"\\n======== Recomputing global deformati
 			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSGaussianSigma " + m_DTIRegOptions[6] + "\"\n";
 			if( m_DTIRegOptions[7].compare("1")==0 ) Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSGaussianSmoothingOff\"\n";
 			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --initialAffine \" + alltfms[case]\n";
+			Script = Script + "\tANTSTempFileBase2 = FinalResampPath + \"/Second_Resampling/Case\" + str(case+1) + \"_FA_\"\n"; // so that nothing is stored in the same dir than the Atlas
+			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSOutbase \" + ANTSTempFileBase2\n"; // no --outputTfm for ANTS because --ANTSOutbase is used for the tfm
 		}
 if(!m_Quiet) 	Script = Script + "\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GlobalDefFieldCommand2)\n";
 		if(m_Overwrite==1) Script = Script + "\tif 1 :\n";

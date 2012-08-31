@@ -318,7 +318,7 @@ void GUI::InitOptions()
 	m_TfmModeComboBox->addItem("useCenterOfHeadAlign");
 	m_TfmModeComboBox->addItem("useGeometryAlign");
 	m_TfmModeComboBox->addItem("Use computed affine transform");
-	m_TfmModeComboBox->setCurrentIndex(2);
+	m_TfmModeComboBox->setCurrentIndex(4);
 	BRAINSWidgetVLayout->addWidget(m_TfmModeComboBox);
 
 	QLabel *SigmaLabel = new QLabel("Smooth Deformation Field Sigma:", this);
