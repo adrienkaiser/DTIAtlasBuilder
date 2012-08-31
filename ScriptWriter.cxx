@@ -157,9 +157,7 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoo
 			Script = Script + "\t\tLinearTrans= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_FA.nrrd\"\n";
 			Script = Script + "\t\tAffineCommand=\"" + m_SoftPath[4] + " --fixedVolume \" + AtlasFAref + \" --movingVolume \" + NormFA + \" --useAffine --outputVolume \" + LinearTrans + \" --outputTransform \" + LinearTranstfm\n";
 			Script = Script + "\t\tInitLinearTrans= OutputPath + \"/Case\" + str(case+1) + \"_InitLinearTrans.nrrd\"\n";
-			Script = Script + "\t\tif n==0 and os.path.isfile(InitLinearTrans) :\n";
-				Script = Script + "\t\t\tAffineCommand= AffineCommand + \" --initialTransform \" + InitLinearTrans\n";
-				Script = Script + "\t\t\tAffineCommand= AffineCommand + \" --initializeTransformMode Off\"\n";
+			Script = Script + "\t\tif n==0 and os.path.isfile(InitLinearTrans) : AffineCommand= AffineCommand + \" --initialTransform \" + InitLinearTrans\n";
 			Script = Script + "\t\telse : AffineCommand= AffineCommand + \" --initializeTransformMode " + m_BFAffineTfmMode + "\"\n";
 if(!m_Quiet) 		Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + AffineCommand)\n";
 			if(m_Overwrite==1) Script = Script + "\t\tif os.system(AffineCommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] BRAINSFit: Affine Registration of FA image\')\n";
@@ -278,37 +276,6 @@ if(!m_Quiet) Script = Script + "print(\"\\n============ Atlas Building =========
 
 	Script = Script + "ErrorList=[] #empty list\n";
 
-/* Scale Levels: -scaleLevel --numberOfIterations --alpha --beta --gamma --maxPerturbation */
-/*	std::ostringstream outSL;
-	outSL << m_AtlasWerksScaleLevels[0][0];
-	std::string SL_str = outSL.str();
-	Script = Script + "ScaleLevels = [[" + SL_str;
-	for(unsigned int j=1;j<6;j++)
-	{
-		std::ostringstream outSL;
-		outSL << m_AtlasWerksScaleLevels[0][j];
-		std::string SL_str = outSL.str();
-		Script = Script + "," + SL_str;
-	}
-	Script = Script + "]";
-
-	for (unsigned int i=1;i<m_AtlasWerksScaleLevels.size();i++) 
-	{
-		std::ostringstream outSL;
-		outSL << m_AtlasWerksScaleLevels[i][0];
-		std::string SL_str = outSL.str();
-		Script = Script + ",[" + SL_str;
-		for(unsigned int j=1;j<6;j++)
-		{
-			std::ostringstream outSL;
-			outSL << m_AtlasWerksScaleLevels[i][j];
-			std::string SL_str = outSL.str();
-			Script = Script + "," + SL_str;
-		}
-		Script = Script + "]";
-	}	
-	Script = Script+ "]\n\n";
-*/
 /* Create directory for temporary files and final */
 	Script = Script + "if not os.path.isdir(DeformPath):\n";
 if(!m_Quiet) 	Script = Script + "\tprint(\"\\n => Creation of the Deformation transform directory = \" + DeformPath)\n";
@@ -327,16 +294,6 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"\\n => Creation of the Second Final R
 		Script = Script + "\tos.mkdir(FinalResampPath + \"/Second_Resampling\")\n\n";
 
 /* Cases variables: */
-/*	Script = Script + "allFAs = [AffinePath + \"/Loop" + m_nbLoops_str + "/Case1_Loop" + m_nbLoops_str + "_FinalFA.nrrd\"";
-	for (unsigned int i=1;i<m_CasesPath.size();i++) 
-	{
-		std::ostringstream outi;
-		outi << i+1;
-		std::string i_str = outi.str();
-		Script = Script + ", AffinePath + \"/Loop" + m_nbLoops_str + "/Case" + i_str + "_Loop" + m_nbLoops_str + "_FinalFA.nrrd\"";
-	}	
-	Script = Script+ "]\n\n";
-*/
 	Script = Script + "alltfms = [AffinePath + \"/Loop" + m_nbLoops_str + "/Case1_Loop" + m_nbLoops_str + "_LinearTrans.txt\"";
 	for (unsigned int i=1;i<m_CasesPath.size();i++) 
 	{
@@ -363,49 +320,30 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"\\n => Creation of the Second Final R
 	Script = Script + "\"]\n\n";	
 
 /* AtlasWerks Command: */
-if(!m_Quiet) Script = Script + "print(\"\\n======== Computing the Deformation Fields =========\")\n";
-	Script = Script + "FinalAtlasPrefix= DeformPath + \"/AverageImage_\"\n";
-	Script = Script + "FinalAtlasDefPrefix= DeformPath + \"/DeformedImage_\"\n";
-	Script = Script + "FinalAtlasDefFieldPrefix= DeformPath + \"/DeformationField_\"\n";
-	Script = Script + "FinalAtlasInvDefFieldPrefix= DeformPath + \"/InverseDeformationField_\"\n";
-/*	Script = Script + "AtlasBCommand= \"AtlasWerks --outputImageFilenamePrefix \" + FinalAtlasPrefix + \" --outputDeformedImageFilenamePrefix \" + FinalAtlasDefPrefix + \" --outputHFieldFilenamePrefix \" + FinalAtlasDefFieldPrefix + \" --outputHInvFieldFilenamePrefix \" + FinalAtlasInvDefFieldPrefix\n";
-	Script = Script + "scale = 0\n";
-	Script = Script + "while scale < len(ScaleLevels):\n";
-		Script = Script + "\tAtlasBCommand = AtlasBCommand + \" --scaleLevel \" + str(ScaleLevels[scale][0]) + \" --numberOfIterations \" + str(ScaleLevels[scale][1]) + \" --alpha \" + str(ScaleLevels[scale][2]) + \" --beta \" + str(ScaleLevels[scale][3]) + \" --gamma \" + str(ScaleLevels[scale][4]) + \" --maxPerturbation \" + str(ScaleLevels[scale][5])\n";
-		Script = Script + "\tscale += 1\n";
-	Script = Script + "case = 0\n";
-	Script = Script + "while case < len(allcases):\n";
-		Script = Script + "\tAtlasBCommand = AtlasBCommand + \" \" + allFAs[case]\n";
-		Script = Script + "\tcase += 1\n";
-*/
+if(!m_Quiet) Script = Script + "print(\"\\n======== Computing the Deformation Fields with AtlasWerks =========\")\n";
 	Script = Script + "XMLFile= DeformPath + \"/AtlasWerksParameters.xml\"\n";
 	Script = Script + "ParsedFile= DeformPath + \"/ParsedXML.xml\"\n";
 	Script = Script + "AtlasBCommand= \"" + m_SoftPath[5] + " -f \" + XMLFile + \" -o \" + ParsedFile\n";
 if(!m_Quiet) Script = Script + "print(\"=> $ \" + AtlasBCommand)\n";
 	if(m_Overwrite==1)Script = Script + "if 1 :\n";
-//	else Script = Script + "if not os.path.isfile(FinalAtlasPrefix + str( len(ScaleLevels)-1 ) + \".mhd\") :\n";
-	else Script = Script + "if not os.path.isfile(FinalAtlasPrefix + \".mhd\") :\n";
+	else Script = Script + "if not os.path.isfile(DeformPath + \"/AverageImage_.mhd\") :\n";
 		Script = Script + "\tif os.system(AtlasBCommand)!=0 : ErrorList.append(\'AtlasWerks: Computing non-linear atlas from affine registered images\')\n";
 if(!m_Quiet) 	Script = Script + "\tprint(\"\\n======== Renaming the files generated by AtlasWerks =========\")\n";
 		Script = Script + "\tcase = 0\n";
-		Script = Script + "\twhile case < len(allcases):\n";
+		Script = Script + "\twhile case < len(allcases): # Renaming\n";
 			Script = Script + "\t\tif case<10 :\n";
-//				Script = Script + "\t\t\toriginalImage=DeformPath + \"/DeformedImage_\" + str( len(ScaleLevels)-1 ) + \"_000\" + str(case) + \".mhd\"\n";
 				Script = Script + "\t\t\toriginalImage=DeformPath + \"/DeformedImage_000\" + str(case) + \".mhd\"\n";
 				Script = Script + "\t\t\toriginalHField=DeformPath + \"/DeformationField_000\" + str(case) + \".mhd\"\n";
 				Script = Script + "\t\t\toriginalInvHField=DeformPath + \"/InverseDeformationField_000\" + str(case) + \".mhd\"\n";
 			Script = Script + "\t\tif case>10 and case <100 :\n";
-//				Script = Script + "\t\t\toriginalImage=DeformPath + \"/DeformedImage_\" + str(len(ScaleLevels)-1) + \"_00\" + str(case) + \".mhd\"\n";
 				Script = Script + "\t\t\toriginalImage=DeformPath + \"/DeformedImage_00\" + str(case) + \".mhd\"\n";
 				Script = Script + "\t\t\toriginalHField=DeformPath + \"/DeformationField_00\" + str(case) + \".mhd\"\n";
 				Script = Script + "\t\t\toriginalInvHField=DeformPath + \"/InverseDeformationField_00\" + str(case) + \".mhd\"\n";
 			Script = Script + "\t\tif case>100 and case <1000 :\n";
-//				Script = Script + "\t\t\toriginalImage=DeformPath + \"/DeformedImage_\" + str(len(ScaleLevels)-1) + \"_0\" + str(case) + \".mhd\"\n";
 				Script = Script + "\t\t\toriginalImage=DeformPath + \"/DeformedImage_0\" + str(case) + \".mhd\"\n";
 				Script = Script + "\t\t\toriginalHField=DeformPath + \"/DeformationField_0\" + str(case) + \".mhd\"\n";
 				Script = Script + "\t\t\toriginalInvHField=DeformPath + \"/InverseDeformationField_0\" + str(case) + \".mhd\"\n";
 			Script = Script + "\t\tif case>1000 :\n";
-//				Script = Script + "\t\t\toriginalImage=DeformPath + \"/DeformedImage_\" + str(len(ScaleLevels)-1) + \"_\" + str(case) + \".mhd\"\n";
 				Script = Script + "\t\t\toriginalImage=DeformPath + \"/DeformedImage_\" + str(case) + \".mhd\"\n";
 				Script = Script + "\t\t\toriginalHField=DeformPath + \"/DeformationField_\" + str(case) + \".mhd\"\n";
 				Script = Script + "\t\t\toriginalInvHField=DeformPath + \"/InverseDeformationField_\" + str(case) + \".mhd\"\n";
@@ -419,14 +357,12 @@ if(!m_Quiet) 		Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => Re
 			Script = Script + "\t\tos.rename(originalHField,NewHField)\n";
 			Script = Script + "\t\tos.rename(originalInvHField,NewInvHField)\n";
 			Script = Script + "\t\tcase += 1\n";
-//if(!m_Quiet) if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + FinalAtlasPrefix + str( len(ScaleLevels)-1 ) + \".mhd\\' already exists so the command will not be executed\")\n\n";
-if(!m_Quiet) if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + FinalAtlasPrefix + \".mhd\\' already exists so the command will not be executed\")\n\n";
+if(!m_Quiet) if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + DeformPath + \"/AverageImage_.mhd\\' already exists so the command will not be executed\")\n\n";
 
 /* Apply deformation fields */
 if(!m_Quiet) Script = Script + "print(\"\\n======== Applying deformation fields to original DTIs =========\")\n";
 	Script = Script + "case = 0\n";
 	Script = Script + "while case < len(allcases):\n";
-		Script = Script + "\ttfm= AffinePath + \"/Loop" + m_nbLoops_str + "/Case\" + str(case+1) + \"_Loop" + m_nbLoops_str + "_LinearTrans.txt\"\n";
 		Script = Script + "\tFinalDTI= FinalPath + \"/Case\" + str(case+1) + \"_FinalDTI.nrrd\"\n";
 		if(m_NeedToBeCropped==1) Script = Script + "\toriginalDTI= AffinePath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
 		else Script = Script + "\toriginalDTI= allcases[case]\n";
@@ -443,7 +379,7 @@ if(!m_Quiet) Script = Script + "print(\"\\n======== Applying deformation fields 
 		Script = Script + "\tRef = AffinePath + \"/Loop" + nbLoops1_str + "/Loop" + nbLoops1_str + "_FAAverage.nrrd\"\n"; // an average image has been generated in the loops of affine reg for reference
 		}
 		Script = Script + "\tHField= DeformPath + \"/Case\" + str(case+1) + \"_DeformationField.mhd\"\n";
-		Script = Script + "\tFinalReSampCommand=\"" + m_SoftPath[1] + " -R \" + Ref + \" -H \" + HField + \" -f \" + tfm + \" \" + originalDTI + \" \" + FinalDTI\n";
+		Script = Script + "\tFinalReSampCommand=\"" + m_SoftPath[1] + " -R \" + Ref + \" -H \" + HField + \" -f \" + alltfms[case] + \" \" + originalDTI + \" \" + FinalDTI\n";
 		if(m_InterpolType.compare("Linear")==0)			Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -i linear\"\n";
 		if(m_InterpolType.compare("Nearest Neighborhoor")==0)	Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -i nn\"\n";
 		if(m_InterpolType.compare("Windowed Sinc")==0)
@@ -516,6 +452,7 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"=> $ \" + DbleToFloatCommand)\n";
 
 if(!m_Quiet) if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + DTIAverage + \"\\' already exists so the command will not be executed\")\n\n";
 
+
 /* Computing global deformation fields */
 if(!m_Quiet) Script = Script + "print(\"\\n======== Computing global deformation fields =========\")\n";
 	Script = Script + "case = 0\n";
@@ -546,10 +483,11 @@ if(!m_Quiet) Script = Script + "print(\"\\n======== Computing global deformation
 		{
 			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --method useScalar-BRAINS\"\n";
 			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSRegistrationType " + m_DTIRegOptions[1] + "\"\n";
-			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSinitializeTransformMode " + m_DTIRegOptions[2] + "\"\n";
 			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSSmoothDefFieldSigma " + m_DTIRegOptions[3] + "\"\n";
 			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSnumberOfPyramidLevels " + m_DTIRegOptions[4] + "\"\n";
 			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSarrayOfPyramidLevelIterations " + m_DTIRegOptions[5] + "\"\n";
+			if(m_DTIRegOptions[2].compare("Use computed affine transform")==0) Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --initialAffine \" + alltfms[case]\n";
+			else Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSinitializeTransformMode " + m_DTIRegOptions[2] + "\"\n";
 		}
 		if( m_DTIRegOptions[0].compare("ANTS")==0 )
 		{
@@ -561,6 +499,7 @@ if(!m_Quiet) Script = Script + "print(\"\\n======== Computing global deformation
 			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSSimilarityParameter " + m_DTIRegOptions[5] + "\"\n";
 			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSGaussianSigma " + m_DTIRegOptions[6] + "\"\n";
 			if( m_DTIRegOptions[7].compare("1")==0 ) Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSGaussianSmoothingOff\"\n";
+			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --initialAffine \" + alltfms[case]\n";
 		}
 if(!m_Quiet) 	Script = Script + "\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GlobalDefFieldCommand)\n";
 		if(m_Overwrite==1) Script = Script + "\tif 1 :\n";
@@ -571,6 +510,7 @@ if(!m_Quiet) 		Script = Script + "\t\tprint(\"\\n||Case \" + str(case+1) + \" =>
 			Script = Script + "\t\tif os.system(GlobDbleToFloatCommand)!=0 : ErrorList.append(\'unu: Converting the final deformed images from double to float DTI\')\n";
 if(!m_Quiet) if(m_Overwrite==0) Script = Script + "\telse : print(\"=> The file \\'\" + FinalDef + \"\\' already exists so the command will not be executed\")\n";
 		Script = Script + "\tcase += 1\n\n";
+
 
 /* dtiaverage recomputing */
 if(!m_Quiet) Script = Script + "print(\"\\n======== Recomputing the final DTI average =========\")\n";
@@ -604,6 +544,7 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"=> $ \" + DbleToFloatCommand2)\n";
 
 if(!m_Quiet) if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + DTIAverage2 + \"\\' already exists so the command will not be executed\")\n\n";
 
+
 /* Recomputing global deformation fields */
 if(!m_Quiet) Script = Script + "print(\"\\n======== Recomputing global deformation fields =========\")\n";
 	Script = Script + "case = 0\n";
@@ -634,10 +575,11 @@ if(!m_Quiet) Script = Script + "print(\"\\n======== Recomputing global deformati
 		{
 			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --method useScalar-BRAINS\"\n";
 			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSRegistrationType " + m_DTIRegOptions[1] + "\"\n";
-			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSinitializeTransformMode " + m_DTIRegOptions[2] + "\"\n";
 			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSSmoothDefFieldSigma " + m_DTIRegOptions[3] + "\"\n";
 			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSnumberOfPyramidLevels " + m_DTIRegOptions[4] + "\"\n";
 			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSarrayOfPyramidLevelIterations " + m_DTIRegOptions[5] + "\"\n";
+			if(m_DTIRegOptions[2].compare("Use computed affine transform")==0) Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --initialAffine \" + alltfms[case]\n";
+			else Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSinitializeTransformMode " + m_DTIRegOptions[2] + "\"\n";
 		}
 		if( m_DTIRegOptions[0].compare("ANTS")==0 )
 		{
@@ -649,6 +591,7 @@ if(!m_Quiet) Script = Script + "print(\"\\n======== Recomputing global deformati
 			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSSimilarityParameter " + m_DTIRegOptions[5] + "\"\n";
 			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSGaussianSigma " + m_DTIRegOptions[6] + "\"\n";
 			if( m_DTIRegOptions[7].compare("1")==0 ) Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSGaussianSmoothingOff\"\n";
+			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --initialAffine \" + alltfms[case]\n";
 		}
 if(!m_Quiet) 	Script = Script + "\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GlobalDefFieldCommand2)\n";
 		if(m_Overwrite==1) Script = Script + "\tif 1 :\n";

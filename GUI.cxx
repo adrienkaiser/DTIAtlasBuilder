@@ -302,13 +302,12 @@ void GUI::InitOptions()
 	m_BRegTypeComboBox = new QComboBox(this);
 	m_BRegTypeComboBox->addItem("None");
 	m_BRegTypeComboBox->addItem("Rigid");
-	m_BRegTypeComboBox->addItem("Affine");
 	m_BRegTypeComboBox->addItem("BSpline");
 	m_BRegTypeComboBox->addItem("Diffeomorphic");
 	m_BRegTypeComboBox->addItem("Demons");
 	m_BRegTypeComboBox->addItem("LogDemons");
 	m_BRegTypeComboBox->addItem("SymmetricLogDemons");
-	m_BRegTypeComboBox->setCurrentIndex(6);
+	m_BRegTypeComboBox->setCurrentIndex(5);
 	BRAINSWidgetVLayout->addWidget(m_BRegTypeComboBox);
 
 	QLabel *TfmModeLabel = new QLabel("Transform Mode:", this);
@@ -318,6 +317,7 @@ void GUI::InitOptions()
 	m_TfmModeComboBox->addItem("useMomentsAlign");
 	m_TfmModeComboBox->addItem("useCenterOfHeadAlign");
 	m_TfmModeComboBox->addItem("useGeometryAlign");
+	m_TfmModeComboBox->addItem("Use computed affine transform");
 	m_TfmModeComboBox->setCurrentIndex(2);
 	BRAINSWidgetVLayout->addWidget(m_TfmModeComboBox);
 
@@ -355,9 +355,12 @@ void GUI::InitOptions()
 	m_ARegTypeComboBox = new QComboBox(this);
 	m_ARegTypeComboBox->addItem("None");
 	m_ARegTypeComboBox->addItem("Rigid");
+	m_ARegTypeComboBox->addItem("Elast");
+	m_ARegTypeComboBox->addItem("Exp");
+	m_ARegTypeComboBox->addItem("GreedyExp");
 	m_ARegTypeComboBox->addItem("GreedyDiffeo");
 	m_ARegTypeComboBox->addItem("SpatioTempDiffeo");
-	m_ARegTypeComboBox->setCurrentIndex(2);
+	m_ARegTypeComboBox->setCurrentIndex(5);
 	QObject::connect(m_ARegTypeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(ANTSRegTypeChanged( int )));
 	ANTSWidgetVLayout->addWidget(m_ARegTypeComboBox);
 
@@ -1303,12 +1306,11 @@ int GUI::LoadParameters(QString paramFile)
 
 			if( param.at(0).contains(QString("None")) ) m_BRegTypeComboBox->setCurrentIndex(0);
 			else if( param.at(0).contains(QString("Rigid")) ) m_BRegTypeComboBox->setCurrentIndex(1);
-			else if( param.at(0).contains(QString("Affine")) ) m_BRegTypeComboBox->setCurrentIndex(2);
-			else if( param.at(0).contains(QString("BSpline")) ) m_BRegTypeComboBox->setCurrentIndex(3);
-			else if( param.at(0).contains(QString("Diffeomorphic")) ) m_BRegTypeComboBox->setCurrentIndex(4);
-			else if( param.at(0).contains(QString("Demons")) ) m_BRegTypeComboBox->setCurrentIndex(5);
-			else if( param.at(0).contains(QString("LogDemons")) ) m_BRegTypeComboBox->setCurrentIndex(6);
-			else if( param.at(0).contains(QString("SymmetricLogDemons")) ) m_BRegTypeComboBox->setCurrentIndex(7);
+			else if( param.at(0).contains(QString("BSpline")) ) m_BRegTypeComboBox->setCurrentIndex(2);
+			else if( param.at(0).contains(QString("Diffeomorphic")) ) m_BRegTypeComboBox->setCurrentIndex(3);
+			else if( param.at(0).contains(QString("SymmetricLogDemons")) ) m_BRegTypeComboBox->setCurrentIndex(6);
+			else if( param.at(0).contains(QString("LogDemons")) ) m_BRegTypeComboBox->setCurrentIndex(5);
+			else if( param.at(0).contains(QString("Demons")) ) m_BRegTypeComboBox->setCurrentIndex(4);
 			else
 			{
 				if(!m_noGUI) 
@@ -1324,6 +1326,7 @@ int GUI::LoadParameters(QString paramFile)
 			else if( param.at(1).contains(QString("useMomentsAlign")) ) m_TfmModeComboBox->setCurrentIndex(1);
 			else if( param.at(1).contains(QString("useCenterOfHeadAlign")) ) m_TfmModeComboBox->setCurrentIndex(2);
 			else if( param.at(1).contains(QString("useGeometryAlign")) ) m_TfmModeComboBox->setCurrentIndex(3);
+			else if( param.at(1).contains(QString("Use computed affine transform")) ) m_TfmModeComboBox->setCurrentIndex(4);
 			else
 			{
 				if(!m_noGUI) 
@@ -1356,9 +1359,11 @@ int GUI::LoadParameters(QString paramFile)
 
 			if( param.at(0).contains(QString("None")) ) m_ARegTypeComboBox->setCurrentIndex(0);
 			else if( param.at(0).contains(QString("Rigid")) ) m_ARegTypeComboBox->setCurrentIndex(1);
-			else if( param.at(0).contains(QString("Affine")) ) m_ARegTypeComboBox->setCurrentIndex(2);
-			else if( param.at(0).contains(QString("GreedyDiffeo")) ) m_ARegTypeComboBox->setCurrentIndex(3);
-			else if( param.at(0).contains(QString("SpatioTempoDiffeo")) ) m_ARegTypeComboBox->setCurrentIndex(3);
+			else if( param.at(0).contains(QString("Elast")) ) m_ARegTypeComboBox->setCurrentIndex(2);
+			else if( param.at(0).contains(QString("Exp")) ) m_ARegTypeComboBox->setCurrentIndex(3);
+			else if( param.at(0).contains(QString("GreedyExp")) ) m_ARegTypeComboBox->setCurrentIndex(4);
+			else if( param.at(0).contains(QString("GreedyDiffeo")) ) m_ARegTypeComboBox->setCurrentIndex(5);
+			else if( param.at(0).contains(QString("SpatioTempoDiffeo")) ) m_ARegTypeComboBox->setCurrentIndex(6);
 			else
 			{
 				if(!m_noGUI) 
