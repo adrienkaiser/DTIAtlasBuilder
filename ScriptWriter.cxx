@@ -1,13 +1,13 @@
-/*itk classes*/
-#include "itkImage.h"
-#include "itkImageFileReader.h"
-
 /*std classes*/
 #include <iostream>
 #include <string>
 #include <vector>
 #include <sstream> // to convert int to std::string
 #include <math.h> // for the absolute value
+
+/*itk classes*/
+#include "itkImage.h"
+#include "itkImageFileReader.h"
 
 #include "ScriptWriter.h"
 
@@ -47,6 +47,7 @@ void ScriptWriter::Preprocess ()
 	Script = Script + "import os\n\n"; // To run a shell command : os.system("[shell command]")
 if(!m_Quiet) Script = Script + "print(\"\\n============ Pre processing =============\")\n\n";
 
+	Script = Script + "# Files Paths\n";
 	Script = Script + "allcases = [\"" + m_CasesPath[0];
 	for (unsigned int i=1;i<m_CasesPath.size();i++) Script = Script + "\", \"" + m_CasesPath[i];
 	Script = Script+ "\"]\n";
@@ -59,6 +60,7 @@ if(!m_Quiet) Script = Script + "print(\"\\n============ Pre processing =========
 	Script = Script + "ErrorList=[] #empty list\n\n";
 
 /* Create directory for temporary files */
+	Script = Script + "# Create directory for temporary files\n";
 	Script = Script + "if not os.path.isdir(OutputPath):\n";
 		Script = Script + "\tos.mkdir(OutputPath)\n";
 if(!m_Quiet) 	Script = Script + "\tprint(\"\\n => Creation of the temporary files directory = \" + OutputPath)\n\n";
@@ -66,6 +68,7 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"\\n => Creation of the temporary file
 /* Cropping DTI image */
 	if(m_NeedToBeCropped==1)
 	{
+	Script = Script + "# Cropping DTI image\n";
 
 	std::string CropSize_str [3];
 	std::ostringstream out1;
@@ -96,6 +99,7 @@ if(!m_Quiet) 		Script = Script + "\telse : print(\"=> The file \\'\" + croppedDT
 	}
 
 /* Generating FA */
+	Script = Script + "# Generating FA\n";
 if(!m_Quiet) Script = Script + "print(\"\\n======== Generating FA =========\")\n";
 	Script = Script + "case = 0\n";
 	Script = Script + "while case < len(allcases):\n";
@@ -114,6 +118,7 @@ if(!m_Quiet) 		Script = Script + "\telse : print(\"=> The file \\'\" + FA + \"\\
 		Script = Script + "\tcase += 1\n\n";
 
 /* Affine Registration and Normalization Loop */
+	Script = Script + "# Affine Registration and Normalization Loop\n";
 	Script = Script + "n = 0\n";
 	Script = Script + "while n <= " + m_nbLoops_str + " :\n";
 
@@ -122,6 +127,7 @@ if(!m_Quiet) 	Script = Script + "\t\tprint(\"\\n => Creation of the Output direc
 		Script = Script + "\t\tos.mkdir(OutputPath + \"/Loop\" + str(n))\n\n";
 
 /* Normalization */
+	Script = Script + "# Normalization\n";
 if(!m_Quiet) 	Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] ======== Normalization =========\")\n";
 	if(m_RegType==1) //use case as loop 1 ref
 	{
@@ -144,6 +150,7 @@ if(!m_Quiet) 			Script = Script + "\t\telse : print(\"=> The file \\'\" + NormFA
 			Script = Script + "\t\tcase += 1\n\n";
 
 /* Affine registration with BrainsFit */
+	Script = Script + "# Affine registration with BrainsFit\n";
 if(!m_Quiet) 	Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] ======== Affine registration with BrainsFit =========\")\n";
 	if(m_RegType==1) //use case 1 as loop 1 ref
 	{
@@ -172,6 +179,7 @@ if(!m_Quiet) 		if(m_Overwrite==0) Script = Script + "\t\telif os.path.isfile(Lin
 			Script = Script + "\t\tcase += 1\n\n";
 
 /* Implementing the affine registration */
+	Script = Script + "# Implementing the affine registration\n";
 if(!m_Quiet) 	Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] ======== Implementing the Affine registration =========\")\n";
 	if(m_RegType==1) //use case as loop 1 ref
 	{
@@ -196,6 +204,7 @@ if(!m_Quiet) 			Script = Script + "\t\telse : print(\"=> The file \\'\" + Linear
 			Script = Script + "\t\tcase += 1\n\n";
 
 /* Generating FA of registered images */
+	Script = Script + "# Generating FA of registered images\n";
 if(!m_Quiet) 	Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] ======== Generating FA of registered images =========\")\n";
 	if(m_RegType==1) //use case as loop 1 ref
 	{
@@ -219,6 +228,7 @@ if(!m_Quiet) 			Script = Script + "\t\telse : print(\"=> The file \\'\" + LoopFA
 			Script = Script + "\t\tcase += 1\n\n";
 		
 /* FA Average of registered images with ImageMath */
+	Script = Script + "# FA Average of registered images with ImageMath\n";
 		Script = Script + "\tif n != " + m_nbLoops_str + " : # this will not be done for the last lap\n";
 if(!m_Quiet) 		Script = Script + "\t\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] ======== Computing FA Average of registered images =========\")\n";
 			Script = Script + "\t\tFAAverage = OutputPath + \"/Loop\" + str(n) + \"/Loop\" + str(n) + \"_FAAverage.nrrd\"\n";
@@ -250,6 +260,7 @@ if(!m_Quiet) Script = Script + "print(\"\\n============ End of Pre processing ==
 
 	if(!m_Quiet)
 	{
+	Script = Script + "# Display errors\n";
 	Script = Script + "if len(ErrorList) >0 :\n";
 	Script = Script + "\tprint(\"\\n=> \" + len(ErrorList) + \" errors detected during the followind operations:\")\n";
 	Script = Script + "\tfor error in ErrorList : print(\'\\n\' + error)\n";
@@ -269,14 +280,16 @@ void ScriptWriter::AtlasBuilding()
 	Script = Script + "import os\n\n"; ///// To run a shell command : os.system("[shell command]")
 if(!m_Quiet) Script = Script + "print(\"\\n============ Atlas Building =============\")\n\n";
 
+	Script = Script + "# Files Paths\n";
 	Script = Script + "DeformPath= \"" + m_OutputPath + "/DTIAtlas/2_NonLinear_Registration\"\n";
 	Script = Script + "AffinePath= \"" + m_OutputPath + "/DTIAtlas/1_Affine_Registration\"\n";
 	Script = Script + "FinalPath= \"" + m_OutputPath + "/DTIAtlas/3_Final_Atlas\"\n";
 	Script = Script + "FinalResampPath= \"" + m_OutputPath + "/DTIAtlas/4_Final_Resampling\"\n";
 
-	Script = Script + "ErrorList=[] #empty list\n";
+	Script = Script + "ErrorList=[] #empty list\n\n";
 
 /* Create directory for temporary files and final */
+	Script = Script + "# Create directory for temporary files and final\n";
 	Script = Script + "if not os.path.isdir(DeformPath):\n";
 if(!m_Quiet) 	Script = Script + "\tprint(\"\\n => Creation of the Deformation transform directory = \" + DeformPath)\n";
 		Script = Script + "\tos.mkdir(DeformPath)\n\n";
@@ -294,6 +307,7 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"\\n => Creation of the Second Final R
 		Script = Script + "\tos.mkdir(FinalResampPath + \"/Second_Resampling\")\n\n";
 
 /* Cases variables: */
+	Script = Script + "# Cases variables\n";
 	Script = Script + "alltfms = [AffinePath + \"/Loop" + m_nbLoops_str + "/Case1_Loop" + m_nbLoops_str + "_LinearTrans.txt\"";
 	for (unsigned int i=1;i<m_CasesPath.size();i++) 
 	{
@@ -320,6 +334,7 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"\\n => Creation of the Second Final R
 	Script = Script + "\"]\n\n";	
 
 /* AtlasWerks Command: */
+	Script = Script + "# AtlasWerks Command\n";
 if(!m_Quiet) Script = Script + "print(\"\\n======== Computing the Deformation Fields with AtlasWerks =========\")\n";
 	Script = Script + "XMLFile= DeformPath + \"/AtlasWerksParameters.xml\"\n";
 	Script = Script + "ParsedFile= DeformPath + \"/ParsedXML.xml\"\n";
@@ -360,6 +375,7 @@ if(!m_Quiet) 		Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => Re
 if(!m_Quiet) if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + DeformPath + \"/AverageImage_.mhd\\' already exists so the command will not be executed\")\n\n";
 
 /* Apply deformation fields */
+	Script = Script + "# Apply deformation fields\n";
 if(!m_Quiet) Script = Script + "print(\"\\n======== Applying deformation fields to original DTIs =========\")\n";
 	Script = Script + "case = 0\n";
 	Script = Script + "while case < len(allcases):\n";
@@ -421,6 +437,7 @@ if(!m_Quiet) if(m_Overwrite==0) Script = Script + "\telse : print(\"=> The file 
 		Script = Script + "\tcase += 1\n\n";
 
 /* dtiaverage computing */
+	Script = Script + "# dtiaverage computing\n";
 if(!m_Quiet) Script = Script + "print(\"\\n======== Computing the final DTI average =========\")\n";
 	Script = Script + "DTIAverage = FinalPath + \"/FinalAtlasDTI.nrrd\"\n";
 	Script = Script + "AverageCommand = \"" + m_SoftPath[6] + " \"\n";
@@ -438,6 +455,7 @@ if(!m_Quiet) Script = Script + "print(\"=> $ \" + AverageCommand)\n";
 	else Script = Script + "if not os.path.isfile(DTIAverage) : \n";
 		Script = Script + "\tif os.system(AverageCommand)!=0 : ErrorList.append(\'dtiaverage: Computing the final DTI average\')\n";
 /* Computing some images from the final DTI with dtiprocess */
+	Script = Script + "# Computing some images from the final DTI with dtiprocess\n";
 		Script = Script + "\tFA= FinalPath + \"/FinalAtlasFA.nrrd\"\n";
 		Script = Script + "\tcFA= FinalPath + \"/FinalAtlasColorFA.nrrd\"\n";
 		Script = Script + "\tRD= FinalPath + \"/FinalAtlasRD.nrrd\"\n"; // Radial Diffusivity
@@ -453,7 +471,10 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"=> $ \" + DbleToFloatCommand)\n";
 if(!m_Quiet) if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + DTIAverage + \"\\' already exists so the command will not be executed\")\n\n";
 
 
+//	Script = Script + "nbCPUs = os.sysconf(\"SC_NPROCESSORS_ONLN\")\n"; => nbCPUs threads ANTS
+
 /* Computing global deformation fields */
+	Script = Script + "# Computing global deformation fields\n";
 if(!m_Quiet) Script = Script + "print(\"\\n======== Computing global deformation fields =========\")\n";
 	Script = Script + "case = 0\n";
 	Script = Script + "while case < len(allcases):\n";
@@ -517,6 +538,7 @@ if(!m_Quiet) if(m_Overwrite==0) Script = Script + "\telse : print(\"=> The file 
 
 
 /* dtiaverage recomputing */
+	Script = Script + "# dtiaverage recomputing\n";
 if(!m_Quiet) Script = Script + "print(\"\\n======== Recomputing the final DTI average =========\")\n";
 	Script = Script + "DTIAverage2 = FinalResampPath + \"/FinalAtlasDTI.nrrd\"\n";
 	Script = Script + "AverageCommand2 = \"" + m_SoftPath[6] + " \"\n";
@@ -534,6 +556,7 @@ if(!m_Quiet) Script = Script + "print(\"=> $ \" + AverageCommand2)\n";
 	else Script = Script + "if not os.path.isfile(DTIAverage2) : \n";
 		Script = Script + "\tif os.system(AverageCommand2)!=0 : ErrorList.append(\'dtiaverage: Recomputing the final DTI average\')\n";
 /* Computing some images from the final DTI with dtiprocess */
+	Script = Script + "# Computing some images from the final DTI with dtiprocess\n";
 		Script = Script + "\tFA2= FinalResampPath + \"/FinalAtlasFA.nrrd\"\n";
 		Script = Script + "\tcFA2= FinalResampPath + \"/FinalAtlasColorFA.nrrd\"\n";
 		Script = Script + "\tRD2= FinalResampPath + \"/FinalAtlasRD.nrrd\"\n"; // Radial Diffusivity
@@ -550,6 +573,7 @@ if(!m_Quiet) if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'
 
 
 /* Recomputing global deformation fields */
+	Script = Script + "# Recomputing global deformation fields\n";
 if(!m_Quiet) Script = Script + "print(\"\\n======== Recomputing global deformation fields =========\")\n";
 	Script = Script + "case = 0\n";
 	Script = Script + "while case < len(allcases):\n";
@@ -616,6 +640,7 @@ if(!m_Quiet) 	Script = Script + "print(\"\\n============ End of Atlas Building =
 
 	if(!m_Quiet)
 	{
+	Script = Script + "# Display errors\n";
 	Script = Script + "if len(ErrorList) >0 :\n";
 	Script = Script + "\tprint(\"\\n=> \" + len(ErrorList) + \" errors detected during the followind operations:\")\n";
 	Script = Script + "\tfor error in ErrorList : print(\'\\n\' + error)\n";
@@ -633,20 +658,22 @@ void ScriptWriter::MainScript()
 
 	Script = Script + "#!/usr/bin/python\n\n";
 	Script = Script + "import os\n"; ///// To run a shell command : os.system("[shell command]")
-	Script = Script + "import time\n\n"; // to compute the execution time
-if(!m_Quiet) 	Script = Script + "print(\"\\n=============== Main Script ================\")\n\n";
+if(!m_Quiet) Script = Script + "import time\n\n"; // to compute the execution time
+if(!m_Quiet) Script = Script + "print(\"\\n=============== Main Script ================\")\n\n";
 
 	Script = Script + "OutputPath= \"" + m_OutputPath + "/DTIAtlas\"\n";
 
 	Script = Script + "ErrorList=[] #empty list\n\n";
 
-	Script = Script + "time1=time.time()\n\n";
+if(!m_Quiet) Script = Script + "time1=time.time()\n\n";
 
 /* Call the other scripts */
+	Script = Script + "# Call the Preprocess script\n";
 	Script = Script + "PrePScriptCommand= OutputPath + \"/Script/DTIAtlasBuilder_Preprocess.script\"\n";
 if(!m_Quiet) 	Script = Script + "print(\"\\n=> $ \" + PrePScriptCommand)\n";
 	Script = Script + "if os.system(PrePScriptCommand)!=0 : ErrorList.append(\'=> Errors detected in preprocessing\')\n\n";
 
+	Script = Script + "# Call the Atlas Building script\n";
 	Script = Script + "AtlasBuildingCommand= OutputPath + \"/Script/DTIAtlasBuilder_AtlasBuilding.script\"\n";
 if(!m_Quiet) 	Script = Script + "print(\"\\n=> $ \" + AtlasBuildingCommand)\n";
 	Script = Script + "if os.system(AtlasBuildingCommand)!=0 : ErrorList.append(\'=> Errors detected in atlas building\')\n\n";
@@ -655,10 +682,12 @@ if(!m_Quiet) 	Script = Script + "print(\"\\n============ End of execution ======
 
 	if(!m_Quiet)
 	{
+	Script = Script + "# Display errors\n";
 	Script = Script + "for error in ErrorList : print(error + \'\\n\')\n";
 	Script = Script + "if len(ErrorList)==0 : print(\"=> No errors detected during execution\\n\")\n\n";
 
 
+	Script = Script + "# Display execution time\n";
 	Script = Script + "time2=time.time()\n";
 	Script = Script + "timeTot=time2-time1\n";
 	Script = Script + "if timeTot<60 : print(\"| Execution time = \" + str(int(timeTot)) + \"s\")\n";
