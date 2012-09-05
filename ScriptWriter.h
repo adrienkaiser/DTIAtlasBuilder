@@ -1,15 +1,15 @@
 #ifndef DEF_SCRIPTWRITER
 #define DEF_SCRIPTWRITER
 
-/*itk classes*/
-#include "itkImage.h"
-#include "itkImageFileReader.h"
-
 /*std classes*/
 #include <iostream>
 #include <string>
 #include <vector>
 #include <math.h>// for the absolute value
+
+/*itk classes*/
+#include "itkImage.h"
+#include "itkImageFileReader.h"
 
 class ScriptWriter
 {
@@ -26,7 +26,7 @@ class ScriptWriter
 		std::string getScript_Main();
 
 /*CHECK DATASET*/
-		int setCroppingSize(); // returns 0 if no cropping , 1 if cropping needed
+		int setCroppingSize( bool SafetyMargin ); // returns 0 if no cropping , 1 if cropping needed
 		int CheckVoxelSize(); // returns 0 if voxel size OK , otherwise 1
 
 /*SET THE VALUES*/

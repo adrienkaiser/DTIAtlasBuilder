@@ -19,7 +19,6 @@
 #include <stdlib.h>
 #include <vector>
 #include <cstdlib> // for getenv()
-#include <ctime> // for clock()
 
 /*itk classes*/
 #include "itkImage.h"
@@ -39,6 +38,8 @@ class GUI : public QMainWindow, public Ui::MainWindow
 /*CONSTRUCTOR*/	GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, bool overwrite, bool noGUI, bool Quiet); //constructor
 
 /*INIT*/	void InitOptions();
+
+/*CASES*/	void CheckCasesIndex();
 
 /*DATASET*/	int ReadCSV(QString CSVfile); // returns -1 if fails, otherwise 0
 		void SaveCSVResults(int Crop, int nbLoops);
@@ -64,15 +65,11 @@ class GUI : public QMainWindow, public Ui::MainWindow
 
 /*TEMPLATE*/	void OpenTemplateBrowseWindow();
 
-/*RUNNING*/	void OpenRunningCompleteWindow();
-		void RunningCompleteWindowClosed();
-		void OpenRunningFailWindow();
-		void DisplayAffineQC();
+/*QC*/		void DisplayAffineQC();
 		void DisplayDeformQC();
 		void DisplayResampQC();
-		void OpenFolder();
-		void Close();
-		void Exit();
+		
+/*EXIT*/	void Exit();
 
 /*DATASET*/	void ReadCSVSlot();
 		void SaveCSVDatasetBrowse();
@@ -100,13 +97,11 @@ class GUI : public QMainWindow, public Ui::MainWindow
 
 /*MAIN FUNCT*/	void Compute();
 
-	signals:
-		void runningcomplete(); //sent when the running is complete
-		void runningfail(); //sent when the running has failed
+	signals: // none
 
 	protected :
 
-/*CLOSE WINDOW*/void closeEvent(QCloseEvent* event);
+/*EXIT*/	void closeEvent(QCloseEvent* event);
 
 	private:
 
@@ -119,6 +114,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 /*CASES*/	std::vector < QLineEdit* > m_CasesQ; // index begin at 0
 		std::vector < std::string > m_CasesPath; // index begin at 0
 
+/*SONPROCESS*/	int m_nbSons;
 /*DATASET*/	QString m_CSVseparator;
 		QString m_CSVPath;
 		QString m_OutputPath;
