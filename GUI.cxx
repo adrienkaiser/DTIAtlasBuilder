@@ -19,7 +19,8 @@
 #include <stdlib.h>
 #include <vector>
 #include <cstdlib> // for getenv()
-#include <ctime> // for clock()
+#include <signal.h> // for kill()
+//#include <sys/wait.h> // for waitpid(): see function "void GUI::LaunchScriptRunner()" at the end
 
 /*itk classes*/
 #include "itkImage.h"
@@ -44,7 +45,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	m_ErrorDetectedInConstructor=false;
 
 /* Script writing object */
-	m_scriptwriter = new ScriptWriter; // delete in "void GUI::OpenRunningCompleteWindow()"
+	m_scriptwriter = new ScriptWriter; // delete in "void GUI::Exit()"
 
 /* Variables */
 	m_ParamFileHeader = QString("DTIAtlasBuilderParameterFileVersion");
@@ -54,6 +55,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	m_noGUI=noGUI;
 	m_Quiet=Quiet;
 	if( overwrite ) OverwritecheckBox->setChecked(true);
+	m_nbSons=0;
 
 /* Initialize the options */
 	InitOptions();
@@ -73,7 +75,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 
 	QObject::connect(actionLoad_parameters, SIGNAL(triggered()), this, SLOT(LoadParametersSlot()));
 	QObject::connect(actionSave_parameters, SIGNAL(triggered()), this, SLOT(SaveParametersSlot()));
-	QObject::connect(actionExit, SIGNAL(triggered()), qApp, SLOT(quit()));
+	QObject::connect(actionExit, SIGNAL(triggered()), this, SLOT(Exit()));
 	QObject::connect(actionLoad_Software_Configuration, SIGNAL(triggered()), this, SLOT(LoadConfigSlot()));
 	QObject::connect(actionSave_Software_Configuration, SIGNAL(triggered()), this, SLOT(SaveConfig()));
 	QObject::connect(actionRead_Me, SIGNAL(triggered()), this, SLOT(ReadMe()));
@@ -82,11 +84,12 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	QObject::connect(TensInterpolComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(TensorInterpolComboBoxChanged(int)));
 	QObject::connect(RegMethodcomboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(RegMethodComboBoxChanged(int)));
 
-	QObject::connect(this, SIGNAL(runningcomplete()), this, SLOT(OpenRunningCompleteWindow()));
-	QObject::connect(this, SIGNAL(runningfail()), this, SLOT(OpenRunningFailWindow()));
-
 	QObject::connect(DefaultButton, SIGNAL(clicked()), this, SLOT(ConfigDefault()));
 	QObject::connect(AWPath, SIGNAL(editingFinished()), this, SLOT(testAW())); // test the version of AtlasWerks automatically when the text changes
+
+	QObject::connect(AffineQCButton, SIGNAL(clicked()), this, SLOT(DisplayAffineQC()));
+	QObject::connect(DeformQCButton, SIGNAL(clicked()), this, SLOT(DisplayDeformQC()));
+	QObject::connect(ResampQCButton, SIGNAL(clicked()), this, SLOT(DisplayResampQC()));
 
 /* Browse software path Buttons */
 	QSignalMapper *SoftButtonMapper = new QSignalMapper();
@@ -141,6 +144,8 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 /* When any value changes, the value of m_ParamSaved is set to 0 */
 	QObject::connect(TemplateLineEdit, SIGNAL(textChanged(QString)), this, SLOT(WidgetHasChangedParamNoSaved()));
 	QObject::connect(OutputFolderLineEdit, SIGNAL(textChanged(QString)), this, SLOT(WidgetHasChangedParamNoSaved()));
+	QObject::connect(SafetyMargincheckBox, SIGNAL(stateChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+	QObject::connect(BFAffineTfmModecomboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
 	QObject::connect(OverwritecheckBox, SIGNAL(stateChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
 	QObject::connect(SL4checkBox, SIGNAL(stateChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
 	QObject::connect(SL2checkBox, SIGNAL(stateChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
@@ -358,8 +363,8 @@ void GUI::InitOptions()
 	m_ARegTypeComboBox->addItem("Elast");
 	m_ARegTypeComboBox->addItem("Exp");
 	m_ARegTypeComboBox->addItem("GreedyExp");
-	m_ARegTypeComboBox->addItem("GreedyDiffeo");
-	m_ARegTypeComboBox->addItem("SpatioTempDiffeo");
+	m_ARegTypeComboBox->addItem("GreedyDiffeo (SyN)");
+	m_ARegTypeComboBox->addItem("SpatioTempDiffeo (SyN)");
 	m_ARegTypeComboBox->setCurrentIndex(5);
 	QObject::connect(m_ARegTypeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(ANTSRegTypeChanged( int )));
 	ANTSWidgetVLayout->addWidget(m_ARegTypeComboBox);
@@ -431,6 +436,8 @@ void GUI::OpenAddCaseBrowseWindow() /*SLOT*/
 		m_ParamSaved=0;
 		SelectCasesLabel->setText( QString("") );
 		m_lastCasePath = CaseListBrowse.last();
+
+		CheckCasesIndex();
 	}
 }
 
@@ -455,6 +462,31 @@ void GUI::RemoveSelectedCases() /*SLOT*/
 		}
 		m_ParamSaved=0;
 		SelectCasesLabel->setText( QString("") );
+
+		CheckCasesIndex();
+	}
+}
+
+void GUI::CheckCasesIndex() /* Change ids at the begining of the lines */
+{
+	std::string text;
+
+	for(int i=0; i < CaseListWidget->count() ;i++)
+	{
+		std::ostringstream outi;
+		outi << i+1;
+		std::string i_str = outi.str();
+
+		if( CaseListWidget->item(i)->text().contains(": ") && CaseListWidget->item(i)->text().at(0)!=QChar(i+1) )
+		{
+			text = i_str + ": " + CaseListWidget->item(i)->text().toStdString().substr(3); // from pos 3 to the end
+			CaseListWidget->item(i)->setText( QString( text.c_str() ) );
+		}
+		else
+		{
+			text = i_str + ": " + CaseListWidget->item(i)->text().toStdString();
+			CaseListWidget->item(i)->setText( QString( text.c_str() ) );
+		}
 	}
 }
 
@@ -479,138 +511,107 @@ void GUI::OpenTemplateBrowseWindow() /*SLOT*/
 }
 
   /////////////////////////////////////////
- //          RUNNING FINISHED           //
+ //           QUALITY CONTROL           //
 /////////////////////////////////////////
 
-void GUI::OpenRunningCompleteWindow() /*SLOT*/
-{
-	if(!m_noGUI)
-	{
-		m_Rundlg = new QDialog(this);
-		m_Rundlg->setWindowTitle ("Running Completed");
-		QObject::connect(m_Rundlg, SIGNAL(finished(int)), this, SLOT(RunningCompleteWindowClosed()));
-		QVBoxLayout *VLayout = new QVBoxLayout();
+void GUI::DisplayAffineQC() /*SLOT*/ 
 
-		std::string info = "Running Completed !";
-		QLabel *InfoLabel = new QLabel (info.c_str(), this);
-		VLayout->addWidget(InfoLabel);
-
-		QPushButton *AffineQCButton = new QPushButton("Affine QC",this);
-		QObject::connect(AffineQCButton, SIGNAL(clicked()), this, SLOT(DisplayAffineQC()));
-		VLayout->addWidget(AffineQCButton);
-
-		QPushButton *DeformQCButton = new QPushButton("Deformable QC",this);
-		QObject::connect(DeformQCButton, SIGNAL(clicked()), this, SLOT(DisplayDeformQC()));
-		VLayout->addWidget(DeformQCButton);
-
-		QPushButton *ResampQCButton = new QPushButton("Final QC",this);
-		QObject::connect(ResampQCButton, SIGNAL(clicked()), this, SLOT(DisplayResampQC()));
-		VLayout->addWidget(ResampQCButton);
-
-		QPushButton *OpenFButton = new QPushButton("Open Containing Folder",this);
-		QObject::connect(OpenFButton, SIGNAL(clicked()), this, SLOT(OpenFolder()));
-		VLayout->addWidget(OpenFButton);
-
-		QPushButton *CloseButton = new QPushButton("Close",this);
-		QObject::connect(CloseButton, SIGNAL(clicked()), this, SLOT(Close()));
-		VLayout->addWidget(CloseButton);
-
-		QPushButton *ExitButton = new QPushButton("Exit",this);
-		QObject::connect(ExitButton, SIGNAL(clicked()), this, SLOT(Exit()));
-		VLayout->addWidget(ExitButton);
-
-		m_Rundlg->setLayout(VLayout);
-		m_Rundlg->setVisible(!m_Rundlg->isVisible()); // display the window
-	}
-
-	else Exit();
-}
-
-void GUI::RunningCompleteWindowClosed() /*SLOT*/ //Closed but the program is not finished
-{
-	if(!m_Quiet) std::cout<<"| Clearing previous cases in vectors..."<<std::endl; // command line display
-	m_CasesPath.clear();
-	m_scriptwriter->clearCasesPath();
-}
-
-void GUI::OpenRunningFailWindow() /*SLOT*/
-{
-	if(!m_noGUI) QMessageBox::critical(this, "Running Fail", "Running Failed...\nClick OK to exit");
-	delete m_scriptwriter;
- 	qApp->quit(); //end of Application: close the main window
-}
-
-void GUI::DisplayAffineQC() /*SLOT*/
 {
 	std::ostringstream out;
 	out << NbLoopsSpinBox->value();
 	std::string nbLoops_str = out.str();
 
-	QProcess * QCProcess = new QProcess;
-	std::string program = MriWatcherPath->text().toStdString();
+	std::string program = MriWatcherPath->text().toStdString() + " --viewAll";
+	std::string path;
 	for(int i=1; i <= CaseListWidget->count() ;i++) 
 	{
 		std::ostringstream outi;
 		outi << i;
 		std::string outi_str = outi.str();
-		program = program + " " + m_OutputPath.toStdString() + "/DTIAtlas/1_Affine_Registration/Loop" + nbLoops_str + "/Case" + outi_str + "_Loop" + nbLoops_str + "_FinalFA.nrrd";
+		path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/1_Affine_Registration/Loop" + nbLoops_str + "/Case" + outi_str + "_Loop" + nbLoops_str + "_FinalFA.nrrd";
+		if( access(path.c_str(), F_OK) == 0 ) program = program + " " + path;
 	}
 	std::ostringstream out1;
 	out1 << NbLoopsSpinBox->value()-1;
 	std::string nbLoops1_str = out1.str();
-	program = program + " " + m_OutputPath.toStdString() + "/DTIAtlas/1_Affine_Registration/Loop" + nbLoops1_str + "/Loop" + nbLoops1_str + "_FAAverage.nrrd";
+	path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/1_Affine_Registration/Loop" + nbLoops1_str + "/Loop" + nbLoops1_str + "_FAAverage.nrrd";
+	if( access(path.c_str(), F_OK) == 0 ) program = program + " " + path;
 
 	if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
-	QCProcess->execute( program.c_str() );
+
+	int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
+	m_nbSons = m_nbSons + 1;
+
+	if(pid==0) // we are in the son
+	{
+		system( program.c_str() );
+
+		kill(getpid(),SIGKILL); // the son kills himself
+//		exit(0); // end the process
+	}
 }
 
 void GUI::DisplayDeformQC() /*SLOT*/
 {
-	QProcess * QCProcess = new QProcess;
-	std::string program = MriWatcherPath->text().toStdString();
+	std::string program = MriWatcherPath->text().toStdString() + " --viewAll";
+	std::string path;
 	for(int i=1; i <= CaseListWidget->count() ;i++) 
 	{
 		std::ostringstream outi;
 		outi << i;
 		std::string outi_str = outi.str();
-		program = program +  " " + m_OutputPath.toStdString() + "/DTIAtlas/3_Final_Atlas/Case" + outi_str + "_FinalDTI.nrrd";
+		path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/3_AW_Atlas/Case" + outi_str + "_AWFA.nrrd";
+		if( access(path.c_str(), F_OK) == 0 ) program = program + " " + path;
 	}
-	program = program + " " + m_OutputPath.toStdString() + "/DTIAtlas/3_Final_Atlas/FinalAtlasDTI.nrrd";
+	path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/3_AW_Atlas/AWAtlasFA.nrrd";
+	if( access(path.c_str(), F_OK) == 0 ) program = program + " " + path;
 
 	if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
-	QCProcess->execute( program.c_str() );
+
+	int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
+	m_nbSons = m_nbSons + 1;
+
+	if(pid==0) // we are in the son
+	{
+		system( program.c_str() );
+
+		kill(getpid(),SIGKILL); // the son kills himself
+//		exit(0); // end the process
+	}
 }
 
 void GUI::DisplayResampQC() /*SLOT*/
 {
-	QProcess * QCProcess = new QProcess;
-	std::string program = MriWatcherPath->text().toStdString();
+	std::string program = MriWatcherPath->text().toStdString() + " --viewAll";
+	std::string path;
 	for(int i=1; i <= CaseListWidget->count() ;i++) 
 	{
 		std::ostringstream outi;
 		outi << i;
 		std::string outi_str = outi.str();
-		program = program +  " " + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/Second_Resampling/Case" + outi_str + "_FinalDeformedDTI.nrrd";
+		path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/4_Final_Resampling/Second_Resampling/Case" + outi_str + "_FinalDeformedFA.nrrd";
+		if( access(path.c_str(), F_OK) == 0 ) program = program + " " + path;
 	}
-	program = program + " " + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/FinalAtlasDTI.nrrd";
+	path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/4_Final_Resampling/FinalAtlasFA.nrrd";
+	if( access(path.c_str(), F_OK) == 0 ) program = program + " " + path;
 
 	if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
-	QCProcess->execute( program.c_str() );
+
+	int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
+	m_nbSons = m_nbSons + 1;
+
+	if(pid==0) // we are in the son
+	{
+		system( program.c_str() );
+
+		kill(getpid(),SIGKILL); // the son kills himself
+//		exit(0); // end the process
+	}
 }
 
-void GUI::OpenFolder() /*SLOT*/
-{
-	QProcess * OpenProcess = new QProcess;
-	std::string program = "nautilus " + m_OutputPath.toStdString() + "/DTIAtlas";
-
-	if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
-	OpenProcess->execute( program.c_str() );
-}
-
-void GUI::Close() /*SLOT*/
-{
-	m_Rundlg->done(0);
-}
+  /////////////////////////////////////////
+ //                EXIT                 //
+/////////////////////////////////////////
 
 void GUI::Exit() /*SLOT*/
 {
@@ -618,10 +619,6 @@ void GUI::Exit() /*SLOT*/
 	delete m_scriptwriter;
 	qApp->quit(); //end of Application: close the main window
 }
-
-  /////////////////////////////////////////
- //            CLOSE WINDOW             //
-/////////////////////////////////////////
 
 void GUI::closeEvent(QCloseEvent* event)
 {
@@ -637,7 +634,10 @@ void GUI::closeEvent(QCloseEvent* event)
 		}
 	}
 	delete m_scriptwriter;
-	event->accept();
+/*	std::cout<<m_nbSons<<std::endl;
+	int status;
+	for(int i=0;i < m_nbSons; i++) wait(&status); // waiting for all the sons to end before ending the main process
+*/	event->accept();
 }
 
   /////////////////////////////////////////
@@ -673,8 +673,9 @@ int GUI::ReadCSV(QString CSVfile)
 				{
 					QString line = stream.readLine();
 					QStringList list = line.split(m_CSVseparator);
-					if( list.at(0).at(0).toAscii() != '#' )  CaseListWidget->addItem( list.at(1) ); //display in the Widget so that some can be removed
+					if( list.at(0) != "id" )  CaseListWidget->addItem( list.at(1) ); //display in the Widget so that some can be removed
 				}
+				CheckCasesIndex();
 	
 				SelectCasesLabel->setText( QString("Current CSV file : ") + CSVfile );
 				m_ParamSaved=0;
@@ -719,8 +720,8 @@ void GUI::SaveCSVDatasetBrowse() /*SLOT*/
 		if(!m_Quiet) std::cout<<"| Generating Dataset csv file..."; // command line display
 
 		QTextStream stream( &file );
-		stream << QString("#") << m_CSVseparator << QString("Original DTI Image") << endl;
-		for(int i=0; i < CaseListWidget->count() ;i++) stream << i+1 << m_CSVseparator << CaseListWidget->item(i)->text() << endl;
+		stream << QString("id") << m_CSVseparator << QString("Original DTI Image") << endl;
+		for(int i=0; i < CaseListWidget->count() ;i++) stream << i+1 << m_CSVseparator << CaseListWidget->item(i)->text().remove(0,3) << endl;
 		if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
 	
 		SelectCasesLabel->setText( QString("Current CSV file : ") + CSVBrowseName );
@@ -744,24 +745,24 @@ void GUI::SaveCSVResults(int Crop, int nbLoops) // Crop = 0 if no cropping , 1 i
 
 		QTextStream stream( &file );
 
-		stream << QString("#") << m_CSVseparator << QString("Original DTI Image");
+		stream << QString("id") << m_CSVseparator << QString("Original DTI Image");
 		if(Crop==1) stream << m_CSVseparator << QString("Cropped DTI");
-		stream << m_CSVseparator << QString("FA from original") << m_CSVseparator << QString("Affine registered FA") << m_CSVseparator << QString("Affine transform") << m_CSVseparator << QString("Affine registered DTI") << m_CSVseparator << QString("Final FA for AtlasWerks") << m_CSVseparator << QString("Deformed Image") << m_CSVseparator << QString("Deformation field") << m_CSVseparator << QString("Deformation Inverse field") << m_CSVseparator << QString("Final DTI") << m_CSVseparator << QString("Global Deformation Field") << endl;
+		stream << m_CSVseparator << QString("FA from original") << m_CSVseparator << QString("Affine transform") << m_CSVseparator << QString("Affine registered DTI") << m_CSVseparator << QString("Affine Registered FA") << m_CSVseparator << QString("AW Deformed FA") << m_CSVseparator << QString("AW Deformation field to Affine space") << m_CSVseparator << QString("AW Inverse Deformation field to Affine space") << m_CSVseparator << QString("AW DTI") << m_CSVseparator << QString("AW Deformation field to Original space") << m_CSVseparator << QString("DTI-Reg Final DTI") << endl;
 
 		for(int i=0; i < CaseListWidget->count() ;i++) // for all cases
 		{
-			stream << i+1 << m_CSVseparator << CaseListWidget->item(i)->text();
-			if(Crop==1) stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Case") << i+1 << QString("_croppedDTI.nrrd");
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Case") << i+1 << QString("_FA.nrrd");
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Loop") << nbLoops << QString("/Case") << i+1 << QString("_Loop ") << nbLoops << QString("_LinearTrans_FA.nrrd"); // only the last processing (last loop) is remembered
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Loop") << nbLoops << QString("/Case") << i+1 << QString("_Loop ") << nbLoops << QString("_LinearTrans.txt");
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Loop") << nbLoops << QString("/Case") << i+1 << QString("_Loop ") << nbLoops << QString("_LinearTrans_DTI.nrrd");
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Loop") << nbLoops << QString("/Case") << i+1 << QString("_Loop ") << nbLoops << QString("_FinalFA.nrrd");
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/Case") << i+1 << QString("_NonLinearTrans_FA.mhd");
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/Case") << i+1 << QString("_DeformationField.mhd");
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/Case") << i+1 << QString("_InverseDeformationField.mhd");
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/3_Final_Atlas/Case") << i+1 << QString("_FinalDTI.nrrd");
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/4_Final_Resampling/Second_Resampling/Case") << i+1 << QString("_GlobalDeformationField.nrrd");
+			stream << i+1 << m_CSVseparator << CaseListWidget->item(i)->text().remove(0,3); // Original DTI Image
+			if(Crop==1) stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Case") << i+1 << QString("_croppedDTI.nrrd"); // Cropped DTI
+			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Case") << i+1 << QString("_FA.nrrd"); // FA from original
+			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Loop") << nbLoops << QString("/Case") << i+1 << QString("_Loop ") << nbLoops << QString("_LinearTrans.txt"); // Affine transform
+			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Loop") << nbLoops << QString("/Case") << i+1 << QString("_Loop ") << nbLoops << QString("_LinearTrans_DTI.nrrd"); // Affine registered DTI
+			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Loop") << nbLoops << QString("/Case") << i+1 << QString("_Loop ") << nbLoops << QString("_FinalFA.nrrd"); // Affine Registered FA
+			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration_AW/Case") << i+1 << QString("_NonLinearTrans_FA.mhd"); // AW Deformed FA
+			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration_AW/Case") << i+1 << QString("_DeformationField.mhd"); // AW Deformation field to Affine space
+			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration_AW/Case") << i+1 << QString("_InverseDeformationField.mhd"); // AW Inverse Deformation field to Affine space
+			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/3_AW_Atlas/Case") << i+1 << QString("_AWDTI.nrrd"); // AW DTI
+			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/4_Final_Resampling/Second_Resampling/Case") << i+1 << QString("_GlobalDeformationField.nrrd"); // AW Deformation field to Original space
+			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/4_Final_Resampling/Second_Resampling/Case") << i+1 << QString("_FinalDeformedDTI.nrrd"); // DTI-Reg Final DTI
 			stream << endl;
 		}
 
@@ -810,6 +811,8 @@ void GUI::SaveParameters(QString ParamBrowseName,QString CSVFileName)
 		stream << m_ParamFileHeader << "=1" << endl;
 		stream << "Output Folder=" << OutputFolderLineEdit->text() << endl;
 		stream << "Atlas Template=" << TemplateLineEdit->text() << endl;
+		if(SafetyMargincheckBox->isChecked()) stream << "SafetyMargin=true" << endl;
+		else  stream << "SafetyMargin=false" << endl;
 		stream << "Loops for the registration=" << NbLoopsSpinBox->value() << endl;
 		stream << "BRAINSFit Affine Tfm Mode=" << BFAffineTfmModecomboBox->currentText() << endl;
 		if(OverwritecheckBox->isChecked()) stream << "Overwrite=true" << endl;
@@ -857,8 +860,8 @@ void GUI::SaveParameters(QString ParamBrowseName,QString CSVFileName)
 			if(!m_Quiet) std::cout<<"| Generating Dataset csv file..."; // command line display
 
 			QTextStream streamcsv( &filecsv );
-			streamcsv << QString("#") << m_CSVseparator << QString("Original DTI Image") << endl;
-			for(int i=0; i < CaseListWidget->count() ;i++) streamcsv << i+1 << m_CSVseparator << CaseListWidget->item(i)->text() << endl;
+			streamcsv << QString("id") << m_CSVseparator << QString("Original DTI Image") << endl;
+			for(int i=0; i < CaseListWidget->count() ;i++) streamcsv << i+1 << m_CSVseparator << CaseListWidget->item(i)->text().remove(0,3) << endl;
 			if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
 		
 			SelectCasesLabel->setText( QString("Current CSV file : ") + CSVFileName );
@@ -935,6 +938,20 @@ int GUI::LoadParameters(QString paramFile)
 			return -1;
 		}
 		TemplateLineEdit->setText(list.at(1));
+
+		line = stream.readLine();
+		list = line.split("=");
+		if(!list.at(0).contains(QString("SafetyMargin")))
+		{
+			if(!m_noGUI) 
+			{
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
+			}
+			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			return -1;
+		}
+		if( list.at(1) == QString("true") ) SafetyMargincheckBox->setChecked(true);
 
 		line = stream.readLine();
 		list = line.split("=");
@@ -1362,8 +1379,8 @@ int GUI::LoadParameters(QString paramFile)
 			else if( param.at(0).contains(QString("Elast")) ) m_ARegTypeComboBox->setCurrentIndex(2);
 			else if( param.at(0).contains(QString("Exp")) ) m_ARegTypeComboBox->setCurrentIndex(3);
 			else if( param.at(0).contains(QString("GreedyExp")) ) m_ARegTypeComboBox->setCurrentIndex(4);
-			else if( param.at(0).contains(QString("GreedyDiffeo")) ) m_ARegTypeComboBox->setCurrentIndex(5);
-			else if( param.at(0).contains(QString("SpatioTempoDiffeo")) ) m_ARegTypeComboBox->setCurrentIndex(6);
+			else if( param.at(0).contains(QString("GreedyDiffeo (SyN)")) ) m_ARegTypeComboBox->setCurrentIndex(5);
+			else if( param.at(0).contains(QString("SpatioTempoDiffeo (SyN)")) ) m_ARegTypeComboBox->setCurrentIndex(6);
 			else
 			{
 				if(!m_noGUI) 
@@ -1442,16 +1459,16 @@ int GUI::LoadParameters(QString paramFile)
 
 void GUI::GenerateXMLForAW()
 {	
-	if( access((m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration").c_str(), F_OK) != 0 ) // Test if the main folder does not exists => unistd::access() returns 0 if F(file)_OK
+	if( access((m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration_AW").c_str(), F_OK) != 0 ) // Test if the main folder does not exists => unistd::access() returns 0 if F(file)_OK
 	{
 		if(!m_Quiet) std::cout<<"| Creating Non Linear Registration directory..."<<std::endl; // command line display
 		QProcess * mkdirMainProcess = new QProcess;
-		std::string program = "mkdir " + m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration"; //// Creates the directory
+		std::string program = "mkdir " + m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration_AW"; //// Creates the directory
 		if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
 		mkdirMainProcess->execute( program.c_str() );
 	}
 
-	QString	xmlFileName = m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/AtlasWerksParameters.xml");
+	QString	xmlFileName = m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration_AW/AtlasWerksParameters.xml");
 	QFile file(xmlFileName);
 	if ( file.open( IO_WriteOnly | IO_Translate ) )
 	{
@@ -1596,10 +1613,10 @@ void GUI::GenerateXMLForAW()
 
 			stream <<"\t<!--number of threads to use, 0=one per processor (only for CPU computation)-->"<< endl;
 			stream <<"\t<nThreads val=\"4\" />"<< endl;
-			stream <<"\t<OutputImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration/AverageImage_\" />"<< endl;
-			stream <<"\t<OutputDeformedImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration/DeformedImage_\" />"<< endl;
-			stream <<"\t<OutputHFieldImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration/DeformationField_\" />"<< endl;
-			stream <<"\t<OutputInvHFieldImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration/InverseDeformationField_\" />"<< endl;
+			stream <<"\t<OutputImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration_AW/AverageImage_\" />"<< endl;
+			stream <<"\t<OutputDeformedImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration_AW/DeformedImage_\" />"<< endl;
+			stream <<"\t<OutputHFieldImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration_AW/DeformationField_\" />"<< endl;
+			stream <<"\t<OutputInvHFieldImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration_AW/InverseDeformationField_\" />"<< endl;
 			stream <<"\t<OutputFileType val=\"mhd\" />"<< endl;
 
 		stream <<"</ParameterFile>"<< endl;
@@ -2203,6 +2220,9 @@ void GUI::Compute() /*SLOT*/
 			if(m_noGUI) Exit(); // no possibility to change because no GUI so QUIT
 			return;
 		}
+		if(!m_Quiet) std::cout<<"| Clearing previous cases in vectors..."<<std::endl; // command line display
+		m_CasesPath.clear();
+		m_scriptwriter->clearCasesPath();
 		LaunchScriptRunner();
 
 	} // else of if(OutputFolderLineEdit->text().isEmpty())
@@ -2225,38 +2245,38 @@ int GUI::LaunchScriptWriter()
 /* Cases */
 	for(int i=0; i < CaseListWidget->count() ;i++) 
 	{
-		if( access(CaseListWidget->item(i)->text().toStdString().c_str(), F_OK) != 0 ) // Test if the case files exist => unistd::access() returns 0 if F(file)_OK
+		if( access(CaseListWidget->item(i)->text().toStdString().substr(3).c_str(), F_OK) != 0 ) // Test if the case files exist => unistd::access() returns 0 if F(file)_OK
 		{
 			if(!m_noGUI)
 			{
-				std::string text = "This file does not exist :\n" + CaseListWidget->item(i)->text().toStdString();
+				std::string text = "This file does not exist :\n" + CaseListWidget->item(i)->text().toStdString().substr(3);
 				QMessageBox::critical(this, "Case does not exist", QString(text.c_str()) );
 			}
-			else if(!m_Quiet) std::cout<<"| This file does not exist : " << CaseListWidget->item(i)->text().toStdString() <<std::endl;
+			else if(!m_Quiet) std::cout<<"| This file does not exist : " << CaseListWidget->item(i)->text().toStdString().substr(3) <<std::endl;
 			return -1;
 		}
-		int checkIm = checkImage(CaseListWidget->item(i)->text().toStdString()); // returns 1 if not an image, 2 if not a dti, otherwise 0
+		int checkIm = checkImage(CaseListWidget->item(i)->text().toStdString().substr(3)); // returns 1 if not an image, 2 if not a dti, otherwise 0
 		if( checkIm == 1 ) // returns 1 if not an image, 2 if not a dti, otherwise 0
 		{
 			if(!m_noGUI)
 			{
-				std::string text = "This file is not an image :\n" + CaseListWidget->item(i)->text().toStdString();
+				std::string text = "This file is not an image :\n" + CaseListWidget->item(i)->text().toStdString().substr(3);
 				QMessageBox::critical(this, "No image", QString(text.c_str()) );
 			}
-			else if(!m_Quiet) std::cout<<"| This file is not an image : " << CaseListWidget->item(i)->text().toStdString() <<std::endl;
+			else if(!m_Quiet) std::cout<<"| This file is not an image : " << CaseListWidget->item(i)->text().toStdString().substr(3) <<std::endl;
 			return -1;
 		}
 		if( checkIm == 2 ) // returns 1 if not an image, 2 if not a dti, otherwise 0
 		{
 			if(!m_noGUI)
 			{
-				std::string text = "This image is not a DTI :\n" + CaseListWidget->item(i)->text().toStdString();
+				std::string text = "This image is not a DTI :\n" + CaseListWidget->item(i)->text().toStdString().substr(3);
 				QMessageBox::critical(this, "No DTI", QString(text.c_str()) );
 			}
-			else if(!m_Quiet) std::cout<<"| This image is not a DTI : " << CaseListWidget->item(i)->text().toStdString() <<std::endl;
+			else if(!m_Quiet) std::cout<<"| This image is not a DTI : " << CaseListWidget->item(i)->text().toStdString().substr(3) <<std::endl;
 			return -1;
 		}
-		m_CasesPath.push_back( CaseListWidget->item(i)->text().toStdString() );
+		m_CasesPath.push_back( CaseListWidget->item(i)->text().toStdString().substr(3) );
 	}
 	m_scriptwriter->setCasesPath(m_CasesPath); // m_CasesPath is a vector
 
@@ -2372,7 +2392,7 @@ int GUI::LaunchScriptWriter()
 		if(m_SmoothOffCheck->isChecked()) DTIRegOptions.push_back("1");
 		else DTIRegOptions.push_back("0");
 	}
-	else 
+	else //BRAINS
 	{
 		DTIRegOptions.push_back(m_BRegTypeComboBox->currentText().toStdString());
 		DTIRegOptions.push_back(m_TfmModeComboBox->currentText().toStdString());
@@ -2637,8 +2657,8 @@ Num. Iterations       : 50
 		else if(!m_Quiet) std::cout<<"| Error: The voxel size of the images are not the same, please change dataset" << std::endl;
 		return -1;
 	}
-	int Crop=m_scriptwriter->setCroppingSize(); // returns 0 if no cropping , 1 if cropping needed
-	if(Crop==1) 
+	int Crop=m_scriptwriter->setCroppingSize( SafetyMargincheckBox->isChecked() ); // returns 0 if no cropping , 1 if cropping needed
+	if( Crop==1 && !SafetyMargincheckBox->isChecked() )
 	{
 		if(!m_noGUI) QMessageBox::warning(this, "Cropping", "Warning: The images do not have the same size, \nso some of them will be cropped");
 		else if(!m_Quiet) std::cout<<"| Warning: The images do not have the same size, so some of them will be cropped" << std::endl;
@@ -2646,7 +2666,7 @@ Num. Iterations       : 50
 
 /* Other Options */
 	if(OverwritecheckBox->isChecked()) m_scriptwriter->setOverwrite(1);
-	else  m_scriptwriter->setOverwrite(0);
+	else m_scriptwriter->setOverwrite(0);
 
 	m_scriptwriter->setnbLoops(NbLoopsSpinBox->value());
 
@@ -2724,27 +2744,64 @@ void GUI::LaunchScriptRunner()
 	if(!m_Quiet) std::cout<<"| Script Running..."<<std::endl; // command line display
 
 /* Running the Script: */
-	QProcess * ScriptProcess = new QProcess;
-
 	std::string program;
 	program = m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Main.script";
 
+	if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
+
+	QProcess * ScriptProcess = new QProcess;
 	int ExitCode=0;
 
-	if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
-	ExitCode = ScriptProcess->execute( program.c_str() );
+	ExitCode = ScriptProcess->execute( program.c_str() ); // stuck here during execution of the scripts
 
-/* When we are here the running is finished : emit signal to display the "Running Completed" Window: */
 	if(ExitCode==0)
 	{
 		if(!m_Quiet) std::cout<<"| Running Completed !"<<std::endl; // command line display
-		emit runningcomplete();
+		QMessageBox::information(this, "Running Completed", "Running Completed !");
 	}
 
 	else
 	{
 		if(!m_Quiet) std::cout<<"| Running Failed..."<<std::endl; // command line display
-		emit runningfail();
+		QMessageBox::information(this, "Running Failed", "Running Failed...");
 	}
+
+/* If need to not freeze the main window : code below 
+/!\ Think to uncomment at the top : #include <sys/wait.h>
+-> wait() or waitpid() make the process wait for the end of a son => FREEZE !!
+*/
+/*
+	int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
+	if(pid==0) // we are in the son
+	{
+		execl( program.c_str() , program.c_str(), NULL); // we REPLACE the son process by our command while the father is still running normally
+	}
+
+	if(!m_noGUI) // if gui, need to NOT freeze the main window: a new son will wait the end of the son running the script and the father will continue to make the main window active
+	{
+		pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
+		if(pid==0) // we are in the son
+		{
+			int ExitCode;
+			waitpid( pid, &ExitCode ,0); // waiting for the son to finish (the value of pid is the pid of the son if we are in the father) (the last 0 is the options => not used)
+
+			if(ExitCode==0)
+			if(!m_Quiet) std::cout<<"| Running Completed !"<<std::endl; // command line display
+			else if(!m_Quiet) std::cout<<"| Running Failed..."<<std::endl; // command line display
+
+			Exit(); // son ends
+		}
+	}
+	else //IF no GUI just make the main process wait (no need to use the gui, so the main program can freeze)
+	{
+		int ExitCode;
+		waitpid( pid, &ExitCode ,0); // waiting for the son to finish (the value of pid is the pid of the son if we are in the father) (the last 0 is the options => not used)
+
+		if(ExitCode==0) if(!m_Quiet) std::cout<<"| Running Completed !"<<std::endl; // command line display
+		else if(!m_Quiet) std::cout<<"| Running Failed..."<<std::endl; // command line display
+
+		Exit();
+	}
+*/
 }
 
