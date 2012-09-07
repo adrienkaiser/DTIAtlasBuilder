@@ -114,7 +114,6 @@ class GUI : public QMainWindow, public Ui::MainWindow
 /*CASES*/	std::vector < QLineEdit* > m_CasesQ; // index begin at 0
 		std::vector < std::string > m_CasesPath; // index begin at 0
 
-/*SONPROCESS*/	int m_nbSons;
 /*DATASET*/	QString m_CSVseparator;
 		QString m_CSVPath;
 		QString m_OutputPath;

@@ -37,7 +37,6 @@ class ScriptWriter
 		void setnbLoops(int nbLoops);
 		void setTemplatePath(std::string FAAtlasrefPath);
 		void setOverwrite(int Overwrite);
-		void setScaleLevels(std::vector< std::vector< double > > AtlasWerksScaleLevels);
 		void setInterpolType(std::string Type);
 		void setInterpolOption(std::string Option);
 		void setTensInterpol(std::string TensInterpol);
@@ -60,7 +59,6 @@ class ScriptWriter
 		int m_CropSize [3]; //x,y,z
 		int m_NeedToBeCropped; //=0 if not and =1 if need to be cropped
 		int m_Overwrite; //=0 if not and =1 if overwrite on existing files
-		std::vector< std::vector<double> > m_AtlasWerksScaleLevels; // contains X 2-int tables : [Scale,NbIter]
 		std::string m_InterpolType;
 		std::string m_InterpolOption;
 		std::string m_TensInterpol;

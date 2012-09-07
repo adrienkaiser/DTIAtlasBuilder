@@ -55,7 +55,6 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	m_noGUI=noGUI;
 	m_Quiet=Quiet;
 	if( overwrite ) OverwritecheckBox->setChecked(true);
-	m_nbSons=0;
 
 /* Initialize the options */
 	InitOptions();
@@ -541,14 +540,12 @@ void GUI::DisplayAffineQC() /*SLOT*/
 	if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
 
 	int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
-	m_nbSons = m_nbSons + 1;
 
 	if(pid==0) // we are in the son
 	{
 		system( program.c_str() );
 
 		kill(getpid(),SIGKILL); // the son kills himself
-//		exit(0); // end the process
 	}
 }
 
@@ -570,14 +567,12 @@ void GUI::DisplayDeformQC() /*SLOT*/
 	if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
 
 	int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
-	m_nbSons = m_nbSons + 1;
 
 	if(pid==0) // we are in the son
 	{
 		system( program.c_str() );
 
 		kill(getpid(),SIGKILL); // the son kills himself
-//		exit(0); // end the process
 	}
 }
 
@@ -599,14 +594,12 @@ void GUI::DisplayResampQC() /*SLOT*/
 	if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
 
 	int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
-	m_nbSons = m_nbSons + 1;
 
 	if(pid==0) // we are in the son
 	{
 		system( program.c_str() );
 
 		kill(getpid(),SIGKILL); // the son kills himself
-//		exit(0); // end the process
 	}
 }
 
@@ -635,10 +628,7 @@ void GUI::closeEvent(QCloseEvent* event)
 		}
 	}
 	delete m_scriptwriter;
-/*	std::cout<<m_nbSons<<std::endl;
-	int status;
-	for(int i=0;i < m_nbSons; i++) wait(&status); // waiting for all the sons to end before ending the main process
-*/	event->accept();
+	event->accept();
 }
 
   /////////////////////////////////////////
@@ -1503,6 +1493,17 @@ void GUI::GenerateXMLForAW()
 				stream <<"\t\t</WeightedImage>"<< endl;
 			}
 			stream <<"\t</WeightedImageSet>"<< endl;
+
+/* Scale Levels */
+/* Aditya :--scaleLevel=4 --numberOfIterations=150 --alpha=1 --beta=1 --gamma=0.0001 --maxPerturbation=0.001 --scaleLevel=2 --numberOfIterations=120 --alpha=1 --beta=1 --gamma=0.001 --maxPerturbation=0.01 --scaleLevel=1 --numberOfIterations=100 --alpha=0.1 --beta=0.1 --gamma=0.01 --maxPerturbation=0.1 */
+/* Default Parameters for AtlasWerks:
+Scale                 : 1
+alpha                 : 0.01
+beta                  : 0.01
+gamma                 : 0.001
+Max. Pert.            : 0.5
+Num. Iterations       : 50
+*/
 
 			if(SL4checkBox->isChecked())
 			{
@@ -2414,59 +2415,6 @@ int GUI::LaunchScriptWriter()
 
 	m_scriptwriter->setDTIRegOptions(DTIRegOptions);
 	DTIRegOptions.clear();
-
-/* Scale Levels */
-/* Aditya :--scaleLevel=4 --numberOfIterations=150 --alpha=1 --beta=1 --gamma=0.0001 --maxPerturbation=0.001 --scaleLevel=2 --numberOfIterations=120 --alpha=1 --beta=1 --gamma=0.001 --maxPerturbation=0.01 --scaleLevel=1 --numberOfIterations=100 --alpha=0.1 --beta=0.1 --gamma=0.01 --maxPerturbation=0.1 */
-/* Default Parameters for AtlasWerks:
-Scale                 : 1
-alpha                 : 0.01
-beta                  : 0.01
-gamma                 : 0.001
-Max. Pert.            : 0.5
-Num. Iterations       : 50
-*/
-/*	std::vector< std::vector< double > > T2;
-	std::vector < double > T;
-
-	if(SL4checkBox->isChecked())
-	{
-		T.push_back(SL4spinBox->value()); // scale level
-		T.push_back(nbIter4SpinBox->value()); //nb iterations
-		T.push_back(alpha4DoubleSpinBox->value()); //alpha
-		T.push_back(beta4DoubleSpinBox->value()); //beta
-		T.push_back(gamma4DoubleSpinBox->value()); //gamma
-		T.push_back(maxPerturbation4DoubleSpinBox->value()); //max perturbation
-		T2.push_back(T);
-		T.clear();
-	}
-
-	if(SL2checkBox->isChecked())
-	{
-		T.push_back(SL2spinBox->value()); // scale level
-		T.push_back(nbIter2SpinBox->value()); //nb iterations
-		T.push_back(alpha2DoubleSpinBox->value()); //alpha
-		T.push_back(beta2DoubleSpinBox->value()); //beta
-		T.push_back(gamma2DoubleSpinBox->value()); //gamma
-		T.push_back(maxPerturbation2DoubleSpinBox->value()); //max perturbation
-		T2.push_back(T);
-		T.clear();
-	}
-
-	if(SL1checkBox->isChecked())
-	{
-		T.push_back(SL1spinBox->value()); // scale level
-		T.push_back(nbIter1SpinBox->value()); //nb iterations
-		T.push_back(alpha1DoubleSpinBox->value()); //alpha
-		T.push_back(beta1DoubleSpinBox->value()); //beta
-		T.push_back(gamma1DoubleSpinBox->value()); //gamma
-		T.push_back(maxPerturbation1DoubleSpinBox->value()); //max perturbation
-		T2.push_back(T);
-		T.clear();
-	}
-
-	m_scriptwriter->setScaleLevels(T2);
-	T2.clear();
-*/
 
 /* Software paths */
 /* Checking if all the programs have been given */
