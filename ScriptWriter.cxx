@@ -350,15 +350,15 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"\\n======== Renaming the files genera
 				Script = Script + "\t\t\toriginalImage=DeformPath + \"/DeformedImage_000\" + str(case) + \".mhd\"\n";
 				Script = Script + "\t\t\toriginalHField=DeformPath + \"/DeformationField_000\" + str(case) + \".mhd\"\n";
 				Script = Script + "\t\t\toriginalInvHField=DeformPath + \"/InverseDeformationField_000\" + str(case) + \".mhd\"\n";
-			Script = Script + "\t\tif case>10 and case <100 :\n";
+			Script = Script + "\t\tif case>=10 and case <100 :\n";
 				Script = Script + "\t\t\toriginalImage=DeformPath + \"/DeformedImage_00\" + str(case) + \".mhd\"\n";
 				Script = Script + "\t\t\toriginalHField=DeformPath + \"/DeformationField_00\" + str(case) + \".mhd\"\n";
 				Script = Script + "\t\t\toriginalInvHField=DeformPath + \"/InverseDeformationField_00\" + str(case) + \".mhd\"\n";
-			Script = Script + "\t\tif case>100 and case <1000 :\n";
+			Script = Script + "\t\tif case>=100 and case <1000 :\n";
 				Script = Script + "\t\t\toriginalImage=DeformPath + \"/DeformedImage_0\" + str(case) + \".mhd\"\n";
 				Script = Script + "\t\t\toriginalHField=DeformPath + \"/DeformationField_0\" + str(case) + \".mhd\"\n";
 				Script = Script + "\t\t\toriginalInvHField=DeformPath + \"/InverseDeformationField_0\" + str(case) + \".mhd\"\n";
-			Script = Script + "\t\tif case>1000 :\n";
+			Script = Script + "\t\tif case>=1000 :\n";
 				Script = Script + "\t\t\toriginalImage=DeformPath + \"/DeformedImage_\" + str(case) + \".mhd\"\n";
 				Script = Script + "\t\t\toriginalHField=DeformPath + \"/DeformationField_\" + str(case) + \".mhd\"\n";
 				Script = Script + "\t\t\toriginalInvHField=DeformPath + \"/InverseDeformationField_\" + str(case) + \".mhd\"\n";
@@ -891,13 +891,6 @@ void ScriptWriter::setOverwrite(int Overwrite)
 	m_Overwrite = Overwrite;
 }
 
-void ScriptWriter::setScaleLevels(std::vector< std::vector<double> > AtlasWerksScaleLevels)
-{
-	for(int i=0;i< (int) AtlasWerksScaleLevels.size();i++)
-	{
-		m_AtlasWerksScaleLevels.push_back( AtlasWerksScaleLevels[i] );
-	}
-}
 
 void ScriptWriter::setInterpolType(std::string Type)
 {
