@@ -319,7 +319,7 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"\\n => Creation of the Second Final R
 	Script = Script+ "]\n\n";
 
 	if(m_NeedToBeCropped==1) Script = Script + "allcases = [AffinePath + \"/Case1_croppedDTI.nrrd\"";
-	else Script = Script + "allcases = [\"" + m_CasesPath[0];
+	else Script = Script + "allcases = [\"" + m_CasesPath[0] + "\"";
 	for (unsigned int i=1;i<m_CasesPath.size();i++) 
 	{
 		if(m_NeedToBeCropped==1)
@@ -329,9 +329,9 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"\\n => Creation of the Second Final R
 			std::string i2_str = outi2.str();
 			Script = Script + ", AffinePath + \"/Case" + i2_str + "_croppedDTI.nrrd\"";
 		}
-		else Script = Script + "\", \"" + m_CasesPath[i];
+		else Script = Script + ", \"" + m_CasesPath[i] + "\"";
 	}
-	Script = Script + "\"]\n\n";	
+	Script = Script + "]\n\n";	
 
 /* AtlasWerks Command: */
 	Script = Script + "# AtlasWerks Command\n";

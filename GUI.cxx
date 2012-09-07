@@ -477,16 +477,10 @@ void GUI::CheckCasesIndex() /* Change ids at the begining of the lines */
 		outi << i+1;
 		std::string i_str = outi.str();
 
-		if( CaseListWidget->item(i)->text().contains(": ") )
-		{
-			text = i_str + ": " + CaseListWidget->item(i)->text().toStdString().substr( CaseListWidget->item(i)->text().split(":").at(0).size()+2 ); // from pos to the end
-			CaseListWidget->item(i)->setText( QString( text.c_str() ) );
-		}
-		else
-		{
-			text = i_str + ": " + CaseListWidget->item(i)->text().toStdString();
-			CaseListWidget->item(i)->setText( QString( text.c_str() ) );
-		}
+		if( CaseListWidget->item(i)->text().contains(": ") ) text = i_str + ": " + CaseListWidget->item(i)->text().toStdString().substr( CaseListWidget->item(i)->text().split(":").at(0).size()+2 ); // from pos to the end
+		else text = i_str + ": " + CaseListWidget->item(i)->text().toStdString();
+
+		CaseListWidget->item(i)->setText( QString( text.c_str() ) );
 	}
 }
 
