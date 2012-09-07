@@ -477,9 +477,9 @@ void GUI::CheckCasesIndex() /* Change ids at the begining of the lines */
 		outi << i+1;
 		std::string i_str = outi.str();
 
-		if( CaseListWidget->item(i)->text().contains(": ") && CaseListWidget->item(i)->text().at(0)!=QChar(i+1) )
+		if( CaseListWidget->item(i)->text().contains(": ") )
 		{
-			text = i_str + ": " + CaseListWidget->item(i)->text().toStdString().substr(3); // from pos 3 to the end
+			text = i_str + ": " + CaseListWidget->item(i)->text().toStdString().substr( CaseListWidget->item(i)->text().split(":").at(0).size()+2 ); // from pos to the end
 			CaseListWidget->item(i)->setText( QString( text.c_str() ) );
 		}
 		else
@@ -497,7 +497,11 @@ void GUI::CheckCasesIndex() /* Change ids at the begining of the lines */
 void GUI::OpenOutputBrowseWindow() /*SLOT*/
 {
 	QString OutputBrowse=QFileDialog::getExistingDirectory(this);
-	OutputFolderLineEdit->setText(OutputBrowse);
+	if(!OutputBrowse.isEmpty())
+	{
+		OutputFolderLineEdit->setText(OutputBrowse);
+	}
+	
 }
 
   /////////////////////////////////////////
@@ -507,7 +511,10 @@ void GUI::OpenOutputBrowseWindow() /*SLOT*/
 void GUI::OpenTemplateBrowseWindow() /*SLOT*/
 {
 	QString TemplateBrowse=QFileDialog::getOpenFileName(this, "Open Atlas Template", QString(), "NERD Image (*.nrrd *.nhdr *.*)");
-	TemplateLineEdit->setText(TemplateBrowse);
+	if(!TemplateBrowse.isEmpty())
+	{
+		TemplateLineEdit->setText(TemplateBrowse);
+	}
 }
 
   /////////////////////////////////////////
@@ -721,7 +728,7 @@ void GUI::SaveCSVDatasetBrowse() /*SLOT*/
 
 		QTextStream stream( &file );
 		stream << QString("id") << m_CSVseparator << QString("Original DTI Image") << endl;
-		for(int i=0; i < CaseListWidget->count() ;i++) stream << i+1 << m_CSVseparator << CaseListWidget->item(i)->text().remove(0,3) << endl;
+		for(int i=0; i < CaseListWidget->count() ;i++) stream << i+1 << m_CSVseparator << CaseListWidget->item(i)->text().remove(0, CaseListWidget->item(i)->text().split(":").at(0).size()+2 ) << endl;
 		if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
 	
 		SelectCasesLabel->setText( QString("Current CSV file : ") + CSVBrowseName );
@@ -751,7 +758,7 @@ void GUI::SaveCSVResults(int Crop, int nbLoops) // Crop = 0 if no cropping , 1 i
 
 		for(int i=0; i < CaseListWidget->count() ;i++) // for all cases
 		{
-			stream << i+1 << m_CSVseparator << CaseListWidget->item(i)->text().remove(0,3); // Original DTI Image
+			stream << i+1 << m_CSVseparator << CaseListWidget->item(i)->text().remove(0, CaseListWidget->item(i)->text().split(":").at(0).size()+2 ); // Original DTI Image
 			if(Crop==1) stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Case") << i+1 << QString("_croppedDTI.nrrd"); // Cropped DTI
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Case") << i+1 << QString("_FA.nrrd"); // FA from original
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Loop") << nbLoops << QString("/Case") << i+1 << QString("_Loop ") << nbLoops << QString("_LinearTrans.txt"); // Affine transform
@@ -861,7 +868,7 @@ void GUI::SaveParameters(QString ParamBrowseName,QString CSVFileName)
 
 			QTextStream streamcsv( &filecsv );
 			streamcsv << QString("id") << m_CSVseparator << QString("Original DTI Image") << endl;
-			for(int i=0; i < CaseListWidget->count() ;i++) streamcsv << i+1 << m_CSVseparator << CaseListWidget->item(i)->text().remove(0,3) << endl;
+			for(int i=0; i < CaseListWidget->count() ;i++) streamcsv << i+1 << m_CSVseparator << CaseListWidget->item(i)->text().remove(0, CaseListWidget->item(i)->text().split(":").at(0).size()+2 ) << endl;
 			if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
 		
 			SelectCasesLabel->setText( QString("Current CSV file : ") + CSVFileName );
@@ -1613,7 +1620,7 @@ void GUI::GenerateXMLForAW()
 
 			stream <<"\t<!--number of threads to use, 0=one per processor (only for CPU computation)-->"<< endl;
 			stream <<"\t<nThreads val=\"4\" />"<< endl;
-			stream <<"\t<OutputImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration_AW/AverageImage_\" />"<< endl;
+			stream <<"\t<OutputImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration_AW/AverageImage\" />"<< endl;
 			stream <<"\t<OutputDeformedImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration_AW/DeformedImage_\" />"<< endl;
 			stream <<"\t<OutputHFieldImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration_AW/DeformationField_\" />"<< endl;
 			stream <<"\t<OutputInvHFieldImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration_AW/InverseDeformationField_\" />"<< endl;
@@ -2245,38 +2252,39 @@ int GUI::LaunchScriptWriter()
 /* Cases */
 	for(int i=0; i < CaseListWidget->count() ;i++) 
 	{
-		if( access(CaseListWidget->item(i)->text().toStdString().substr(3).c_str(), F_OK) != 0 ) // Test if the case files exist => unistd::access() returns 0 if F(file)_OK
+		std::string CurrentCase = CaseListWidget->item(i)->text().toStdString().substr( CaseListWidget->item(i)->text().split(":").at(0).size()+2 );
+		if( access(CurrentCase.c_str(), F_OK) != 0 ) // Test if the case files exist => unistd::access() returns 0 if F(file)_OK
 		{
 			if(!m_noGUI)
 			{
-				std::string text = "This file does not exist :\n" + CaseListWidget->item(i)->text().toStdString().substr(3);
+				std::string text = "This file does not exist :\n" + CurrentCase;
 				QMessageBox::critical(this, "Case does not exist", QString(text.c_str()) );
 			}
-			else if(!m_Quiet) std::cout<<"| This file does not exist : " << CaseListWidget->item(i)->text().toStdString().substr(3) <<std::endl;
+			else if(!m_Quiet) std::cout<<"| This file does not exist : " << CurrentCase <<std::endl;
 			return -1;
 		}
-		int checkIm = checkImage(CaseListWidget->item(i)->text().toStdString().substr(3)); // returns 1 if not an image, 2 if not a dti, otherwise 0
+		int checkIm = checkImage(CurrentCase); // returns 1 if not an image, 2 if not a dti, otherwise 0
 		if( checkIm == 1 ) // returns 1 if not an image, 2 if not a dti, otherwise 0
 		{
 			if(!m_noGUI)
 			{
-				std::string text = "This file is not an image :\n" + CaseListWidget->item(i)->text().toStdString().substr(3);
+				std::string text = "This file is not an image :\n" + CurrentCase;
 				QMessageBox::critical(this, "No image", QString(text.c_str()) );
 			}
-			else if(!m_Quiet) std::cout<<"| This file is not an image : " << CaseListWidget->item(i)->text().toStdString().substr(3) <<std::endl;
+			else if(!m_Quiet) std::cout<<"| This file is not an image : " << CurrentCase <<std::endl;
 			return -1;
 		}
 		if( checkIm == 2 ) // returns 1 if not an image, 2 if not a dti, otherwise 0
 		{
 			if(!m_noGUI)
 			{
-				std::string text = "This image is not a DTI :\n" + CaseListWidget->item(i)->text().toStdString().substr(3);
+				std::string text = "This image is not a DTI :\n" + CurrentCase;
 				QMessageBox::critical(this, "No DTI", QString(text.c_str()) );
 			}
-			else if(!m_Quiet) std::cout<<"| This image is not a DTI : " << CaseListWidget->item(i)->text().toStdString().substr(3) <<std::endl;
+			else if(!m_Quiet) std::cout<<"| This image is not a DTI : " << CurrentCase <<std::endl;
 			return -1;
 		}
-		m_CasesPath.push_back( CaseListWidget->item(i)->text().toStdString().substr(3) );
+		m_CasesPath.push_back( CurrentCase );
 	}
 	m_scriptwriter->setCasesPath(m_CasesPath); // m_CasesPath is a vector
 
