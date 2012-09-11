@@ -2037,11 +2037,15 @@ void GUI::testAW() /*SLOT*/
 	std::string program;
 	program = AWPath->text().toStdString() + " --version";
 
+	if(!m_Quiet) std::cout<<"| Testing the version of AtlasWerks...";
+
 	Process->start( program.c_str() ); // try to find the version => returns nothing if not the right version
 
 	Process->waitForReadyRead();
 	QByteArray BA =  Process->readAllStandardOutput();
 //	if(!m_Quiet) std::cout<< BA.size() <<std::endl;
+
+	if(!m_Quiet) std::cout<<"DONE"<<std::endl;
 
 	if(BA.size()==0) // if notinh displayed in std output, '--version' does not exists so it is not the right version
 	{
