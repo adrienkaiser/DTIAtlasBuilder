@@ -1913,8 +1913,8 @@ void GUI::ConfigDefault() /*SLOT*/
 	if(program.empty() && dtiavgPath->text().isEmpty()) notFound = notFound + "> dtiaverage\n";
 	else dtiavgPath->setText(QString(program.c_str()));
 
-	program = itksys::SystemTools::FindProgram("DTI-Reg_1.1.1");
-	if(program.empty() && DTIRegPath->text().isEmpty()) notFound = notFound + "> DTI-Reg_1.1.1\n";
+	program = itksys::SystemTools::FindProgram("DTI-Reg");
+	if(program.empty() && DTIRegPath->text().isEmpty()) notFound = notFound + "> DTI-Reg\n";
 	else DTIRegPath->setText(QString(program.c_str()));
 
 	program = itksys::SystemTools::FindProgram("unu");
@@ -1993,7 +1993,7 @@ void GUI::ResetSoft(int softindex) /*SLOT*/ //softwares: 1=ImageMath, 2=Resample
 		break;
 	case 7: soft="dtiaverage";
 		break;
-	case 8: soft="DTI-Reg_1.1.1";
+	case 8: soft="DTI-Reg";
 		break;
 	case 9: soft="unu";
 		break;
@@ -2474,8 +2474,8 @@ int GUI::LaunchScriptWriter()
 		}
 		if(DTIRegPath->text().isEmpty())
 		{
-			programPath = itksys::SystemTools::FindProgram("DTI-Reg_1.1.1");
-			if(programPath.empty()) notFound = notFound + "> DTI-Reg_1.1.1\n";
+			programPath = itksys::SystemTools::FindProgram("DTI-Reg");
+			if(programPath.empty()) notFound = notFound + "> DTI-Reg\n";
 			else DTIRegPath->setText(QString(programPath.c_str()));
 		}
 		if(unuPath->text().isEmpty())
