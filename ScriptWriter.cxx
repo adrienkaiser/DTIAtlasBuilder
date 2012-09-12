@@ -570,9 +570,9 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"\\n||Case \" + str(case+1) + \" => $ 
 if(!m_Quiet) 		Script = Script + "\t\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GlobDbleToFloatCommand)\n";
 			Script = Script + "\t\tif os.system(GlobDbleToFloatCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] unu: Converting the deformed images from double to float DTI\')\n";
 if(!m_Quiet) if(m_Overwrite==0) Script = Script + "\telse : print(\"=> The file \\'\" + FinalDef + \"\\' already exists so the command will not be executed\")\n";
-		Script = Script + "\tcase += 1\n";
+		Script = Script + "\tcase += 1\n\n";
 
-if( m_DTIRegOptions[0].compare("ANTS")==0 )	Script = Script + "while nbRunningThreads > 0 : pass # waiting for all the threads to be finished\n\n";
+//if( m_DTIRegOptions[0].compare("ANTS")==0 )	Script = Script + "while nbRunningThreads > 0 : pass # waiting for all the threads to be finished\n\n";
 
 /* dtiaverage recomputing */
 	Script = Script + "# dtiaverage recomputing\n";
