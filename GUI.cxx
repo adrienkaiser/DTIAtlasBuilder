@@ -84,7 +84,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	QObject::connect(RegMethodcomboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(RegMethodComboBoxChanged(int)));
 
 	QObject::connect(DefaultButton, SIGNAL(clicked()), this, SLOT(ConfigDefault()));
-	QObject::connect(AWPath, SIGNAL(editingFinished()), this, SLOT(testAW())); // test the version of AtlasWerks automatically when the text changes
+	QObject::connect(AWPath, SIGNAL(editingFinished()), this, SLOT(testAW())); // test the version of AtlasWerks automatically when the text is changed manually ( not by a setText() )
 
 	QObject::connect(AffineQCButton, SIGNAL(clicked()), this, SLOT(DisplayAffineQC()));
 	QObject::connect(DeformQCButton, SIGNAL(clicked()), this, SLOT(DisplayDeformQC()));
@@ -191,10 +191,10 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 
 	} //if(!m_noGUI)
 
-/* SET the soft config from an env variable or look in the PATH */
 	m_FromConstructor=1; // do not test AW path if 'Default' called from constructor -> test at the end of constructor
+
+/* SET the soft config from an env variable or look in the PATH */
 	ConfigDefault(); // look for the programs with the itk function
-	m_FromConstructor=0;
 
 	const char * value = getenv("DTIAtlasBuilderSoftPath");
 	if (value!=NULL) 
@@ -217,6 +217,8 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 
 	if( !CSVFile.empty() ) if( ReadCSV( QString(CSVFile.c_str())) == -1 ) m_ErrorDetectedInConstructor=true;
 	if( !ConfigFile.empty() ) if( LoadConfig( QString(ConfigFile.c_str())) == -1 ) m_ErrorDetectedInConstructor=true;
+
+	m_FromConstructor=0;
 
 	testAW(); // test the version of AtlasWerks
 }
@@ -1729,6 +1731,7 @@ int GUI::LoadConfig(QString configFile) // returns -1 if fails, otherwise 0
 			if(!list.at(1).isEmpty()) BRAINSFitPath->setText(list.at(1));
 			else if(BRAINSFitPath->text().isEmpty()) notFound = notFound + "> BRAINSFit\n";
 
+
 			line = stream.readLine();
 			list = line.split("=");
 			if(!list.at(0).contains(QString("AtlasWerks")))
@@ -1741,7 +1744,12 @@ int GUI::LoadConfig(QString configFile) // returns -1 if fails, otherwise 0
 				else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
 				return -1;
 			}
-			if(!list.at(1).isEmpty()) AWPath->setText(list.at(1));
+			bool AWToTest=false;
+			if( !list.at(1).isEmpty() )
+			{
+				AWToTest=true; // call testAW after the display of "DONE"
+				AWPath->setText(list.at(1));
+			}
 			else if(AWPath->text().isEmpty()) notFound = notFound + "> AtlasWerks\n";
 
 			line = stream.readLine();
@@ -1805,6 +1813,8 @@ int GUI::LoadConfig(QString configFile) // returns -1 if fails, otherwise 0
 			else if(MriWatcherPath->text().isEmpty()) notFound = notFound + "> MriWatcher\n";
 
 			if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
+
+			if(AWToTest) if(m_FromConstructor!=1) testAW();  // do not test AW path if 'LoadConfig' called from constructor -> test at the end of constructor
 
 			if( !notFound.empty() )
 			{
@@ -1901,12 +1911,13 @@ void GUI::ConfigDefault() /*SLOT*/
 	if(program.empty() && BRAINSFitPath->text().isEmpty()) notFound = notFound + "> BRAINSFit\n";
 	else BRAINSFitPath->setText(QString(program.c_str()));
 
+	bool AWToTest=false;
 	program = itksys::SystemTools::FindProgram("AtlasWerks");
 	if(program.empty() && AWPath->text().isEmpty()) notFound = notFound + "> AtlasWerks\n";
-	else 
+	else
 	{
-		AWPath->setText(QString(program.c_str()));
-		if(m_FromConstructor!=1) testAW();  // do not test AW path if 'Default' called from constructor -> test at the end of constructor
+		AWToTest=true; // call testAW after the display of "DONE"
+		AWPath->setText(QString(program.c_str()));	
 	}
 
 	program = itksys::SystemTools::FindProgram("dtiaverage");
@@ -1926,6 +1937,8 @@ void GUI::ConfigDefault() /*SLOT*/
 	else MriWatcherPath->setText(QString(program.c_str()));
 
 	if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
+
+	if(AWToTest) if(m_FromConstructor!=1) testAW();  // do not test AW path if 'Default' called from constructor -> test at the end of constructor
 
 	if( !notFound.empty() )
 	{
@@ -2005,6 +2018,7 @@ void GUI::ResetSoft(int softindex) /*SLOT*/ //softwares: 1=ImageMath, 2=Resample
 
 	std::string program = itksys::SystemTools::FindProgram(soft.c_str());
 
+	bool AWToTest=false;
 	if(program.empty()) 
 	{
 		std::string text = "The program \'" + soft + "\' is missing.\nPlease enter the path manually.\n";
@@ -2020,7 +2034,7 @@ void GUI::ResetSoft(int softindex) /*SLOT*/ //softwares: 1=ImageMath, 2=Resample
 		else if(softindex==6)
 		{
 			AWPath->setText(QString(program.c_str()));
-			testAW();
+			AWToTest=true; // call testAW after the display of "DONE"
 		}
 		else if(softindex==7) dtiavgPath->setText(QString(program.c_str()));
 		else if(softindex==8) DTIRegPath->setText(QString(program.c_str()));
@@ -2029,6 +2043,8 @@ void GUI::ResetSoft(int softindex) /*SLOT*/ //softwares: 1=ImageMath, 2=Resample
 	}
 
 	if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
+
+	if(AWToTest) if(m_FromConstructor!=1) testAW();  // do not test AW path if 'Default' called from constructor -> test at the end of constructor
 }
 
 void GUI::testAW() /*SLOT*/
@@ -2051,10 +2067,10 @@ void GUI::testAW() /*SLOT*/
 	{
 		if(!m_noGUI) 
 		{
-			std::string text = "The version of AtlasWerks \'" + AWPath->text().toStdString() + "\' is not the right one.\nPlease give a version supporting --xml.\n";
+			std::string text = "The version of AtlasWerks \'" + AWPath->text().toStdString() + "\' is not the right one.\nPlease give a version supporting a XML file (--paramFile).\n";
 			QMessageBox::warning(this, "Wrong version", QString(text.c_str()) );
 		}
-		else if(!m_Quiet) std::cout<<"| The version of AtlasWerks \'" << AWPath->text().toStdString() << "\' is not the right one. Please give a version supporting --xml."<<std::endl;
+		else if(!m_Quiet) std::cout<<"| The version of AtlasWerks \'" << AWPath->text().toStdString() << "\' is not the right one. Please give a version supporting a XML file (--paramFile)."<<std::endl;
 	}
 }
 
