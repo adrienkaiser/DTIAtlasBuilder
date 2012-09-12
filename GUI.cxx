@@ -138,7 +138,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	QObject::connect(unuResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
 	ResetSoftButtonMapper->setMapping(unuResetButton,9);
 	QObject::connect(MriWatcherResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
-	ResetSoftButtonMapper->setMapping(unuResetButton,10);
+	ResetSoftButtonMapper->setMapping(MriWatcherResetButton,10);
 
 /* When any value changes, the value of m_ParamSaved is set to 0 */
 	QObject::connect(TemplateLineEdit, SIGNAL(textChanged(QString)), this, SLOT(WidgetHasChangedParamNoSaved()));
@@ -1892,28 +1892,28 @@ void GUI::ConfigDefault() /*SLOT*/
 	std::string notFound;
 
 	program = itksys::SystemTools::FindProgram("ImageMath");
-	if(program.empty() && ImagemathPath->text().isEmpty()) notFound = notFound + "> ImageMath\n";
+	if(program.empty()) { if(ImagemathPath->text().isEmpty()) notFound = notFound + "> ImageMath\n"; }
 	else ImagemathPath->setText(QString(program.c_str()));
 
 	program = itksys::SystemTools::FindProgram("ResampleDTIlogEuclidean");
-	if(program.empty() && ResampPath->text().isEmpty()) notFound = notFound + "> ResampleDTIlogEuclidean\n";
+	if(program.empty()) { if(ResampPath->text().isEmpty()) notFound = notFound + "> ResampleDTIlogEuclidean\n"; }
 	else ResampPath->setText(QString(program.c_str()));
 
 	program = itksys::SystemTools::FindProgram("CropDTI");
-	if(program.empty() && CropDTIPath->text().isEmpty()) notFound = notFound + "> CropDTI\n";
+	if(program.empty()) { if(CropDTIPath->text().isEmpty()) notFound = notFound + "> CropDTI\n"; }
 	else CropDTIPath->setText(QString(program.c_str()));
 
 	program = itksys::SystemTools::FindProgram("dtiprocess");
-	if(program.empty() && dtiprocPath->text().isEmpty()) notFound = notFound + "> dtiprocess\n";
+	if(program.empty()) { if(dtiprocPath->text().isEmpty()) notFound = notFound + "> dtiprocess\n"; }
 	else dtiprocPath->setText(QString(program.c_str()));
 
 	program = itksys::SystemTools::FindProgram("BRAINSFit");
-	if(program.empty() && BRAINSFitPath->text().isEmpty()) notFound = notFound + "> BRAINSFit\n";
+	if(program.empty()) { if(BRAINSFitPath->text().isEmpty()) notFound = notFound + "> BRAINSFit\n"; }
 	else BRAINSFitPath->setText(QString(program.c_str()));
 
 	bool AWToTest=false;
 	program = itksys::SystemTools::FindProgram("AtlasWerks");
-	if(program.empty() && AWPath->text().isEmpty()) notFound = notFound + "> AtlasWerks\n";
+	if(program.empty()) { if(AWPath->text().isEmpty()) notFound = notFound + "> AtlasWerks\n"; }
 	else
 	{
 		AWToTest=true; // call testAW after the display of "DONE"
@@ -1921,19 +1921,19 @@ void GUI::ConfigDefault() /*SLOT*/
 	}
 
 	program = itksys::SystemTools::FindProgram("dtiaverage");
-	if(program.empty() && dtiavgPath->text().isEmpty()) notFound = notFound + "> dtiaverage\n";
+	if(program.empty()) { if(dtiavgPath->text().isEmpty()) notFound = notFound + "> dtiaverage\n"; }
 	else dtiavgPath->setText(QString(program.c_str()));
 
 	program = itksys::SystemTools::FindProgram("DTI-Reg");
-	if(program.empty() && DTIRegPath->text().isEmpty()) notFound = notFound + "> DTI-Reg\n";
+	if(program.empty()) { if(DTIRegPath->text().isEmpty()) notFound = notFound + "> DTI-Reg\n"; }
 	else DTIRegPath->setText(QString(program.c_str()));
 
 	program = itksys::SystemTools::FindProgram("unu");
-	if(program.empty() && unuPath->text().isEmpty()) notFound = notFound + "> unu\n";
+	if(program.empty()) { if(unuPath->text().isEmpty()) notFound = notFound + "> unu\n"; }
 	else unuPath->setText(QString(program.c_str()));
 
 	program = itksys::SystemTools::FindProgram("MriWatcher");
-	if(program.empty() && MriWatcherPath->text().isEmpty()) notFound = notFound + "> MriWatcher\n";
+	if(program.empty()) { if(MriWatcherPath->text().isEmpty()) notFound = notFound + "> MriWatcher\n"; }
 	else MriWatcherPath->setText(QString(program.c_str()));
 
 	if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
@@ -2438,7 +2438,7 @@ int GUI::LaunchScriptWriter()
 
 /* Software paths */
 /* Checking if all the programs have been given */
-	if(ImagemathPath->text().isEmpty() || ResampPath->text().isEmpty() || CropDTIPath->text().isEmpty() || dtiprocPath->text().isEmpty() || BRAINSFitPath->text().isEmpty() || AWPath->text().isEmpty() || dtiavgPath->text().isEmpty() || DTIRegPath->text().isEmpty() ) // if any path is missing => check in the config file and in the PATH
+	if(ImagemathPath->text().isEmpty() || ResampPath->text().isEmpty() || CropDTIPath->text().isEmpty() || dtiprocPath->text().isEmpty() || BRAINSFitPath->text().isEmpty() || AWPath->text().isEmpty() || dtiavgPath->text().isEmpty() || DTIRegPath->text().isEmpty() || unuPath->text().isEmpty() || MriWatcherPath->text().isEmpty()) // if any path is missing => check in the config file and in the PATH
 	{
 		char * value = getenv("DTIAtlasBuilderSoftPath");
 		if (value) LoadConfig( QString(value) ); // replace the paths by the paths given in the config file
@@ -2499,6 +2499,12 @@ int GUI::LaunchScriptWriter()
 			programPath = itksys::SystemTools::FindProgram("unu");
 			if(programPath.empty()) notFound = notFound + "> unu\n";
 			else unuPath->setText(QString(programPath.c_str()));
+		}
+		if(MriWatcherPath->text().isEmpty())
+		{
+			programPath = itksys::SystemTools::FindProgram("MriWatcher");
+			if(programPath.empty()) notFound = notFound + "> MriWatcher\n";
+			else MriWatcherPath->setText(QString(programPath.c_str()));
 		}
 
 		if( !notFound.empty() )
@@ -2602,6 +2608,16 @@ int GUI::LaunchScriptWriter()
 			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
 		}
 		else if(!m_Quiet) std::cout<<"| The file \'" << unuPath->text().toStdString() << "\' is not executable" << std::endl;
+		return -1;
+	}
+	if(access(MriWatcherPath->text().toStdString().c_str(), X_OK) != 0 )
+	{
+		if(!m_noGUI)
+		{
+			std::string text = "The file \'" + MriWatcherPath->text().toStdString() + "\' is not executable";
+			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+		}
+		else if(!m_Quiet) std::cout<<"| The file \'" << MriWatcherPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
 
