@@ -947,12 +947,12 @@ as an Affine transform already computed, it will be used as an input for the Aff
               <widget class="QComboBox" name="TensTfmComboBox">
                <item>
                 <property name="text">
-                 <string>PPD</string>
+                 <string>Preservation of the Principal Direction (PPD)</string>
                 </property>
                </item>
                <item>
                 <property name="text">
-                 <string>FS</string>
+                 <string>Finite Strain (FS)</string>
                 </property>
                </item>
               </widget>
@@ -1008,11 +1008,11 @@ as an Affine transform already computed, it will be used as an input for the Aff
                 </sizepolicy>
                </property>
                <property name="currentIndex">
-                <number>2</number>
+                <number>0</number>
                </property>
                <item>
                 <property name="text">
-                 <string>PGA</string>
+                 <string>Principal Geodesic Analysis (PGA)</string>
                 </property>
                </item>
                <item>

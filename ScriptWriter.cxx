@@ -422,8 +422,8 @@ if(!m_Quiet) Script = Script + "print(\"\\n======== Applying deformation fields 
 			if(m_InterpolLogOption.compare("Nearest")==0)		Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" --nolog --correction nearest\"\n";
 		}
 
-		if(m_TensTfm.compare("PPD")==0)	Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -T PPD\"\n";
-		if(m_TensTfm.compare("FS")==0)	Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -T FS\"\n";
+		if(m_TensTfm.compare("Preservation of the Principal Direction (PPD)")==0)	Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -T PPD\"\n";
+		if(m_TensTfm.compare("Finite Strain (FS)")==0)	Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -T FS\"\n";
 
 if(!m_Quiet) 	Script = Script + "\tprint(\"||Case \" + str(case+1) + \" => $ \" + FinalReSampCommand)\n";
 		if(m_Overwrite==1) Script = Script + "\tif 1 :\n";
@@ -455,7 +455,7 @@ if(!m_Quiet) Script = Script + "print(\"\\n======== Computing the AW DTI average
 		Script = Script + "\tAverageCommand = AverageCommand + DTIforAVG\n";
 		Script = Script + "\tcase += 1\n";
 	Script = Script + "AverageCommand = AverageCommand + \"--tensor_output \" + DTIAverage\n";
-	if(m_AverageStatMethod.compare("PGA")==0)		Script = Script + "AverageCommand = AverageCommand + \" -m pga\"\n";
+	if(m_AverageStatMethod.compare("Principal Geodesic Analysis (PGA)")==0)		Script = Script + "AverageCommand = AverageCommand + \" -m pga\"\n";
 	if(m_AverageStatMethod.compare("Euclidean")==0) 	Script = Script + "AverageCommand = AverageCommand + \" -m euclidean\"\n";
 	if(m_AverageStatMethod.compare("Log Euclidean")==0)	Script = Script + "AverageCommand = AverageCommand + \" -m log-euclidean\"\n";
 if(!m_Quiet) Script = Script + "print(\"=> $ \" + AverageCommand)\n";
@@ -585,7 +585,7 @@ if(!m_Quiet) Script = Script + "print(\"\\n======== Recomputing the final DTI av
 		Script = Script + "\tAverageCommand2 = AverageCommand2 + DTIforAVG2\n";
 		Script = Script + "\tcase += 1\n";
 	Script = Script + "AverageCommand2 = AverageCommand2 + \"--tensor_output \" + DTIAverage2\n";
-	if(m_AverageStatMethod.compare("PGA")==0)		Script = Script + "AverageCommand2 = AverageCommand2 + \" -m pga\"\n";
+	if(m_AverageStatMethod.compare("Principal Geodesic Analysis (PGA)")==0)		Script = Script + "AverageCommand2 = AverageCommand2 + \" -m pga\"\n";
 	if(m_AverageStatMethod.compare("Euclidean")==0) 	Script = Script + "AverageCommand2 = AverageCommand2 + \" -m euclidean\"\n";
 	if(m_AverageStatMethod.compare("Log Euclidean")==0)	Script = Script + "AverageCommand2 = AverageCommand2 + \" -m log-euclidean\"\n";
 if(!m_Quiet) Script = Script + "print(\"=> $ \" + AverageCommand2)\n";
