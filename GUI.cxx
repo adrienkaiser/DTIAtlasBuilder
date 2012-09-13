@@ -687,7 +687,7 @@ int GUI::ReadCSV(QString CSVfile)
 				ComputepushButton->setEnabled(true);
 			}
 		}
-		else if(!m_Quiet) std::cout<<"| The given file does not exist"<<std::endl; // command line display
+		else if(!m_Quiet) std::cout<<"| The given CSV file does not exist"<<std::endl; // command line display
 	}
 
 	return 0;
@@ -1373,7 +1373,7 @@ int GUI::LoadParameters(QString paramFile)
 			else if( param.at(0).contains(QString("Exp")) ) m_ARegTypeComboBox->setCurrentIndex(3);
 			else if( param.at(0).contains(QString("GreedyExp")) ) m_ARegTypeComboBox->setCurrentIndex(4);
 			else if( param.at(0).contains(QString("GreedyDiffeo (SyN)")) ) m_ARegTypeComboBox->setCurrentIndex(5);
-			else if( param.at(0).contains(QString("SpatioTempoDiffeo (SyN)")) ) m_ARegTypeComboBox->setCurrentIndex(6);
+			else if( param.at(0).contains(QString("SpatioTempDiffeo (SyN)")) ) m_ARegTypeComboBox->setCurrentIndex(6);
 			else
 			{
 				if(!m_noGUI) 
@@ -1441,7 +1441,7 @@ int GUI::LoadParameters(QString paramFile)
 	else if ( !paramFile.isEmpty() ) qDebug( "Could not open file");
 
 	}
-	else if(!m_Quiet) std::cout<<"| The given file does not exist"<<std::endl; // command line display
+	else if(!m_Quiet) std::cout<<"| The given parameter file does not exist"<<std::endl; // command line display
 
 	return 0;
 }
@@ -1832,7 +1832,7 @@ int GUI::LoadConfig(QString configFile) // returns -1 if fails, otherwise 0
 		} 
 		else qDebug( "Could not open file");
 	}
-	else if(!m_Quiet) std::cout<<"| The given file does not exist"<<std::endl; // command line display
+	else if(!m_Quiet) std::cout<<"| The given configuration file does not exist"<<std::endl; // command line display
 
 	return 0;
 }
