@@ -113,7 +113,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	QObject::connect(unuButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
 	SoftButtonMapper->setMapping(unuButton,9);
 	QObject::connect(MriWatcherButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
-	SoftButtonMapper->setMapping(unuButton,10);
+	SoftButtonMapper->setMapping(MriWatcherButton,10);
 
 /* Reset software path Buttons */
 	QSignalMapper *ResetSoftButtonMapper = new QSignalMapper();
