@@ -193,8 +193,10 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 
 	m_FromConstructor=1; // do not test AW path if 'Default' called from constructor -> test at the end of constructor
 
-/* SET the soft config from an env variable or look in the PATH */
+/* SET the soft config from an env variable or look in the PATH or from a config file in the current folder*/
 	ConfigDefault(); // look for the programs with the itk function
+
+	if( access("DTIAtlasBuilderSoftConfig.txt", F_OK) == 0 ) if( LoadConfig(QString("DTIAtlasBuilderSoftConfig.txt")) == -1 ) m_ErrorDetectedInConstructor=true; // Look for the parameter file in the current directory
 
 	const char * value = getenv("DTIAtlasBuilderSoftPath");
 	if (value!=NULL) 
@@ -204,7 +206,10 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	}
 	else if(!m_Quiet) std::cout<<"| No environment variable found"<<std::endl;
 
-/* Load Parameters from Command Line */
+/* Look for the parameter file in the current directory */
+	if( access("DTIAtlasBuilderParameters.txt", F_OK) == 0 ) if( LoadParameters(QString("DTIAtlasBuilderParameters.txt")) == -1 ) m_ErrorDetectedInConstructor=true;
+
+/* Load Parameters from Command Line => cmd line arguments a taking into account at last and change the parameters at last because they have priority */
 	if( !ParamFile.empty() )
 	{
 		if( LoadParameters(QString(ParamFile.c_str())) == -1 ) m_ErrorDetectedInConstructor=true;
