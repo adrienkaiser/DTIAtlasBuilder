@@ -1247,8 +1247,8 @@ int GUI::LoadParameters(QString paramFile)
 			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 			return -1;
 		}
-		if( list.at(1).contains(QString("PPD")) ) TensTfmComboBox->setCurrentIndex(0);
-		else if( list.at(1).contains(QString("FS")) ) TensTfmComboBox->setCurrentIndex(1);
+		if( list.at(1).contains(QString("Preservation of the Principal Direction (PPD)")) ) TensTfmComboBox->setCurrentIndex(0);
+		else if( list.at(1).contains(QString("Finite Strain (FS)")) ) TensTfmComboBox->setCurrentIndex(1);
 		else
 		{
 			if(!m_noGUI) 
@@ -1272,7 +1272,7 @@ int GUI::LoadParameters(QString paramFile)
 			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
 			return -1;
 		}
-		if( list.at(1).contains(QString("PGA")) ) averageStatMethodComboBox->setCurrentIndex(0);
+		if( list.at(1).contains(QString("Principal Geodesic Analysis (PGA)")) ) averageStatMethodComboBox->setCurrentIndex(0);
 		else if( list.at(1).contains(QString("Log Euclidean")) ) averageStatMethodComboBox->setCurrentIndex(2);
 		else if( list.at(1).contains(QString("Euclidean")) ) averageStatMethodComboBox->setCurrentIndex(1);
 		else
