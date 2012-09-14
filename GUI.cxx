@@ -225,7 +225,36 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 
 	m_FromConstructor=0;
 
-	testAW(); // test the version of AtlasWerks
+	//NOW that all the files have been loaded => test if all the paths are here
+	bool AWFound=true;
+	std::string notFound;
+
+	if(ImagemathPath->text().isEmpty()) notFound = notFound + "> ImageMath\n";
+	if(ResampPath->text().isEmpty()) notFound = notFound + "> ResampleDTIlogEuclidean\n";
+	if(CropDTIPath->text().isEmpty()) notFound = notFound + "> CropDTI\n";
+	if(dtiprocPath->text().isEmpty()) notFound = notFound + "> dtiprocess\n";
+	if(BRAINSFitPath->text().isEmpty()) notFound = notFound + "> BRAINSFit\n";
+	if(AWPath->text().isEmpty())
+	{
+		notFound = notFound + "> AtlasWerks\n";
+		AWFound=false; // so it will test the version
+	}
+	if(dtiavgPath->text().isEmpty()) notFound = notFound + "> dtiaverage\n";
+	if(DTIRegPath->text().isEmpty()) notFound = notFound + "> DTI-Reg\n";
+	if(unuPath->text().isEmpty()) notFound = notFound + "> unu\n";
+	if(MriWatcherPath->text().isEmpty()) notFound = notFound + "> MriWatcher\n";
+
+	if( !notFound.empty() )
+	{
+		if(!m_noGUI) 
+		{
+			std::string text = "The following programs have not been found.\nPlease enter the path manually or open a configuration file:\n" + notFound;
+			QMessageBox::warning(this, "Program missing", QString(text.c_str()) );
+		}
+		else if(!m_Quiet) std::cout<<"| The following programs have not been found. Please give a configuration file or modify it or enter the path manually in the GUI:\n"<< notFound <<std::endl;
+	}
+
+	if(AWFound) testAW(); // test the version of AtlasWerks only if found
 }
 
   /////////////////////////////////////////
@@ -1819,21 +1848,25 @@ int GUI::LoadConfig(QString configFile) // returns -1 if fails, otherwise 0
 
 			if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
 
-			if(AWToTest) if(m_FromConstructor!=1) testAW();  // do not test AW path if 'LoadConfig' called from constructor -> test at the end of constructor
-
-			if( !notFound.empty() )
+			if(m_FromConstructor!=1) // do not test when from constructor -> test at the end of it
 			{
-				if(!m_noGUI) 
+				if( !notFound.empty() )
 				{
-					std::string text = "The following programs are missing.\nPlease enter the path manually:\n" + notFound;
-					QMessageBox::warning(this, "Program missing", QString(text.c_str()) );
+					if(!m_noGUI) 
+					{
+						std::string text = "The following programs are missing.\nPlease enter the path manually:\n" + notFound;
+						QMessageBox::warning(this, "Program missing", QString(text.c_str()) );
+					}
+					else
+					{
+						if(!m_Quiet) std::cout<<"| The following programs have not been found. Please give a configuration file or modify it or enter the path manually in the GUI:\n"<< notFound <<std::endl;
+						return -1;
+					}
 				}
-				else
-				{
-					if(!m_Quiet) std::cout<<"| The following programs have not been found. Please give a configuration file or modify it or enter the path manually in the GUI:\n"<< notFound <<std::endl;
-					return -1;
-				}
+
+				if(AWToTest) testAW();  // do not test AW path if 'LoadConfig' called from constructor -> test at the end of constructor
 			}
+
 		} 
 		else qDebug( "Could not open file");
 	}
@@ -1943,16 +1976,19 @@ void GUI::ConfigDefault() /*SLOT*/
 
 	if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
 
-	if(AWToTest) if(m_FromConstructor!=1) testAW();  // do not test AW path if 'Default' called from constructor -> test at the end of constructor
-
-	if( !notFound.empty() )
+	if(m_FromConstructor!=1) // do not test when from constructor -> test at the end of it
 	{
-		if(!m_noGUI) 
+		if( !notFound.empty() )
 		{
-			std::string text = "The following programs have not been found.\nPlease enter the path manually or open a configuration file:\n" + notFound;
-			QMessageBox::warning(this, "Program missing", QString(text.c_str()) );
+			if(!m_noGUI) 
+			{
+				std::string text = "The following programs have not been found.\nPlease enter the path manually or open a configuration file:\n" + notFound;
+				QMessageBox::warning(this, "Program missing", QString(text.c_str()) );
+			}
+			else if(!m_Quiet) std::cout<<"| The following programs have not been found. Please give a configuration file or modify it or enter the path manually in the GUI:\n"<< notFound <<std::endl;
 		}
-		else if(!m_Quiet) std::cout<<"| The following programs have not been found. Please give a configuration file or modify it or enter the path manually in the GUI:\n"<< notFound <<std::endl;
+
+		if(AWToTest) testAW();  // do not test AW path if 'Default' called from constructor -> test at the end of constructor
 	}
 }
 
