@@ -25,7 +25,7 @@
 /*itk classes*/
 #include "itkImage.h"
 #include "itkImageFileReader.h"
-#include <itksys/SystemTools.hxx> // for FindProgram()
+#include <itksys/SystemTools.hxx> // for FindProgram() and GetFilenamePath()
 
 #include "GUI.h"
 #include "ScriptWriter.h"
@@ -193,11 +193,22 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 
 	m_FromConstructor=1; // do not test AW path if 'Default' called from constructor -> test at the end of constructor
 
-/* SET the soft config from an env variable or look in the PATH or from a config file in the current folder*/
-	ConfigDefault(); // look for the programs with the itk function
+/* SET the soft config */
+// look for the programs with the itk function
+	ConfigDefault();
 
-	if( access("DTIAtlasBuilderSoftConfig.txt", F_OK) == 0 ) if( LoadConfig(QString("DTIAtlasBuilderSoftConfig.txt")) == -1 ) m_ErrorDetectedInConstructor=true; // Look for the parameter file in the current directory
+// Look for the config file in the executable directory
+	std::string executable = itksys::SystemTools::FindProgram("DTIAtlasBuilder");
+	std::string path = itksys::SystemTools::GetFilenamePath(executable); // get the path WITHOUT '/'
+	std::string SoftConfigPath= path + "/DTIAtlasBuilderSoftConfig.txt";
+	if( access( SoftConfigPath.c_str() , F_OK) == 0 ) if( LoadConfig(QString( SoftConfigPath.c_str() )) == -1 ) m_ErrorDetectedInConstructor=true;
 
+// Look for the config file in the current directory
+	std::string CurrentPath = itksys::SystemTools::GetRealPath( itksys::SystemTools::GetCurrentWorkingDirectory().c_str() ); //GetRealPath() to remove symlinks
+	SoftConfigPath = CurrentPath + "/DTIAtlasBuilderSoftConfig.txt";
+	if( access( SoftConfigPath.c_str() , F_OK) == 0 ) if( LoadConfig(QString( SoftConfigPath.c_str() )) == -1 ) m_ErrorDetectedInConstructor=true;
+
+// Look for the config file in the env variable
 	const char * value = getenv("DTIAtlasBuilderSoftPath");
 	if (value!=NULL) 
 	{
@@ -207,7 +218,8 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	else if(!m_Quiet) std::cout<<"| No environment variable found"<<std::endl;
 
 /* Look for the parameter file in the current directory */
-	if( access("DTIAtlasBuilderParameters.txt", F_OK) == 0 ) if( LoadParameters(QString("DTIAtlasBuilderParameters.txt")) == -1 ) m_ErrorDetectedInConstructor=true;
+	std::string ParamPath = CurrentPath + "/DTIAtlasBuilderParameters.txt";
+	if( access( ParamPath.c_str() , F_OK) == 0 ) if( LoadParameters(QString( ParamPath.c_str() )) == -1 ) m_ErrorDetectedInConstructor=true;
 
 /* Load Parameters from Command Line => cmd line arguments a taking into account at last and change the parameters at last because they have priority */
 	if( !ParamFile.empty() )
@@ -693,7 +705,7 @@ int GUI::ReadCSV(QString CSVfile)
 
 			if (file.open(QFile::ReadOnly))
 			{
-				if(!m_Quiet) std::cout<<"| Loading csv file..."; // command line display
+				if(!m_Quiet) std::cout<<"| Loading csv file \'"<< CSVfile.toStdString() <<"\'..."; // command line display
 
 				QTextStream stream(&file);
 				while(!stream.atEnd()) //read all the lines
@@ -935,7 +947,7 @@ int GUI::LoadParameters(QString paramFile)
 			return -1;
 		}
 
-		if(!m_Quiet) std::cout<<"| Loading Parameters file..."; // command line display
+		if(!m_Quiet) std::cout<<"| Loading Parameters file \'"<< paramFile.toStdString() <<"\'..."; // command line display
 
 /* Other Parameters */
 		line = stream.readLine();
@@ -1680,7 +1692,7 @@ int GUI::LoadConfig(QString configFile) // returns -1 if fails, otherwise 0
 {
 	if( access(configFile.toStdString().c_str(), F_OK) == 0 ) // Test if the config file exists => unistd::access() returns 0 if F(file)_OK
 	{
-		if(!m_Quiet) std::cout<<"| Loading Configuration file..."; // command line display
+		if(!m_Quiet) std::cout<<"| Loading Configuration file \'"<< configFile.toStdString() <<"\'..."; // command line display
 
 		std::string notFound;
 
