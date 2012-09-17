@@ -82,7 +82,8 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		void ConfigDefault();
 		void BrowseSoft(int); //in the soft dialog window
 		void ResetSoft(int);
-		void testAW();
+		int testAW(); // returns 0 if version ok, -1 if bad version
+		int testDTIReg(); // returns 0 if version ok, -1 if bad version
 
 /*READ ME*/	void ReadMe();
 

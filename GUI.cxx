@@ -85,6 +85,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 
 	QObject::connect(DefaultButton, SIGNAL(clicked()), this, SLOT(ConfigDefault()));
 	QObject::connect(AWPath, SIGNAL(editingFinished()), this, SLOT(testAW())); // test the version of AtlasWerks automatically when the text is changed manually ( not by a setText() )
+	QObject::connect(DTIRegPath, SIGNAL(editingFinished()), this, SLOT(testDTIReg())); // test the version of DTI-Reg automatically when the text is changed manually ( not by a setText() )
 
 	QObject::connect(AffineQCButton, SIGNAL(clicked()), this, SLOT(DisplayAffineQC()));
 	QObject::connect(DeformQCButton, SIGNAL(clicked()), this, SLOT(DisplayDeformQC()));
@@ -239,6 +240,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 
 	//NOW that all the files have been loaded => test if all the paths are here
 	bool AWFound=true;
+	bool DTIRegFound=true;
 	std::string notFound;
 
 	if(ImagemathPath->text().isEmpty()) notFound = notFound + "> ImageMath\n";
@@ -249,10 +251,14 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	if(AWPath->text().isEmpty())
 	{
 		notFound = notFound + "> AtlasWerks\n";
-		AWFound=false; // so it will test the version
+		AWFound=false; // so it will not test the version
 	}
 	if(dtiavgPath->text().isEmpty()) notFound = notFound + "> dtiaverage\n";
-	if(DTIRegPath->text().isEmpty()) notFound = notFound + "> DTI-Reg\n";
+	if(DTIRegPath->text().isEmpty())
+	{
+		notFound = notFound + "> DTI-Reg\n";
+		DTIRegFound=false; // so it will not test the version
+	}
 	if(unuPath->text().isEmpty()) notFound = notFound + "> unu\n";
 	if(MriWatcherPath->text().isEmpty()) notFound = notFound + "> MriWatcher\n";
 
@@ -267,6 +273,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	}
 
 	if(AWFound) testAW(); // test the version of AtlasWerks only if found
+	if(DTIRegFound) testDTIReg(); // test the version of DTI-Reg only if found
 }
 
   /////////////////////////////////////////
@@ -1825,7 +1832,12 @@ int GUI::LoadConfig(QString configFile) // returns -1 if fails, otherwise 0
 				else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
 				return -1;
 			}
-			if(!list.at(1).isEmpty()) DTIRegPath->setText(list.at(1));
+			bool DTIRegToTest=false;
+			if( !list.at(1).isEmpty() )
+			{
+				DTIRegToTest=true; // call testDTIReg after the display of "DONE"
+				DTIRegPath->setText(list.at(1));
+			}
 			else if(DTIRegPath->text().isEmpty()) notFound = notFound + "> DTI-Reg\n";
 
 			line = stream.readLine();
@@ -1877,6 +1889,7 @@ int GUI::LoadConfig(QString configFile) // returns -1 if fails, otherwise 0
 				}
 
 				if(AWToTest) testAW();  // do not test AW path if 'LoadConfig' called from constructor -> test at the end of constructor
+				if(DTIRegToTest) testDTIReg();  // do not test DTIReg path if 'LoadConfig' called from constructor -> test at the end of constructor
 			}
 
 		} 
@@ -1974,9 +1987,15 @@ void GUI::ConfigDefault() /*SLOT*/
 	if(program.empty()) { if(dtiavgPath->text().isEmpty()) notFound = notFound + "> dtiaverage\n"; }
 	else dtiavgPath->setText(QString(program.c_str()));
 
-	program = itksys::SystemTools::FindProgram("DTI-Reg");
+	bool DTIRegToTest=false;
+	program = itksys::SystemTools::FindProgram("DTI-Reg_1.1.2");
+	if(program.empty()) program = itksys::SystemTools::FindProgram("DTI-Reg"); // if 1.1.2 not found, look for "DTI-Reg"
 	if(program.empty()) { if(DTIRegPath->text().isEmpty()) notFound = notFound + "> DTI-Reg\n"; }
-	else DTIRegPath->setText(QString(program.c_str()));
+	else
+	{
+		DTIRegToTest=true; // call testDTIReg after the display of "DONE"
+		DTIRegPath->setText(QString(program.c_str()));	
+	}
 
 	program = itksys::SystemTools::FindProgram("unu");
 	if(program.empty()) { if(unuPath->text().isEmpty()) notFound = notFound + "> unu\n"; }
@@ -2001,6 +2020,7 @@ void GUI::ConfigDefault() /*SLOT*/
 		}
 
 		if(AWToTest) testAW();  // do not test AW path if 'Default' called from constructor -> test at the end of constructor
+		if(DTIRegToTest) testDTIReg();  // do not test DTIReg path if 'Default' called from constructor -> test at the end of constructor
 	}
 }
 
@@ -2029,7 +2049,10 @@ void GUI::BrowseSoft(int soft)  /*SLOT*/ //softwares: 1=ImageMath, 2=ResampleDTI
 			break;
 		case 7: dtiavgPath->setText(SoftBrowse);
 			break;
-		case 8: DTIRegPath->setText(SoftBrowse);
+		case 8: {
+			DTIRegPath->setText(SoftBrowse);
+			testDTIReg();
+			}
 			break;
 		case 9: unuPath->setText(SoftBrowse);
 			break;
@@ -2059,7 +2082,7 @@ void GUI::ResetSoft(int softindex) /*SLOT*/ //softwares: 1=ImageMath, 2=Resample
 		break;
 	case 7: soft="dtiaverage";
 		break;
-	case 8: soft="DTI-Reg";
+	case 8: soft="DTI-Reg_1.1.2";
 		break;
 	case 9: soft="unu";
 		break;
@@ -2071,7 +2094,11 @@ void GUI::ResetSoft(int softindex) /*SLOT*/ //softwares: 1=ImageMath, 2=Resample
 
 	std::string program = itksys::SystemTools::FindProgram(soft.c_str());
 
+	if(program.empty() && soft=="DTI-Reg_1.1.2") program = itksys::SystemTools::FindProgram("DTI-Reg"); // if 1.1.2 not found, look for "DTI-Reg"
+
+
 	bool AWToTest=false;
+	bool DTIRegToTest=false;
 	if(program.empty()) 
 	{
 		std::string text = "The program \'" + soft + "\' is missing.\nPlease enter the path manually.\n";
@@ -2090,17 +2117,25 @@ void GUI::ResetSoft(int softindex) /*SLOT*/ //softwares: 1=ImageMath, 2=Resample
 			AWToTest=true; // call testAW after the display of "DONE"
 		}
 		else if(softindex==7) dtiavgPath->setText(QString(program.c_str()));
-		else if(softindex==8) DTIRegPath->setText(QString(program.c_str()));
+		else if(softindex==8)
+		{
+			DTIRegPath->setText(QString(program.c_str()));
+			DTIRegToTest=true; // call testDTIReg after the display of "DONE"
+		}
 		else if(softindex==9) unuPath->setText(QString(program.c_str()));
 		else if(softindex==10) MriWatcherPath->setText(QString(program.c_str()));
 	}
 
 	if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
 
-	if(AWToTest) if(m_FromConstructor!=1) testAW();  // do not test AW path if 'Default' called from constructor -> test at the end of constructor
+	if(m_FromConstructor!=1) // do not test paths if 'Default' called from constructor -> test at the end of constructor
+	{
+		if(AWToTest) testAW();
+		if(DTIRegToTest) testDTIReg();
+	}
 }
 
-void GUI::testAW() /*SLOT*/
+int GUI::testAW() /*SLOT*/ // returns 0 if version ok, -1 if bad version
 {
 	QProcess * Process = new QProcess;
 	std::string program;
@@ -2112,7 +2147,6 @@ void GUI::testAW() /*SLOT*/
 
 	Process->waitForReadyRead();
 	QByteArray BA =  Process->readAllStandardOutput();
-//	if(!m_Quiet) std::cout<< BA.size() <<std::endl;
 
 	if(!m_Quiet) std::cout<<"DONE"<<std::endl;
 
@@ -2124,7 +2158,43 @@ void GUI::testAW() /*SLOT*/
 			QMessageBox::warning(this, "Wrong version", QString(text.c_str()) );
 		}
 		else if(!m_Quiet) std::cout<<"| The version of AtlasWerks \'" << AWPath->text().toStdString() << "\' is not the right one. Please give a version supporting a XML file (--paramFile)."<<std::endl;
+
+		return -1;
 	}
+
+	return 0;
+}
+
+int GUI::testDTIReg() /*SLOT*/ // returns 0 if version ok, -1 if bad version
+{
+	QProcess * Process = new QProcess;
+	std::string program;
+	program = DTIRegPath->text().toStdString() + " --version";
+
+	if(!m_Quiet) std::cout<<"| Testing the version of DTI-Reg...";
+
+	Process->start( program.c_str() ); // try to find the version => returns nothing if not the right version
+
+	Process->waitForReadyRead();
+	QByteArray BA =  Process->readAllStandardOutput();
+
+	QString text = QString( BA.data() );
+
+	if(!m_Quiet) std::cout<<"DONE"<<std::endl;
+
+	if( BA.size()==0 || text.contains("1.0") || ( text.contains("1.1") && !text.contains("1.1.") ) || text.contains("1.1.1") ) //old version -> NOK
+	{
+		if(!m_noGUI) 
+		{
+			std::string text = "The version of DTI-Reg \'" + DTIRegPath->text().toStdString() + "\' is not the right one.\nPlease give a version older than 1.1.2.\n";
+			QMessageBox::warning(this, "Wrong version", QString(text.c_str()) );
+		}
+		else if(!m_Quiet) std::cout<<"| The version of DTI-Reg \'" << DTIRegPath->text().toStdString() << "\' is not the right one. Please give a version older than 1.1.2."<<std::endl;
+
+		return -1;
+	}
+
+	return 0;
 }
 
   /////////////////////////////////////////
@@ -2543,7 +2613,8 @@ int GUI::LaunchScriptWriter()
 		}
 		if(DTIRegPath->text().isEmpty())
 		{
-			programPath = itksys::SystemTools::FindProgram("DTI-Reg");
+			programPath = itksys::SystemTools::FindProgram("DTI-Reg_1.1.2");
+			if(programPath.empty()) programPath = itksys::SystemTools::FindProgram("DTI-Reg"); // if 1.1.2 not found, look for "DTI-Reg"
 			if(programPath.empty()) notFound = notFound + "> DTI-Reg\n";
 			else DTIRegPath->setText(QString(programPath.c_str()));
 		}
@@ -2571,6 +2642,9 @@ int GUI::LaunchScriptWriter()
 			return -1;
 		}
 	}
+
+	if(testAW()==-1) return -1;
+	if(testDTIReg()==-1) return -1;
 
 /* Checking if the given files are executable */
 	if(access(ImagemathPath->text().toStdString().c_str(), X_OK)!=0 )
