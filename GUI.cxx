@@ -1989,7 +1989,7 @@ void GUI::ConfigDefault() /*SLOT*/
 
 	bool DTIRegToTest=false;
 	program = itksys::SystemTools::FindProgram("DTI-Reg_1.1.2");
-	if(program.empty()) program = itksys::SystemTools::FindProgram("DTI-Reg"); // if 1.1.2 not found, look for "DTI-Reg"
+	if(program.empty()) program = itksys::SystemTools::FindProgram("DTI-Reg"); // if 1.1.2 not found, look for "DTI-Reg" alone
 	if(program.empty()) { if(DTIRegPath->text().isEmpty()) notFound = notFound + "> DTI-Reg\n"; }
 	else
 	{

@@ -28,7 +28,7 @@ ENDIF(GenerateCLP_FOUND)
 QT4_WRAP_CPP(QtProject_HEADERS_MOC GUI.h)
 QT4_WRAP_UI(UI_FILES GUIwindow.ui)
 
-SET(sources DTIAtlasBuilder.cxx GUI.h GUI.cxx ScriptWriter.h ScriptWriter.cxx ${QtProject_HEADERS_MOC} ${UI_FILES}) #define the variable "sources" that contains the names of files
+SET(sources DTIAtlasBuilder.cxx GUI.h GUI.cxx ScriptWriter.h ScriptWriter.cxx ${QtProject_HEADERS_MOC} ${UI_FILES}) # define the variable "sources" that contains the names of files
 
 GENERATECLP(sources DTIAtlasBuilder.xml) # include the GCLP file to the project
 
