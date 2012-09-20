@@ -43,7 +43,7 @@
 		<boolean>
 			<name>Overwrite</name>
 			<longflag>overwrite</longflag>
-			<description>If you want to overwrite on compute</description>
+			<description>If you want to overwrite on previous compute</description>
 			<label>Overwrite</label>
 			<default>false</default>
 		</boolean>
