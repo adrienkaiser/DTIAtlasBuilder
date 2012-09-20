@@ -2186,10 +2186,10 @@ int GUI::testDTIReg() /*SLOT*/ // returns 0 if version ok, -1 if bad version
 	{
 		if(!m_noGUI) 
 		{
-			std::string text = "The version of DTI-Reg \'" + DTIRegPath->text().toStdString() + "\' is not the right one.\nPlease give a version older than 1.1.2.\n";
+			std::string text = "The version of DTI-Reg \'" + DTIRegPath->text().toStdString() + "\' is not the right one.\nPlease give the version 1.1.2. or older\n";
 			QMessageBox::warning(this, "Wrong version", QString(text.c_str()) );
 		}
-		else if(!m_Quiet) std::cout<<"| The version of DTI-Reg \'" << DTIRegPath->text().toStdString() << "\' is not the right one. Please give a version older than 1.1.2."<<std::endl;
+		else if(!m_Quiet) std::cout<<"| The version of DTI-Reg \'" << DTIRegPath->text().toStdString() << "\' is not the right one. Please give the version 1.1.2. or older"<<std::endl;
 
 		return -1;
 	}
@@ -2211,7 +2211,7 @@ void GUI::ReadMe()  /*SLOT*/ /////to UPDATE
 	QDialog *dlg = new QDialog(this);
 	dlg->setWindowTitle ("Read Me");
 
-	std::string info = "DTIAtlasBuilder\n===============\n\nA tool to create an atlas from several DTI images\n\nThese Softwares need to be installed before executing the tool :\n- ImageMath\n- ResampleDTIlogEuclidean\n- CropDTI\n- dtiprocess\n- BRAINSFit\n- AtlasWerks\n- dtiaverage\n- DTI-Reg\n- unu\n- MriWatcher\n";
+	std::string info = "DTIAtlasBuilder\n===============\n\nA tool to create an atlas from several DTI images\n\nThese Softwares need to be installed before executing the tool :\n- ImageMath\n- ResampleDTIlogEuclidean\n- CropDTI\n- dtiprocess\n- BRAINSFit\n- AtlasWerks\n- dtiaverage\n- DTI-Reg\n- unu\n- MriWatcher\n\n For any question, suggestion or remark, please contact akaiser@unc.edu.";
 	QLabel *InfoLabel = new QLabel (info.c_str(), this);
 	QVBoxLayout *VLayout = new QVBoxLayout();
 	VLayout->addWidget(InfoLabel);
@@ -2341,40 +2341,40 @@ void GUI::Compute() /*SLOT*/
 	else
 	{
 
-	if(CaseListWidget->count()==0)
-	{
-		if(!m_noGUI) QMessageBox::critical(this, "No Cases", "Please give at least one case");
-		else if(!m_Quiet) std::cout<<"| No Cases: Please give at least one case"<<std::endl;
-	}
-	else // OK Case
-	{
-	
-	if(OutputFolderLineEdit->text().isEmpty())
-	{
-		if(!m_noGUI) QMessageBox::critical(this, "No Output Folder", "Please give an output folder");
-		else if(!m_Quiet) std::cout<<"| No Output Folder: Please give an output folder"<<std::endl;
-	}
-	else // OK Output
-	{
-
-		if(LaunchScriptWriter()==-1) 
+		if(CaseListWidget->count()==0)
 		{
-			if(!m_Quiet) std::cout<<"| Clearing previous cases in vectors..."<<std::endl; // command line display
-			m_CasesPath.clear();
-			m_scriptwriter->clearCasesPath();
-			if(m_noGUI) Exit(); // no possibility to change because no GUI so QUIT
-			return;
+			if(!m_noGUI) QMessageBox::critical(this, "No Cases", "Please give at least one case");
+			else if(!m_Quiet) std::cout<<"| No Cases: Please give at least one case"<<std::endl;
 		}
-		if(!m_Quiet) std::cout<<"| Clearing previous cases in vectors..."<<std::endl; // command line display
-		m_CasesPath.clear();
-		m_scriptwriter->clearCasesPath();
-		LaunchScriptRunner();
+		else // OK Case
+		{
+	
+			if(OutputFolderLineEdit->text().isEmpty())
+			{
+				if(!m_noGUI) QMessageBox::critical(this, "No Output Folder", "Please give an output folder");
+				else if(!m_Quiet) std::cout<<"| No Output Folder: Please give an output folder"<<std::endl;
+			}
+			else // OK Output
+			{
 
-	} // else of if(OutputFolderLineEdit->text().isEmpty())
+				if(LaunchScriptWriter()==-1) 
+				{
+					if(!m_Quiet) std::cout<<"| Clearing previous cases in vectors..."<<std::endl; // command line display
+					m_CasesPath.clear();
+					m_scriptwriter->clearCasesPath();
+					if(m_noGUI) Exit(); // no possibility to change because no GUI so QUIT
+					return;
+				}
+				if(!m_Quiet) std::cout<<"| Clearing previous cases in vectors..."<<std::endl; // command line display
+				m_CasesPath.clear();
+				m_scriptwriter->clearCasesPath();
+				LaunchScriptRunner();
 
-	} // else of if[Case]
+			} // else of if(OutputFolderLineEdit->text().isEmpty())
 
-	if(m_noGUI) Exit(); // Only 1 compute in nogui mode
+		} // else of if[Case]
+
+		if(m_noGUI) Exit(); // Only 1 compute in nogui mode
 
 	} // else of if( m_ErrorDetectedInConstructor && m_noGUI )
 }

@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
-PROJECT(DTIAtlasBuilderGUI)  # name of the project
+PROJECT(DTIAtlasBuilder)  # name of the project
 
 FIND_PACKAGE(ITK)
 IF(ITK_FOUND)
