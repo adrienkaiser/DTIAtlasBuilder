@@ -65,6 +65,24 @@ if(!m_Quiet) Script = Script + "print(\"\\n============ Pre processing =========
 		Script = Script + "\tos.mkdir(OutputPath)\n";
 if(!m_Quiet) 	Script = Script + "\tprint(\"\\n=> Creation of the affine directory = \" + OutputPath)\n\n";
 
+/* Rescaling template */
+	if(m_RegType==0)
+	{
+if(!m_Quiet) 	Script = Script + "print(\"\\n======== Rescaling FA template =========\")\n";
+		Script = Script + "RescaleTemp= OutputPath + \"/FATemplate_Rescaled.nrrd\"\n";
+		Script = Script + "RescaleTempCommand=\"" + m_SoftPath[0] + " \" + AtlasFAref + \" -outfile \" + RescaleTemp + \" -rescale 0,10000 \"\n";
+if(!m_Quiet) 	Script = Script + "print(\"=> $ \" + RescaleTempCommand)\n";
+		if(m_Overwrite==1) Script = Script + "if os.system(RescaleTempCommand)!=0 : ErrorList.append(\'ImageMath: Rescaling FA template\')\n";
+		else
+		{
+			Script = Script + "if not os.path.isfile(RescaleTemp) :\n";
+				Script = Script + "\tif os.system(RescaleTempCommand)!=0 : ErrorList.append(\'ImageMath:  Rescaling FA template\')\n";
+if(!m_Quiet) 		Script = Script + "else : print(\"=> The file \\'\" + RescaleTemp + \"\\' already exists so the command will not be executed\")\n";
+		}
+
+		Script = Script + "AtlasFAref= RescaleTemp\n\n";
+	}
+
 /* Cropping DTI image */
 	if(m_NeedToBeCropped==1)
 	{
