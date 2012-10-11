@@ -499,7 +499,7 @@ if(!m_Quiet) if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'
 
 /* Computing global deformation fields */
 	Script = Script + "# Computing global deformation fields\n";
-/*
+/* Threads
 	if( m_DTIRegOptions[0].compare("ANTS")==0 )
 	{
 
@@ -565,7 +565,9 @@ if(!m_Quiet) Script = Script + "print(\"\\n======== Computing global deformation
 			else Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSRegistrationType " + m_DTIRegOptions[1] + "\"\n";
 			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSTransformationStep " + m_DTIRegOptions[2] + "\"\n";
 			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSIterations " + m_DTIRegOptions[3] + "\"\n";
-			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSSimilarityMetric " + m_DTIRegOptions[4] + "\"\n";
+			if(m_DTIRegOptions[4].compare("Cross-Correlation (CC)")==0) Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSSimilarityMetric CC\"\n";
+			else if(m_DTIRegOptions[4].compare("Mutual Information (MI)")==0) Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSSimilarityMetric MI\"\n";
+			else if(m_DTIRegOptions[4].compare("Mean Square Difference (MSQ)")==0) Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSSimilarityMetric MSQ\"\n";
 			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSSimilarityParameter " + m_DTIRegOptions[5] + "\"\n";
 			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSGaussianSigma " + m_DTIRegOptions[6] + "\"\n";
 			if( m_DTIRegOptions[7].compare("1")==0 ) Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSGaussianSmoothingOff\"\n";
@@ -660,9 +662,9 @@ if(!m_Quiet) Script = Script + "print(\"\\n======== Recomputing global deformati
 		if( m_DTIRegOptions[0].compare("BRAINS")==0 )
 		{
 			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --method useScalar-BRAINS\"\n";
-			if(m_DTIRegOptions[1].compare("GreedyDiffeo (SyN)")==0) Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSRegistrationType GreedyDiffeo\"\n";
-			else if(m_DTIRegOptions[1].compare("SpatioTempDiffeo (SyN)")==0) Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSRegistrationType SpatioTempDiffeo\"\n";
-			else Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSRegistrationType " + m_DTIRegOptions[1] + "\"\n";
+			if(m_DTIRegOptions[1].compare("GreedyDiffeo (SyN)")==0) Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSRegistrationType GreedyDiffeo\"\n";
+			else if(m_DTIRegOptions[1].compare("SpatioTempDiffeo (SyN)")==0) Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSRegistrationType SpatioTempDiffeo\"\n";
+			else Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSRegistrationType " + m_DTIRegOptions[1] + "\"\n";
 			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSSmoothDefFieldSigma " + m_DTIRegOptions[3] + "\"\n";
 			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSnumberOfPyramidLevels " + m_DTIRegOptions[4] + "\"\n";
 			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSarrayOfPyramidLevelIterations " + m_DTIRegOptions[5] + "\"\n";
@@ -679,7 +681,9 @@ if(!m_Quiet) Script = Script + "print(\"\\n======== Recomputing global deformati
 			else Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSRegistrationType " + m_DTIRegOptions[1] + "\"\n";
 			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSTransformationStep " + m_DTIRegOptions[2] + "\"\n";
 			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSIterations " + m_DTIRegOptions[3] + "\"\n";
-			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSSimilarityMetric " + m_DTIRegOptions[4] + "\"\n";
+			if(m_DTIRegOptions[4].compare("Cross-Correlation (CC)")==0) Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSSimilarityMetric CC\"\n";
+			else if(m_DTIRegOptions[4].compare("Mutual Information (MI)")==0) Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSSimilarityMetric MI\"\n";
+			else if(m_DTIRegOptions[4].compare("Mean Square Difference (MSQ)")==0) Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSSimilarityMetric MSQ\"\n";
 			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSSimilarityParameter " + m_DTIRegOptions[5] + "\"\n";
 			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSGaussianSigma " + m_DTIRegOptions[6] + "\"\n";
 			if( m_DTIRegOptions[7].compare("1")==0 ) Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSGaussianSmoothingOff\"\n";
@@ -946,11 +950,13 @@ void ScriptWriter::setAverageStatMethod(std::string Method)
 
 void ScriptWriter::setSoftPath(std::vector < std::string > SoftPath) // 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=AtlasWerks, 7=dtiaverage, 8=DTI-Reg, 9=unu
 {
+	m_SoftPath.clear();
 	for (unsigned int i=0;i<SoftPath.size();i++) m_SoftPath.push_back( SoftPath[i] );
 }
 
 void ScriptWriter::setDTIRegOptions(std::vector < std::string > DTIRegOptions)
 {
+	m_DTIRegOptions.clear();
 	for (unsigned int i=0;i<DTIRegOptions.size();i++) m_DTIRegOptions.push_back( DTIRegOptions[i] );
 /*
 	RegMethod
