@@ -438,9 +438,9 @@ void GUI::InitOptions()
 	QLabel *SimMetLabel = new QLabel("Similarity Metric:", this);
 	ANTSLabelVLayout->addWidget(SimMetLabel);
 	m_SimMetComboBox = new QComboBox(this);
-	m_SimMetComboBox->addItem("CC");
-	m_SimMetComboBox->addItem("MI");
-	m_SimMetComboBox->addItem("MSQ");
+	m_SimMetComboBox->addItem("Cross-Correlation (CC)");
+	m_SimMetComboBox->addItem("Mutual Information (MI)");
+	m_SimMetComboBox->addItem("Mean Square Difference (MSQ)");
 	m_SimMetComboBox->setCurrentIndex(0);
 	QObject::connect(m_SimMetComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(SimMetChanged( int )));
 	ANTSWidgetVLayout->addWidget(m_SimMetComboBox);
@@ -1354,7 +1354,7 @@ int GUI::LoadParameters(QString paramFile)
 		}
 		if( list.at(1).contains(QString("BRAINS")) )
 		{
-			InterpolTypeComboBox->setCurrentIndex(0);
+			RegMethodcomboBox->setCurrentIndex(0);
 			QStringList param= list.at(2).split(";");
 			if( param.size()!=5 )
 			{
@@ -1441,9 +1441,9 @@ int GUI::LoadParameters(QString paramFile)
 			m_TfmStepLine->setText( param.at(1) );
 			m_IterLine->setText( param.at(2) );
 
-			if( param.at(3).contains(QString("CC")) ) m_SimMetComboBox->setCurrentIndex(0);
-			else if( param.at(3).contains(QString("MI")) ) m_SimMetComboBox->setCurrentIndex(1);
-			else if( param.at(3).contains(QString("MSQ")) ) m_SimMetComboBox->setCurrentIndex(2);
+			if( param.at(3).contains(QString("Cross-Correlation (CC)")) ) m_SimMetComboBox->setCurrentIndex(0);
+			else if( param.at(3).contains(QString("Mutual Information (MI)")) ) m_SimMetComboBox->setCurrentIndex(1);
+			else if( param.at(3).contains(QString("Mean Square Difference (MSQ)")) ) m_SimMetComboBox->setCurrentIndex(2);
 			else
 			{
 				if(!m_noGUI) 
