@@ -2786,7 +2786,10 @@ int GUI::LaunchScriptWriter()
 	m_scriptwriter->setQuiet(m_Quiet);
 
 	m_scriptwriter->setBFAffineTfmMode(BFAffineTfmModecomboBox->currentText().toStdString());
-	
+
+	if( GridProcesscheckBox->isChecked() ) m_scriptwriter->setGridProcess( GridProcessCmdLineEdit->text().toStdString() ); // set useGridProcess also
+	else m_scriptwriter->NoGridProcess(); // reset useGridProcess
+
 /* Launch writing */
 	m_scriptwriter->WriteScript(); // Master Function
 

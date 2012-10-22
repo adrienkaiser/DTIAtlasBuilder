@@ -22,6 +22,7 @@ void ScriptWriter::WriteScript()
 		std::cout<<"|"<<std::endl; // command line display
 		std::cout<<"| Number of Cases: "<<m_CasesPath.size()<<std::endl; // command line display
 		std::cout<<"| Output Directory : "<<m_OutputPath<<"/DTIAtlas/1_Affine_Registration"<<std::endl; // command line display
+		if( m_useGridProcess ) std::cout<<"| Using grid processing with the command: \'"<<m_GridProcessCmd<<" [command]\'"<<std::endl; // command line display
 		if(m_RegType==1) std::cout<<"| Using Case 1 as reference in the first Registration Loop"<<std::endl; // command line display
 		else std::cout<<"| Using Template as reference for the Registration: "<<m_TemplatePath<<std::endl; // command line display
 		std::cout<<"| Number of loops in the Registration Loop : "<<m_nbLoops<<std::endl; // command line display
@@ -986,5 +987,16 @@ void ScriptWriter::setQuiet(bool Quiet)
 void ScriptWriter::setBFAffineTfmMode(std::string BFAffineTfmMode)
 {
 	m_BFAffineTfmMode=BFAffineTfmMode;
+}
+
+void ScriptWriter::setGridProcess(std::string GridProcessCmd)
+{
+	m_useGridProcess = true;
+	m_GridProcessCmd = GridProcessCmd;
+}
+
+void ScriptWriter::NoGridProcess()
+{
+	m_useGridProcess = false;
 }
 
