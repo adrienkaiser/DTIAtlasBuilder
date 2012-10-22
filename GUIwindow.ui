@@ -386,7 +386,7 @@ as an Affine transform already computed, it will be used as an input for the Aff
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="ResampTab">
+      <widget class="QWidget" name="AWTab">
        <attribute name="title">
         <string>AtlasWerks Atlas</string>
        </attribute>
@@ -1063,7 +1063,7 @@ as an Affine transform already computed, it will be used as an input for the Aff
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab">
+      <widget class="QWidget" name="FinalResamptab">
        <attribute name="title">
         <string>Final Resampling</string>
        </attribute>
@@ -1468,6 +1468,69 @@ It will be read at the beginning of the program.</string>
            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
           </property>
          </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="GridTab">
+       <attribute name="title">
+        <string>Grid Processing</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_15">
+        <item>
+         <widget class="QCheckBox" name="GridProcesscheckBox">
+          <property name="text">
+           <string>Enable Grid Processing</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_22">
+          <property name="text">
+           <string>Please give the command to use to run a command on server : </string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_23">
+          <property name="font">
+           <font>
+            <family>Courier 10 Pitch</family>
+            <pointsize>11</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>&quot;bsub mkdir NewFolder&quot; -&gt; Write &quot;bsub&quot;</string>
+          </property>
+          <property name="textInteractionFlags">
+           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="GridProcessCmdLineEdit">
+          <property name="font">
+           <font>
+            <family>Courier 10 Pitch</family>
+            <pointsize>11</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
         </item>
        </layout>
       </widget>
