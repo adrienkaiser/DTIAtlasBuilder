@@ -896,6 +896,10 @@ void GUI::SaveParameters(QString ParamBrowseName,QString CSVFileName)
 		}
 		else stream << "=" << m_BRegTypeComboBox->currentText() << ";" << m_TfmModeComboBox->currentText() << ";" << m_SigmaDble->value() << ";" << m_NbPyrLevSpin->value() << ";" << m_PyrLevItLine->text() << endl;
 
+		stream << "GridProcessing=";
+		if( GridProcesscheckBox->isChecked() ) stream << GridProcessCmdLineEdit->text() <<endl;
+		else stream << endl;
+
 		stream << "CSV Dataset File=" << CSVFileName << endl;
 
 		if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
@@ -1471,6 +1475,30 @@ int GUI::LoadParameters(QString paramFile)
 		}
 
 		if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
+
+/* Grid Processing */
+		line = stream.readLine();
+		list = line.split("=");
+		if(!list.at(0).contains(QString("GridProcessing")))
+		{
+			if(!m_noGUI) 
+			{
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				if(!m_Quiet) std::cout<<"FAILED"<<std::endl; // command line display
+			}
+			else if(!m_Quiet) std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			return -1;
+		}
+		if( !list.at(1).isEmpty() )
+		{
+			GridProcesscheckBox->setChecked(true);
+			GridProcessCmdLineEdit->setText( list.at(1) );
+		}
+		else
+		{
+			GridProcesscheckBox->setChecked(false);
+			GridProcessCmdLineEdit->setText( "" );
+		}
 
 /* Opening CSV File */
 		line = stream.readLine();
@@ -2787,8 +2815,7 @@ int GUI::LaunchScriptWriter()
 
 	m_scriptwriter->setBFAffineTfmMode(BFAffineTfmModecomboBox->currentText().toStdString());
 
-	if( GridProcesscheckBox->isChecked() ) m_scriptwriter->setGridProcess( GridProcessCmdLineEdit->text().toStdString() ); // set useGridProcess also
-	else m_scriptwriter->NoGridProcess(); // reset useGridProcess
+	m_scriptwriter->setGridProcess( GridProcesscheckBox->isChecked() ); // isChecked() returns true or false
 
 /* Launch writing */
 	m_scriptwriter->WriteScript(); // Master Function
@@ -2846,9 +2873,49 @@ int GUI::LaunchScriptWriter()
 	}
 	else qDebug( "Could not create file");
 
+/* Generate Server script file */
+	if( GridProcesscheckBox->isChecked() )
+	{
+	 	if(!m_Quiet) std::cout<<"| Generating Server script file..."; // command line display
+
+		ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/RunCommandOnServer.script");
+		QFile fileMain(ScriptPath);
+
+		if ( fileMain.open( IO_WriteOnly | IO_Translate ) )
+		{
+			//file.setPermissions(QFile::ExeOwner); // make the file executable for the owner
+			QTextStream stream( &fileMain );
+
+			stream << "#!/usr/bin/python" << endl << endl;
+
+			stream << "import os" << endl ;
+			stream << "import sys # to get the arguments" << endl << endl;
+
+			stream << "# arguments: [file to create] [command to execute]" << endl;
+			stream << "# sys.argv[0] is the name of the executable" << endl << endl;
+
+			stream << "Command = \""<< GridProcessCmdLineEdit->text() <<" \"" << endl;
+			stream << "i=2" << endl;
+			stream << "while i < len(sys.argv):" << endl;
+				stream << "\tCommand = Command + sys.argv[i] + \" \"" << endl;
+				stream << "\ti += 1"<< endl;
+			stream << "print(\"Running Command : \" + Command)" << endl;
+			stream << "os.system(Command)" << endl <<endl;
+
+			stream << "FileName=sys.argv[1]" << endl ;
+			stream << "print(\"Creating file :\" + FileName)" << endl ;
+			stream << "f = open(FileName,'w')" << endl ;
+			stream << "f.close()" << endl ;
+
+			if(!m_Quiet) std::cout<<"DONE"<<std::endl; // command line display
+		}
+		else qDebug( "Could not create file");
+	}
+
 /* Give the right to user to execute the scripts */
 	QProcess * chmodProcess = new QProcess;
-	program = "chmod u+x " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Preprocess.script " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_AtlasBuilding.script " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Main.script"; // 'chmod u+x = user+execute'
+	program = "chmod u+x " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Preprocess.script " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_AtlasBuilding.script " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Main.script "; // 'chmod u+x = user+execute'
+	if( GridProcesscheckBox->isChecked() ) program = program + m_OutputPath.toStdString() + "/DTIAtlas/Script/RunCommandOnServer.script";
 	if(!m_Quiet) std::cout<<"| $ " << program << std::endl;
 	ExitCode = chmodProcess->execute( program.c_str() );
 	

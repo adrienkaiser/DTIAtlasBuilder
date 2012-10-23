@@ -22,7 +22,7 @@ void ScriptWriter::WriteScript()
 		std::cout<<"|"<<std::endl; // command line display
 		std::cout<<"| Number of Cases: "<<m_CasesPath.size()<<std::endl; // command line display
 		std::cout<<"| Output Directory : "<<m_OutputPath<<"/DTIAtlas/1_Affine_Registration"<<std::endl; // command line display
-		if( m_useGridProcess ) std::cout<<"| Using grid processing with the command: \'"<<m_GridProcessCmd<<" [command]\'"<<std::endl; // command line display
+		if( m_useGridProcess ) std::cout<<"| Using grid processing"<<std::endl; // command line display
 		if(m_RegType==1) std::cout<<"| Using Case 1 as reference in the first Registration Loop"<<std::endl; // command line display
 		else std::cout<<"| Using Template as reference for the Registration: "<<m_TemplatePath<<std::endl; // command line display
 		std::cout<<"| Number of loops in the Registration Loop : "<<m_nbLoops<<std::endl; // command line display
@@ -59,6 +59,34 @@ if(!m_Quiet) Script = Script + "print(\"\\n============ Pre processing =========
 	else Script = Script + "AtlasFAref= \"" + m_TemplatePath + "\" #the reference will be the given template for the first loop\n";
 
 	Script = Script + "ErrorList=[] #empty list\n\n";
+
+/* Call script to run command on grid */
+	if( m_useGridProcess )
+	{
+		Script = Script + "# Call script to run command on server\n";
+		Script = Script + "ScriptCommand = \"" + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script\"\n";
+		Script = Script + "FilesFolder = \"" + m_OutputPath + "/DTIAtlas/GridProcessingFiles\"\n";
+		Script = Script + "if not os.path.isdir(FilesFolder):\n";
+			Script = Script + "\tos.mkdir(FilesFolder)\n";
+if(!m_Quiet)	 	Script = Script + "\tprint(\"\\n=> Creation of the directory for the grid processing = \" + FilesFolder)\n\n";
+
+		//Test Function
+		Script = Script + "# Function that tests if all cases have been processed on the grid\n";
+		Script = Script + "def TestGridProcess ( FilesFolder, NbCases ):\n";
+if(!m_Quiet) 		Script = Script + "\tprint(\"| Waiting for all cases to be processed on grid...\")\n";
+			Script = Script + "\tfilesOK = false\n";
+			Script = Script + "\twhile not filesOK :\n";
+				Script = Script + "\t\tfilesOK = true\n";
+				Script = Script + "\t\tcase = 0\n";
+				Script = Script + "\t\twhile case < NbCases:\n";
+					Script = Script + "\t\t\tif not os.path.isfile( FilesFolder + \"/Case\" + str(case+1) ) : filesOK = false\n";
+if(!m_Quiet) 		Script = Script + "\tprint(\"| All files processed\")\n";
+			Script = Script + "\tos.system(\"rm \" + FilesFolder + \"/*\")\n\n";
+// 	if( m_useGridProcess ) Script = Script + "ServerCommand = ScriptCommand + \" \" + FilesFolder + \"/Case\" + str(case+1) + \" \"\n\n";
+// 	else Script = Script + "ServerCommand = \"\" # empty string if no grid process\n\n";
+//	Script = Script + "ResampCommand = ServerCommand + BRAINSFit...\n";
+// if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, len(allcases) ) # stays in the function until all process is done\n\n";
+	}
 
 /* Create directory for temporary files */
 	Script = Script + "# Create directory for temporary files\n";
@@ -245,7 +273,7 @@ if(!m_Quiet) 		Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ 
 if(!m_Quiet) 			Script = Script + "\t\telse : print(\"=> The file \\'\" + LoopFA + \"\\' already exists so the command will not be executed\")\n";
 			}
 			Script = Script + "\t\tcase += 1\n\n";
-		
+
 /* FA Average of registered images with ImageMath */
 	Script = Script + "# FA Average of registered images with ImageMath\n";
 		Script = Script + "\tif n != " + m_nbLoops_str + " : # this will not be done for the last lap\n";
@@ -989,14 +1017,8 @@ void ScriptWriter::setBFAffineTfmMode(std::string BFAffineTfmMode)
 	m_BFAffineTfmMode=BFAffineTfmMode;
 }
 
-void ScriptWriter::setGridProcess(std::string GridProcessCmd)
+void ScriptWriter::setGridProcess(bool useGridProcess)
 {
-	m_useGridProcess = true;
-	m_GridProcessCmd = GridProcessCmd;
-}
-
-void ScriptWriter::NoGridProcess()
-{
-	m_useGridProcess = false;
+	m_useGridProcess = useGridProcess;
 }
 
