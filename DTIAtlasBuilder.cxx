@@ -10,11 +10,11 @@
 int main(int argc, char* argv[])
 {
 	PARSE_ARGS; //thanks to this line, we can use the variables entered in command line as variables of the program
-	//string ParamFile, string ConfigFile, string CSVFile, bool Overwrite, bool noGUI, bool Quiet
+	//string ParamFile, string ConfigFile, string CSVFile, bool Overwrite, bool noGUI
 
 	QApplication app(argc, argv);
 
-	GUI AtlasGUI(ParamFile,ConfigFile,CSVFile,Overwrite,noGUI,Quiet);
+	GUI AtlasGUI(ParamFile,ConfigFile,CSVFile,Overwrite,noGUI);
 
 	if(noGUI) AtlasGUI.Compute();
 	else
