@@ -35,7 +35,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 
 	public:
 		
-/*CONSTRUCTOR*/	GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, bool overwrite, bool noGUI, bool Quiet); //constructor
+/*CONSTRUCTOR*/	GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, bool overwrite, bool noGUI); //constructor
 
 /*INIT*/	void InitOptions();
 
@@ -107,7 +107,6 @@ class GUI : public QMainWindow, public Ui::MainWindow
 	private:
 
 		bool m_noGUI;
-		bool m_Quiet;
 		bool m_ErrorDetectedInConstructor; // useful in --nogui mode to exit the program without trying the compute function
 
 /* RUNNING */	QDialog *m_Rundlg; // dialog window that appears when running is done

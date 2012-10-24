@@ -17,17 +17,14 @@
 
 void ScriptWriter::WriteScript()
 {
-	if(!m_Quiet)
-	{
-		std::cout<<"|"<<std::endl; // command line display
-		std::cout<<"| Number of Cases: "<<m_CasesPath.size()<<std::endl; // command line display
-		std::cout<<"| Output Directory : "<<m_OutputPath<<"/DTIAtlas/1_Affine_Registration"<<std::endl; // command line display
-		if( m_useGridProcess ) std::cout<<"| Using grid processing"<<std::endl; // command line display
-		if(m_RegType==1) std::cout<<"| Using Case 1 as reference in the first Registration Loop"<<std::endl; // command line display
-		else std::cout<<"| Using Template as reference for the Registration: "<<m_TemplatePath<<std::endl; // command line display
-		std::cout<<"| Number of loops in the Registration Loop : "<<m_nbLoops<<std::endl; // command line display
-		std::cout<<"| Writing begin: "; // command line display (no endl)
-	}
+	std::cout<<"|"<<std::endl; // command line display
+	std::cout<<"| Number of Cases: "<<m_CasesPath.size()<<std::endl; // command line display
+	std::cout<<"| Output Directory : "<<m_OutputPath<<"/DTIAtlas/1_Affine_Registration"<<std::endl; // command line display
+	if( m_useGridProcess ) std::cout<<"| Using grid processing"<<std::endl; // command line display
+	if(m_RegType==1) std::cout<<"| Using Case 1 as reference in the first Registration Loop"<<std::endl; // command line display
+	else std::cout<<"| Using Template as reference for the Registration: "<<m_TemplatePath<<std::endl; // command line display
+	std::cout<<"| Number of loops in the Registration Loop : "<<m_nbLoops<<std::endl; // command line display
+	std::cout<<"| Writing begin: "; // command line display (no endl)
 
 	std::ostringstream out;
 	out << m_nbLoops;
@@ -42,11 +39,11 @@ void ScriptWriter::Preprocess ()
 {
 	std::string Script;
 
-	if(!m_Quiet) std::cout<<"[Pre Processing]"; // command line display (no endl)
+	std::cout<<"[Pre Processing]"; // command line display (no endl)
 
 	Script = Script + "#!/usr/bin/python\n\n";
 	Script = Script + "import os\n\n"; // To run a shell command : os.system("[shell command]")
-if(!m_Quiet) Script = Script + "print(\"\\n============ Pre processing =============\")\n\n";
+	Script = Script + "print(\"\\n============ Pre processing =============\")\n\n";
 
 	Script = Script + "# Files Paths\n";
 	Script = Script + "allcases = [\"" + m_CasesPath[0];
@@ -68,19 +65,19 @@ if(!m_Quiet) Script = Script + "print(\"\\n============ Pre processing =========
 		Script = Script + "FilesFolder = \"" + m_OutputPath + "/DTIAtlas/GridProcessingFiles\"\n";
 		Script = Script + "if not os.path.isdir(FilesFolder):\n";
 			Script = Script + "\tos.mkdir(FilesFolder)\n";
-if(!m_Quiet)	 	Script = Script + "\tprint(\"\\n=> Creation of the directory for the grid processing = \" + FilesFolder)\n\n";
+		 	Script = Script + "\tprint(\"\\n=> Creation of the directory for the grid processing = \" + FilesFolder)\n\n";
 
 		//Test Function
 		Script = Script + "# Function that tests if all cases have been processed on the grid\n";
 		Script = Script + "def TestGridProcess ( FilesFolder, NbCases ):\n";
-if(!m_Quiet) 		Script = Script + "\tprint(\"| Waiting for all cases to be processed on grid...\")\n";
+			Script = Script + "\tprint(\"| Waiting for all cases to be processed on grid...\")\n";
 			Script = Script + "\tfilesOK = false\n";
 			Script = Script + "\twhile not filesOK :\n";
 				Script = Script + "\t\tfilesOK = true\n";
 				Script = Script + "\t\tcase = 0\n";
 				Script = Script + "\t\twhile case < NbCases:\n";
 					Script = Script + "\t\t\tif not os.path.isfile( FilesFolder + \"/Case\" + str(case+1) ) : filesOK = false\n";
-if(!m_Quiet) 		Script = Script + "\tprint(\"| All files processed\")\n";
+			Script = Script + "\tprint(\"| All files processed\")\n";
 			Script = Script + "\tos.system(\"rm \" + FilesFolder + \"/*\")\n\n";
 // 	if( m_useGridProcess ) Script = Script + "ServerCommand = ScriptCommand + \" \" + FilesFolder + \"/Case\" + str(case+1) + \" \"\n\n";
 // 	else Script = Script + "ServerCommand = \"\" # empty string if no grid process\n\n";
@@ -92,21 +89,21 @@ if(!m_Quiet) 		Script = Script + "\tprint(\"| All files processed\")\n";
 	Script = Script + "# Create directory for temporary files\n";
 	Script = Script + "if not os.path.isdir(OutputPath):\n";
 		Script = Script + "\tos.mkdir(OutputPath)\n";
-if(!m_Quiet) 	Script = Script + "\tprint(\"\\n=> Creation of the affine directory = \" + OutputPath)\n\n";
+	 	Script = Script + "\tprint(\"\\n=> Creation of the affine directory = \" + OutputPath)\n\n";
 
 /* Rescaling template */
 	if(m_RegType==0)
 	{
-if(!m_Quiet) 	Script = Script + "print(\"\\n======== Rescaling FA template =========\")\n";
+		Script = Script + "print(\"\\n======== Rescaling FA template =========\")\n";
 		Script = Script + "RescaleTemp= OutputPath + \"/FATemplate_Rescaled.nrrd\"\n";
 		Script = Script + "RescaleTempCommand=\"" + m_SoftPath[0] + " \" + AtlasFAref + \" -outfile \" + RescaleTemp + \" -rescale 0,10000 \"\n";
-if(!m_Quiet) 	Script = Script + "print(\"=> $ \" + RescaleTempCommand)\n";
+		Script = Script + "print(\"=> $ \" + RescaleTempCommand)\n";
 		if(m_Overwrite==1) Script = Script + "if os.system(RescaleTempCommand)!=0 : ErrorList.append(\'ImageMath: Rescaling FA template\')\n";
 		else
 		{
 			Script = Script + "if not os.path.isfile(RescaleTemp) :\n";
 				Script = Script + "\tif os.system(RescaleTempCommand)!=0 : ErrorList.append(\'ImageMath:  Rescaling FA template\')\n";
-if(!m_Quiet) 		Script = Script + "else : print(\"=> The file \\'\" + RescaleTemp + \"\\' already exists so the command will not be executed\")\n";
+			Script = Script + "else : print(\"=> The file \\'\" + RescaleTemp + \"\\' already exists so the command will not be executed\")\n";
 		}
 
 		Script = Script + "AtlasFAref= RescaleTemp\n\n";
@@ -129,38 +126,38 @@ if(!m_Quiet) 		Script = Script + "else : print(\"=> The file \\'\" + RescaleTemp
 	CropSize_str[2] = out3.str();
 	Script = Script + "CropSize=[\"" + CropSize_str[0] + "\",\"" + CropSize_str[1] + "\",\"" + CropSize_str[2] + "\"]\n\n";
 
-if(!m_Quiet) Script = Script + "print(\"\\n======== Cropping DTI Image =========\")\n";
+	Script = Script + "print(\"\\n======== Cropping DTI Image =========\")\n";
 	Script = Script + "case = 0\n";
 	Script = Script + "while case < len(allcases):\n";
 		Script = Script + "\tcroppedDTI= OutputPath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
 		Script = Script + "\tCropCommand=\"" + m_SoftPath[2] + " \" + allcases[case] + \" -o \" + croppedDTI + \" -size \" + CropSize[0] + \",\" + CropSize[1] + \",\" + CropSize[2] + \" -v\"\n";
-if(!m_Quiet) 	Script = Script + "\tprint(\"||Case \" + str(case+1) + \" => $ \" + CropCommand)\n";
+		Script = Script + "\tprint(\"||Case \" + str(case+1) + \" => $ \" + CropCommand)\n";
 		if(m_Overwrite==1) Script = Script + "\tif os.system(CropCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] CropDTI: Cropping DTI image\')\n";
 		else
 		{
 			Script = Script + "\tif not os.path.isfile(croppedDTI) :\n";
 				Script = Script + "\t\tif os.system(CropCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] CropDTI: Cropping DTI image\')\n";
-if(!m_Quiet) 		Script = Script + "\telse : print(\"=> The file \\'\" + croppedDTI + \"\\' already exists so the command will not be executed\")\n";
+			Script = Script + "\telse : print(\"=> The file \\'\" + croppedDTI + \"\\' already exists so the command will not be executed\")\n";
 		}
 		Script = Script + "\tcase += 1\n\n";
 	}
 
 /* Generating FA */
 	Script = Script + "# Generating FA\n";
-if(!m_Quiet) Script = Script + "print(\"\\n======== Generating FA =========\")\n";
+	Script = Script + "print(\"\\n======== Generating FA =========\")\n";
 	Script = Script + "case = 0\n";
 	Script = Script + "while case < len(allcases):\n";
 		if(m_NeedToBeCropped==1) Script = Script + "\tDTI= OutputPath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
 		else Script = Script + "\tDTI= allcases[case]\n";
 		Script = Script + "\tFA= OutputPath + \"/Case\" + str(case+1) + \"_FA.nrrd\"\n";
 		Script = Script + "\tGeneFACommand=\"" + m_SoftPath[3] + " --dti_image \" + DTI + \" -f \" + FA\n";
-if(!m_Quiet) 	Script = Script + "\tprint(\"||Case \" + str(case+1) + \" => $ \" + GeneFACommand)\n";
+		Script = Script + "\tprint(\"||Case \" + str(case+1) + \" => $ \" + GeneFACommand)\n";
 		if(m_Overwrite==1) Script = Script + "\tif os.system(GeneFACommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] dtiprocess: Generating FA of DTI image\')\n";
 		else
 		{
 			Script = Script + "\tif not os.path.isfile(FA) :\n";
 				Script = Script + "\t\tif os.system(GeneFACommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] dtiprocess: Generating FA of DTI image\')\n";
-if(!m_Quiet) 		Script = Script + "\telse : print(\"=> The file \\'\" + FA + \"\\' already exists so the command will not be executed\")\n";
+			Script = Script + "\telse : print(\"=> The file \\'\" + FA + \"\\' already exists so the command will not be executed\")\n";
 		}
 		Script = Script + "\tcase += 1\n\n";
 
@@ -170,12 +167,12 @@ if(!m_Quiet) 		Script = Script + "\telse : print(\"=> The file \\'\" + FA + \"\\
 	Script = Script + "while n <= " + m_nbLoops_str + " :\n";
 
 	Script = Script + "\tif not os.path.isdir(OutputPath + \"/Loop\" + str(n)):\n";
-if(!m_Quiet) 	Script = Script + "\t\tprint(\"\\n => Creation of the Output directory for Loop \" + str(n) + \" = \" + OutputPath + \"/Loop\" + str(n))\n";
+		Script = Script + "\t\tprint(\"\\n => Creation of the Output directory for Loop \" + str(n) + \" = \" + OutputPath + \"/Loop\" + str(n))\n";
 		Script = Script + "\t\tos.mkdir(OutputPath + \"/Loop\" + str(n))\n\n";
 
 /* Normalization */
 	Script = Script + "# Normalization\n";
-if(!m_Quiet) 	Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] ======== Normalization =========\")\n";
+		Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] ======== Normalization =========\")\n";
 	if(m_RegType==1) //use case as loop 1 ref
 	{
 		Script = Script + "\tif n == 0 : case = 1 # the first case is the reference for the first loop so it will not be normalized or registered\n";
@@ -186,19 +183,19 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoo
 			Script = Script + "\t\tFA= OutputPath + \"/Case\" + str(case+1) + \"_FA.nrrd\"\n";
 			Script = Script + "\t\tNormFA= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_NormFA.nrrd\"\n";
 			Script = Script + "\t\tNormFACommand=\"" + m_SoftPath[0] + " \" + FA + \" -outfile \" + NormFA + \" -matchHistogram \" + AtlasFAref\n";
-if(!m_Quiet) 		Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + NormFACommand)\n";
+			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + NormFACommand)\n";
 			if(m_Overwrite==1) Script = Script + "\t\tif os.system(NormFACommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] ImageMath: Normalizing FA image\')\n";
 			else
 			{
 				Script = Script + "\t\tif not os.path.isfile(NormFA) :\n";
 					Script = Script + "\t\t\tif os.system(NormFACommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] ImageMath: Normalizing FA image\')\n";
-if(!m_Quiet) 			Script = Script + "\t\telse : print(\"=> The file \\'\" + NormFA + \"\\' already exists so the command will not be executed\")\n";
+				Script = Script + "\t\telse : print(\"=> The file \\'\" + NormFA + \"\\' already exists so the command will not be executed\")\n";
 			}
 			Script = Script + "\t\tcase += 1\n\n";
 
 /* Affine registration with BrainsFit */
 	Script = Script + "# Affine registration with BrainsFit\n";
-if(!m_Quiet) 	Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] ======== Affine registration with BrainsFit =========\")\n";
+		Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] ======== Affine registration with BrainsFit =========\")\n";
 	if(m_RegType==1) //use case 1 as loop 1 ref
 	{
 		Script = Script + "\tif n == 0 : case = 1\n";
@@ -213,7 +210,7 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoo
 			Script = Script + "\t\tInitLinearTrans= OutputPath + \"/Case\" + str(case+1) + \"_InitLinearTrans.nrrd\"\n";
 			Script = Script + "\t\tif n==0 and os.path.isfile(InitLinearTrans) : AffineCommand= AffineCommand + \" --initialTransform \" + InitLinearTrans\n";
 			Script = Script + "\t\telse : AffineCommand= AffineCommand + \" --initializeTransformMode " + m_BFAffineTfmMode + "\"\n";
-if(!m_Quiet) 		Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + AffineCommand)\n";
+			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + AffineCommand)\n";
 			if(m_Overwrite==1) Script = Script + "\t\tif os.system(AffineCommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] BRAINSFit: Affine Registration of FA image\')\n";
 			else 
 			{
@@ -221,13 +218,13 @@ if(!m_Quiet) 		Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ 
 					Script = Script + "\t\t\tif os.system(AffineCommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] BRAINSFit: Affine Registration of FA image\')\n";
 			}
 				
-if(!m_Quiet) 		if(m_Overwrite==0) Script = Script + "\t\telif os.path.isfile(LinearTranstfm) : print(\"=> The file \\'\" + LinearTranstfm + \"\\' already exists so the command will not be executed\")\n";
-if(!m_Quiet) 		if(m_Overwrite==0) Script = Script + "\t\telif os.path.isfile(LinearTrans) : print(\"=> The file \\'\" + LinearTrans + \"\\' already exists so the command will not be executed\")\n";
+			if(m_Overwrite==0) Script = Script + "\t\telif os.path.isfile(LinearTranstfm) : print(\"=> The file \\'\" + LinearTranstfm + \"\\' already exists so the command will not be executed\")\n";
+			if(m_Overwrite==0) Script = Script + "\t\telif os.path.isfile(LinearTrans) : print(\"=> The file \\'\" + LinearTrans + \"\\' already exists so the command will not be executed\")\n";
 			Script = Script + "\t\tcase += 1\n\n";
 
 /* Implementing the affine registration */
 	Script = Script + "# Implementing the affine registration\n";
-if(!m_Quiet) 	Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] ======== Implementing the Affine registration =========\")\n";
+		Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] ======== Implementing the Affine registration =========\")\n";
 	if(m_RegType==1) //use case as loop 1 ref
 	{
 		Script = Script + "\tif n == 0 : case = 1\n";
@@ -240,19 +237,19 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoo
 			if(m_NeedToBeCropped==1) Script = Script + "\t\toriginalDTI= OutputPath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
 			else Script = Script + "\t\toriginalDTI= allcases[case]\n";
 			Script = Script + "\t\tImplementCommand=\"" + m_SoftPath[1] + " \" + originalDTI + \" \" + LinearTransDTI + \" -f \" + LinearTranstfm + \" -R \" + AtlasFAref\n";
-if(!m_Quiet) 		Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + ImplementCommand)\n";
+			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + ImplementCommand)\n";
 			if(m_Overwrite==1) Script = Script + "\t\tif os.system(ImplementCommand)!=0: ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] BRAINSFit: Implementing the Affine Registration on FA image\')\n";
 			else
 			{
 				Script = Script + "\t\tif not os.path.isfile(LinearTransDTI) :\n";
 					Script = Script + "\t\t\tif os.system(ImplementCommand)!=0: ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] ResampleDTIlogEuclidean: Implementing the Affine Registration on FA image\')\n";
-if(!m_Quiet) 			Script = Script + "\t\telse : print(\"=> The file \\'\" + LinearTransDTI + \"\\' already exists so the command will not be executed\")\n";
+				Script = Script + "\t\telse : print(\"=> The file \\'\" + LinearTransDTI + \"\\' already exists so the command will not be executed\")\n";
 			}
 			Script = Script + "\t\tcase += 1\n\n";
 
 /* Generating FA of registered images */
 	Script = Script + "# Generating FA of registered images\n";
-if(!m_Quiet) 	Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] ======== Generating FA of registered images =========\")\n";
+		Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] ======== Generating FA of registered images =========\")\n";
 	if(m_RegType==1) //use case as loop 1 ref
 	{
 		Script = Script + "\tif n == 0 : case = 1\n";
@@ -264,20 +261,20 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoo
 			Script = Script + "\t\tif n == " + m_nbLoops_str + " : LoopFA= OutputPath + \"/Loop" + m_nbLoops_str + "/Case\" + str(case+1) + \"_Loop" + m_nbLoops_str + "_FinalFA.nrrd\" # the last FA will be the Final output\n";
 			Script = Script + "\t\telse : LoopFA= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_FA.nrrd\"\n";
 			Script = Script + "\t\tGeneLoopFACommand=\"" + m_SoftPath[3] + " --dti_image \" + LinearTransDTI + \" -f \" + LoopFA\n";
-if(!m_Quiet) 		Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + GeneLoopFACommand)\n";
+			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + GeneLoopFACommand)\n";
 			if(m_Overwrite==1) Script = Script + "\t\tif os.system(GeneLoopFACommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] dtiprocess: Generating FA of affine registered images\')\n";
 			else
 			{
 				Script = Script + "\t\tif not os.path.isfile(LoopFA) :\n";
 					Script = Script + "\t\t\tif os.system(GeneLoopFACommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] dtiprocess: Generating FA of affine registered images\')\n";
-if(!m_Quiet) 			Script = Script + "\t\telse : print(\"=> The file \\'\" + LoopFA + \"\\' already exists so the command will not be executed\")\n";
+				Script = Script + "\t\telse : print(\"=> The file \\'\" + LoopFA + \"\\' already exists so the command will not be executed\")\n";
 			}
 			Script = Script + "\t\tcase += 1\n\n";
 
 /* FA Average of registered images with ImageMath */
 	Script = Script + "# FA Average of registered images with ImageMath\n";
 		Script = Script + "\tif n != " + m_nbLoops_str + " : # this will not be done for the last lap\n";
-if(!m_Quiet) 		Script = Script + "\t\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] ======== Computing FA Average of registered images =========\")\n";
+			Script = Script + "\t\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] ======== Computing FA Average of registered images =========\")\n";
 			Script = Script + "\t\tFAAverage = OutputPath + \"/Loop\" + str(n) + \"/Loop\" + str(n) + \"_FAAverage.nrrd\"\n";
 		if(m_RegType==1) //use case as loop 1 ref
 		{
@@ -291,28 +288,25 @@ if(!m_Quiet) 		Script = Script + "\t\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nb
 				Script = Script + "\t\t\tFAforAVG= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_FA.nrrd \"\n";
 				Script = Script + "\t\t\tAverageCommand= AverageCommand + FAforAVG\n";
 				Script = Script + "\t\t\tcase += 1\n";
-if(!m_Quiet) 		Script = Script + "\t\tprint(\"=> $ \" + AverageCommand)\n";
+			Script = Script + "\t\tprint(\"=> $ \" + AverageCommand)\n";
 			if(m_Overwrite==1) Script = Script + "\t\tif os.system(AverageCommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'] dtiaverage: Computing FA Average of registered images\')\n";
 			else
 			{
 				Script = Script + "\t\tif not os.path.isfile(FAAverage) :\n";
 					Script = Script + "\t\t\tif os.system(AverageCommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'] dtiaverage: Computing FA Average of registered images\')\n";
-if(!m_Quiet) 			Script = Script + "\t\telse : print(\"=> The file \\'\" + FAAverage + \"\\' already exists so the command will not be executed\")\n";
+				Script = Script + "\t\telse : print(\"=> The file \\'\" + FAAverage + \"\\' already exists so the command will not be executed\")\n";
 			}
 			Script = Script + "\t\tAtlasFAref = FAAverage # the average becomes the reference\n\n";
 
 		Script = Script + "\tn += 1\n\n";
 
-if(!m_Quiet) Script = Script + "print(\"\\n============ End of Pre processing =============\")\n\n";
+	Script = Script + "print(\"\\n============ End of Pre processing =============\")\n\n";
 
-	if(!m_Quiet)
-	{
 	Script = Script + "# Display errors\n";
 	Script = Script + "if len(ErrorList) >0 :\n";
 	Script = Script + "\tprint(\"\\n=> \" + len(ErrorList) + \" errors detected during the followind operations:\")\n";
 	Script = Script + "\tfor error in ErrorList : print(\'\\n\' + error)\n";
 	Script = Script + "else: print(\"\\n=> No errors detected during preprocessing\")\n";
-	}
 
 	m_Script_Preprocess=Script;
 }
@@ -321,11 +315,11 @@ void ScriptWriter::AtlasBuilding()
 {
 	std::string Script;
 
-	if(!m_Quiet) std::cout<<"[AtlasBuilding]"; // command line display (no endl)
+	std::cout<<"[AtlasBuilding]"; // command line display (no endl)
 
 	Script = Script + "#!/usr/bin/python\n\n";
 	Script = Script + "import os\n\n"; ///// To run a shell command : os.system("[shell command]")
-if(!m_Quiet) Script = Script + "print(\"\\n============ Atlas Building =============\")\n\n";
+	Script = Script + "print(\"\\n============ Atlas Building =============\")\n\n";
 
 	Script = Script + "# Files Paths\n";
 	Script = Script + "DeformPath= \"" + m_OutputPath + "/DTIAtlas/2_NonLinear_Registration_AW\"\n";
@@ -338,19 +332,19 @@ if(!m_Quiet) Script = Script + "print(\"\\n============ Atlas Building =========
 /* Create directory for temporary files and final */
 	Script = Script + "# Create directory for temporary files and final\n";
 	Script = Script + "if not os.path.isdir(DeformPath):\n";
-if(!m_Quiet) 	Script = Script + "\tprint(\"\\n=> Creation of the Deformation transform directory = \" + DeformPath)\n";
+		Script = Script + "\tprint(\"\\n=> Creation of the Deformation transform directory = \" + DeformPath)\n";
 		Script = Script + "\tos.mkdir(DeformPath)\n\n";
 	Script = Script + "if not os.path.isdir(FinalPath):\n";
-if(!m_Quiet) 	Script = Script + "\tprint(\"\\n=> Creation of the Final Atlas directory = \" + FinalPath)\n";
+		Script = Script + "\tprint(\"\\n=> Creation of the Final Atlas directory = \" + FinalPath)\n";
 		Script = Script + "\tos.mkdir(FinalPath)\n\n";
 	Script = Script + "if not os.path.isdir(FinalResampPath):\n";
-if(!m_Quiet) 	Script = Script + "\tprint(\"\\n=> Creation of the Final Resampling directory = \" + FinalResampPath)\n";
+		Script = Script + "\tprint(\"\\n=> Creation of the Final Resampling directory = \" + FinalResampPath)\n";
 		Script = Script + "\tos.mkdir(FinalResampPath)\n\n";
 	Script = Script + "if not os.path.isdir(FinalResampPath + \"/First_Resampling\"):\n";
-if(!m_Quiet) 	Script = Script + "\tprint(\"\\n=> Creation of the First Final Resampling directory = \" + FinalResampPath + \"/First_Resampling\")\n";
+		Script = Script + "\tprint(\"\\n=> Creation of the First Final Resampling directory = \" + FinalResampPath + \"/First_Resampling\")\n";
 		Script = Script + "\tos.mkdir(FinalResampPath + \"/First_Resampling\")\n\n";
 	Script = Script + "if not os.path.isdir(FinalResampPath + \"/Second_Resampling\"):\n";
-if(!m_Quiet) 	Script = Script + "\tprint(\"\\n => Creation of the Second Final Resampling directory = \" + FinalResampPath + \"/Second_Resampling\")\n";
+		Script = Script + "\tprint(\"\\n => Creation of the Second Final Resampling directory = \" + FinalResampPath + \"/Second_Resampling\")\n";
 		Script = Script + "\tos.mkdir(FinalResampPath + \"/Second_Resampling\")\n\n";
 
 /* Cases variables: */
@@ -382,15 +376,15 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"\\n => Creation of the Second Final R
 
 /* AtlasWerks Command: */
 	Script = Script + "# AtlasWerks Command\n";
-if(!m_Quiet) Script = Script + "print(\"\\n======== Computing the Deformation Fields with AtlasWerks =========\")\n";
+	Script = Script + "print(\"\\n======== Computing the Deformation Fields with AtlasWerks =========\")\n";
 	Script = Script + "XMLFile= DeformPath + \"/AtlasWerksParameters.xml\"\n";
 	Script = Script + "ParsedFile= DeformPath + \"/ParsedXML.xml\"\n";
 	Script = Script + "AtlasBCommand= \"" + m_SoftPath[5] + " -f \" + XMLFile + \" -o \" + ParsedFile\n";
-if(!m_Quiet) Script = Script + "print(\"=> $ \" + AtlasBCommand)\n";
+	Script = Script + "print(\"=> $ \" + AtlasBCommand)\n";
 	if(m_Overwrite==1)Script = Script + "if 1 :\n";
 	else Script = Script + "if not os.path.isfile(DeformPath + \"/AverageImage.mhd\") :\n";
 		Script = Script + "\tif os.system(AtlasBCommand)!=0 : ErrorList.append(\'AtlasWerks: Computing non-linear atlas from affine registered images\')\n";
-if(!m_Quiet) 	Script = Script + "\tprint(\"\\n======== Renaming the files generated by AtlasWerks =========\")\n";
+		Script = Script + "\tprint(\"\\n======== Renaming the files generated by AtlasWerks =========\")\n";
 		Script = Script + "\tcase = 0\n";
 		Script = Script + "\twhile case < len(allcases): # Renaming\n";
 			Script = Script + "\t\tif case<10 :\n";
@@ -412,18 +406,18 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"\\n======== Renaming the files genera
 			Script = Script + "\t\tNewImage= DeformPath + \"/Case\" + str(case+1) + \"_NonLinearTrans_FA.mhd\"\n";
 			Script = Script + "\t\tNewHField=DeformPath + \"/Case\" + str(case+1) + \"_DeformationField.mhd\"\n";
 			Script = Script + "\t\tNewInvHField=DeformPath + \"/Case\" + str(case+1) + \"_InverseDeformationField.mhd\"\n";
-if(!m_Quiet) 		Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => Renaming \\'\" + originalImage + \"\\' to \\'\" + NewImage + \"\\'\")\n";
-if(!m_Quiet) 		Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => Renaming \\'\" + originalHField + \"\\' to \\'\" + NewHField + \"\\'\")\n";
-if(!m_Quiet) 		Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => Renaming \\'\" + originalInvHField + \"\\' to \\'\" + NewInvHField + \"\\'\")\n";
+			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => Renaming \\'\" + originalImage + \"\\' to \\'\" + NewImage + \"\\'\")\n";
+			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => Renaming \\'\" + originalHField + \"\\' to \\'\" + NewHField + \"\\'\")\n";
+			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => Renaming \\'\" + originalInvHField + \"\\' to \\'\" + NewInvHField + \"\\'\")\n";
 			Script = Script + "\t\tos.rename(originalImage,NewImage)\n";
 			Script = Script + "\t\tos.rename(originalHField,NewHField)\n";
 			Script = Script + "\t\tos.rename(originalInvHField,NewInvHField)\n";
 			Script = Script + "\t\tcase += 1\n";
-if(!m_Quiet) if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + DeformPath + \"/AverageImage.mhd\\' already exists so the command will not be executed\")\n\n";
+if(m_Overwrite==0) Script = Script + "else : print(\"=> The file \\'\" + DeformPath + \"/AverageImage.mhd\\' already exists so the command will not be executed\")\n\n";
 
 /* Apply deformation fields */
 	Script = Script + "# Apply deformation fields\n";
-if(!m_Quiet) Script = Script + "print(\"\\n======== Applying deformation fields to original DTIs =========\")\n";
+	Script = Script + "print(\"\\n======== Applying deformation fields to original DTIs =========\")\n";
 	Script = Script + "case = 0\n";
 	Script = Script + "while case < len(allcases):\n";
 		Script = Script + "\tFinalDTI= FinalPath + \"/Case\" + str(case+1) + \"_AWDTI.nrrd\"\n";
@@ -472,7 +466,7 @@ if(!m_Quiet) Script = Script + "print(\"\\n======== Applying deformation fields 
 		if(m_TensTfm.compare("Preservation of the Principal Direction (PPD)")==0)	Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -T PPD\"\n";
 		if(m_TensTfm.compare("Finite Strain (FS)")==0)	Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -T FS\"\n";
 
-if(!m_Quiet) 	Script = Script + "\tprint(\"||Case \" + str(case+1) + \" => $ \" + FinalReSampCommand)\n";
+		Script = Script + "\tprint(\"||Case \" + str(case+1) + \" => $ \" + FinalReSampCommand)\n";
 		if(m_Overwrite==1) Script = Script + "\tif 1 :\n";
 		else Script = Script + "\tif not os.path.isfile(FinalDTI) :\n";
 
@@ -480,20 +474,20 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"||Case \" + str(case+1) + \" => $ \" 
 
 			Script = Script + "\t\tAWCaseFA = FinalPath + \"/Case\" + str(case+1) + \"_AWFA.nrrd\"\n";
 			Script = Script + "\t\tGeneAWCaseFACommand=\"" + m_SoftPath[3] + " --scalar_float --dti_image \" + FinalDTI + \" -f \" + AWCaseFA\n";
-if(!m_Quiet) 		Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + GeneAWCaseFACommand)\n";
+			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + GeneAWCaseFACommand)\n";
 			Script = Script + "\t\tif os.system(GeneAWCaseFACommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] dtiprocess: Computing AW FA\')\n";
 
 			Script = Script + "\t\tCaseDbleToFloatCommand=\"" + m_SoftPath[8] + " convert -t float -i \" + FinalDTI + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalPath + \"/Case\" + str(case+1) + \"_AWDTI_float.nrrd\"\n";
-if(!m_Quiet) 		Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + CaseDbleToFloatCommand + \"\\n\")\n";
+			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + CaseDbleToFloatCommand + \"\\n\")\n";
 			Script = Script + "\t\tif os.system(CaseDbleToFloatCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] unu: Converting the final DTI images from double to float DTI\')\n";
 
-if(!m_Quiet) if(m_Overwrite==0) Script = Script + "\telse : print(\"=> The file \\'\" + FinalDTI + \"\\' already exists so the command will not be executed\")\n";
+if(m_Overwrite==0) Script = Script + "\telse : print(\"=> The file \\'\" + FinalDTI + \"\\' already exists so the command will not be executed\")\n";
 
 		Script = Script + "\tcase += 1\n\n";
 
 /* dtiaverage computing */
 	Script = Script + "# dtiaverage computing\n";
-if(!m_Quiet) Script = Script + "print(\"\\n======== Computing the AW DTI average =========\")\n";
+	Script = Script + "print(\"\\n======== Computing the AW DTI average =========\")\n";
 	Script = Script + "DTIAverage = FinalPath + \"/AWAtlasDTI.nrrd\"\n";
 	Script = Script + "AverageCommand = \"" + m_SoftPath[6] + " \"\n";
 	Script = Script + "case = 0\n";
@@ -505,7 +499,7 @@ if(!m_Quiet) Script = Script + "print(\"\\n======== Computing the AW DTI average
 	if(m_AverageStatMethod.compare("Principal Geodesic Analysis (PGA)")==0)		Script = Script + "AverageCommand = AverageCommand + \" -m pga\"\n";
 	if(m_AverageStatMethod.compare("Euclidean")==0) 	Script = Script + "AverageCommand = AverageCommand + \" -m euclidean\"\n";
 	if(m_AverageStatMethod.compare("Log Euclidean")==0)	Script = Script + "AverageCommand = AverageCommand + \" -m log-euclidean\"\n";
-if(!m_Quiet) Script = Script + "print(\"=> $ \" + AverageCommand)\n";
+	Script = Script + "print(\"=> $ \" + AverageCommand)\n";
 	if(m_Overwrite==1)Script = Script + "if 1 : \n";
 	else Script = Script + "if not os.path.isfile(DTIAverage) : \n";
 		Script = Script + "\tif os.system(AverageCommand)!=0 : ErrorList.append(\'dtiaverage: Computing the final DTI average\')\n";
@@ -517,13 +511,13 @@ if(!m_Quiet) Script = Script + "print(\"=> $ \" + AverageCommand)\n";
 		Script = Script + "\tMD= FinalPath + \"/AWAtlasMD.nrrd\"\n"; // Mean Diffusivity
 		Script = Script + "\tAD= FinalPath + \"/AWAtlasAD.nrrd\"\n"; // Axial Diffusivity
 		Script = Script + "\tGeneFACommand=\"" + m_SoftPath[3] + " --scalar_float --dti_image \" + DTIAverage + \" -f \" + FA + \" -m \" + MD + \" --color_fa_output \" + cFA + \" --RD_output \" + RD + \" --lambda1_output \" + AD\n";
-if(!m_Quiet) 	Script = Script + "\tprint(\"=> $ \" + GeneFACommand)\n";
+		Script = Script + "\tprint(\"=> $ \" + GeneFACommand)\n";
 		Script = Script + "\tif os.system(GeneFACommand)!=0 : ErrorList.append(\'dtiprocess: Computing AW FA, color FA, MD, RD and AD\')\n";
 		Script = Script + "\tDbleToFloatCommand=\"" + m_SoftPath[8] + " convert -t float -i \" + DTIAverage + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalPath + \"/AWAtlasDTI_float.nrrd\"\n";
-if(!m_Quiet) 	Script = Script + "\tprint(\"=> $ \" + DbleToFloatCommand)\n";
+		Script = Script + "\tprint(\"=> $ \" + DbleToFloatCommand)\n";
 		Script = Script + "\tif os.system(DbleToFloatCommand)!=0 : ErrorList.append(\'unu: Converting the final DTI atlas from double to float DTI\')\n";
 
-if(!m_Quiet) if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + DTIAverage + \"\\' already exists so the command will not be executed\")\n\n";
+if(m_Overwrite==0) Script = Script + "else : print(\"=> The file \\'\" + DTIAverage + \"\\' already exists so the command will not be executed\")\n\n";
 
 
 /* Computing global deformation fields */
@@ -547,7 +541,7 @@ if(!m_Quiet) if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'
 //		Script = Script + "\tprint(str(nbRunningThreads) + \" threads running, \" + str(nbCPUs) + \" CPUs on the machine\")\n";
 	}
 */
-if(!m_Quiet) Script = Script + "print(\"\\n======== Computing global deformation fields =========\")\n";
+	Script = Script + "print(\"\\n======== Computing global deformation fields =========\")\n";
 	Script = Script + "case = 0\n";
 	Script = Script + "while case < len(allcases):\n";
 		if(m_NeedToBeCropped==1) Script = Script + "\torigDTI= AffinePath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
@@ -604,7 +598,7 @@ if(!m_Quiet) Script = Script + "print(\"\\n======== Computing global deformation
 			Script = Script + "\tANTSTempFileBase = FinalResampPath + \"/First_Resampling/Case\" + str(case+1) + \"_FA_\"\n"; // so that nothing is stored in the same dir than the Atlas
 			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSOutbase \" + ANTSTempFileBase\n"; // no --outputTfm for ANTS because --ANTSOutbase is used for the tfm
 		}
-if(!m_Quiet) 	Script = Script + "\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GlobalDefFieldCommand)\n";
+		Script = Script + "\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GlobalDefFieldCommand)\n";
 		if(m_Overwrite==1) Script = Script + "\tif 1 :\n";
 		else Script = Script + "\tif not os.path.isfile(FinalDef) :\n";
 			Script = Script + "\t\tif os.system(GlobalDefFieldCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] DTI-Reg: Computing global deformation fields\')\n";
@@ -618,16 +612,16 @@ if(!m_Quiet) 	Script = Script + "\tprint(\"\\n||Case \" + str(case+1) + \" => $ 
 					Script = Script + "\t\t\tprint \"Error: unable to start thread\"\n";
 			}*/
 			Script = Script + "\t\tGlobDbleToFloatCommand=\"" + m_SoftPath[8] + " convert -t float -i \" + FinalDef + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalResampPath + \"/First_Resampling/Case\" + str(case+1) + \"_DeformedDTI_float.nrrd\"\n";
-if(!m_Quiet) 		Script = Script + "\t\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GlobDbleToFloatCommand)\n";
+			Script = Script + "\t\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GlobDbleToFloatCommand)\n";
 			Script = Script + "\t\tif os.system(GlobDbleToFloatCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] unu: Converting the deformed images from double to float DTI\')\n";
-if(!m_Quiet) if(m_Overwrite==0) Script = Script + "\telse : print(\"=> The file \\'\" + FinalDef + \"\\' already exists so the command will not be executed\")\n";
+if(m_Overwrite==0) Script = Script + "\telse : print(\"=> The file \\'\" + FinalDef + \"\\' already exists so the command will not be executed\")\n";
 		Script = Script + "\tcase += 1\n\n";
 
 //if( m_DTIRegOptions[0].compare("ANTS")==0 )	Script = Script + "while nbRunningThreads > 0 : pass # waiting for all the threads to be finished\n\n";
 
 /* dtiaverage recomputing */
 	Script = Script + "# dtiaverage recomputing\n";
-if(!m_Quiet) Script = Script + "print(\"\\n======== Recomputing the final DTI average =========\")\n";
+	Script = Script + "print(\"\\n======== Recomputing the final DTI average =========\")\n";
 	Script = Script + "DTIAverage2 = FinalResampPath + \"/FinalAtlasDTI.nrrd\"\n";
 	Script = Script + "AverageCommand2 = \"" + m_SoftPath[6] + " \"\n";
 	Script = Script + "case = 0\n";
@@ -639,7 +633,7 @@ if(!m_Quiet) Script = Script + "print(\"\\n======== Recomputing the final DTI av
 	if(m_AverageStatMethod.compare("Principal Geodesic Analysis (PGA)")==0)		Script = Script + "AverageCommand2 = AverageCommand2 + \" -m pga\"\n";
 	if(m_AverageStatMethod.compare("Euclidean")==0) 	Script = Script + "AverageCommand2 = AverageCommand2 + \" -m euclidean\"\n";
 	if(m_AverageStatMethod.compare("Log Euclidean")==0)	Script = Script + "AverageCommand2 = AverageCommand2 + \" -m log-euclidean\"\n";
-if(!m_Quiet) Script = Script + "print(\"=> $ \" + AverageCommand2)\n";
+	Script = Script + "print(\"=> $ \" + AverageCommand2)\n";
 	if(m_Overwrite==1)Script = Script + "if 1 : \n";
 	else Script = Script + "if not os.path.isfile(DTIAverage2) : \n";
 		Script = Script + "\tif os.system(AverageCommand2)!=0 : ErrorList.append(\'dtiaverage: Recomputing the final DTI average\')\n";
@@ -651,18 +645,18 @@ if(!m_Quiet) Script = Script + "print(\"=> $ \" + AverageCommand2)\n";
 		Script = Script + "\tMD2= FinalResampPath + \"/FinalAtlasMD.nrrd\"\n"; // Mean Diffusivity
 		Script = Script + "\tAD2= FinalResampPath + \"/FinalAtlasAD.nrrd\"\n"; // Axial Diffusivity
 		Script = Script + "\tGeneFACommand2=\"" + m_SoftPath[3] + " --scalar_float --dti_image \" + DTIAverage2 + \" -f \" + FA2 + \" -m \" + MD2 + \" --color_fa_output \" + cFA2 + \" --RD_output \" + RD2 + \" --lambda1_output \" + AD2\n";
-if(!m_Quiet) 	Script = Script + "\tprint(\"=> $ \" + GeneFACommand2)\n";
+		Script = Script + "\tprint(\"=> $ \" + GeneFACommand2)\n";
 		Script = Script + "\tif os.system(GeneFACommand2)!=0 : ErrorList.append(\'dtiprocess: Recomputing final FA, color FA, MD, RD and AD\')\n";
 		Script = Script + "\tDbleToFloatCommand2=\"" + m_SoftPath[8] + " convert -t float -i \" + DTIAverage2 + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalResampPath + \"/FinalAtlasDTI_float.nrrd\"\n";
-if(!m_Quiet) 	Script = Script + "\tprint(\"=> $ \" + DbleToFloatCommand2)\n";
+		Script = Script + "\tprint(\"=> $ \" + DbleToFloatCommand2)\n";
 		Script = Script + "\tif os.system(DbleToFloatCommand2)!=0 : ErrorList.append(\'unu: Converting the final resampled DTI atlas from double to float DTI\')\n";
 
-if(!m_Quiet) if(m_Overwrite==0)Script = Script + "else : print(\"=> The file \\'\" + DTIAverage2 + \"\\' already exists so the command will not be executed\")\n\n";
+if(m_Overwrite==0) Script = Script + "else : print(\"=> The file \\'\" + DTIAverage2 + \"\\' already exists so the command will not be executed\")\n\n";
 
 
 /* Recomputing global deformation fields */
 	Script = Script + "# Recomputing global deformation fields\n";
-if(!m_Quiet) Script = Script + "print(\"\\n======== Recomputing global deformation fields =========\")\n";
+	Script = Script + "print(\"\\n======== Recomputing global deformation fields =========\")\n";
 	Script = Script + "case = 0\n";
 	Script = Script + "while case < len(allcases):\n";
 		if(m_NeedToBeCropped==1) Script = Script + "\torigDTI2= AffinePath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
@@ -720,33 +714,30 @@ if(!m_Quiet) Script = Script + "print(\"\\n======== Recomputing global deformati
 			Script = Script + "\tANTSTempFileBase2 = FinalResampPath + \"/Second_Resampling/Case\" + str(case+1) + \"_FA_\"\n"; // so that nothing is stored in the same dir than the Atlas
 			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSOutbase \" + ANTSTempFileBase2\n"; // no --outputTfm for ANTS because --ANTSOutbase is used for the tfm
 		}
-if(!m_Quiet) 	Script = Script + "\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GlobalDefFieldCommand2)\n";
+		Script = Script + "\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GlobalDefFieldCommand2)\n";
 		if(m_Overwrite==1) Script = Script + "\tif 1 :\n";
 		else Script = Script + "\tif not os.path.isfile(FinalDef2) :\n";
 			Script = Script + "\t\tif os.system(GlobalDefFieldCommand2)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] DTI-Reg: Recomputing global deformation fields\')\n";
 
 			Script = Script + "\t\tDTIRegCaseFA = FinalResampPath + \"/Second_Resampling/Case\" + str(case+1) + \"_FinalDeformedFA.nrrd\"\n";
 			Script = Script + "\t\tGeneDTIRegCaseFACommand=\"" + m_SoftPath[3] + " --scalar_float --dti_image \" + FinalDef2 + \" -f \" + DTIRegCaseFA\n";
-if(!m_Quiet) 		Script = Script + "\t\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GeneDTIRegCaseFACommand)\n";
+			Script = Script + "\t\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GeneDTIRegCaseFACommand)\n";
 			Script = Script + "\t\tif os.system(GeneDTIRegCaseFACommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] dtiprocess: Computing DTIReg FA\')\n";
 
 			Script = Script + "\t\tGlobDbleToFloatCommand2=\"" + m_SoftPath[8] + " convert -t float -i \" + FinalDef2 + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalResampPath + \"/Second_Resampling/Case\" + str(case+1) + \"_FinalDeformedDTI_float.nrrd\"\n";
-if(!m_Quiet) 		Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + GlobDbleToFloatCommand2)\n";
+			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + GlobDbleToFloatCommand2)\n";
 			Script = Script + "\t\tif os.system(GlobDbleToFloatCommand2)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] unu: Converting the final redeformed images from double to float DTI\')\n";
-if(!m_Quiet) if(m_Overwrite==0) Script = Script + "\telse : print(\"=> The file \\'\" + FinalDef2 + \"\\' already exists so the command will not be executed\")\n";
+if(m_Overwrite==0) Script = Script + "\telse : print(\"=> The file \\'\" + FinalDef2 + \"\\' already exists so the command will not be executed\")\n";
 		Script = Script + "\tcase += 1\n\n";
 
 
-if(!m_Quiet) 	Script = Script + "print(\"\\n============ End of Atlas Building =============\")\n\n";
+	Script = Script + "print(\"\\n============ End of Atlas Building =============\")\n\n";
 
-	if(!m_Quiet)
-	{
 	Script = Script + "# Display errors\n";
 	Script = Script + "if len(ErrorList) >0 :\n";
 	Script = Script + "\tprint(\"\\n=> \" + len(ErrorList) + \" errors detected during the followind operations:\")\n";
 	Script = Script + "\tfor error in ErrorList : print(\'\\n\' + error)\n";
 	Script = Script + "else: print(\"\\n=> No errors detected during Atlas building\")\n";
-	}
 
 	m_Script_AtlasBuilding=Script;
 }
@@ -755,34 +746,32 @@ void ScriptWriter::MainScript()
 {
 	std::string Script;
 
-	if(!m_Quiet) std::cout<<"[Main]"<<std::endl; // command line display (no endl)
+	std::cout<<"[Main]"<<std::endl; // command line display (no endl)
 
 	Script = Script + "#!/usr/bin/python\n\n";
 	Script = Script + "import os\n"; ///// To run a shell command : os.system("[shell command]")
-if(!m_Quiet) Script = Script + "import time\n\n"; // to compute the execution time
-if(!m_Quiet) Script = Script + "print(\"\\n=============== Main Script ================\")\n\n";
+	Script = Script + "import time\n\n"; // to compute the execution time
+	Script = Script + "print(\"\\n=============== Main Script ================\")\n\n";
 
 	Script = Script + "OutputPath= \"" + m_OutputPath + "/DTIAtlas\"\n";
 
 	Script = Script + "ErrorList=[] #empty list\n\n";
 
-if(!m_Quiet) Script = Script + "time1=time.time()\n\n";
+	Script = Script + "time1=time.time()\n\n";
 
 /* Call the other scripts */
 	Script = Script + "# Call the Preprocess script\n";
 	Script = Script + "PrePScriptCommand= OutputPath + \"/Script/DTIAtlasBuilder_Preprocess.script\"\n";
-if(!m_Quiet) 	Script = Script + "print(\"\\n=> $ \" + PrePScriptCommand)\n";
+	Script = Script + "print(\"\\n=> $ \" + PrePScriptCommand)\n";
 	Script = Script + "if os.system(PrePScriptCommand)!=0 : ErrorList.append(\'=> Errors detected in preprocessing\')\n\n";
 
 	Script = Script + "# Call the Atlas Building script\n";
 	Script = Script + "AtlasBuildingCommand= OutputPath + \"/Script/DTIAtlasBuilder_AtlasBuilding.script\"\n";
-if(!m_Quiet) 	Script = Script + "print(\"\\n=> $ \" + AtlasBuildingCommand)\n";
+	Script = Script + "print(\"\\n=> $ \" + AtlasBuildingCommand)\n";
 	Script = Script + "if os.system(AtlasBuildingCommand)!=0 : ErrorList.append(\'=> Errors detected in atlas building\')\n\n";
 
-if(!m_Quiet) 	Script = Script + "print(\"\\n============ End of execution =============\\n\")\n\n";
+	Script = Script + "print(\"\\n============ End of execution =============\\n\")\n\n";
 
-	if(!m_Quiet)
-	{
 	Script = Script + "# Display errors\n";
 	Script = Script + "for error in ErrorList : print(error + \'\\n\')\n";
 	Script = Script + "if len(ErrorList)==0 : print(\"=> No errors detected during execution\\n\")\n\n";
@@ -794,7 +783,6 @@ if(!m_Quiet) 	Script = Script + "print(\"\\n============ End of execution ======
 	Script = Script + "if timeTot<60 : print(\"| Execution time = \" + str(int(timeTot)) + \"s\")\n";
 	Script = Script + "elif timeTot<3600 : print(\"| Execution time = \" + str(int(timeTot)) + \"s = \" + str(int(timeTot/60)) + \"m \" + str( int(timeTot) - (int(timeTot/60)*60) ) + \"s\")\n";
 	Script = Script + "else : print(\"| Execution time = \" + str(int(timeTot)) + \"s = \" + str(int(timeTot/3600)) + \"h \" + str( int( (int(timeTot) - int(timeTot/3600)*3600) /60) ) + \"m \" + str( int(timeTot) - (int(timeTot/60)*60) ) + \"s\")\n\n";
-	}
 
 	m_Script_Main=Script;
 }
@@ -871,7 +859,7 @@ int ScriptWriter::setCroppingSize( bool SafetyMargin ) // returns 0 if no croppi
 		m_CropSize[0] = MaxSize[0];
 		m_CropSize[1] = MaxSize[1];
 		m_CropSize[2] = MaxSize[2];
-		if(!m_Quiet) std::cout<<"| Crop size computed : ["<<m_CropSize[0]<<";"<<m_CropSize[1]<<";"<<m_CropSize[2]<<"]"<<std::endl;
+		std::cout<<"| Crop size computed : ["<<m_CropSize[0]<<";"<<m_CropSize[1]<<";"<<m_CropSize[2]<<"]"<<std::endl;
 		return 1;
 	}
 
@@ -1005,11 +993,6 @@ void ScriptWriter::setDTIRegOptions(std::vector < std::string > DTIRegOptions)
 		NbPyrLev
 		PyrLevIt
 */
-}
-
-void ScriptWriter::setQuiet(bool Quiet)
-{
-	m_Quiet=Quiet;
 }
 
 void ScriptWriter::setBFAffineTfmMode(std::string BFAffineTfmMode)
