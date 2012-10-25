@@ -1473,8 +1473,6 @@ int GUI::LoadParameters(QString paramFile)
 			return -1;
 		}
 
-		std::cout<<"DONE"<<std::endl; // command line display
-
 /* Grid Processing */
 		line = stream.readLine();
 		list = line.split("=");
@@ -1498,6 +1496,8 @@ int GUI::LoadParameters(QString paramFile)
 			GridProcesscheckBox->setChecked(false);
 			GridProcessCmdLineEdit->setText( "" );
 		}
+
+		std::cout<<"DONE"<<std::endl; // command line display
 
 /* Opening CSV File */
 		line = stream.readLine();
