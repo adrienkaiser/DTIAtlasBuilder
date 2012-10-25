@@ -85,13 +85,13 @@ void ScriptWriter::Preprocess ()
 		//Test Function
 		Script = Script + "# Function that tests if all cases have been processed on the grid\n";
 		Script = Script + "def TestGridProcess ( FilesFolder, NbCases , NoCase1): # if NbCases == 0, then just search the file \'file\' (unique command)\n";
-			Script = Script + "\tprint(\"| Waiting for all cases to be processed on grid...\")\n";
+			Script = Script + "\tprint(\"\\n| Waiting for all cases to be processed on grid...\")\n";
 			Script = Script + "\tfilesOK = 0\n";
 			Script = Script + "\twhile not filesOK :\n";
 				Script = Script + "\t\tfilesOK = 1\n";
 				Script = Script + "\t\tif NbCases>0 : \n";
 					Script = Script + "\t\t\tif NoCase1 == 1 : case = 1\n";
-					Script = Script + "\t\t\telse : case = 1\n";
+					Script = Script + "\t\t\telse : case = 0\n";
 					Script = Script + "\t\t\twhile case < NbCases:\n";
 						Script = Script + "\t\t\t\tif not os.path.isfile( FilesFolder + \"/Case\" + str(case+1) ) : filesOK = 0\n";
 						Script = Script + "\t\t\t\tcase += 1\n";
@@ -211,11 +211,7 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, len(allc
 /* Normalization */
 	Script = Script + "# Normalization\n";
 		Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] ======== Normalization =========\")\n";
-	if(m_RegType==1) //use case as loop 1 ref
-	{
-		Script = Script + "\tif n == 0 : case = 1 # the first case is the reference for the first loop so it will not be normalized or registered\n";
-		Script = Script + "\telse : case = 0\n";
-	}
+	if(m_RegType==1) Script = Script + "\tcase = (n==0) # (n==0) -> bool: =1(true) =0(false) : the first case is the reference for the first loop so it will not be normalized or registered\n";
 	else 	Script = Script + "\tcase = 0\n";
 		Script = Script + "\twhile case < len(allcases):\n";
 			Script = Script + "\t\tFA= OutputPath + \"/Case\" + str(case+1) + \"_FA.nrrd\"\n";
@@ -236,11 +232,7 @@ if( m_useGridProcess ) Script = Script + "\tTestGridProcess( FilesFolder, len(al
 /* Affine registration with BrainsFit */
 	Script = Script + "# Affine registration with BrainsFit\n";
 		Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] ======== Affine registration with BrainsFit =========\")\n";
-	if(m_RegType==1) //use case 1 as loop 1 ref
-	{
-		Script = Script + "\tif n == 0 : case = 1\n";
-		Script = Script + "\telse : case = 0\n";
-	}
+	if(m_RegType==1) Script = Script + "\tcase = (n==0) # (n==0) -> bool: =1(true) =0(false) : the first case is the reference for the first loop so it will not be normalized or registered\n";
 	else 	Script = Script + "\tcase = 0\n";
 		Script = Script + "\twhile case < len(allcases):\n";
 			Script = Script + "\t\tNormFA= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_NormFA.nrrd\"\n";
@@ -267,11 +259,7 @@ if( m_useGridProcess ) Script = Script + "\tTestGridProcess( FilesFolder, len(al
 /* Implementing the affine registration */
 	Script = Script + "# Implementing the affine registration\n";
 		Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] ======== Implementing the Affine registration =========\")\n";
-	if(m_RegType==1) //use case as loop 1 ref
-	{
-		Script = Script + "\tif n == 0 : case = 1\n";
-		Script = Script + "\telse : case = 0\n";
-	}
+	if(m_RegType==1) Script = Script + "\tcase = (n==0) # (n==0) -> bool: =1(true) =0(false) : the first case is the reference for the first loop so it will not be normalized or registered\n";
 	else 	Script = Script + "\tcase = 0\n";
 		Script = Script + "\twhile case < len(allcases):\n";
 			Script = Script + "\t\tLinearTranstfm= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans.txt\"\n";
@@ -294,11 +282,7 @@ if( m_useGridProcess ) Script = Script + "\tTestGridProcess( FilesFolder, len(al
 /* Generating FA of registered images */
 	Script = Script + "# Generating FA of registered images\n";
 		Script = Script + "\tprint(\"\\n[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] ======== Generating FA of registered images =========\")\n";
-	if(m_RegType==1) //use case as loop 1 ref
-	{
-		Script = Script + "\tif n == 0 : case = 1\n";
-		Script = Script + "\telse : case = 0\n";
-	}
+	if(m_RegType==1) Script = Script + "\tcase = (n==0) # (n==0) -> bool: =1(true) =0(false) : the first case is the reference for the first loop so it will not be normalized or registered\n";
 	else 	Script = Script + "\tcase = 0\n";
 		Script = Script + "\twhile case < len(allcases):\n";
 			Script = Script + "\t\tLinearTransDTI= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_DTI.nrrd\"\n";
@@ -399,7 +383,7 @@ void ScriptWriter::AtlasBuilding()
 		//Test Function
 		Script = Script + "# Function that tests if all cases have been processed on the grid\n";
 		Script = Script + "def TestGridProcess ( FilesFolder, NbCases ): # if NbCases == 0, then just search the file \'file\' (unique command)\n";
-			Script = Script + "\tprint(\"| Waiting for all cases to be processed on grid...\")\n";
+			Script = Script + "\tprint(\"\\n| Waiting for all cases to be processed on grid...\")\n";
 			Script = Script + "\tfilesOK = 0\n";
 			Script = Script + "\twhile not filesOK :\n";
 				Script = Script + "\t\tfilesOK = 1\n";
