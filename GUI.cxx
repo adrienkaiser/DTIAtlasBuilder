@@ -2813,6 +2813,7 @@ int GUI::LaunchScriptWriter()
 	m_scriptwriter->setBFAffineTfmMode(BFAffineTfmModecomboBox->currentText().toStdString());
 
 	m_scriptwriter->setGridProcess( GridProcesscheckBox->isChecked() ); // isChecked() returns true or false
+	m_scriptwriter->setGridCommand( GridProcessCmdLineEdit->text().toStdString() );
 
 /* Launch writing */
 	m_scriptwriter->WriteScript(); // Master Function
@@ -2888,16 +2889,15 @@ int GUI::LaunchScriptWriter()
 			stream << "import os" << endl ;
 			stream << "import sys # to get the arguments" << endl << endl;
 
-			stream << "# arguments: [file to create] [command to execute]" << endl;
-			stream << "# sys.argv[0] is the name of the executable" << endl << endl;
+			stream << "# arguments: [file to create] [commands to execute]" << endl;
+			stream << "# example : RunCommandOnServer.script file.txt \"ls\" \"du -sh\" \"nautilus .\"" << endl << endl;
 
-			stream << "Command = \""<< GridProcessCmdLineEdit->text() <<" \"" << endl;
-			stream << "i=2" << endl;
+			stream << "i=2 # sys.argv[0] is the name of the executable and sys.argv[1] is the name of the file to create" << endl;
 			stream << "while i < len(sys.argv):" << endl;
-				stream << "\tCommand = Command + sys.argv[i] + \" \"" << endl;
-				stream << "\ti += 1"<< endl;
-			stream << "print(\"Running Command : \" + Command)" << endl;
-			stream << "os.system(Command)" << endl <<endl;
+				stream << "\tCommand = sys.argv[i]" << endl;
+				stream << "\tprint(\"Running Command : \" + Command)" << endl;
+				stream << "\tos.system(Command)" << endl;
+				stream << "\ti += 1"<< endl <<endl;
 
 			stream << "FileName=sys.argv[1]" << endl ;
 			stream << "print(\"Creating file :\" + FileName)" << endl ;

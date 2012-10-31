@@ -58,6 +58,7 @@ void ScriptWriter::Preprocess ()
 	Script = Script + "ErrorList=[] #empty list\n\n";
 
 /* Call script to run command on grid */
+	std::string GridApostrophe = "";
 	std::string GridProcessCmd = "";
 	std::string GridProcessFileExistCmd = "";
 	std::string GridProcessFileExistCmd1 = "";
@@ -99,14 +100,15 @@ void ScriptWriter::Preprocess ()
 			Script = Script + "\tprint(\"| All files processed\")\n";
 			Script = Script + "\tos.system(\"rm \" + FilesFolder + \"/*\")\n\n";
 
+		GridApostrophe = " + \"\\'\"";
 		std::string File = "FilesFolder + \"/Case\" + str(case+1)";
-		GridProcessCmd = "\"" + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + " + File + " + \" \" + ";
+		GridProcessCmd = "\"" + m_GridCommand + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + " + File + " + \" \"" + GridApostrophe + " + ";
 		GridProcessFileExistCmd = "\tf = open( " + File + ", 'w')\n\tf.close()\n"; // if the image already exists, create the "semaphore" file
 		GridProcessFileExistCmd1 = "\t\tf = open( " + File + ", 'w')\n\t\tf.close()\n"; // if the image already exists, create the "semaphore" file
 		GridProcessFileExistCmd2 = "\t\t\tf = open( " + File + ", 'w')\n\t\t\tf.close()\n"; // if the image already exists, create the "semaphore" file
 
 		std::string FileNoCase = "FilesFolder + \"/file\""; //  for the commands executed only once = not once per case
-		GridProcessCmdNoCase = "\"" + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + " + FileNoCase + " + \" \" + ";
+		GridProcessCmdNoCase = "\"" + m_GridCommand + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + " + FileNoCase + " + \" \"" + GridApostrophe + " + ";
 		GridProcessFileExistCmdNoCase = "\tf = open( " + FileNoCase + ", 'w')\n\tf.close()\n";
 		GridProcessFileExistCmdNoCase1 = "\t\tf = open( " + FileNoCase + ", 'w')\n\t\tf.close()\n";
 		GridProcessFileExistCmdNoCase2 = "\t\t\tf = open( " + FileNoCase + ", 'w')\n\t\t\tf.close()\n";
@@ -129,7 +131,7 @@ void ScriptWriter::Preprocess ()
 		Script = Script + "# Rescaling template\n";
 		Script = Script + "print(\"\\n======== Rescaling FA template =========\")\n";
 		Script = Script + "RescaleTemp= OutputPath + \"/FATemplate_Rescaled.nrrd\"\n";
-		Script = Script + "RescaleTempCommand=" + GridProcessCmdNoCase + "\"" + m_SoftPath[0] + " \" + AtlasFAref + \" -outfile \" + RescaleTemp + \" -rescale 0,10000 \"\n";
+		Script = Script + "RescaleTempCommand=" + GridProcessCmdNoCase + "\"" + m_SoftPath[0] + " \" + AtlasFAref + \" -outfile \" + RescaleTemp + \" -rescale 0,10000 \"" + GridApostrophe + "\n";
 		Script = Script + "print(\"=> $ \" + RescaleTempCommand)\n";
 		if(m_Overwrite==1) Script = Script + "if os.system(RescaleTempCommand)!=0 : ErrorList.append(\'ImageMath: Rescaling FA template\')\n";
 		else
@@ -164,7 +166,7 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0, 0) # 
 	Script = Script + "case = 0\n";
 	Script = Script + "while case < len(allcases):\n";
 		Script = Script + "\tcroppedDTI= OutputPath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
-		Script = Script + "\tCropCommand=" + GridProcessCmd + "\"" + m_SoftPath[2] + " \" + allcases[case] + \" -o \" + croppedDTI + \" -size \" + CropSize[0] + \",\" + CropSize[1] + \",\" + CropSize[2] + \" -v\"\n";
+		Script = Script + "\tCropCommand=" + GridProcessCmd + "\"" + m_SoftPath[2] + " \" + allcases[case] + \" -o \" + croppedDTI + \" -size \" + CropSize[0] + \",\" + CropSize[1] + \",\" + CropSize[2] + \" -v\"" + GridApostrophe + "\n";
 		Script = Script + "\tprint(\"||Case \" + str(case+1) + \" => $ \" + CropCommand)\n";
 		if(m_Overwrite==1) Script = Script + "\tif os.system(CropCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] CropDTI: Cropping DTI image\')\n";
 		else
@@ -186,7 +188,7 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, len(allc
 		if(m_NeedToBeCropped==1) Script = Script + "\tDTI= OutputPath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
 		else Script = Script + "\tDTI= allcases[case]\n";
 		Script = Script + "\tFA= OutputPath + \"/Case\" + str(case+1) + \"_FA.nrrd\"\n";
-		Script = Script + "\tGeneFACommand=" + GridProcessCmd + "\"" + m_SoftPath[3] + " --dti_image \" + DTI + \" -f \" + FA\n";
+		Script = Script + "\tGeneFACommand=" + GridProcessCmd + "\"" + m_SoftPath[3] + " --dti_image \" + DTI + \" -f \" + FA" + GridApostrophe + "\n";
 		Script = Script + "\tprint(\"||Case \" + str(case+1) + \" => $ \" + GeneFACommand)\n";
 		if(m_Overwrite==1) Script = Script + "\tif os.system(GeneFACommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] dtiprocess: Generating FA of DTI image\')\n";
 		else
@@ -216,7 +218,7 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, len(allc
 		Script = Script + "\twhile case < len(allcases):\n";
 			Script = Script + "\t\tFA= OutputPath + \"/Case\" + str(case+1) + \"_FA.nrrd\"\n";
 			Script = Script + "\t\tNormFA= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_NormFA.nrrd\"\n";
-			Script = Script + "\t\tNormFACommand=" + GridProcessCmd + "\"" + m_SoftPath[0] + " \" + FA + \" -outfile \" + NormFA + \" -matchHistogram \" + AtlasFAref\n";
+			Script = Script + "\t\tNormFACommand=" + GridProcessCmd + "\"" + m_SoftPath[0] + " \" + FA + \" -outfile \" + NormFA + \" -matchHistogram \" + AtlasFAref" + GridApostrophe + "\n";
 			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + NormFACommand)\n";
 			if(m_Overwrite==1) Script = Script + "\t\tif os.system(NormFACommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] ImageMath: Normalizing FA image\')\n";
 			else
@@ -240,8 +242,8 @@ if( m_useGridProcess ) Script = Script + "\tTestGridProcess( FilesFolder, len(al
 			Script = Script + "\t\tLinearTrans= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_FA.nrrd\"\n";
 			Script = Script + "\t\tAffineCommand=" + GridProcessCmd + "\"" + m_SoftPath[4] + " --fixedVolume \" + AtlasFAref + \" --movingVolume \" + NormFA + \" --useAffine --outputVolume \" + LinearTrans + \" --outputTransform \" + LinearTranstfm\n";
 			Script = Script + "\t\tInitLinearTrans= OutputPath + \"/Case\" + str(case+1) + \"_InitLinearTrans.nrrd\"\n";
-			Script = Script + "\t\tif n==0 and os.path.isfile(InitLinearTrans) : AffineCommand= AffineCommand + \" --initialTransform \" + InitLinearTrans\n";
-			Script = Script + "\t\telse : AffineCommand= AffineCommand + \" --initializeTransformMode " + m_BFAffineTfmMode + "\"\n";
+			Script = Script + "\t\tif n==0 and os.path.isfile(InitLinearTrans) : AffineCommand= AffineCommand + \" --initialTransform \" + InitLinearTrans" + GridApostrophe + "\n";
+			Script = Script + "\t\telse : AffineCommand= AffineCommand + \" --initializeTransformMode " + m_BFAffineTfmMode + "\"" + GridApostrophe + "\n";
 			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + AffineCommand)\n";
 			if(m_Overwrite==1) Script = Script + "\t\tif os.system(AffineCommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] BRAINSFit: Affine Registration of FA image\')\n";
 			else 
@@ -266,7 +268,7 @@ if( m_useGridProcess ) Script = Script + "\tTestGridProcess( FilesFolder, len(al
 			Script = Script + "\t\tLinearTransDTI= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_DTI.nrrd\"\n";
 			if(m_NeedToBeCropped==1) Script = Script + "\t\toriginalDTI= OutputPath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
 			else Script = Script + "\t\toriginalDTI= allcases[case]\n";
-			Script = Script + "\t\tImplementCommand=" + GridProcessCmd + "\"" + m_SoftPath[1] + " \" + originalDTI + \" \" + LinearTransDTI + \" -f \" + LinearTranstfm + \" -R \" + AtlasFAref\n";
+			Script = Script + "\t\tImplementCommand=" + GridProcessCmd + "\"" + m_SoftPath[1] + " \" + originalDTI + \" \" + LinearTransDTI + \" -f \" + LinearTranstfm + \" -R \" + AtlasFAref" + GridApostrophe + "\n";
 			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + ImplementCommand)\n";
 			if(m_Overwrite==1) Script = Script + "\t\tif os.system(ImplementCommand)!=0: ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] BRAINSFit: Implementing the Affine Registration on FA image\')\n";
 			else
@@ -288,7 +290,7 @@ if( m_useGridProcess ) Script = Script + "\tTestGridProcess( FilesFolder, len(al
 			Script = Script + "\t\tLinearTransDTI= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_DTI.nrrd\"\n";
 			Script = Script + "\t\tif n == " + m_nbLoops_str + " : LoopFA= OutputPath + \"/Loop" + m_nbLoops_str + "/Case\" + str(case+1) + \"_Loop" + m_nbLoops_str + "_FinalFA.nrrd\" # the last FA will be the Final output\n";
 			Script = Script + "\t\telse : LoopFA= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_FA.nrrd\"\n";
-			Script = Script + "\t\tGeneLoopFACommand=" + GridProcessCmd + "\"" + m_SoftPath[3] + " --dti_image \" + LinearTransDTI + \" -f \" + LoopFA\n";
+			Script = Script + "\t\tGeneLoopFACommand=" + GridProcessCmd + "\"" + m_SoftPath[3] + " --dti_image \" + LinearTransDTI + \" -f \" + LoopFA" + GridApostrophe + "\n";
 			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + GeneLoopFACommand)\n";
 			if(m_Overwrite==1) Script = Script + "\t\tif os.system(GeneLoopFACommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] dtiprocess: Generating FA of affine registered images\')\n";
 			else
@@ -318,6 +320,7 @@ if( m_useGridProcess ) Script = Script + "\tTestGridProcess( FilesFolder, len(al
 				Script = Script + "\t\t\tFAforAVG= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_FA.nrrd \"\n";
 				Script = Script + "\t\t\tAverageCommand= AverageCommand + FAforAVG\n";
 				Script = Script + "\t\t\tcase += 1\n";
+			Script = Script + "\t\tAverageCommand= AverageCommand" + GridApostrophe + "\n";
 			Script = Script + "\t\tprint(\"=> $ \" + AverageCommand)\n";
 			if(m_Overwrite==1) Script = Script + "\t\tif os.system(AverageCommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'] dtiaverage: Computing FA Average of registered images\')\n";
 			else
@@ -363,6 +366,7 @@ void ScriptWriter::AtlasBuilding()
 	Script = Script + "ErrorList=[] #empty list\n\n";
 
 /* Call script to run command on grid */
+	std::string GridApostrophe = "";
 	std::string GridProcessCmd = "";
 	std::string GridProcessFileExistCmd = "";
 	std::string GridProcessFileExistCmd1 = "";
@@ -396,14 +400,15 @@ void ScriptWriter::AtlasBuilding()
 			Script = Script + "\tprint(\"| All files processed\")\n";
 			Script = Script + "\tos.system(\"rm \" + FilesFolder + \"/*\")\n\n";
 
+		GridApostrophe = " + \"\\'\"";
 		std::string File = "FilesFolder + \"/Case\" + str(case+1)";
-		GridProcessCmd = "\"" + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + " + File + " + \" \" + ";
+		GridProcessCmd = "\"" + m_GridCommand + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + " + File + " + \" \"" + GridApostrophe + " + ";
 		GridProcessFileExistCmd = "\tf = open( " + File + ", 'w')\n\tf.close()\n"; // if the image already exists, create the "semaphore" file
 		GridProcessFileExistCmd1 = "\t\tf = open( " + File + ", 'w')\n\t\tf.close()\n"; // if the image already exists, create the "semaphore" file
 		GridProcessFileExistCmd2 = "\t\t\tf = open( " + File + ", 'w')\n\t\t\tf.close()\n"; // if the image already exists, create the "semaphore" file
 
 		std::string FileNoCase = "FilesFolder + \"/file\""; //  for the commands executed only once = not once per case
-		GridProcessCmdNoCase = "\"" + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + " + FileNoCase + " + \" \" + ";
+		GridProcessCmdNoCase = "\"" + m_GridCommand + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + " + FileNoCase + " + \" \"" + GridApostrophe + " + ";
 		GridProcessFileExistCmdNoCase = "\tf = open( " + FileNoCase + ", 'w')\n\tf.close()\n";
 		GridProcessFileExistCmdNoCase1 = "\t\tf = open( " + FileNoCase + ", 'w')\n\t\tf.close()\n";
 		GridProcessFileExistCmdNoCase2 = "\t\t\tf = open( " + FileNoCase + ", 'w')\n\t\t\tf.close()\n";
@@ -464,11 +469,13 @@ void ScriptWriter::AtlasBuilding()
 	Script = Script + "print(\"\\n======== Computing the Deformation Fields with AtlasWerks =========\")\n";
 	Script = Script + "XMLFile= DeformPath + \"/AtlasWerksParameters.xml\"\n";
 	Script = Script + "ParsedFile= DeformPath + \"/ParsedXML.xml\"\n";
-	Script = Script + "AtlasBCommand= " + GridProcessCmdNoCase + "\"" + m_SoftPath[5] + " -f \" + XMLFile + \" -o \" + ParsedFile\n";
+	Script = Script + "AtlasBCommand= " + GridProcessCmdNoCase + "\"" + m_SoftPath[5] + " -f \" + XMLFile + \" -o \" + ParsedFile" + GridApostrophe + "\n";
 	Script = Script + "print(\"=> $ \" + AtlasBCommand)\n";
 	if(m_Overwrite==1)Script = Script + "if 1 :\n";
 	else Script = Script + "if not os.path.isfile(DeformPath + \"/AverageImage.mhd\") :\n";
 		Script = Script + "\tif os.system(AtlasBCommand)!=0 : ErrorList.append(\'AtlasWerks: Computing non-linear atlas from affine registered images\')\n";
+if( m_useGridProcess ) Script = Script + "\tTestGridProcess( FilesFolder, 0) # stays in the function until all process is done : 0 makes the function look for \'file\'\n\n";
+
 		Script = Script + "\tprint(\"\\n======== Renaming the files generated by AtlasWerks =========\")\n";
 		Script = Script + "\tcase = 0\n";
 		Script = Script + "\twhile case < len(allcases): # Renaming\n";
@@ -498,12 +505,10 @@ void ScriptWriter::AtlasBuilding()
 			Script = Script + "\t\tos.rename(originalHField,NewHField)\n";
 			Script = Script + "\t\tos.rename(originalInvHField,NewInvHField)\n";
 			Script = Script + "\t\tcase += 1\n";
-if(m_Overwrite==0) Script = Script + "else : " + GridProcessFileExistIndent + "print(\"=> The file \\'\" + DeformPath + \"/AverageImage.mhd\\' already exists so the command will not be executed\")\n" + GridProcessFileExistCmdNoCase;
-
-if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0) # stays in the function until all process is done : 0 makes the function look for \'file\'\n\n";
+if(m_Overwrite==0) Script = Script + "else : print(\"=> The file \\'\" + DeformPath + \"/AverageImage.mhd\\' already exists so the command will not be executed\")\n";
 
 /* Apply deformation fields */
-	Script = Script + "# Apply deformation fields\n";
+	Script = Script + "\n# Apply deformation fields\n";
 	Script = Script + "print(\"\\n======== Applying deformation fields to original DTIs =========\")\n";
 	Script = Script + "case = 0\n";
 	Script = Script + "while case < len(allcases):\n";
@@ -523,7 +528,7 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0) # sta
 		Script = Script + "\tRef = AffinePath + \"/Loop" + nbLoops1_str + "/Loop" + nbLoops1_str + "_FAAverage.nrrd\"\n"; // an average image has been generated in the loops of affine reg for reference
 		}
 		Script = Script + "\tHField= DeformPath + \"/Case\" + str(case+1) + \"_DeformationField.mhd\"\n";
-		Script = Script + "\tFinalReSampCommand=" + GridProcessCmd + "\"" + m_SoftPath[1] + " -R \" + Ref + \" -H \" + HField + \" -f \" + alltfms[case] + \" \" + originalDTI + \" \" + FinalDTI\n";
+		Script = Script + "\tFinalReSampCommand=\"" + m_SoftPath[1] + " -R \" + Ref + \" -H \" + HField + \" -f \" + alltfms[case] + \" \" + originalDTI + \" \" + FinalDTI\n";
 		/* options */
 		if(m_InterpolType.compare("Linear")==0)			Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -i linear\"\n";
 		if(m_InterpolType.compare("Nearest Neighborhoor")==0)	Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -i nn\"\n";
@@ -557,16 +562,26 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0) # sta
 		if(m_Overwrite==1) Script = Script + "\tif 1 :\n";
 		else Script = Script + "\tif not os.path.isfile(FinalDTI) :\n";
 
+			Script = Script + "\t\tAWCaseFA = FinalPath + \"/Case\" + str(case+1) + \"_AWFA.nrrd\"\n";
+			Script = Script + "\t\tGeneAWCaseFACommand=\"" + m_SoftPath[3] + " --scalar_float --dti_image \" + FinalDTI + \" -f \" + AWCaseFA\n";
+
+			Script = Script + "\t\tCaseDbleToFloatCommand=\"" + m_SoftPath[8] + " convert -t float -i \" + FinalDTI + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalPath + \"/Case\" + str(case+1) + \"_AWDTI_float.nrrd\"\n\n";
+
+			if( ! m_useGridProcess )
+			{
 			Script = Script + "\t\tif os.system(FinalReSampCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] ResampleDTIlogEuclidean: Applying deformation fields to original DTIs\')\n";
 
-			Script = Script + "\t\tAWCaseFA = FinalPath + \"/Case\" + str(case+1) + \"_AWFA.nrrd\"\n";
-			Script = Script + "\t\tGeneAWCaseFACommand=" + GridProcessCmd + "\"" + m_SoftPath[3] + " --scalar_float --dti_image \" + FinalDTI + \" -f \" + AWCaseFA\n";
 			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + GeneAWCaseFACommand)\n";
 			Script = Script + "\t\tif os.system(GeneAWCaseFACommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] dtiprocess: Computing AW FA\')\n";
 
-			Script = Script + "\t\tCaseDbleToFloatCommand=" + GridProcessCmd + "\"" + m_SoftPath[8] + " convert -t float -i \" + FinalDTI + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalPath + \"/Case\" + str(case+1) + \"_AWDTI_float.nrrd\"\n";
 			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + CaseDbleToFloatCommand + \"\\n\")\n";
 			Script = Script + "\t\tif os.system(CaseDbleToFloatCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] unu: Converting the final DTI images from double to float DTI\')\n";
+			}
+			else // run all commands in the same time in the script
+			{
+			Script = Script + "\t\tFinalResampGridCommand=" + GridProcessCmd + "FinalReSampCommand + \"\\' \" + \"\\'\" + GeneAWCaseFACommand + \"\\' \" + \"\\'\" + CaseDbleToFloatCommand + \"\\'\"\n";
+			Script = Script + "\t\tif os.system(FinalResampGridCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] Applying deformation fields to original DTIs\')\n";
+			}
 
 if(m_Overwrite==0) Script = Script + "\telse : " + GridProcessFileExistIndent1 + "print(\"=> The file \\'\" + FinalDTI + \"\\' already exists so the command will not be executed\")\n" + GridProcessFileExistCmd1;
 
@@ -578,7 +593,7 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, len(allc
 	Script = Script + "# dtiaverage computing\n";
 	Script = Script + "print(\"\\n======== Computing the AW DTI average =========\")\n";
 	Script = Script + "DTIAverage = FinalPath + \"/AWAtlasDTI.nrrd\"\n";
-	Script = Script + "AverageCommand = " + GridProcessCmdNoCase + "\"" + m_SoftPath[6] + " \"\n";
+	Script = Script + "AverageCommand = \"" + m_SoftPath[6] + " \"\n";
 	Script = Script + "case = 0\n";
 	Script = Script + "while case < len(allcases):\n";
 		Script = Script + "\tDTIforAVG= \"--inputs \" + FinalPath + \"/Case\" + str(case+1) + \"_AWDTI.nrrd \"\n";
@@ -591,7 +606,7 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, len(allc
 	Script = Script + "print(\"=> $ \" + AverageCommand)\n";
 	if(m_Overwrite==1)Script = Script + "if 1 : \n";
 	else Script = Script + "if not os.path.isfile(DTIAverage) : \n";
-		Script = Script + "\tif os.system(AverageCommand)!=0 : ErrorList.append(\'dtiaverage: Computing the final DTI average\')\n";
+
 /* Computing some images from the final DTI with dtiprocess */
 	Script = Script + "# Computing some images from the final DTI with dtiprocess\n";
 		Script = Script + "\tFA= FinalPath + \"/AWAtlasFA.nrrd\"\n";
@@ -599,12 +614,25 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, len(allc
 		Script = Script + "\tRD= FinalPath + \"/AWAtlasRD.nrrd\"\n"; // Radial Diffusivity
 		Script = Script + "\tMD= FinalPath + \"/AWAtlasMD.nrrd\"\n"; // Mean Diffusivity
 		Script = Script + "\tAD= FinalPath + \"/AWAtlasAD.nrrd\"\n"; // Axial Diffusivity
-		Script = Script + "\tGeneFACommand=" + GridProcessCmdNoCase + "\"" + m_SoftPath[3] + " --scalar_float --dti_image \" + DTIAverage + \" -f \" + FA + \" -m \" + MD + \" --color_fa_output \" + cFA + \" --RD_output \" + RD + \" --lambda1_output \" + AD\n";
+		Script = Script + "\tGeneFACommand=\"" + m_SoftPath[3] + " --scalar_float --dti_image \" + DTIAverage + \" -f \" + FA + \" -m \" + MD + \" --color_fa_output \" + cFA + \" --RD_output \" + RD + \" --lambda1_output \" + AD\n\n";
+
+		Script = Script + "\tDbleToFloatCommand=\"" + m_SoftPath[8] + " convert -t float -i \" + DTIAverage + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalPath + \"/AWAtlasDTI_float.nrrd\"\n\n";
+
+		if( ! m_useGridProcess )
+		{
+		Script = Script + "\tif os.system(AverageCommand)!=0 : ErrorList.append(\'dtiaverage: Computing the final DTI average\')\n";
+
 		Script = Script + "\tprint(\"=> $ \" + GeneFACommand)\n";
 		Script = Script + "\tif os.system(GeneFACommand)!=0 : ErrorList.append(\'dtiprocess: Computing AW FA, color FA, MD, RD and AD\')\n";
-		Script = Script + "\tDbleToFloatCommand=" + GridProcessCmdNoCase + "\"" + m_SoftPath[8] + " convert -t float -i \" + DTIAverage + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalPath + \"/AWAtlasDTI_float.nrrd\"\n";
+
 		Script = Script + "\tprint(\"=> $ \" + DbleToFloatCommand)\n";
 		Script = Script + "\tif os.system(DbleToFloatCommand)!=0 : ErrorList.append(\'unu: Converting the final DTI atlas from double to float DTI\')\n";
+		}
+		else // run all commands in the same time in the script
+		{
+		Script = Script + "\tAverageGridCommand=" + GridProcessCmdNoCase + "AverageCommand + \"\\' \" + \"\\'\" + GeneFACommand + \"\\' \" + \"\\'\" + DbleToFloatCommand + \"\\'\"\n";
+		Script = Script + "\tif os.system(AverageGridCommand)!=0 : ErrorList.append(\'Computing the final DTI average\')\n";
+		}
 
 if(m_Overwrite==0) Script = Script + "else : " + GridProcessFileExistIndent + "print(\"=> The file \\'\" + DTIAverage + \"\\' already exists so the command will not be executed\")\n" + GridProcessFileExistCmdNoCase;
 
@@ -631,6 +659,17 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # st
 //		Script = Script + "\tprint(str(nbRunningThreads) + \" threads running, \" + str(nbCPUs) + \" CPUs on the machine\")\n";
 	}
 */
+
+/*MULTITHREADING	if( m_DTIRegOptions[0].compare("BRAINS")==0 ) Script = Script + "\t\tif os.system(GlobalDefFieldCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] DTI-Reg: Computing global deformation fields\')\n";
+			if( m_DTIRegOptions[0].compare("ANTS")==0 ) //use threads for ANTS because very slow
+			{
+				Script = Script + "\t\twhile nbRunningThreads >= nbCPUs : pass # waiting here for a thread to be free (pass = do nothing)\n";
+				Script = Script + "\t\ttry:\n";
+					Script = Script + "\t\t\tthread.start_new_thread( thread_executeANTS, (GlobalDefFieldCommand, ) )\n";
+				Script = Script + "\t\texcept:\n";
+					Script = Script + "\t\t\tprint \"Error: unable to start thread\"\n";
+			}*/
+
 	Script = Script + "print(\"\\n======== Computing global deformation fields =========\")\n";
 	Script = Script + "case = 0\n";
 	Script = Script + "while case < len(allcases):\n";
@@ -638,7 +677,7 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # st
 		else Script = Script + "\torigDTI= allcases[case]\n";
 		Script = Script + "\tGlobalDefField = FinalResampPath + \"/First_Resampling/Case\" + str(case+1) + \"_GlobalDeformationField.nrrd\"\n";
 		Script = Script + "\tFinalDef = FinalResampPath + \"/First_Resampling/Case\" + str(case+1) + \"_DeformedDTI.nrrd\"\n";
-		Script = Script + "\tGlobalDefFieldCommand= " + GridProcessCmd + "\"" + m_SoftPath[7] + " --fixedVolume \" + DTIAverage + \" --movingVolume \" + origDTI + \" --outputDeformationFieldVolume \" + GlobalDefField + \" --outputVolume \" + FinalDef\n";
+		Script = Script + "\tGlobalDefFieldCommand=\"" + m_SoftPath[7] + " --fixedVolume \" + DTIAverage + \" --movingVolume \" + origDTI + \" --outputDeformationFieldVolume \" + GlobalDefField + \" --outputVolume \" + FinalDef\n";
 /* m_DTIRegOptions[]
 0	RegMethod
 	ANTS
@@ -689,21 +728,25 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # st
 			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSOutbase \" + ANTSTempFileBase\n"; // no --outputTfm for ANTS because --ANTSOutbase is used for the tfm
 		}
 		Script = Script + "\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GlobalDefFieldCommand)\n";
+
 		if(m_Overwrite==1) Script = Script + "\tif 1 :\n";
 		else Script = Script + "\tif not os.path.isfile(FinalDef) :\n";
-			Script = Script + "\t\tif os.system(GlobalDefFieldCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] DTI-Reg: Computing global deformation fields\')\n";
-/*MULTITHREADING	if( m_DTIRegOptions[0].compare("BRAINS")==0 ) Script = Script + "\t\tif os.system(GlobalDefFieldCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] DTI-Reg: Computing global deformation fields\')\n";
-			if( m_DTIRegOptions[0].compare("ANTS")==0 ) //use threads for ANTS because very slow
+
+			Script = Script + "\t\tGlobDbleToFloatCommand=\"" + m_SoftPath[8] + " convert -t float -i \" + FinalDef + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalResampPath + \"/First_Resampling/Case\" + str(case+1) + \"_DeformedDTI_float.nrrd\"\n\n";
+
+			if( ! m_useGridProcess )
 			{
-				Script = Script + "\t\twhile nbRunningThreads >= nbCPUs : pass # waiting here for a thread to be free (pass = do nothing)\n";
-				Script = Script + "\t\ttry:\n";
-					Script = Script + "\t\t\tthread.start_new_thread( thread_executeANTS, (GlobalDefFieldCommand, ) )\n";
-				Script = Script + "\t\texcept:\n";
-					Script = Script + "\t\t\tprint \"Error: unable to start thread\"\n";
-			}*/
-			Script = Script + "\t\tGlobDbleToFloatCommand=" + GridProcessCmd + "\"" + m_SoftPath[8] + " convert -t float -i \" + FinalDef + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalResampPath + \"/First_Resampling/Case\" + str(case+1) + \"_DeformedDTI_float.nrrd\"\n";
+			Script = Script + "\t\tif os.system(GlobalDefFieldCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] DTI-Reg: Computing global deformation fields\')\n";
+
 			Script = Script + "\t\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GlobDbleToFloatCommand)\n";
 			Script = Script + "\t\tif os.system(GlobDbleToFloatCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] unu: Converting the deformed images from double to float DTI\')\n";
+			}
+			else // run all commands in the same time in the script
+			{
+			Script = Script + "\t\tGlobDefFieldGridCommand=" + GridProcessCmd + "GlobalDefFieldCommand + \"\\' \" + \"\\'\" + GlobDbleToFloatCommand + \"\\' \"\n";
+			Script = Script + "\t\tif os.system(GlobDefFieldGridCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] Computing global deformation fields\')\n";
+			}
+
 if(m_Overwrite==0) Script = Script + "\telse : " + GridProcessFileExistIndent1 + "print(\"=> The file \\'\" + FinalDef + \"\\' already exists so the command will not be executed\")\n" + GridProcessFileExistCmd1;
 		Script = Script + "\tcase += 1\n\n";
 
@@ -715,7 +758,7 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, len(allc
 	Script = Script + "# dtiaverage recomputing\n";
 	Script = Script + "print(\"\\n======== Recomputing the final DTI average =========\")\n";
 	Script = Script + "DTIAverage2 = FinalResampPath + \"/FinalAtlasDTI.nrrd\"\n";
-	Script = Script + "AverageCommand2 = " + GridProcessCmdNoCase + "\"" + m_SoftPath[6] + " \"\n";
+	Script = Script + "AverageCommand2 = \"" + m_SoftPath[6] + " \"\n";
 	Script = Script + "case = 0\n";
 	Script = Script + "while case < len(allcases):\n";
 		Script = Script + "\tDTIforAVG2= \"--inputs \" + FinalResampPath + \"/First_Resampling/Case\" + str(case+1) + \"_DeformedDTI.nrrd \"\n";
@@ -728,7 +771,7 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, len(allc
 	Script = Script + "print(\"=> $ \" + AverageCommand2)\n";
 	if(m_Overwrite==1)Script = Script + "if 1 : \n";
 	else Script = Script + "if not os.path.isfile(DTIAverage2) : \n";
-		Script = Script + "\tif os.system(AverageCommand2)!=0 : ErrorList.append(\'dtiaverage: Recomputing the final DTI average\')\n";
+
 /* Computing some images from the final DTI with dtiprocess */
 	Script = Script + "# Computing some images from the final DTI with dtiprocess\n";
 		Script = Script + "\tFA2= FinalResampPath + \"/FinalAtlasFA.nrrd\"\n";
@@ -736,12 +779,26 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, len(allc
 		Script = Script + "\tRD2= FinalResampPath + \"/FinalAtlasRD.nrrd\"\n"; // Radial Diffusivity
 		Script = Script + "\tMD2= FinalResampPath + \"/FinalAtlasMD.nrrd\"\n"; // Mean Diffusivity
 		Script = Script + "\tAD2= FinalResampPath + \"/FinalAtlasAD.nrrd\"\n"; // Axial Diffusivity
-		Script = Script + "\tGeneFACommand2=" + GridProcessCmdNoCase + "\"" + m_SoftPath[3] + " --scalar_float --dti_image \" + DTIAverage2 + \" -f \" + FA2 + \" -m \" + MD2 + \" --color_fa_output \" + cFA2 + \" --RD_output \" + RD2 + \" --lambda1_output \" + AD2\n";
+		Script = Script + "\tGeneFACommand2=\"" + m_SoftPath[3] + " --scalar_float --dti_image \" + DTIAverage2 + \" -f \" + FA2 + \" -m \" + MD2 + \" --color_fa_output \" + cFA2 + \" --RD_output \" + RD2 + \" --lambda1_output \" + AD2\n\n";
+
+		Script = Script + "\tDbleToFloatCommand2=\"" + m_SoftPath[8] + " convert -t float -i \" + DTIAverage2 + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalResampPath + \"/FinalAtlasDTI_float.nrrd\"\n\n";
+
+		if( ! m_useGridProcess )
+		{
+		Script = Script + "\tif os.system(AverageCommand2)!=0 : ErrorList.append(\'dtiaverage: Recomputing the final DTI average\')\n";
+
 		Script = Script + "\tprint(\"=> $ \" + GeneFACommand2)\n";
 		Script = Script + "\tif os.system(GeneFACommand2)!=0 : ErrorList.append(\'dtiprocess: Recomputing final FA, color FA, MD, RD and AD\')\n";
-		Script = Script + "\tDbleToFloatCommand2=" + GridProcessCmdNoCase + "\"" + m_SoftPath[8] + " convert -t float -i \" + DTIAverage2 + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalResampPath + \"/FinalAtlasDTI_float.nrrd\"\n";
+
 		Script = Script + "\tprint(\"=> $ \" + DbleToFloatCommand2)\n";
 		Script = Script + "\tif os.system(DbleToFloatCommand2)!=0 : ErrorList.append(\'unu: Converting the final resampled DTI atlas from double to float DTI\')\n";
+		}
+		else // run all commands in the same time in the script
+		{
+		Script = Script + "\tAverage2GridCommand=" + GridProcessCmdNoCase + "AverageCommand2 + \"\\' \" + \"\\'\" + GeneFACommand2 + \"\\' \" + \"\\'\" + DbleToFloatCommand2 + \"\\'\"\n";
+		Script = Script + "\tif os.system(Average2GridCommand)!=0 : ErrorList.append(\'Recomputing the final DTI average\')\n";
+		}
+
 
 if(m_Overwrite==0) Script = Script + "else : " + GridProcessFileExistIndent + "print(\"=> The file \\'\" + DTIAverage2 + \"\\' already exists so the command will not be executed\")\n" + GridProcessFileExistCmdNoCase;
 
@@ -756,7 +813,7 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # st
 		else Script = Script + "\torigDTI2= allcases[case]\n";
 		Script = Script + "\tGlobalDefField2 = FinalResampPath + \"/Second_Resampling/Case\" + str(case+1) + \"_GlobalDeformationField.nrrd\"\n";
 		Script = Script + "\tFinalDef2 = FinalResampPath + \"/Second_Resampling/Case\" + str(case+1) + \"_FinalDeformedDTI.nrrd\"\n";
-		Script = Script + "\tGlobalDefFieldCommand2= " + GridProcessCmd + "\"" + m_SoftPath[7] + " --fixedVolume \" + DTIAverage2 + \" --movingVolume \" + origDTI2 + \" --outputDeformationFieldVolume \" + GlobalDefField2 + \" --outputVolume \" + FinalDef2\n";
+		Script = Script + "\tGlobalDefFieldCommand2=\"" + m_SoftPath[7] + " --fixedVolume \" + DTIAverage2 + \" --movingVolume \" + origDTI2 + \" --outputDeformationFieldVolume \" + GlobalDefField2 + \" --outputVolume \" + FinalDef2\n";
 
 /* m_DTIRegOptions[]
 0	RegMethod
@@ -810,16 +867,25 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # st
 		Script = Script + "\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GlobalDefFieldCommand2)\n";
 		if(m_Overwrite==1) Script = Script + "\tif 1 :\n";
 		else Script = Script + "\tif not os.path.isfile(FinalDef2) :\n";
-			Script = Script + "\t\tif os.system(GlobalDefFieldCommand2)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] DTI-Reg: Recomputing global deformation fields\')\n";
 
 			Script = Script + "\t\tDTIRegCaseFA = FinalResampPath + \"/Second_Resampling/Case\" + str(case+1) + \"_FinalDeformedFA.nrrd\"\n";
-			Script = Script + "\t\tGeneDTIRegCaseFACommand=" + GridProcessCmd + "\"" + m_SoftPath[3] + " --scalar_float --dti_image \" + FinalDef2 + \" -f \" + DTIRegCaseFA\n";
-			Script = Script + "\t\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GeneDTIRegCaseFACommand)\n";
-			Script = Script + "\t\tif os.system(GeneDTIRegCaseFACommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] dtiprocess: Computing DTIReg FA\')\n";
+			Script = Script + "\t\tGeneDTIRegCaseFACommand=\"" + m_SoftPath[3] + " --scalar_float --dti_image \" + FinalDef2 + \" -f \" + DTIRegCaseFA\n";
 
-			Script = Script + "\t\tGlobDbleToFloatCommand2=" + GridProcessCmd + "\"" + m_SoftPath[8] + " convert -t float -i \" + FinalDef2 + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalResampPath + \"/Second_Resampling/Case\" + str(case+1) + \"_FinalDeformedDTI_float.nrrd\"\n";
-			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + GlobDbleToFloatCommand2)\n";
-			Script = Script + "\t\tif os.system(GlobDbleToFloatCommand2)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] unu: Converting the final redeformed images from double to float DTI\')\n";
+			Script = Script + "\t\tGlobDbleToFloatCommand2=\"" + m_SoftPath[8] + " convert -t float -i \" + FinalDef2 + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalResampPath + \"/Second_Resampling/Case\" + str(case+1) + \"_FinalDeformedDTI_float.nrrd\"\n";
+
+			if( ! m_useGridProcess )
+			{
+			Script = Script + "\t\tif os.system(GlobalDefFieldCommand2)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] DTI-Reg: Computing global deformation fields\')\n";
+
+			Script = Script + "\t\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GlobDbleToFloatCommand)\n";
+			Script = Script + "\t\tif os.system(GlobDbleToFloatCommand2)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] unu: Converting the deformed images from double to float DTI\')\n";
+			}
+			else // run all commands in the same time in the script
+			{
+			Script = Script + "\t\tGlobDefField2GridCommand=" + GridProcessCmd + "GlobalDefFieldCommand2 + \"\\' \" + \"\\'\" + GlobDbleToFloatCommand2 + \"\\' \"\n";
+			Script = Script + "\t\tif os.system(GlobDefField2GridCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] Recomputing global deformation fields\')\n";
+			}
+
 if(m_Overwrite==0) Script = Script + "\telse : " + GridProcessFileExistIndent1 + "print(\"=> The file \\'\" + FinalDef2 + \"\\' already exists so the command will not be executed\")\n" + GridProcessFileExistCmd1;
 		Script = Script + "\tcase += 1\n\n";
 
@@ -1097,5 +1163,10 @@ void ScriptWriter::setBFAffineTfmMode(std::string BFAffineTfmMode)
 void ScriptWriter::setGridProcess(bool useGridProcess)
 {
 	m_useGridProcess = useGridProcess;
+}
+
+void ScriptWriter::setGridCommand(std::string GridCommand)
+{
+	m_GridCommand = GridCommand;
 }
 
