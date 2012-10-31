@@ -1520,6 +1520,14 @@ It will be read at the beginning of the program.</string>
          </widget>
         </item>
         <item>
+         <widget class="QLabel" name="label_24">
+          <property name="text">
+           <string>Before running DTI Atlas Builder on the grid, please be sure to have all tools listed in the &quot;Software Configuration&quot; tab installed on the grid with their
+paths configured.</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <spacer name="verticalSpacer_4">
           <property name="orientation">
            <enum>Qt::Vertical</enum>

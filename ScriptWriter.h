@@ -47,6 +47,7 @@ class ScriptWriter
 		void setDTIRegOptions(std::vector < std::string > DTIRegOptions);
 		void setBFAffineTfmMode(std::string BFAffineTfmMode);
 		void setGridProcess(bool useGridProcess);
+		void setGridCommand(std::string GridCommand);
 
 	private:
 /* VALUES */
@@ -69,6 +70,7 @@ class ScriptWriter
 		std::vector < std::string > m_DTIRegOptions;
 		std::string m_BFAffineTfmMode;
 		bool m_useGridProcess;
+		std::string m_GridCommand;
 
 /* SCRIPTS */
 		std::string m_Script_Preprocess; //contains the whole Script for Pre processing
