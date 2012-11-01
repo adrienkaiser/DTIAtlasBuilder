@@ -2900,7 +2900,7 @@ int GUI::LaunchScriptWriter()
 				stream << "\ti += 1"<< endl <<endl;
 
 			stream << "FileName=sys.argv[1]" << endl ;
-			stream << "print(\"Creating file :\" + FileName)" << endl ;
+			stream << "print(\"Creating file : \" + FileName + \"\\n\")" << endl ;
 			stream << "f = open(FileName,'w')" << endl ;
 			stream << "f.close()" << endl ;
 
