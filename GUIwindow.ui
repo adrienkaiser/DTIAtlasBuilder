@@ -1214,9 +1214,9 @@ as an Affine transform already computed, it will be used as an input for the Aff
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="AWButton">
+             <widget class="QPushButton" name="GAButton">
               <property name="text">
-               <string>AtlasWerks</string>
+               <string>GreedyAtlas</string>
               </property>
              </widget>
             </item>
@@ -1268,7 +1268,7 @@ as an Affine transform already computed, it will be used as an input for the Aff
              <widget class="QLineEdit" name="BRAINSFitPath"/>
             </item>
             <item>
-             <widget class="QLineEdit" name="AWPath"/>
+             <widget class="QLineEdit" name="GAPath"/>
             </item>
             <item>
              <widget class="QLineEdit" name="dtiavgPath"/>
@@ -1343,7 +1343,7 @@ as an Affine transform already computed, it will be used as an input for the Aff
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="AWResetButton">
+             <widget class="QPushButton" name="GAResetButton">
               <property name="toolTip">
                <string>Reset Software Path</string>
               </property>
