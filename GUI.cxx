@@ -83,7 +83,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	QObject::connect(RegMethodcomboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(RegMethodComboBoxChanged(int)));
 
 	QObject::connect(DefaultButton, SIGNAL(clicked()), this, SLOT(ConfigDefault()));
-	QObject::connect(AWPath, SIGNAL(editingFinished()), this, SLOT(testAW())); // test the version of AtlasWerks automatically when the text is changed manually ( not by a setText() )
+	QObject::connect(GAPath, SIGNAL(editingFinished()), this, SLOT(testGA())); // test the version of GreedyAtlas automatically when the text is changed manually ( not by a setText() )
 	QObject::connect(DTIRegPath, SIGNAL(editingFinished()), this, SLOT(testDTIReg())); // test the version of DTI-Reg automatically when the text is changed manually ( not by a setText() )
 
 	QObject::connect(AffineQCButton, SIGNAL(clicked()), this, SLOT(DisplayAffineQC()));
@@ -104,8 +104,8 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	SoftButtonMapper->setMapping(dtiprocButton,4);
 	QObject::connect(BRAINSFitButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
 	SoftButtonMapper->setMapping(BRAINSFitButton,5);
-	QObject::connect(AWButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
-	SoftButtonMapper->setMapping(AWButton,6);
+	QObject::connect(GAButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
+	SoftButtonMapper->setMapping(GAButton,6);
 	QObject::connect(dtiavgButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
 	SoftButtonMapper->setMapping(dtiavgButton,7);
 	QObject::connect(DTIRegButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
@@ -129,8 +129,8 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	ResetSoftButtonMapper->setMapping(dtiprocResetButton,4);
 	QObject::connect(BRAINSFitResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
 	ResetSoftButtonMapper->setMapping(BRAINSFitResetButton,5);
-	QObject::connect(AWResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
-	ResetSoftButtonMapper->setMapping(AWResetButton,6);
+	QObject::connect(GAResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
+	ResetSoftButtonMapper->setMapping(GAResetButton,6);
 	QObject::connect(dtiavgResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
 	ResetSoftButtonMapper->setMapping(dtiavgResetButton,7);
 	QObject::connect(DTIRegResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
@@ -191,7 +191,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 
 	} //if(!m_noGUI)
 
-	m_FromConstructor=1; // do not test AW path if 'Default' called from constructor -> test at the end of constructor
+	m_FromConstructor=1; // do not test GA path if 'Default' called from constructor -> test at the end of constructor
 
 /* SET the soft config */
 // look for the programs with the itk function
@@ -238,7 +238,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	m_FromConstructor=0;
 
 	//NOW that all the files have been loaded => test if all the paths are here
-	bool AWFound=true;
+	bool GAFound=true;
 	bool DTIRegFound=true;
 	std::string notFound;
 
@@ -247,10 +247,10 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	if(CropDTIPath->text().isEmpty()) notFound = notFound + "> CropDTI\n";
 	if(dtiprocPath->text().isEmpty()) notFound = notFound + "> dtiprocess\n";
 	if(BRAINSFitPath->text().isEmpty()) notFound = notFound + "> BRAINSFit\n";
-	if(AWPath->text().isEmpty())
+	if(GAPath->text().isEmpty())
 	{
-		notFound = notFound + "> AtlasWerks\n";
-		AWFound=false; // so it will not test the version
+		notFound = notFound + "> GreedyAtlas\n";
+		GAFound=false; // so it will not test the version
 	}
 	if(dtiavgPath->text().isEmpty()) notFound = notFound + "> dtiaverage\n";
 	if(DTIRegPath->text().isEmpty())
@@ -271,7 +271,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 		else std::cout<<"| The following programs have not been found. Please give a configuration file or modify it or enter the path manually in the GUI:\n"<< notFound <<std::endl;
 	}
 
-	if(AWFound) testAW(); // test the version of AtlasWerks only if found
+	if(GAFound) testGA(); // test the version of GreedyAtlas only if found
 	if(DTIRegFound) testDTIReg(); // test the version of DTI-Reg only if found
 }
 
@@ -1708,6 +1708,176 @@ Num. Iterations       : 50
 	else qDebug( "Could not create xml file");
 }
 
+void GUI::GenerateXMLForGA() // Greedy Atlas
+{	
+	if( access((m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration_AW").c_str(), F_OK) != 0 ) // Test if the main folder does not exists => unistd::access() returns 0 if F(file)_OK
+	{
+		std::cout<<"| Creating Non Linear Registration directory..."<<std::endl; // command line display
+		QProcess * mkdirMainProcess = new QProcess;
+		std::string program = "mkdir " + m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration_AW"; //// Creates the directory
+		std::cout<<"| $ " << program << std::endl;
+		mkdirMainProcess->execute( program.c_str() );
+	}
+
+	QString	xmlFileName = m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration_AW/GreedyAtlasParameters.xml");
+	QFile file(xmlFileName);
+	if ( file.open( IO_WriteOnly | IO_Translate ) )
+	{
+		std::cout<<"| Saving XML file for GreedyAtlas..."<<std::endl; // command line display
+		QTextStream stream( &file );
+
+		stream <<"<!--top-level node-->"<< endl;
+		stream <<"<ParameterFile>"<< endl;
+			stream <<"\t<WeightedImageSet>"<< endl;
+				stream <<"\t\t<ScaleImageWeights val=\"true\"/>"<< endl;
+				stream <<"\t\t<InputImageFormatString>"<< endl;
+					stream <<"\t\t\t<FormatString val=\"\" />"<< endl;
+					stream <<"\t\t\t<Base val=\"0\" />"<< endl;
+					std::ostringstream out;
+					out << m_CasesPath.size();
+					std::string nbcases_str = out.str();
+					stream <<"\t\t\t<NumFiles val=\"" << nbcases_str.c_str() << "\" />"<< endl;
+					stream <<"\t\t\t<Weight val=\"1\" />"<< endl;
+				stream <<"\t\t</InputImageFormatString>"<< endl;
+			std::ostringstream out1;
+			out1 << NbLoopsSpinBox->value();
+			std::string nbLoops_str = out1.str();
+			for (unsigned int i=0;i<m_CasesPath.size();i++)
+			{
+				std::ostringstream outi;
+				outi << i+1;
+				std::string i_str = outi.str();
+				stream <<"\t\t<WeightedImage>"<< endl;
+					stream <<"\t\t\t<Filename val=\"" << m_OutputPath << "/DTIAtlas/1_Affine_Registration/Loop" << nbLoops_str.c_str() << "/Case" << i_str.c_str() << "_Loop" << nbLoops_str.c_str() << "_FinalFA.nrrd\" />"<< endl;
+					stream <<"\t\t\t<ItkTransform val=\"1\" />"<< endl;
+				stream <<"\t\t</WeightedImage>"<< endl;
+			}
+			stream <<"\t</WeightedImageSet>"<< endl;
+
+/* Scale Levels */
+			if(SL4checkBox->isChecked())
+			{
+			stream <<"\t<GreedyScaleLevel>"<< endl;
+				stream <<"\t\t<ScaleLevel>"<< endl;
+					stream <<"\t\t\t<!--factor by which to downsample images-->"<< endl;
+					std::ostringstream outSL46;
+					outSL46 << SL4spinBox->value();
+					std::string SL46_str = outSL46.str();
+					stream <<"\t\t\t<DownsampleFactor val=\"" << SL46_str.c_str() << "\" />"<< endl;
+				stream <<"\t\t</ScaleLevel>"<< endl;
+				stream <<"\t\t<!--Scale factor on the maximum velocity in a given deformation for computing delta-->"<< endl;
+				std::ostringstream outSL42;
+				outSL42 << nbIter4SpinBox->value();
+				std::string SL42_str = outSL42.str();
+				stream <<"\t\t<NIterations val=\"" << SL42_str.c_str() << "\" />"<< endl;
+				stream <<"\t\t<Iterator>"<< endl;
+					std::ostringstream outSL4;
+					outSL4 << maxPerturbation4DoubleSpinBox->value();
+					std::string SL4_str = outSL4.str();
+					stream <<"\t\t\t<MaxPert val=\"" << SL4_str.c_str() << "\" />"<< endl;
+					stream <<"\t\t\t<DiffOper>"<< endl;
+						std::ostringstream outSL43;
+						outSL43 << alpha4DoubleSpinBox->value();
+						std::string SL43_str = outSL43.str();
+						stream <<"\t\t\t\t<Alpha val=\"" << SL43_str.c_str() << "\" />"<< endl;
+						std::ostringstream outSL44;
+						outSL44 << beta4DoubleSpinBox->value();
+						std::string SL44_str = outSL44.str();
+						stream <<"\t\t\t\t<Beta val=\"" << SL44_str.c_str() << "\" />"<< endl;
+						std::ostringstream outSL45;
+						outSL45 << gamma4DoubleSpinBox->value();
+						std::string SL45_str = outSL45.str();
+						stream <<"\t\t\t\t<Gamma val=\"" << SL45_str.c_str() << "\" />"<< endl;
+					stream <<"\t\t\t</DiffOper>"<< endl;
+				stream <<"\t\t</Iterator>"<< endl;
+			stream <<"\t</GreedyScaleLevel>"<< endl;
+			}
+
+			if(SL2checkBox->isChecked())
+			{
+			stream <<"\t<GreedyScaleLevel>"<< endl;
+				stream <<"\t\t<ScaleLevel>"<< endl;
+					stream <<"\t\t\t<!--factor by which to downsample images-->"<< endl;
+					std::ostringstream outSL26;
+					outSL26 << SL2spinBox->value();
+					std::string SL26_str = outSL26.str();
+					stream <<"\t\t\t<DownsampleFactor val=\"" << SL26_str.c_str() << "\" />"<< endl;
+				stream <<"\t\t</ScaleLevel>"<< endl;
+				stream <<"\t\t<!--Scale factor on the maximum velocity in a given deformation for computing delta-->"<< endl;
+				std::ostringstream outSL22;
+				outSL22 << nbIter2SpinBox->value();
+				std::string SL22_str = outSL22.str();
+				stream <<"\t\t<NIterations val=\"" << SL22_str.c_str() << "\" />"<< endl;
+				stream <<"\t\t<Iterator>"<< endl;
+					std::ostringstream outSL2;
+					outSL2 << maxPerturbation2DoubleSpinBox->value();
+					std::string SL2_str = outSL2.str();
+					stream <<"\t\t\t<MaxPert val=\"" << SL2_str.c_str() << "\" />"<< endl;
+					stream <<"\t\t\t<DiffOper>"<< endl;
+						std::ostringstream outSL23;
+						outSL23 << alpha2DoubleSpinBox->value();
+						std::string SL23_str = outSL23.str();
+						stream <<"\t\t\t\t<Alpha val=\"" << SL23_str.c_str() << "\" />"<< endl;
+						std::ostringstream outSL24;
+						outSL24 << beta2DoubleSpinBox->value();
+						std::string SL24_str = outSL24.str();
+						stream <<"\t\t\t\t<Beta val=\"" << SL24_str.c_str() << "\" />"<< endl;
+						std::ostringstream outSL25;
+						outSL25 << gamma2DoubleSpinBox->value();
+						std::string SL25_str = outSL25.str();
+						stream <<"\t\t\t\t<Gamma val=\"" << SL25_str.c_str() << "\" />"<< endl;
+					stream <<"\t\t\t</DiffOper>"<< endl;
+				stream <<"\t\t</Iterator>"<< endl;
+			stream <<"\t</GreedyScaleLevel>"<< endl;
+			}
+
+			if(SL1checkBox->isChecked())
+			{
+			stream <<"\t<GreedyScaleLevel>"<< endl;
+				stream <<"\t\t<ScaleLevel>"<< endl;
+					stream <<"\t\t\t<!--factor by which to downsample images-->"<< endl;
+					std::ostringstream outSL16;
+					outSL16 << SL1spinBox->value();
+					std::string SL16_str = outSL16.str();
+					stream <<"\t\t\t<DownsampleFactor val=\"" << SL16_str.c_str() << "\" />"<< endl;
+				stream <<"\t\t</ScaleLevel>"<< endl;
+				stream <<"\t\t<!--Scale factor on the maximum velocity in a given deformation for computing delta-->"<< endl;
+				std::ostringstream outSL12;
+				outSL12 << nbIter1SpinBox->value();
+				std::string SL12_str = outSL12.str();
+					stream <<"\t\t<NIterations val=\"" << SL12_str.c_str() << "\" />"<< endl;
+					std::ostringstream outSL1;
+					outSL1 << maxPerturbation1DoubleSpinBox->value();
+					std::string SL1_str = outSL1.str();
+				stream <<"\t\t<Iterator>"<< endl;
+					stream <<"\t\t\t<MaxPert val=\"" << SL1_str.c_str() << "\" />"<< endl;
+					stream <<"\t\t\t<DiffOper>"<< endl;
+						std::ostringstream outSL13;
+						outSL13 << alpha1DoubleSpinBox->value();
+						std::string SL13_str = outSL13.str();
+						stream <<"\t\t\t\t<Alpha val=\"" << SL13_str.c_str() << "\" />"<< endl;
+						std::ostringstream outSL14;
+						outSL14 << beta1DoubleSpinBox->value();
+						std::string SL14_str = outSL14.str();
+						stream <<"\t\t\t\t<Beta val=\"" << SL14_str.c_str() << "\" />"<< endl;
+						std::ostringstream outSL15;
+						outSL15 << gamma1DoubleSpinBox->value();
+						std::string SL15_str = outSL15.str();
+						stream <<"\t\t\t\t<Gamma val=\"" << SL15_str.c_str() << "\" />"<< endl;
+					stream <<"\t\t\t</DiffOper>"<< endl;
+				stream <<"\t\t</Iterator>"<< endl;
+			stream <<"\t</GreedyScaleLevel>"<< endl;
+			}
+
+			stream <<"\t<!--number of threads to use, 0=one per processor (only for CPU computation)-->"<< endl;
+			stream <<"\t<nThreads val=\"4\" />"<< endl;
+			stream <<"\t<OutputPrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration_AW/\" />"<< endl;
+			stream <<"\t<OutputSuffix val=\"mhd\" />"<< endl;
+		stream <<"</ParameterFile>"<< endl;
+	}
+	else qDebug( "Could not create xml file");
+}
+
   /////////////////////////////////////////
  //         SOFT CONFIGURATION          //
 /////////////////////////////////////////
@@ -1814,7 +1984,7 @@ int GUI::LoadConfig(QString configFile) // returns -1 if fails, otherwise 0
 
 			line = stream.readLine();
 			list = line.split("=");
-			if(!list.at(0).contains(QString("AtlasWerks")))
+			if(!list.at(0).contains(QString("GreedyAtlas")))
 			{
 				if(!m_noGUI) 
 				{
@@ -1824,13 +1994,13 @@ int GUI::LoadConfig(QString configFile) // returns -1 if fails, otherwise 0
 				else std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
 				return -1;
 			}
-			bool AWToTest=false;
+			bool GAToTest=false;
 			if( !list.at(1).isEmpty() )
 			{
-				AWToTest=true; // call testAW after the display of "DONE"
-				AWPath->setText(list.at(1));
+				GAToTest=true; // call testGA after the display of "DONE"
+				GAPath->setText(list.at(1));
 			}
-			else if(AWPath->text().isEmpty()) notFound = notFound + "> AtlasWerks\n";
+			else if(GAPath->text().isEmpty()) notFound = notFound + "> GreedyAtlas\n";
 
 			line = stream.readLine();
 			list = line.split("=");
@@ -1915,7 +2085,7 @@ int GUI::LoadConfig(QString configFile) // returns -1 if fails, otherwise 0
 					}
 				}
 
-				if(AWToTest) testAW();  // do not test AW path if 'LoadConfig' called from constructor -> test at the end of constructor
+				if(GAToTest) testGA();  // do not test GA path if 'LoadConfig' called from constructor -> test at the end of constructor
 				if(DTIRegToTest) testDTIReg();  // do not test DTIReg path if 'LoadConfig' called from constructor -> test at the end of constructor
 			}
 
@@ -1947,7 +2117,7 @@ void GUI::SaveConfig() /*SLOT*/
 			stream << "CropDTI=" << CropDTIPath->text() << endl;
 			stream << "dtiprocess=" << dtiprocPath->text() << endl;
 			stream << "BRAINSFit=" << BRAINSFitPath->text() << endl;
-			stream << "AtlasWerks=" << AWPath->text() << endl;
+			stream << "GreedyAtlas=" << GAPath->text() << endl;
 			stream << "dtiaverage=" << dtiavgPath->text() << endl;
 			stream << "DTI-Reg=" << DTIRegPath->text() << endl;
 			stream << "unu=" << unuPath->text() << endl;
@@ -2001,13 +2171,13 @@ void GUI::ConfigDefault() /*SLOT*/
 	if(program.empty()) { if(BRAINSFitPath->text().isEmpty()) notFound = notFound + "> BRAINSFit\n"; }
 	else BRAINSFitPath->setText(QString(program.c_str()));
 
-	bool AWToTest=false;
-	program = itksys::SystemTools::FindProgram("AtlasWerks");
-	if(program.empty()) { if(AWPath->text().isEmpty()) notFound = notFound + "> AtlasWerks\n"; }
+	bool GAToTest=false;
+	program = itksys::SystemTools::FindProgram("GreedyAtlas");
+	if(program.empty()) { if(GAPath->text().isEmpty()) notFound = notFound + "> GreedyAtlas\n"; }
 	else
 	{
-		AWToTest=true; // call testAW after the display of "DONE"
-		AWPath->setText(QString(program.c_str()));	
+		GAToTest=true; // call testGA after the display of "DONE"
+		GAPath->setText(QString(program.c_str()));	
 	}
 
 	program = itksys::SystemTools::FindProgram("dtiaverage");
@@ -2046,12 +2216,12 @@ void GUI::ConfigDefault() /*SLOT*/
 			else std::cout<<"| The following programs have not been found. Please give a configuration file or modify it or enter the path manually in the GUI:\n"<< notFound <<std::endl;
 		}
 
-		if(AWToTest) testAW();  // do not test AW path if 'Default' called from constructor -> test at the end of constructor
+		if(GAToTest) testGA();  // do not test GA path if 'Default' called from constructor -> test at the end of constructor
 		if(DTIRegToTest) testDTIReg();  // do not test DTIReg path if 'Default' called from constructor -> test at the end of constructor
 	}
 }
 
-void GUI::BrowseSoft(int soft)  /*SLOT*/ //softwares: 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=AtlasWerks, 7=dtiaverage, 8=DTI-Reg, 9=unu, 10=MriWatcher
+void GUI::BrowseSoft(int soft)  /*SLOT*/ //softwares: 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=GreedyAtlas, 7=dtiaverage, 8=DTI-Reg, 9=unu, 10=MriWatcher
 {
 	QString SoftBrowse = QFileDialog::getOpenFileName(this, "Open Software", QString(), "Executable Files (*)");
 
@@ -2070,8 +2240,8 @@ void GUI::BrowseSoft(int soft)  /*SLOT*/ //softwares: 1=ImageMath, 2=ResampleDTI
 		case 5: BRAINSFitPath->setText(SoftBrowse);
 			break;
 		case 6: {
-			AWPath->setText(SoftBrowse);
-			testAW();
+			GAPath->setText(SoftBrowse);
+			testGA();
 			}
 			break;
 		case 7: dtiavgPath->setText(SoftBrowse);
@@ -2089,7 +2259,7 @@ void GUI::BrowseSoft(int soft)  /*SLOT*/ //softwares: 1=ImageMath, 2=ResampleDTI
 	}
 }
 
-void GUI::ResetSoft(int softindex) /*SLOT*/ //softwares: 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=AtlasWerks, 7=dtiaverage, 8=DTI-Reg, 9=unu, 10=MriWatcher
+void GUI::ResetSoft(int softindex) /*SLOT*/ //softwares: 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=GreedyAtlas, 7=dtiaverage, 8=DTI-Reg, 9=unu, 10=MriWatcher
 {
 	std::string soft;
 
@@ -2105,7 +2275,7 @@ void GUI::ResetSoft(int softindex) /*SLOT*/ //softwares: 1=ImageMath, 2=Resample
 		break;
 	case 5:	soft="BRAINSFit";
 		break;
-	case 6: soft="AtlasWerks";
+	case 6: soft="GreedyAtlas";
 		break;
 	case 7: soft="dtiaverage";
 		break;
@@ -2124,7 +2294,7 @@ void GUI::ResetSoft(int softindex) /*SLOT*/ //softwares: 1=ImageMath, 2=Resample
 	if(program.empty() && soft=="DTI-Reg_1.1.2") program = itksys::SystemTools::FindProgram("DTI-Reg"); // if 1.1.2 not found, look for "DTI-Reg"
 
 
-	bool AWToTest=false;
+	bool GAToTest=false;
 	bool DTIRegToTest=false;
 	if(program.empty()) 
 	{
@@ -2140,8 +2310,8 @@ void GUI::ResetSoft(int softindex) /*SLOT*/ //softwares: 1=ImageMath, 2=Resample
 		else if(softindex==5) BRAINSFitPath->setText(QString(program.c_str()));
 		else if(softindex==6)
 		{
-			AWPath->setText(QString(program.c_str()));
-			AWToTest=true; // call testAW after the display of "DONE"
+			GAPath->setText(QString(program.c_str()));
+			GAToTest=true; // call testGA after the display of "DONE"
 		}
 		else if(softindex==7) dtiavgPath->setText(QString(program.c_str()));
 		else if(softindex==8)
@@ -2157,18 +2327,18 @@ void GUI::ResetSoft(int softindex) /*SLOT*/ //softwares: 1=ImageMath, 2=Resample
 
 	if(m_FromConstructor!=1) // do not test paths if 'Default' called from constructor -> test at the end of constructor
 	{
-		if(AWToTest) testAW();
+		if(GAToTest) testGA();
 		if(DTIRegToTest) testDTIReg();
 	}
 }
 
-int GUI::testAW() /*SLOT*/ // returns 0 if version ok, -1 if bad version
+int GUI::testGA() /*SLOT*/ // returns 0 if version ok, -1 if bad version
 {
 	QProcess * Process = new QProcess;
 	std::string program;
-	program = AWPath->text().toStdString() + " --version";
+	program = GAPath->text().toStdString() + " --version";
 
-	std::cout<<"| Testing the version of AtlasWerks...";
+	std::cout<<"| Testing the version of GreedyAtlas...";
 
 	Process->start( program.c_str() ); // try to find the version => returns nothing if not the right version
 
@@ -2181,10 +2351,10 @@ int GUI::testAW() /*SLOT*/ // returns 0 if version ok, -1 if bad version
 	{
 		if(!m_noGUI) 
 		{
-			std::string text = "The version of AtlasWerks \'" + AWPath->text().toStdString() + "\' is not the right one.\nPlease give a version supporting a XML file (--paramFile).\n";
+			std::string text = "The version of GreedyAtlas \'" + GAPath->text().toStdString() + "\' is not the right one.\nPlease give a version supporting a XML file (--paramFile).\n";
 			QMessageBox::warning(this, "Wrong version", QString(text.c_str()) );
 		}
-		else std::cout<<"| The version of AtlasWerks \'" << AWPath->text().toStdString() << "\' is not the right one. Please give a version supporting a XML file (--paramFile)."<<std::endl;
+		else std::cout<<"| The version of GreedyAtlas \'" << GAPath->text().toStdString() << "\' is not the right one. Please give a version supporting a XML file (--paramFile)."<<std::endl;
 
 		return -1;
 	}
@@ -2238,7 +2408,7 @@ void GUI::ReadMe()  /*SLOT*/ /////to UPDATE
 	QDialog *dlg = new QDialog(this);
 	dlg->setWindowTitle ("Read Me");
 
-	std::string info = "DTIAtlasBuilder\n===============\n\nA tool to create an atlas from several DTI images\n\nThese Softwares need to be installed before executing the tool :\n- ImageMath\n- ResampleDTIlogEuclidean\n- CropDTI\n- dtiprocess\n- BRAINSFit\n- AtlasWerks\n- dtiaverage\n- DTI-Reg\n- unu\n- MriWatcher\n\n For any question, suggestion or remark, please contact akaiser@unc.edu.";
+	std::string info = "DTIAtlasBuilder\n===============\n\nA tool to create an atlas from several DTI images\n\nThese Softwares need to be installed before executing the tool :\n- ImageMath\n- ResampleDTIlogEuclidean\n- CropDTI\n- dtiprocess\n- BRAINSFit\n- GreedyAtlas\n- dtiaverage\n- DTI-Reg\n- unu\n- MriWatcher\n\n For any question, suggestion or remark, please contact akaiser@unc.edu.";
 	QLabel *InfoLabel = new QLabel (info.c_str(), this);
 	QVBoxLayout *VLayout = new QVBoxLayout();
 	VLayout->addWidget(InfoLabel);
@@ -2588,7 +2758,7 @@ int GUI::LaunchScriptWriter()
 
 /* Software paths */
 /* Checking if all the programs have been given */
-	if(ImagemathPath->text().isEmpty() || ResampPath->text().isEmpty() || CropDTIPath->text().isEmpty() || dtiprocPath->text().isEmpty() || BRAINSFitPath->text().isEmpty() || AWPath->text().isEmpty() || dtiavgPath->text().isEmpty() || DTIRegPath->text().isEmpty() || unuPath->text().isEmpty() || MriWatcherPath->text().isEmpty()) // if any path is missing => check in the config file and in the PATH
+	if(ImagemathPath->text().isEmpty() || ResampPath->text().isEmpty() || CropDTIPath->text().isEmpty() || dtiprocPath->text().isEmpty() || BRAINSFitPath->text().isEmpty() || GAPath->text().isEmpty() || dtiavgPath->text().isEmpty() || DTIRegPath->text().isEmpty() || unuPath->text().isEmpty() || MriWatcherPath->text().isEmpty()) // if any path is missing => check in the config file and in the PATH
 	{
 		char * value = getenv("DTIAtlasBuilderSoftPath");
 		if (value) LoadConfig( QString(value) ); // replace the paths by the paths given in the config file
@@ -2626,11 +2796,11 @@ int GUI::LaunchScriptWriter()
 			if(programPath.empty()) notFound = notFound + "> BRAINSFit\n";
 			else BRAINSFitPath->setText(QString(programPath.c_str()));
 		}
-		if(AWPath->text().isEmpty())
+		if(GAPath->text().isEmpty())
 		{
-			programPath = itksys::SystemTools::FindProgram("AtlasWerks");
-			if(programPath.empty()) notFound = notFound + "> AtlasWerks\n";
-			else AWPath->setText(QString(programPath.c_str()));
+			programPath = itksys::SystemTools::FindProgram("GreedyAtlas");
+			if(programPath.empty()) notFound = notFound + "> GreedyAtlas\n";
+			else GAPath->setText(QString(programPath.c_str()));
 		}
 		if(dtiavgPath->text().isEmpty())
 		{
@@ -2670,7 +2840,7 @@ int GUI::LaunchScriptWriter()
 		}
 	}
 
-	if(testAW()==-1) return -1;
+	if(testGA()==-1) return -1;
 	if(testDTIReg()==-1) return -1;
 
 /* Checking if the given files are executable */
@@ -2724,11 +2894,11 @@ int GUI::LaunchScriptWriter()
 		else std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
-	if(access(AWPath->text().toStdString().c_str(), X_OK) != 0 )
+	if(access(GAPath->text().toStdString().c_str(), X_OK) != 0 )
 	{
 		if(!m_noGUI)
 		{
-			std::string text = "The file \'" + AWPath->text().toStdString() + "\' is not executable";
+			std::string text = "The file \'" + GAPath->text().toStdString() + "\' is not executable";
 			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
 		}
 		else std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
@@ -2782,7 +2952,7 @@ int GUI::LaunchScriptWriter()
 	SoftPath.push_back(CropDTIPath->text().toStdString());
 	SoftPath.push_back(dtiprocPath->text().toStdString());
 	SoftPath.push_back(BRAINSFitPath->text().toStdString());
-	SoftPath.push_back(AWPath->text().toStdString());
+	SoftPath.push_back(GAPath->text().toStdString());
 	SoftPath.push_back(dtiavgPath->text().toStdString());
 	SoftPath.push_back(DTIRegPath->text().toStdString());
 	SoftPath.push_back(unuPath->text().toStdString());
@@ -2818,8 +2988,8 @@ int GUI::LaunchScriptWriter()
 /* Launch writing */
 	m_scriptwriter->WriteScript(); // Master Function
 
-/* XML file for AtlasWerks */
-	GenerateXMLForAW();
+/* XML file for GreedyAtlas */
+	GenerateXMLForGA();
 
 /* Save CSV and parameters */
 	SaveCSVResults(Crop,NbLoopsSpinBox->value());

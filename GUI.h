@@ -48,6 +48,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		void SaveParameters(QString ParamBrowseName,QString CSVFileName);
 
 /*XML FILE*/	void GenerateXMLForAW();
+		void GenerateXMLForGA();
 
 /*SOFT CONFIG*/	int LoadConfig(QString ConfigFile); // returns -1 if fails, otherwise 0
 
@@ -82,7 +83,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		void ConfigDefault();
 		void BrowseSoft(int); //in the soft dialog window
 		void ResetSoft(int);
-		int testAW(); // returns 0 if version ok, -1 if bad version
+		int testGA(); // returns 0 if version ok, -1 if bad version
 		int testDTIReg(); // returns 0 if version ok, -1 if bad version
 
 /*READ ME*/	void ReadMe();
@@ -123,7 +124,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 /*PARAMETERS*/	int m_ParamSaved; // 0 if the last parameters have not been saved, 1 if the last have been saved
 		QString m_ParamFileHeader; // to check if the file to read is really a parameter file
 
-/*SOFT CONFIG*/	int m_FromConstructor; // do not test AW path if 'Default' called from constructor
+/*SOFT CONFIG*/	int m_FromConstructor; // do not test GA path if 'Default' called from constructor
 
 /*RESAMP PARAM*/QComboBox *m_windowComboBox;
 		QComboBox *m_BSplineComboBox;
