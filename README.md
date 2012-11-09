@@ -2,10 +2,12 @@ DTIAtlasBuilder
 ===============
 
 Find the tool on NITRC : https://www.nitrc.org/projects/dtiatlasbuilder
+
 And GitHub : https://github.com/NIRALUser/DTIAtlasBuilder
+
 Contact : akaiser@unc.edu
 
-===============
+
 
 A tool to create an atlas from several DTI images
 

@@ -363,8 +363,7 @@ void GUI::InitOptions()
 	m_BRegTypeComboBox->addItem("BSpline");
 	m_BRegTypeComboBox->addItem("Diffeomorphic");
 	m_BRegTypeComboBox->addItem("Demons");
-	m_BRegTypeComboBox->addItem("LogDemons");
-	m_BRegTypeComboBox->addItem("SymmetricLogDemons");
+	m_BRegTypeComboBox->addItem("FastSymmetricForces");
 	m_BRegTypeComboBox->setCurrentIndex(5);
 	BRAINSWidgetVLayout->addWidget(m_BRegTypeComboBox);
 
@@ -1374,9 +1373,8 @@ int GUI::LoadParameters(QString paramFile)
 			else if( param.at(0).contains(QString("Rigid")) ) m_BRegTypeComboBox->setCurrentIndex(1);
 			else if( param.at(0).contains(QString("BSpline")) ) m_BRegTypeComboBox->setCurrentIndex(2);
 			else if( param.at(0).contains(QString("Diffeomorphic")) ) m_BRegTypeComboBox->setCurrentIndex(3);
-			else if( param.at(0).contains(QString("SymmetricLogDemons")) ) m_BRegTypeComboBox->setCurrentIndex(6);
-			else if( param.at(0).contains(QString("LogDemons")) ) m_BRegTypeComboBox->setCurrentIndex(5);
 			else if( param.at(0).contains(QString("Demons")) ) m_BRegTypeComboBox->setCurrentIndex(4);
+			else if( param.at(0).contains(QString("FastSymmetricForces")) ) m_BRegTypeComboBox->setCurrentIndex(5);
 			else
 			{
 				if(!m_noGUI) 
