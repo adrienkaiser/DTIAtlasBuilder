@@ -86,16 +86,19 @@ void ScriptWriter::Preprocess ()
 		//Test Function
 		Script = Script + "# Function that tests if all cases have been processed on the grid\n";
 		Script = Script + "def TestGridProcess ( FilesFolder, NbCases , NoCase1): # if NbCases == 0, then just search the file \'file\' (unique command)\n";
-			Script = Script + "\tprint(\"\\n| Waiting for all cases to be processed on grid...\")\n";
+			Script = Script + "\tprint(\"\\n| Waiting for all cases (\" + str(NbCases) + \") to be processed on grid...\")\n";
 			Script = Script + "\tfilesOK = 0\n";
 			Script = Script + "\twhile not filesOK :\n";
 				Script = Script + "\t\tfilesOK = 1\n";
 				Script = Script + "\t\tif NbCases>0 : \n";
+					Script = Script + "\t\t\tNbfilesOK = 0\n";
 					Script = Script + "\t\t\tif NoCase1 == 1 : case = 1\n";
 					Script = Script + "\t\t\telse : case = 0\n";
 					Script = Script + "\t\t\twhile case < NbCases:\n";
 						Script = Script + "\t\t\t\tif not os.path.isfile( FilesFolder + \"/Case\" + str(case+1) ) : filesOK = 0\n";
+						Script = Script + "\t\t\t\telse : NbfilesOK = NbfilesOK + 1\n";
 						Script = Script + "\t\t\t\tcase += 1\n";
+					Script = Script + "\t\t\tprint(\"| [\" + str(NbfilesOK) + \"\\t/ \" + str(NbCases) + \" ] Files processed\")\n";
 				Script = Script + "\t\telif not os.path.isfile( FilesFolder + \"/file\" ) : filesOK = 0\n";
 			Script = Script + "\tprint(\"| All files processed\")\n";
 			Script = Script + "\tos.system(\"rm \" + FilesFolder + \"/*\")\n\n";
@@ -392,10 +395,13 @@ void ScriptWriter::AtlasBuilding()
 			Script = Script + "\twhile not filesOK :\n";
 				Script = Script + "\t\tfilesOK = 1\n";
 				Script = Script + "\t\tif NbCases>0 : \n";
+					Script = Script + "\t\t\tNbfilesOK = 0\n";
 					Script = Script + "\t\t\tcase = 0\n";
 					Script = Script + "\t\t\twhile case < NbCases:\n";
 						Script = Script + "\t\t\t\tif not os.path.isfile( FilesFolder + \"/Case\" + str(case+1) ) : filesOK = 0\n";
+						Script = Script + "\t\t\t\telse : NbfilesOK = NbfilesOK + 1\n";
 						Script = Script + "\t\t\t\tcase += 1\n";
+					Script = Script + "\t\t\tprint(\"| [\" + str(NbfilesOK) + \"\\t/ \" + str(NbCases) + \" ] Files processed\")\n";
 				Script = Script + "\t\telif not os.path.isfile( FilesFolder + \"/file\" ) : filesOK = 0\n";
 			Script = Script + "\tprint(\"| All files processed\")\n";
 			Script = Script + "\tos.system(\"rm \" + FilesFolder + \"/*\")\n\n";
