@@ -364,7 +364,7 @@ void GUI::InitOptions()
 	m_BRegTypeComboBox->addItem("Diffeomorphic");
 	m_BRegTypeComboBox->addItem("Demons");
 	m_BRegTypeComboBox->addItem("FastSymmetricForces");
-	m_BRegTypeComboBox->setCurrentIndex(5);
+	m_BRegTypeComboBox->setCurrentIndex(3);
 	BRAINSWidgetVLayout->addWidget(m_BRegTypeComboBox);
 
 	QLabel *TfmModeLabel = new QLabel("Transform Mode:", this);
@@ -611,10 +611,10 @@ void GUI::DisplayDeformQC() /*SLOT*/
 		std::ostringstream outi;
 		outi << i;
 		std::string outi_str = outi.str();
-		path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/3_AW_Atlas/Case" + outi_str + "_AWFA.nrrd";
+		path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/3_Diffeomorphic_Atlas/Case" + outi_str + "_DiffeomorphicFA.nrrd";
 		if( access(path.c_str(), F_OK) == 0 ) program = program + " " + path;
 	}
-	path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/3_AW_Atlas/AWAtlasFA.nrrd";
+	path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/3_Diffeomorphic_Atlas/DiffeomorphicAtlasFA.nrrd";
 	if( access(path.c_str(), F_OK) == 0 ) program = program + " " + path;
 
 	std::cout<<"| $ " << program << std::endl;
@@ -791,7 +791,7 @@ void GUI::SaveCSVResults(int Crop, int nbLoops) // Crop = 0 if no cropping , 1 i
 
 		stream << QString("id") << m_CSVseparator << QString("Original DTI Image");
 		if(Crop==1) stream << m_CSVseparator << QString("Cropped DTI");
-		stream << m_CSVseparator << QString("FA from original") << m_CSVseparator << QString("Affine transform") << m_CSVseparator << QString("Affine registered DTI") << m_CSVseparator << QString("Affine Registered FA") << m_CSVseparator << QString("AW Deformed FA") << m_CSVseparator << QString("AW Deformation field to Affine space") << m_CSVseparator << QString("AW Inverse Deformation field to Affine space") << m_CSVseparator << QString("AW DTI") << m_CSVseparator << QString("AW Deformation field to Original space") << m_CSVseparator << QString("DTI-Reg Final DTI") << endl;
+		stream << m_CSVseparator << QString("FA from original") << m_CSVseparator << QString("Affine transform") << m_CSVseparator << QString("Affine registered DTI") << m_CSVseparator << QString("Affine Registered FA") << m_CSVseparator << QString("Diffeomorphic Deformed FA") << m_CSVseparator << QString("Diffeomorphic Deformation field to Affine space") << m_CSVseparator << QString("Diffeomorphic Inverse Deformation field to Affine space") << m_CSVseparator << QString("Diffeomorphic DTI") << m_CSVseparator << QString("Diffeomorphic Deformation field to Original space") << m_CSVseparator << QString("DTI-Reg Final DTI") << endl;
 
 		for(int i=0; i < CaseListWidget->count() ;i++) // for all cases
 		{
@@ -801,11 +801,11 @@ void GUI::SaveCSVResults(int Crop, int nbLoops) // Crop = 0 if no cropping , 1 i
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Loop") << nbLoops << QString("/Case") << i+1 << QString("_Loop ") << nbLoops << QString("_LinearTrans.txt"); // Affine transform
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Loop") << nbLoops << QString("/Case") << i+1 << QString("_Loop ") << nbLoops << QString("_LinearTrans_DTI.nrrd"); // Affine registered DTI
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Loop") << nbLoops << QString("/Case") << i+1 << QString("_Loop ") << nbLoops << QString("_FinalFA.nrrd"); // Affine Registered FA
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration_AW/Case") << i+1 << QString("_NonLinearTrans_FA.mhd"); // AW Deformed FA
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration_AW/Case") << i+1 << QString("_DeformationField.mhd"); // AW Deformation field to Affine space
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration_AW/Case") << i+1 << QString("_InverseDeformationField.mhd"); // AW Inverse Deformation field to Affine space
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/3_AW_Atlas/Case") << i+1 << QString("_AWDTI.nrrd"); // AW DTI
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/4_Final_Resampling/Second_Resampling/Case") << i+1 << QString("_GlobalDeformationField.nrrd"); // AW Deformation field to Original space
+			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/Case") << i+1 << QString("_NonLinearTrans_FA.mhd"); // Diffeomorphic Deformed FA
+			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/Case") << i+1 << QString("_DeformationField.mhd"); // Diffeomorphic Deformation field to Affine space
+			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/Case") << i+1 << QString("_InverseDeformationField.mhd"); // Diffeomorphic Inverse Deformation field to Affine space
+			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/3_Diffeomorphic_Atlas/Case") << i+1 << QString("_DiffeomorphicDTI.nrrd"); // Diffeomorphic DTI
+			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/4_Final_Resampling/Second_Resampling/Case") << i+1 << QString("_GlobalDeformationField.nrrd"); // Diffeomorphic Deformation field to Original space
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/4_Final_Resampling/Second_Resampling/Case") << i+1 << QString("_FinalDeformedDTI.nrrd"); // DTI-Reg Final DTI
 			stream << endl;
 		}
@@ -1539,7 +1539,7 @@ void GUI::GenerateXMLForAW()
 		mkdirMainProcess->execute( program.c_str() );
 	}
 
-	QString	xmlFileName = m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration_AW/AtlasWerksParameters.xml");
+	QString	xmlFileName = m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/AtlasWerksParameters.xml");
 	QFile file(xmlFileName);
 	if ( file.open( IO_WriteOnly | IO_Translate ) )
 	{
@@ -1695,10 +1695,10 @@ Num. Iterations       : 50
 
 			stream <<"\t<!--number of threads to use, 0=one per processor (only for CPU computation)-->"<< endl;
 			stream <<"\t<nThreads val=\"4\" />"<< endl;
-			stream <<"\t<OutputImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration_AW/AverageImage\" />"<< endl;
-			stream <<"\t<OutputDeformedImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration_AW/DeformedImage_\" />"<< endl;
-			stream <<"\t<OutputHFieldImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration_AW/DeformationField_\" />"<< endl;
-			stream <<"\t<OutputInvHFieldImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration_AW/InverseDeformationField_\" />"<< endl;
+			stream <<"\t<OutputImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration/AverageImage\" />"<< endl;
+			stream <<"\t<OutputDeformedImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration/DeformedImage_\" />"<< endl;
+			stream <<"\t<OutputHFieldImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration/DeformationField_\" />"<< endl;
+			stream <<"\t<OutputInvHFieldImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration/InverseDeformationField_\" />"<< endl;
 			stream <<"\t<OutputFileType val=\"mhd\" />"<< endl;
 
 		stream <<"</ParameterFile>"<< endl;
@@ -1708,16 +1708,16 @@ Num. Iterations       : 50
 
 void GUI::GenerateXMLForGA() // Greedy Atlas
 {	
-	if( access((m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration_AW").c_str(), F_OK) != 0 ) // Test if the main folder does not exists => unistd::access() returns 0 if F(file)_OK
+	if( access((m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration").c_str(), F_OK) != 0 ) // Test if the main folder does not exists => unistd::access() returns 0 if F(file)_OK
 	{
 		std::cout<<"| Creating Non Linear Registration directory..."<<std::endl; // command line display
 		QProcess * mkdirMainProcess = new QProcess;
-		std::string program = "mkdir " + m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration_AW"; //// Creates the directory
+		std::string program = "mkdir " + m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration"; //// Creates the directory
 		std::cout<<"| $ " << program << std::endl;
 		mkdirMainProcess->execute( program.c_str() );
 	}
 
-	QString	xmlFileName = m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration_AW/GreedyAtlasParameters.xml");
+	QString	xmlFileName = m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/GreedyAtlasParameters.xml");
 	QFile file(xmlFileName);
 	if ( file.open( IO_WriteOnly | IO_Translate ) )
 	{
@@ -1869,7 +1869,7 @@ void GUI::GenerateXMLForGA() // Greedy Atlas
 
 			stream <<"\t<!--number of threads to use, 0=one per processor (only for CPU computation)-->"<< endl;
 			stream <<"\t<nThreads val=\"4\" />"<< endl;
-			stream <<"\t<OutputPrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration_AW/\" />"<< endl;
+			stream <<"\t<OutputPrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration/\" />"<< endl;
 			stream <<"\t<OutputSuffix val=\"mhd\" />"<< endl;
 		stream <<"</ParameterFile>"<< endl;
 	}
