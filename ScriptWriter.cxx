@@ -86,7 +86,7 @@ void ScriptWriter::Preprocess ()
 		//Test Function
 		Script = Script + "# Function that tests if all cases have been processed on the grid\n";
 		Script = Script + "def TestGridProcess ( FilesFolder, NbCases , NoCase1): # if NbCases == 0, then just search the file \'file\' (unique command)\n";
-			Script = Script + "\tprint(\"\\n| Waiting for all cases (\" + str(NbCases) + \") to be processed on grid...\")\n";
+			Script = Script + "\tprint(\"\\n| Waiting for all cases (\" + str(NbCases-NoCase1) + \") to be processed on grid...\") # NoCase1 is 0 or 1\n";
 			Script = Script + "\tfilesOK = 0\n";
 			Script = Script + "\twhile not filesOK :\n";
 				Script = Script + "\t\tfilesOK = 1\n";
@@ -98,9 +98,9 @@ void ScriptWriter::Preprocess ()
 						Script = Script + "\t\t\t\tif not os.path.isfile( FilesFolder + \"/Case\" + str(case+1) ) : filesOK = 0\n";
 						Script = Script + "\t\t\t\telse : NbfilesOK = NbfilesOK + 1\n";
 						Script = Script + "\t\t\t\tcase += 1\n";
-					Script = Script + "\t\t\tprint(\"| [\" + str(NbfilesOK) + \"\\t/ \" + str(NbCases) + \" ] Files processed\")\n";
+					Script = Script + "\t\t\tprint(\"\\r| [\" + str(NbfilesOK) + \"\\t/ \" + str(NbCases) + \" ] Files processed\"), # the comma prevents the print from jumping line\n";
 				Script = Script + "\t\telif not os.path.isfile( FilesFolder + \"/file\" ) : filesOK = 0\n";
-			Script = Script + "\tprint(\"| All files processed\")\n";
+			Script = Script + "\tprint(\"\\n| All files processed\")\n";
 			Script = Script + "\tos.system(\"rm \" + FilesFolder + \"/*\")\n\n";
 
 		GridApostrophe = " + \"\\'\"";
@@ -361,9 +361,9 @@ void ScriptWriter::AtlasBuilding()
 	Script = Script + "print(\"\\n============ Atlas Building =============\")\n\n";
 
 	Script = Script + "# Files Paths\n";
-	Script = Script + "DeformPath= \"" + m_OutputPath + "/DTIAtlas/2_NonLinear_Registration_AW\"\n";
+	Script = Script + "DeformPath= \"" + m_OutputPath + "/DTIAtlas/2_NonLinear_Registration\"\n";
 	Script = Script + "AffinePath= \"" + m_OutputPath + "/DTIAtlas/1_Affine_Registration\"\n";
-	Script = Script + "FinalPath= \"" + m_OutputPath + "/DTIAtlas/3_AW_Atlas\"\n";
+	Script = Script + "FinalPath= \"" + m_OutputPath + "/DTIAtlas/3_Diffeomorphic_Atlas\"\n";
 	Script = Script + "FinalResampPath= \"" + m_OutputPath + "/DTIAtlas/4_Final_Resampling\"\n";
 
 	Script = Script + "ErrorList=[] #empty list\n\n";
@@ -390,7 +390,7 @@ void ScriptWriter::AtlasBuilding()
 		//Test Function
 		Script = Script + "# Function that tests if all cases have been processed on the grid\n";
 		Script = Script + "def TestGridProcess ( FilesFolder, NbCases ): # if NbCases == 0, then just search the file \'file\' (unique command)\n";
-			Script = Script + "\tprint(\"\\n| Waiting for all cases to be processed on grid...\")\n";
+			Script = Script + "\tprint(\"\\n| Waiting for all cases (\" + str(NbCases-NoCase1) + \") to be processed on grid...\") # NoCase1 is 0 or 1\n";
 			Script = Script + "\tfilesOK = 0\n";
 			Script = Script + "\twhile not filesOK :\n";
 				Script = Script + "\t\tfilesOK = 1\n";
@@ -401,9 +401,9 @@ void ScriptWriter::AtlasBuilding()
 						Script = Script + "\t\t\t\tif not os.path.isfile( FilesFolder + \"/Case\" + str(case+1) ) : filesOK = 0\n";
 						Script = Script + "\t\t\t\telse : NbfilesOK = NbfilesOK + 1\n";
 						Script = Script + "\t\t\t\tcase += 1\n";
-					Script = Script + "\t\t\tprint(\"| [\" + str(NbfilesOK) + \"\\t/ \" + str(NbCases) + \" ] Files processed\")\n";
+					Script = Script + "\t\t\tprint(\"\\r| [\" + str(NbfilesOK) + \"\\t/ \" + str(NbCases) + \" ] Files processed\"), # the comma prevents the print from jumping line\n";
 				Script = Script + "\t\telif not os.path.isfile( FilesFolder + \"/file\" ) : filesOK = 0\n";
-			Script = Script + "\tprint(\"| All files processed\")\n";
+			Script = Script + "\tprint(\"\\n| All files processed\")\n";
 			Script = Script + "\tos.system(\"rm \" + FilesFolder + \"/*\")\n\n";
 
 		GridApostrophe = " + \"\\'\"";
@@ -505,7 +505,7 @@ if(m_Overwrite==0) Script = Script + "else : print(\"=> The file \\'\" + DeformP
 	Script = Script + "print(\"\\n======== Applying deformation fields to original DTIs =========\")\n";
 	Script = Script + "case = 0\n";
 	Script = Script + "while case < len(allcases):\n";
-		Script = Script + "\tFinalDTI= FinalPath + \"/Case\" + str(case+1) + \"_AWDTI.nrrd\"\n";
+		Script = Script + "\tFinalDTI= FinalPath + \"/Case\" + str(case+1) + \"_DiffeomorphicDTI.nrrd\"\n";
 		if(m_NeedToBeCropped==1) Script = Script + "\toriginalDTI= AffinePath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
 		else Script = Script + "\toriginalDTI= allcases[case]\n";
 		if(m_nbLoops==0)
@@ -555,24 +555,24 @@ if(m_Overwrite==0) Script = Script + "else : print(\"=> The file \\'\" + DeformP
 		if(m_Overwrite==1) Script = Script + "\tif 1 :\n";
 		else Script = Script + "\tif not os.path.isfile(FinalDTI) :\n";
 
-			Script = Script + "\t\tAWCaseFA = FinalPath + \"/Case\" + str(case+1) + \"_AWFA.nrrd\"\n";
-			Script = Script + "\t\tGeneAWCaseFACommand=\"" + m_SoftPath[3] + " --scalar_float --dti_image \" + FinalDTI + \" -f \" + AWCaseFA\n";
+			Script = Script + "\t\tDiffeomorphicCaseFA = FinalPath + \"/Case\" + str(case+1) + \"_DiffeomorphicFA.nrrd\"\n";
+			Script = Script + "\t\tGeneDiffeomorphicCaseFACommand=\"" + m_SoftPath[3] + " --scalar_float --dti_image \" + FinalDTI + \" -f \" + DiffeomorphicCaseFA\n";
 
-			Script = Script + "\t\tCaseDbleToFloatCommand=\"" + m_SoftPath[8] + " convert -t float -i \" + FinalDTI + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalPath + \"/Case\" + str(case+1) + \"_AWDTI_float.nrrd\"\n\n";
+			Script = Script + "\t\tCaseDbleToFloatCommand=\"" + m_SoftPath[8] + " convert -t float -i \" + FinalDTI + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalPath + \"/Case\" + str(case+1) + \"_DiffeomorphicDTI_float.nrrd\"\n\n";
 
 			if( ! m_useGridProcess )
 			{
 			Script = Script + "\t\tif os.system(FinalReSampCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] ResampleDTIlogEuclidean: Applying deformation fields to original DTIs\')\n";
 
-			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + GeneAWCaseFACommand)\n";
-			Script = Script + "\t\tif os.system(GeneAWCaseFACommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] dtiprocess: Computing AW FA\')\n";
+			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + GeneDiffeomorphicCaseFACommand)\n";
+			Script = Script + "\t\tif os.system(GeneDiffeomorphicCaseFACommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] dtiprocess: Computing Diffeomorphic FA\')\n";
 
 			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + CaseDbleToFloatCommand + \"\\n\")\n";
 			Script = Script + "\t\tif os.system(CaseDbleToFloatCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] unu: Converting the final DTI images from double to float DTI\')\n";
 			}
 			else // run all commands in the same time in the script
 			{
-			Script = Script + "\t\tFinalResampGridCommand=" + GridProcessCmd + "FinalReSampCommand + \"\\' \" + \"\\'\" + GeneAWCaseFACommand + \"\\' \" + \"\\'\" + CaseDbleToFloatCommand + \"\\'\"\n";
+			Script = Script + "\t\tFinalResampGridCommand=" + GridProcessCmd + "FinalReSampCommand + \"\\' \" + \"\\'\" + GeneDiffeomorphicCaseFACommand + \"\\' \" + \"\\'\" + CaseDbleToFloatCommand + \"\\'\"\n";
 			Script = Script + "\t\tif os.system(FinalResampGridCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] Applying deformation fields to original DTIs\')\n";
 			}
 
@@ -584,12 +584,12 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, len(allc
 
 /* dtiaverage computing */
 	Script = Script + "# dtiaverage computing\n";
-	Script = Script + "print(\"\\n======== Computing the AW DTI average =========\")\n";
-	Script = Script + "DTIAverage = FinalPath + \"/AWAtlasDTI.nrrd\"\n";
+	Script = Script + "print(\"\\n======== Computing the Diffeomorphic DTI average =========\")\n";
+	Script = Script + "DTIAverage = FinalPath + \"/DiffeomorphicAtlasDTI.nrrd\"\n";
 	Script = Script + "AverageCommand = \"" + m_SoftPath[6] + " \"\n";
 	Script = Script + "case = 0\n";
 	Script = Script + "while case < len(allcases):\n";
-		Script = Script + "\tDTIforAVG= \"--inputs \" + FinalPath + \"/Case\" + str(case+1) + \"_AWDTI.nrrd \"\n";
+		Script = Script + "\tDTIforAVG= \"--inputs \" + FinalPath + \"/Case\" + str(case+1) + \"_DiffeomorphicDTI.nrrd \"\n";
 		Script = Script + "\tAverageCommand = AverageCommand + DTIforAVG\n";
 		Script = Script + "\tcase += 1\n";
 	Script = Script + "AverageCommand = AverageCommand + \"--tensor_output \" + DTIAverage\n";
@@ -602,21 +602,21 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, len(allc
 
 /* Computing some images from the final DTI with dtiprocess */
 	Script = Script + "# Computing some images from the final DTI with dtiprocess\n";
-		Script = Script + "\tFA= FinalPath + \"/AWAtlasFA.nrrd\"\n";
-		Script = Script + "\tcFA= FinalPath + \"/AWAtlasColorFA.nrrd\"\n";
-		Script = Script + "\tRD= FinalPath + \"/AWAtlasRD.nrrd\"\n"; // Radial Diffusivity
-		Script = Script + "\tMD= FinalPath + \"/AWAtlasMD.nrrd\"\n"; // Mean Diffusivity
-		Script = Script + "\tAD= FinalPath + \"/AWAtlasAD.nrrd\"\n"; // Axial Diffusivity
+		Script = Script + "\tFA= FinalPath + \"/DiffeomorphicAtlasFA.nrrd\"\n";
+		Script = Script + "\tcFA= FinalPath + \"/DiffeomorphicAtlasColorFA.nrrd\"\n";
+		Script = Script + "\tRD= FinalPath + \"/DiffeomorphicAtlasRD.nrrd\"\n"; // Radial Diffusivity
+		Script = Script + "\tMD= FinalPath + \"/DiffeomorphicAtlasMD.nrrd\"\n"; // Mean Diffusivity
+		Script = Script + "\tAD= FinalPath + \"/DiffeomorphicAtlasAD.nrrd\"\n"; // Axial Diffusivity
 		Script = Script + "\tGeneFACommand=\"" + m_SoftPath[3] + " --scalar_float --dti_image \" + DTIAverage + \" -f \" + FA + \" -m \" + MD + \" --color_fa_output \" + cFA + \" --RD_output \" + RD + \" --lambda1_output \" + AD\n\n";
 
-		Script = Script + "\tDbleToFloatCommand=\"" + m_SoftPath[8] + " convert -t float -i \" + DTIAverage + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalPath + \"/AWAtlasDTI_float.nrrd\"\n\n";
+		Script = Script + "\tDbleToFloatCommand=\"" + m_SoftPath[8] + " convert -t float -i \" + DTIAverage + \" | " + m_SoftPath[8] + " save -f nrrd -e gzip -o \" + FinalPath + \"/DiffeomorphicAtlasDTI_float.nrrd\"\n\n";
 
 		if( ! m_useGridProcess )
 		{
 		Script = Script + "\tif os.system(AverageCommand)!=0 : ErrorList.append(\'dtiaverage: Computing the final DTI average\')\n";
 
 		Script = Script + "\tprint(\"=> $ \" + GeneFACommand)\n";
-		Script = Script + "\tif os.system(GeneFACommand)!=0 : ErrorList.append(\'dtiprocess: Computing AW FA, color FA, MD, RD and AD\')\n";
+		Script = Script + "\tif os.system(GeneFACommand)!=0 : ErrorList.append(\'dtiprocess: Computing Diffeomorphic FA, color FA, MD, RD and AD\')\n";
 
 		Script = Script + "\tprint(\"=> $ \" + DbleToFloatCommand)\n";
 		Script = Script + "\tif os.system(DbleToFloatCommand)!=0 : ErrorList.append(\'unu: Converting the final DTI atlas from double to float DTI\')\n";
@@ -1121,7 +1121,7 @@ void ScriptWriter::setAverageStatMethod(std::string Method)
 	m_AverageStatMethod = Method;
 }
 
-void ScriptWriter::setSoftPath(std::vector < std::string > SoftPath) // 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=AtlasWerks, 7=dtiaverage, 8=DTI-Reg, 9=unu
+void ScriptWriter::setSoftPath(std::vector < std::string > SoftPath) // 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=GreedyAtlas, 7=dtiaverage, 8=DTI-Reg, 9=unu
 {
 	m_SoftPath.clear();
 	for (unsigned int i=0;i<SoftPath.size();i++) m_SoftPath.push_back( SoftPath[i] );
