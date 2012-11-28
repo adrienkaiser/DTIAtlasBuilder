@@ -15,9 +15,9 @@ class ScriptWriter
 {
 	public:
 /*WRITING FUNCTIONS*/
-		void WriteScript();
-		void Preprocess();
-		void AtlasBuilding();
+		void WriteScript(int);
+		void Preprocess(std::string);
+		void AtlasBuilding(std::string);
 		void MainScript();
 
 /*SCRIPT ACCESSORS*/
