@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <cstdlib> // for getenv()
+#include <signal.h> // for the signal types
 
 /*itk classes*/
 #include "itkImage.h"
@@ -57,6 +58,11 @@ class GUI : public QMainWindow, public Ui::MainWindow
 /*MAIN FUNCT*/	int LaunchScriptWriter(); // returns -1 if failed, otherwise 0
 		void LaunchScriptRunner();
 
+		void RunningCompleted();
+		void RunningFailed();
+
+/*PROGRESSBAR*/	void ProgressBar();
+
 	public slots:
 
 /*CASES*/	void OpenAddCaseBrowseWindow();
@@ -70,7 +76,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		void DisplayDeformQC();
 		void DisplayResampQC();
 		
-/*EXIT*/	void Exit();
+/*EXIT*/	void ExitProgram();
 
 /*DATASET*/	void ReadCSVSlot();
 		void SaveCSVDatasetBrowse();
@@ -109,8 +115,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 
 		bool m_noGUI;
 		bool m_ErrorDetectedInConstructor; // useful in --nogui mode to exit the program without trying the compute function
-
-/* RUNNING */	QDialog *m_Rundlg; // dialog window that appears when running is done
+		bool m_ScriptRunning;
 
 /*CASES*/	std::vector < QLineEdit* > m_CasesQ; // index begin at 0
 		std::vector < std::string > m_CasesPath; // index begin at 0
@@ -150,6 +155,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		QCheckBox *m_SmoothOffCheck;
 
 /*MAIN FUNCT*/	ScriptWriter* m_scriptwriter; ////contains the writing pipeline
+		int m_NeedToBeCropped;
 
 };
 #endif

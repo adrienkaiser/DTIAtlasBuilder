@@ -14,6 +14,7 @@
 			<longflag>parameter_file</longflag>
 			<description>Parameter file from this program</description>
 			<label>Parameter file</label>
+			<channel>input</channel>
 		</file>
 		<file fileExtensions="txt">
 			<name>ConfigFile</name>
@@ -21,6 +22,7 @@
 			<longflag>configuration_file</longflag>
 			<description>Software configuration file</description>
 			<label>Configuration File</label>
+			<channel>input</channel>
 		</file>
 		<file fileExtensions="csv">
 			<name>CSVFile</name>
@@ -28,6 +30,7 @@
 			<longflag>dataset_file</longflag>
 			<description>CSV file containing the dataset</description>
 			<label>Dataset File</label>
+			<channel>input</channel>
 		</file>
 	</parameters>
 	<parameters>

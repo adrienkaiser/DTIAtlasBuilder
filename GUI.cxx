@@ -18,9 +18,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
-#include <cstdlib> // for getenv()
+#include <cstdlib> // for getenv() and exit()
 #include <signal.h> // for kill()
-//#include <sys/wait.h> // for waitpid(): see function "void GUI::LaunchScriptRunner()" at the end
+#include <sys/wait.h> // for waitpid(): see function "void GUI::LaunchScriptRunner()" at the end
+#include <csignal> // for signal()
 
 /*itk classes*/
 #include "itkImage.h"
@@ -44,8 +45,10 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 
 	m_ErrorDetectedInConstructor=false;
 
+	ExecStatusLabel->setText("                       "); // fill with spaces
+
 /* Script writing object */
-	m_scriptwriter = new ScriptWriter; // delete in "void GUI::Exit()"
+	m_scriptwriter = new ScriptWriter; // delete in "void GUI::ExitProgram()"
 
 /* Variables */
 	m_ParamFileHeader = QString("DTIAtlasBuilderParameterFileVersion");
@@ -54,6 +57,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	m_lastCasePath="";
 	m_noGUI=noGUI;
 	if( overwrite ) OverwritecheckBox->setChecked(true);
+	m_ScriptRunning=false;
 
 /* Initialize the options */
 	InitOptions();
@@ -73,7 +77,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 
 	QObject::connect(actionLoad_parameters, SIGNAL(triggered()), this, SLOT(LoadParametersSlot()));
 	QObject::connect(actionSave_parameters, SIGNAL(triggered()), this, SLOT(SaveParametersSlot()));
-	QObject::connect(actionExit, SIGNAL(triggered()), this, SLOT(Exit()));
+	QObject::connect(actionExit, SIGNAL(triggered()), this, SLOT(ExitProgram()));
 	QObject::connect(actionLoad_Software_Configuration, SIGNAL(triggered()), this, SLOT(LoadConfigSlot()));
 	QObject::connect(actionSave_Software_Configuration, SIGNAL(triggered()), this, SLOT(SaveConfig()));
 	QObject::connect(actionRead_Me, SIGNAL(triggered()), this, SLOT(ReadMe()));
@@ -596,9 +600,8 @@ void GUI::DisplayAffineQC() /*SLOT*/
 
 	if(pid==0) // we are in the son
 	{
-		system( program.c_str() );
-
-		kill(getpid(),SIGKILL); // the son kills himself
+		int status = system( program.c_str() );
+		_exit(status); // son ends
 	}
 }
 
@@ -623,9 +626,8 @@ void GUI::DisplayDeformQC() /*SLOT*/
 
 	if(pid==0) // we are in the son
 	{
-		system( program.c_str() );
-
-		kill(getpid(),SIGKILL); // the son kills himself
+		int status = system( program.c_str() );
+		_exit(status); // son ends
 	}
 }
 
@@ -650,9 +652,8 @@ void GUI::DisplayResampQC() /*SLOT*/
 
 	if(pid==0) // we are in the son
 	{
-		system( program.c_str() );
-
-		kill(getpid(),SIGKILL); // the son kills himself
+		int status = system( program.c_str() );
+		_exit(status); // son ends
 	}
 }
 
@@ -660,7 +661,7 @@ void GUI::DisplayResampQC() /*SLOT*/
  //                EXIT                 //
 /////////////////////////////////////////
 
-void GUI::Exit() /*SLOT*/
+void GUI::ExitProgram() /*SLOT*/
 {
 	std::cout<<"| End of the program"<<std::endl; // command line display
 	delete m_scriptwriter;
@@ -669,17 +670,31 @@ void GUI::Exit() /*SLOT*/
 
 void GUI::closeEvent(QCloseEvent* event)
 {
-	while(m_ParamSaved==0)
+	if(m_ScriptRunning)
 	{
-		int ret = QMessageBox::question(this,"Quit","Last parameters have not been saved.\nDo you want to save the last parameters ?",QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes);
-		if (ret == QMessageBox::Yes) SaveParametersSlot();
-		else if (ret == QMessageBox::No) break;
-		else if (ret == QMessageBox::Cancel) 
+		int ret = QMessageBox::question(this,"Quit","The script is still running.\nDo you want to exit anyway ?",QMessageBox::No | QMessageBox::Yes);
+		if (ret == QMessageBox::No) 
 		{
 			event->ignore();
 			return;
 		}
 	}
+
+	else
+	{
+		while(m_ParamSaved==0)
+		{
+			int ret = QMessageBox::question(this,"Quit","Last parameters have not been saved.\nDo you want to save the last parameters ?",QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes);
+			if (ret == QMessageBox::Yes) SaveParametersSlot();
+			else if (ret == QMessageBox::No) break;
+			else if (ret == QMessageBox::Cancel) 
+			{
+				event->ignore();
+				return;
+			}
+		}
+	}
+
 	delete m_scriptwriter;
 	event->accept();
 }
@@ -2532,7 +2547,7 @@ int GUI::checkImage(std::string Image) // returns 1 if not an image, 2 if not a 
 
 void GUI::Compute() /*SLOT*/
 {
-	if( m_ErrorDetectedInConstructor && m_noGUI ) Exit();
+	if( m_ErrorDetectedInConstructor && m_noGUI ) ExitProgram();
 	else
 	{
 
@@ -2557,7 +2572,7 @@ void GUI::Compute() /*SLOT*/
 					std::cout<<"| Clearing previous cases in vectors..."<<std::endl; // command line display
 					m_CasesPath.clear();
 					m_scriptwriter->clearCasesPath();
-					if(m_noGUI) Exit(); // no possibility to change because no GUI so QUIT
+					if(m_noGUI) ExitProgram(); // no possibility to change because no GUI so QUIT
 					return;
 				}
 				std::cout<<"| Clearing previous cases in vectors..."<<std::endl; // command line display
@@ -2569,7 +2584,7 @@ void GUI::Compute() /*SLOT*/
 
 		} // else of if[Case]
 
-		if(m_noGUI) Exit(); // Only 1 compute in nogui mode
+		if(m_noGUI) ExitProgram(); // Only 1 compute in nogui mode
 
 	} // else of if( m_ErrorDetectedInConstructor && m_noGUI )
 }
@@ -2965,8 +2980,8 @@ int GUI::LaunchScriptWriter()
 		else std::cout<<"| Error: The voxel size of the images are not the same, please change dataset" << std::endl;
 		return -1;
 	}
-	int Crop=m_scriptwriter->setCroppingSize( SafetyMargincheckBox->isChecked() ); // returns 0 if no cropping , 1 if cropping needed
-	if( Crop==1 && !SafetyMargincheckBox->isChecked() )
+	m_NeedToBeCropped=m_scriptwriter->setCroppingSize( SafetyMargincheckBox->isChecked() ); // returns 0 if no cropping , 1 if cropping needed
+	if( m_NeedToBeCropped==1 && !SafetyMargincheckBox->isChecked() )
 	{
 		if(!m_noGUI) QMessageBox::warning(this, "Cropping", "Warning: The images do not have the same size, \nso some of them will be cropped");
 		else std::cout<<"| Warning: The images do not have the same size, so some of them will be cropped" << std::endl;
@@ -2984,13 +2999,13 @@ int GUI::LaunchScriptWriter()
 	m_scriptwriter->setGridCommand( GridProcessCmdLineEdit->text().toStdString() );
 
 /* Launch writing */
-	m_scriptwriter->WriteScript(); // Master Function
+	m_scriptwriter->WriteScript( getpid() ); // Master Function : get pid to send a signal to Qt process to move progress bar
 
 /* XML file for GreedyAtlas */
 	GenerateXMLForGA();
 
 /* Save CSV and parameters */
-	SaveCSVResults(Crop,NbLoopsSpinBox->value());
+	SaveCSVResults(m_NeedToBeCropped,NbLoopsSpinBox->value());
 	SaveParameters(m_OutputPath + QString("/DTIAtlas/DTIAtlasBuilderParameters.txt"), m_OutputPath + QString("/DTIAtlas/DTIAtlasBuilderDataset.csv"));
 
 /* Generate Preprocess script file */
@@ -3091,65 +3106,92 @@ void GUI::LaunchScriptRunner()
 {
 	std::cout<<"| Script Running..."<<std::endl; // command line display
 
+	ComputepushButton->setEnabled(false);
+	m_ScriptRunning=true;
+	progressBar->setValue(0);
+	ExecStatusLabel->setText("                       "); // fill with spaces
+
 /* Running the Script: */
 	std::string program;
 	program = m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Main.script";
 
 	std::cout<<"| $ " << program << std::endl;
 
-	QProcess * ScriptProcess = new QProcess;
-	int ExitCode=0;
+	int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
 
-	ExitCode = ScriptProcess->execute( program.c_str() ); // stuck here during execution of the scripts
-
-	if(ExitCode==0)
+	if(pid==0) // we are in the  son : the father just keeps on running (window), the son will execute the script
 	{
-		std::cout<<"| Running Completed !"<<std::endl; // command line display
+		int ExitCode = system( program.c_str() ); // son freezes here during execution of the script
+
+		sigval value;
+		value.sival_int = ExitCode;
+		sigqueue(getppid(),SIGUSR1, value);
+
+		_exit(0); // son ends // exit terminates the calling process after cleanup; _exit terminates it immediately.
+	}
+
+/* If need to not freeze the main window :
+-> wait() or waitpid() make the process wait for the end of a son => FREEZE !!
+
+execl( program.c_str() , program.c_str(), NULL); // we REPLACE the son process by our command while the father is still running normally
+kill(getpid(),SIGKILL); // the son kills himself
+waitpid( pid, &ExitCode ,0); // waiting for the son to finish (the value of pid is the pid of the son if we are in the father) (the last 0 is the options => not used)
+if(ExitCode==0) kill(getppid(),SIGUSR1); // signal to the father than execution is done OK
+*/
+
+/* Using QProcess : (freeze)
+	QProcess * ScriptProcess = new QProcess;
+
+	int ExitCode = ScriptProcess->execute( program.c_str() ); // stuck here during execution of the scripts
+*/
+}
+
+void GUI::RunningCompleted()
+{
+	progressBar->setValue(100); // if the progress steps don't go until 100
+	ComputepushButton->setEnabled(true);
+	m_ScriptRunning=false;
+
+	if(!m_noGUI)
+	{
+		ExecStatusLabel->setText("Executed without errors");
 		QMessageBox::information(this, "Running Completed", "Running Completed !");
 	}
+	std::cout<<"| Running Completed !"<<std::endl; // command line display
+}
 
-	else
+void GUI::RunningFailed()
+{
+	progressBar->setValue(100); // if the progress steps don't go until 100
+	ComputepushButton->setEnabled(true);
+	m_ScriptRunning=false;
+
+	if(!m_noGUI)
 	{
-		std::cout<<"| Running Failed..."<<std::endl; // command line display
+		ExecStatusLabel->setText("Executed with errors");
 		QMessageBox::information(this, "Running Failed", "Running Failed...");
 	}
+	std::cout<<"| Running Failed..."<<std::endl; // command line display
+}
 
-/* If need to not freeze the main window : code below 
-/!\ Think to uncomment at the top : #include <sys/wait.h>
--> wait() or waitpid() make the process wait for the end of a son => FREEZE !!
-*/
-/*
-	int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
-	if(pid==0) // we are in the son
-	{
-		execl( program.c_str() , program.c_str(), NULL); // we REPLACE the son process by our command while the father is still running normally
-	}
+  /////////////////////////////////////////
+ //            PROGRESS BAR             //
+/////////////////////////////////////////
 
-	if(!m_noGUI) // if gui, need to NOT freeze the main window: a new son will wait the end of the son running the script and the father will continue to make the main window active
-	{
-		pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
-		if(pid==0) // we are in the son
-		{
-			int ExitCode;
-			waitpid( pid, &ExitCode ,0); // waiting for the son to finish (the value of pid is the pid of the son if we are in the father) (the last 0 is the options => not used)
+void GUI::ProgressBar()
+{
+	int nbCases=CaseListWidget->count();
+	int nbLoops=NbLoopsSpinBox->value();
+	// nbSteps = nbLoops+1 x (nbCases x (Generate FA, Normalize, Affine reg, Apply transfm, generate FA) + Compute average) + nonLinear reg + nbCases x Apply tfm + DTI average + nbCases x (1st resamp 2nd resamp) + DTI average
+	int nbSteps = (nbLoops+1)*(nbCases*5 + 1) + 1 + nbCases*1 + 1 + nbCases*2 + 1;
+	if(m_NeedToBeCropped==1) nbSteps = nbSteps + nbCases*1; // + Crop DTI
 
-			if(ExitCode==0)
-			std::cout<<"| Running Completed !"<<std::endl; // command line display
-			else std::cout<<"| Running Failed..."<<std::endl; // command line display
+	int progressStep;
+	if(nbSteps>=100) progressStep=1;
+	else progressStep=(int)((double)100/(double)nbSteps); // compute a %
 
-			Exit(); // son ends
-		}
-	}
-	else //IF no GUI just make the main process wait (no need to use the gui, so the main program can freeze)
-	{
-		int ExitCode;
-		waitpid( pid, &ExitCode ,0); // waiting for the son to finish (the value of pid is the pid of the son if we are in the father) (the last 0 is the options => not used)
+	int progressValue = progressBar->value() + progressStep;
 
-		if(ExitCode==0) std::cout<<"| Running Completed !"<<std::endl; // command line display
-		else std::cout<<"| Running Failed..."<<std::endl; // command line display
-
-		Exit();
-	}
-*/
+	progressBar->setValue( progressValue ); // crashes when refreshed too quickly
 }
 
