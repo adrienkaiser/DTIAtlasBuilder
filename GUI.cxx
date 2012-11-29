@@ -3178,9 +3178,11 @@ void GUI::RunningFailed()
  //            PROGRESS BAR             //
 /////////////////////////////////////////
 
-void GUI::ProgressBar()
+void GUI::ProgressBar(int Progress) // value sent by python script in signal
 {
-	int nbCases=CaseListWidget->count();
+	progressBar->setValue( Progress ); // crashes when refreshed too quickly
+
+/*	int nbCases=CaseListWidget->count();
 	int nbLoops=NbLoopsSpinBox->value();
 	// nbSteps = nbLoops+1 x (nbCases x (Generate FA, Normalize, Affine reg, Apply transfm, generate FA) + Compute average) + nonLinear reg + nbCases x Apply tfm + DTI average + nbCases x (1st resamp 2nd resamp) + DTI average
 	int nbSteps = (nbLoops+1)*(nbCases*5 + 1) + 1 + nbCases*1 + 1 + nbCases*2 + 1;
@@ -3191,7 +3193,6 @@ void GUI::ProgressBar()
 	else progressStep=(int)((double)100/(double)nbSteps); // compute a %
 
 	int progressValue = progressBar->value() + progressStep;
-
-	progressBar->setValue( progressValue ); // crashes when refreshed too quickly
+*/
 }
 

@@ -61,7 +61,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		void RunningCompleted();
 		void RunningFailed();
 
-/*PROGRESSBAR*/	void ProgressBar();
+/*PROGRESSBAR*/	void ProgressBar(int Progress);
 
 	public slots:
 
