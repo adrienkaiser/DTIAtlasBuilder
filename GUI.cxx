@@ -35,12 +35,13 @@
  //            CONSTRUCTOR              //
 /////////////////////////////////////////
 	
-GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, bool overwrite, bool noGUI) : QMainWindow()
+GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, bool overwrite, bool noGUI, std::string commandRan) : QMainWindow()
 {
-/*	std::cout<<"Command Line parameter file :"<<ParamFile<<std::endl;
-	std::cout<<"Command Line configuration file :"<<ConfigFile<<std::endl;
-	std::cout<<"Command Line dataset file :"<<CSVFile<<std::endl;
-*/
+	std::cout<<"Command Line ran command: "<<commandRan<<std::endl;
+	std::cout<<"Command Line parameter file : "<<ParamFile<<std::endl;
+	std::cout<<"Command Line configuration file : "<<ConfigFile<<std::endl;
+	std::cout<<"Command Line dataset file : "<<CSVFile<<std::endl;
+
 	setupUi(this);
 
 	m_ErrorDetectedInConstructor=false;
@@ -202,15 +203,14 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	ConfigDefault();
 
 // Look for the config file in the executable directory
-	std::string executable = itksys::SystemTools::FindProgram("DTIAtlasBuilder");
-	std::string path = itksys::SystemTools::GetFilenamePath(executable); // get the path WITHOUT '/'
+	std::string path= itksys::SystemTools::GetRealPath( itksys::SystemTools::GetFilenamePath(commandRan).c_str() ); // get the place where the running executable is
 	std::string SoftConfigPath= path + "/DTIAtlasBuilderSoftConfig.txt";
-	if( access( SoftConfigPath.c_str() , F_OK) == 0 ) if( LoadConfig(QString( SoftConfigPath.c_str() )) == -1 ) m_ErrorDetectedInConstructor=true;
+	if( access( SoftConfigPath.c_str() , F_OK) == 0 ) if( LoadConfig(QString( SoftConfigPath.c_str() )) == -1 ) m_ErrorDetectedInConstructor=true; // if file exists
 
 // Look for the config file in the current directory
 	std::string CurrentPath = itksys::SystemTools::GetRealPath( itksys::SystemTools::GetCurrentWorkingDirectory().c_str() ); //GetRealPath() to remove symlinks
 	SoftConfigPath = CurrentPath + "/DTIAtlasBuilderSoftConfig.txt";
-	if( access( SoftConfigPath.c_str() , F_OK) == 0 ) if( LoadConfig(QString( SoftConfigPath.c_str() )) == -1 ) m_ErrorDetectedInConstructor=true;
+	if( access( SoftConfigPath.c_str() , F_OK) == 0 ) if( LoadConfig(QString( SoftConfigPath.c_str() )) == -1 ) m_ErrorDetectedInConstructor=true; // if file exists
 
 // Look for the config file in the env variable
 	const char * value = getenv("DTIAtlasBuilderSoftPath");

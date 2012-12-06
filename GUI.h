@@ -36,7 +36,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 
 	public:
 		
-/*CONSTRUCTOR*/	GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, bool overwrite, bool noGUI); //constructor
+/*CONSTRUCTOR*/	GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, bool overwrite, bool noGUI, std::string commandRan); //constructor
 
 /*INIT*/	void InitOptions();
 

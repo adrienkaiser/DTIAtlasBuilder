@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
 
 	QApplication app(argc, argv);
 
-	GUI AtlasGUI(ParamFile,ConfigFile,CSVFile,Overwrite,noGUI);
+	GUI AtlasGUI(ParamFile,ConfigFile,CSVFile,Overwrite,noGUI,argv[0]); // argv[0] is the command that the user has ran -> to search the config file in the same directory
 
 	OtherGUI=&AtlasGUI;
 
