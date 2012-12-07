@@ -7,22 +7,13 @@ CMAKE_POLICY(VERSION 2.8)
 set (EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin CACHE PATH "Single output directory for building all executables.")
 
 #===================================================================================
-# Search needed libraries and packages : ITK_DIR VTK_DIR GenerateCLP_DIR ModuleDescriptionParser_DIR TCLAP_DIR QT_QMAKE_EXECUTABLE SlicerExecutionModel_DIR(DTI-Reg)
+# Search needed libraries and packages : ITK_DIR VTK_DIR GenerateCLP_DIR ModuleDescriptionParser_DIR TCLAP_DIR QT_QMAKE_EXECUTABLE SlicerExecutionModel_DIR(DTI-Reg) FFTW(GreedyAtlas)
 find_package(ITK REQUIRED) # creates ITK_DIR
 if(ITK_FOUND)
   include(${ITK_USE_FILE})
 else(ITK_FOUND)
   message(FATAL_ERROR "ITK not found. Please set ITK_DIR")
 endif(ITK_FOUND)
-
-find_package(VTK REQUIRED) # creates VTK_DIR
-if (VTK_FOUND)
-  set(VTK_USE_QVTK TRUE)
-  set(VTK_USE_GUISUPPORT TRUE)
-  include(${VTK_USE_FILE})
-else(VTK_FOUND)
-  message(FATAL_ERROR, "VTK not found. Please set VTK_DIR.")
-endif (VTK_FOUND)
 
 find_package(Qt4 REQUIRED) # creates QT_QMAKE_EXECUTABLE
 if(QT_USE_FILE)
@@ -40,10 +31,31 @@ else(GenerateCLP_FOUND)
   message(FATAL_ERROR "GenerateCLP not found. Please set GenerateCLP_DIR")
 endif(GenerateCLP_FOUND)
 
+set(FFTW_DIR CACHE PATH "Install directory for FFTW containing ./include , ./lib/libfftw3f.a and ./lib/libfftw3.a")
+
 #======================================================================================
 # Compile package
 set( COMPILE_PACKAGE OFF CACHE BOOL "Compiles all the external projects and tools" )
 if(COMPILE_PACKAGE)
+
+  # Librairies needed only for external tools
+  find_package(VTK REQUIRED) # creates VTK_DIR
+  if (VTK_FOUND)
+    set(VTK_USE_QVTK TRUE)
+    set(VTK_USE_GUISUPPORT TRUE)
+    include(${VTK_USE_FILE})
+  else(VTK_FOUND)
+    message(FATAL_ERROR, "VTK not found. Please set VTK_DIR.")
+  endif (VTK_FOUND)
+
+  find_package(SlicerExecutionModel REQUIRED) # creates SlicerExecutionModel_DIR
+  if(SlicerExecutionModel_FOUND)
+    include(${SlicerExecutionModel_USE_FILE})
+    include(${SlicerExecutionModel_CMAKE_DIR}/SEMMacroBuildCLI.cmake)
+  else(SlicerExecutionModel_FOUND)
+    message(FATAL_ERROR "SlicerExecutionModel not found. Please set SlicerExecutionModel_DIR")
+  endif(SlicerExecutionModel_FOUND)
+
   # External packages to compile
   set( ExtProjList
     dtiprocessTK # dtiprocess, dtiaverage

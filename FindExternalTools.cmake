@@ -87,14 +87,14 @@ macro( AddToolMacro Proj ) # ex: Proj = dtiprocessTK , tools = dtiprocess, dtiav
         ${LOCAL_CMAKE_BUILD_OPTIONS}
         -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
         -DCMAKE_INSTALL_PREFIX:PATH=${Proj}-install # ${CMAKE_INSTALL_PREFIX}
-        -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${Proj}-build/bin # ${EXECUTABLE_OUTPUT_PATH}
-        -DEXECUTABLE_OUTPUT_PATH:PATH=${Proj}-build/bin # ${EXECUTABLE_OUTPUT_PATH}
+#        -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${Proj}-build/bin # ${EXECUTABLE_OUTPUT_PATH}
+#        -DEXECUTABLE_OUTPUT_PATH:PATH=${Proj}-build/bin # ${EXECUTABLE_OUTPUT_PATH}
         ${CMAKE_ExtraARGS}
       INSTALL_COMMAND ""
 # DEPENDS ITK VTK FFTWF FFTWD CLAPACK ${FLTK_PREREQ}
 # DEPENDS  ${ITK_DEPEND} ${SlicerExecutionModel_DEPEND} ${VTK_DEPEND}
     )
-    # Install step
+    # Install step : copy all needed executables to ${EXECUTABLE_OUTPUT_PATH}
     foreach( tool ${Tools} )
       install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${Proj}-build/bin/${tool} DESTINATION ${EXECUTABLE_OUTPUT_PATH}) # bin/${tool} ${CMAKE_INSTALL_PREFIX}
     endforeach()
@@ -139,12 +139,14 @@ set( SourceCodeArgs
 set( CMAKE_ExtraARGS
   -DITK_DIR:PATH=${ITK_DIR}
   -DVTK_DIR:PATH=${VTK_DIR}
-#	-DFFTWF_LIB:PATH=${Prereqs}/lib/libfftw3f.a
+  -DFLTK_DIR:PATH=${FLTK_DIR}
+  -DatlasWerks_COMPILE_APP_IMMAP:BOOL=OFF # Because needs FTLK
+  -DFFTWF_LIB:PATH=${FFTW_DIR}/lib/libfftw3f.a
 #	-DFFTWF_THREADS_LIB:PATH=${Prereqs}/lib/libfftw3f_threads.a
-#	-DFFTWD_LIB:PATH=${Prereqs}/lib/libfftw3.a
+  -DFFTWD_LIB:PATH=${FFTW_DIR}/lib/libfftw3.a
 #	-DFFTWD_THREADS_LIB:PATH=${Prereqs}/lib/libfftw3_threads.a
-#	-DFFTW_INCLUDE:PATH=${Prereqs}/include
-#	-DatlasWerks_COMPILE_APP_ImageConvert:BOOL=${AtlasWerks_BUILD_IMAGE_CONVERT}
+  -DFFTW_INCLUDE:PATH=${FFTW_DIR}/include
+#	-DatlasWerks_COMPILE_APP_ImageConvert:BOOL=OFF
 #	${BuildGUIFlag}
 #	"-DLAPACK_LIBS:STRING=lapack blas f2c"
 #	"-DLAPACK_LIBS_SEARCH_DIRS:STRING=${Prereqs}/lib"
@@ -167,6 +169,7 @@ set( CMAKE_ExtraARGS
   -DITK_DIR:PATH=${ITK_DIR}
   -DGenerateCLP_DIR:PATH=${GenerateCLP_DIR}
   -DModuleDescriptionParser_DIR:PATH=${ModuleDescriptionParser_DIR}
+  -DSlicerExecutionModel_DIR:PATH=${SlicerExecutionModel_DIR}
   -DBUILD_TESTING:BOOL=OFF
   -DUSE_AutoWorkup:BOOL=OFF
   -DUSE_BRAINSContinuousClass:BOOL=OFF
@@ -179,7 +182,7 @@ set( CMAKE_ExtraARGS
   -DUSE_DebugImageViewer:BOOL=OFF
   -DUSE_GTRACT:BOOL=OFF
   -DUSE_SYSTEM_ITK=ON
-  -DUSE_SYSTEM_SlicerExecutionMode=ON
+  -DUSE_SYSTEM_SlicerExecutionModel=ON
   -DUSE_SYSTEM_VTK=ON
   )
 set( Tools
