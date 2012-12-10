@@ -1,9 +1,33 @@
-project (DTIAtlasBuilder)
-
 cmake_minimum_required(VERSION 2.8)
 CMAKE_POLICY(VERSION 2.8)
 
-# Executable output path : folder with all the executables together
+project(DTIAtlasBuilder)
+set(Slicer_SKIP_PROJECT_COMMAND ON)
+
+#===================================================================================
+# Slicer Extension
+option( DTIAtlasBuilder_BUILD_SLICER_EXTENSION "Build DTIAtlasBuilder as a Slicer extension" OFF )
+if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
+
+  if(NOT Slicer_SOURCE_DIR)
+    set(EXTENSION_NAME DTIAtlasBuilder)
+    set(EXTENSION_HOMEPAGE "https://github.com/NIRALUser/DTIAtlasBuilder")
+    set(EXTENSION_CATEGORY "Diffusion")
+    set(EXTENSION_CONTRIBUTORS "Adrien Kaiser")
+    set(EXTENSION_DESCRIPTION "DTI Atlas Builder")
+    set(EXTENSION_ACKNOWLEDGEMENTS "")
+    set(EXTENSION_STATUS Beta)
+  endif()
+
+  set(MODULE_NAME DTIAtlasBuilder)
+
+  if(NOT Slicer_SOURCE_DIR)
+    find_package(Slicer REQUIRED)
+    include(${Slicer_USE_FILE})
+  endif()
+endif( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
+
+# Executable output path : folder with all the needed executables together
 set (EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin CACHE PATH "Single output directory for building all executables.")
 
 #===================================================================================
@@ -102,4 +126,10 @@ GENERATECLP(sources DTIAtlasBuilder.xml) # include the GCLP file to the project
 add_executable(DTIAtlasBuilder ${sources})  # add the files contained by "sources" to the project
 target_link_libraries(DTIAtlasBuilder ${QT_LIBRARIES} ${ITK_LIBRARIES})
 #install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/bin/DTIAtlasBuilder DESTINATION ${CMAKE_INSTALL_PREFIX}) # will create the install folder if doesn't exist and copy the program in it
+
+if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
+  if(NOT Slicer_SOURCE_DIR)
+    include(${Slicer_EXTENSION_CPACK})
+  endif()
+endif( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
 
