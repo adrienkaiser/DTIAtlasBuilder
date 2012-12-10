@@ -37,11 +37,11 @@
 	
 GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, bool overwrite, bool noGUI, std::string commandRan) : QMainWindow()
 {
-	std::cout<<"Command Line ran command: "<<commandRan<<std::endl;
+/*	std::cout<<"Command Line ran command: "<<commandRan<<std::endl;
 	std::cout<<"Command Line parameter file : "<<ParamFile<<std::endl;
 	std::cout<<"Command Line configuration file : "<<ConfigFile<<std::endl;
 	std::cout<<"Command Line dataset file : "<<CSVFile<<std::endl;
-
+*/
 	setupUi(this);
 
 	m_ErrorDetectedInConstructor=false;

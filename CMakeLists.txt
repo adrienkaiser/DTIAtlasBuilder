@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 2.8)
 CMAKE_POLICY(VERSION 2.8)
 
+enable_testing()
+
 project(DTIAtlasBuilder)
-set(Slicer_SKIP_PROJECT_COMMAND ON)
+set(Slicer_SKIP_PROJECT_COMMAND ON) # Useful for Slicer Extension
 
 #===================================================================================
 # Slicer Extension
@@ -27,11 +29,8 @@ if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
   endif()
 endif( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
 
-# Executable output path : folder with all the needed executables together
-set (EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin CACHE PATH "Single output directory for building all executables.")
-
 #===================================================================================
-# Search needed libraries and packages fro DTIAtlasBuilder : ITK_DIR GenerateCLP_DIR ModuleDescriptionParser_DIR TCLAP_DIR QT_QMAKE_EXECUTABLE
+# Search needed libraries and packages for DTIAtlasBuilder : ITK_DIR GenerateCLP_DIR ModuleDescriptionParser_DIR TCLAP_DIR QT_QMAKE_EXECUTABLE
 find_package(ITK REQUIRED)
 if(ITK_FOUND)
   include(${ITK_USE_FILE}) # creates ITK_DIR
@@ -60,6 +59,9 @@ endif(GenerateCLP_FOUND)
 set( COMPILE_PACKAGE OFF CACHE BOOL "Compiles all the external projects and tools" )
 if(COMPILE_PACKAGE)
 
+  # Executable output path : folder with all the needed executables together
+  set (EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin CACHE PATH "Single output directory for building all executables.")
+
   # External packages to compile
   set( ExtProjList
     dtiprocessTK # dtiprocess, dtiaverage
@@ -73,40 +75,8 @@ if(COMPILE_PACKAGE)
     NIRALUtilities # ImageMath, CropDTI
     )
   foreach( tool ${ExtProjList})
-    set( COMPILE_EXTERNAL_${tool} ON CACHE BOOL "" )
+    set( COMPILE_EXTERNAL_${tool} ON CACHE BOOL "Compile external ${tool}" )
   endforeach()
-
-  # Librairies needed only for external tools
-  find_package(VTK REQUIRED)
-  if (VTK_FOUND)
-    set(VTK_USE_QVTK TRUE)
-    set(VTK_USE_GUISUPPORT TRUE)
-    include(${VTK_USE_FILE}) # creates VTK_DIR
-  else(VTK_FOUND)
-    message(FATAL_ERROR, "VTK not found. Please set VTK_DIR.")
-  endif (VTK_FOUND)
-
-  find_package(SlicerExecutionModel REQUIRED)
-  if(SlicerExecutionModel_FOUND)
-    include(${SlicerExecutionModel_USE_FILE}) # creates SlicerExecutionModel_DIR (DTI-Reg)
-    include(${SlicerExecutionModel_CMAKE_DIR}/SEMMacroBuildCLI.cmake)
-  else(SlicerExecutionModel_FOUND)
-    message(FATAL_ERROR "SlicerExecutionModel not found. Please set SlicerExecutionModel_DIR")
-  endif(SlicerExecutionModel_FOUND)
-
-  if(COMPILE_EXTERNAL_AtlasWerks) # FFTW and FLTK only needed for AtlasWerks
-    set(FFTW_DIR CACHE PATH "Path to the fftw install folder (./include, ./lib/libfftw3f.a)")
-    if(NOT FFTW_DIR)
-      message(FATAL_ERROR "FFTW not set. Please set FFTW_DIR manually")
-    endif()
-
-    find_package(FLTK REQUIRED)
-    if(FLTK_FOUND)
-      include_directories(${FLTK_INCLUDE_DIR}) # creates FLTK_DIR
-    else(FLTK_FOUND)
-      message(FATAL_ERROR "FLTK not found. Please set FLTK_DIR")
-    endif(FLTK_FOUND)
-  endif(COMPILE_EXTERNAL_AtlasWerks)
 
   # File containing add_external for all tools
   include( FindExternalTools.cmake ) # Go execute the given cmake script, and get back into this script when done
@@ -115,18 +85,36 @@ if(COMPILE_PACKAGE)
   configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/DTIAtlasBuilderSoftConfig.txt.in ${EXECUTABLE_OUTPUT_PATH}/DTIAtlasBuilderSoftConfig.txt ) # configure and copy with (tool)Path
 #  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/DTIAtlasBuilderSoftConfig.txt DESTINATION ${CMAKE_INSTALL_PREFIX}) # will create the install folder if doesn't exist and copy the file in it
 
+  message("When CMake done, run \"make\" to download and compile tools, and then run \"make install\" to copy all the needed executables in the output folder : ${EXECUTABLE_OUTPUT_PATH}.\nEnter e to exit this message, and then g to generate and get CMake done.")
+
 endif(COMPILE_PACKAGE)
 
 #======================================================================================
-# Compile and Install step for DTIAtlasBuilder
-QT4_WRAP_CPP(QtProject_HEADERS_MOC GUI.h)
-QT4_WRAP_UI(UI_FILES GUIwindow.ui)
-set(sources DTIAtlasBuilder.cxx GUI.h GUI.cxx ScriptWriter.h ScriptWriter.cxx ${QtProject_HEADERS_MOC} ${UI_FILES}) # define the variable "sources" that contains the names of files
-GENERATECLP(sources DTIAtlasBuilder.xml) # include the GCLP file to the project
+# Compile step for DTIAtlasBuilder
+set(DTIABsourcesFolder ${CMAKE_CURRENT_SOURCE_DIR}/Code)
+QT4_WRAP_CPP(QtProject_HEADERS_MOC ${DTIABsourcesFolder}/GUI.h)
+QT4_WRAP_UI(UI_FILES ${DTIABsourcesFolder}/GUIwindow.ui)
+set(sources ${DTIABsourcesFolder}/DTIAtlasBuilder.cxx ${DTIABsourcesFolder}/GUI.h ${DTIABsourcesFolder}/GUI.cxx ${DTIABsourcesFolder}/ScriptWriter.h ${DTIABsourcesFolder}/ScriptWriter.cxx ${QtProject_HEADERS_MOC} ${UI_FILES})
+GENERATECLP(sources ${DTIABsourcesFolder}/DTIAtlasBuilder.xml) # include the GCLP file to the project
 add_executable(DTIAtlasBuilder ${sources})  # add the files contained by "sources" to the project
 target_link_libraries(DTIAtlasBuilder ${QT_LIBRARIES} ${ITK_LIBRARIES})
 #install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/bin/DTIAtlasBuilder DESTINATION ${CMAKE_INSTALL_PREFIX}) # will create the install folder if doesn't exist and copy the program in it
 
+#======================================================================================
+# Testing for DTIAtlasBuilder # add_test(testName Command)
+add_test(TestGUI ${EXECUTABLE_OUTPUT_PATH}/DTIAtlasBuilder) # Should just display the gui
+add_test(TestGUIparameters ${EXECUTABLE_OUTPUT_PATH}/DTIAtlasBuilder --parameter_file ${CMAKE_CURRENT_BINARY_DIR}/Testing/TestGUIparameters.txt) # Should just display the gui with the parameters in it
+add_test(TestGUIrun ${EXECUTABLE_OUTPUT_PATH}/DTIAtlasBuilder --parameter_file ${CMAKE_CURRENT_SOURCE_DIR}/Testing/TestGUIparameters.txt) # Should display the window and user should run the pipeline
+configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/Testing/ReadMe.txt ${CMAKE_CURRENT_BINARY_DIR}/Testing/ReadMe.txt ) # copy the readme
+configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/Testing/TestGUIparameters.txt.in ${CMAKE_CURRENT_BINARY_DIR}/Testing/TestGUIparameters.txt ) # configure and copy
+configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/Testing/TestGUIparameters.csv.in ${CMAKE_CURRENT_BINARY_DIR}/Testing/TestGUIparameters.csv ) # configure and copy
+if(COMPILE_PACKAGE) # Informative display
+  message("When installed, run \"ctest\" in the build directory to launch tests and see if the program is working.")
+else(COMPILE_PACKAGE)
+  message("When CMake done, run \"make\" to compile the program, and then run \"ctest\" in the build directory to launch tests and see if the program is working.\nEnter e to exit this message, and then g to generate and get CMake done.")
+endif(COMPILE_PACKAGE)
+
+# For Slicer Extension
 if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
   if(NOT Slicer_SOURCE_DIR)
     include(${Slicer_EXTENSION_CPACK})
