@@ -141,9 +141,9 @@ set( CMAKE_ExtraARGS
   -DVTK_DIR:PATH=${VTK_DIR}
   -DFLTK_DIR:PATH=${FLTK_DIR}
   -DatlasWerks_COMPILE_APP_IMMAP:BOOL=OFF # Because needs FTLK
-  -DFFTWF_LIB:PATH=${FFTW_DIR}/lib/libfftw3f.a
+  -DFFTWF_LIB:PATH=${FFTW_DIR}/lib/libfftw3f.a # FFTW in float
 #	-DFFTWF_THREADS_LIB:PATH=${Prereqs}/lib/libfftw3f_threads.a
-  -DFFTWD_LIB:PATH=${FFTW_DIR}/lib/libfftw3.a
+  -DFFTWD_LIB:PATH=${FFTW_DIR}/lib/libfftw3.a # FFTW in double
 #	-DFFTWD_THREADS_LIB:PATH=${Prereqs}/lib/libfftw3_threads.a
   -DFFTW_INCLUDE:PATH=${FFTW_DIR}/include
 #	-DatlasWerks_COMPILE_APP_ImageConvert:BOOL=OFF
@@ -221,7 +221,6 @@ set( Tools
   )
 AddToolMacro( ResampleDTI )
 
-
 # ===== DTI-Reg =====================================================================
 set( SourceCodeArgs
   SVN_REPOSITORY "https://www.nitrc.org/svn/dtireg/trunk"
@@ -243,9 +242,61 @@ set( CMAKE_ExtraARGS
   -DdtiprocessTOOL:PATH=${dtiprocessPath}
   )
 set( Tools
-  DTI-Reg_1.1.2
+  DTI-Reg
   DTI-Reg_Scalar_ANTS.bms
   DTI-Reg_Scalar_BRAINS.bms
   )
 AddToolMacro( DTIReg )
+
+# ===== teem (unu) =====================================================================
+set( SourceCodeArgs
+  SVN_REPOSITORY "https://teem.svn.sourceforge.net/svnroot/teem/teem/trunk"
+  SVN_REVISION -r 5888
+  )
+set( CMAKE_ExtraARGS
+  )
+set( Tools
+  unu
+  )
+AddToolMacro( teem )
+
+# ===== MriWatcher =====================================================================
+set( SourceCodeArgs
+  SVN_REPOSITORY "https://www.nitrc.org/svn/mriwatcher/branches/mriwatcher_qt4"
+  SVN_REVISION -r 16
+  )
+set( CMAKE_ExtraARGS
+  )
+set( Tools
+  MriWatcher
+  )
+AddToolMacro( MriWatcher )
+
+# ===== NIRALUtilities ===================================================================
+set( SourceCodeArgs
+  SVN_REPOSITORY "https://www.nitrc.org/svn/niral_utilities/trunk"
+  SVN_REVISION -r 38
+  )
+set( CMAKE_ExtraARGS
+  -DCOMPILE_CONVERTITKFORMATS:BOOL=OFF
+  -DCOMPILE_CROPTOOLS:BOOL=ON
+  -DCOMPILE_CURVECOMPARE:BOOL=OFF
+  -DCOMPILE_DTIAtlasBuilder:BOOL=OFF
+  -DCOMPILE_DWI_NIFTINRRDCONVERSION:BOOL=OFF
+  -DCOMPILE_IMAGEMATH:BOOL=ON
+  -DCOMPILE_IMAGESTAT:BOOL=OFF
+  -DCOMPILE_POLYDATAMERGE:BOOL=OFF
+  -DCOMPILE_POLYDATATRANSFORM:BOOL=OFF
+  -DCOMPILE_TRANSFORMDEFORMATIONFIELD:BOOL=OFF
+  -DITK_DIR:PATH=${ITK_DIR}
+  -DVTK_DIR:PATH=${VTK_DIR}
+  -DGenerateCLP_DIR:PATH=${GenerateCLP_DIR}
+  -DModuleDescriptionParser_DIR:PATH=${ModuleDescriptionParser_DIR}
+  -DTCLAP_DIR:PATH=${TCLAP_DIR}
+)
+set( Tools
+  ImageMath
+  CropDTI
+  )
+AddToolMacro( NIRALUtilities )
 

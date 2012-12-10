@@ -7,54 +7,34 @@ CMAKE_POLICY(VERSION 2.8)
 set (EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin CACHE PATH "Single output directory for building all executables.")
 
 #===================================================================================
-# Search needed libraries and packages : ITK_DIR VTK_DIR GenerateCLP_DIR ModuleDescriptionParser_DIR TCLAP_DIR QT_QMAKE_EXECUTABLE SlicerExecutionModel_DIR(DTI-Reg) FFTW(GreedyAtlas)
-find_package(ITK REQUIRED) # creates ITK_DIR
+# Search needed libraries and packages fro DTIAtlasBuilder : ITK_DIR GenerateCLP_DIR ModuleDescriptionParser_DIR TCLAP_DIR QT_QMAKE_EXECUTABLE
+find_package(ITK REQUIRED)
 if(ITK_FOUND)
-  include(${ITK_USE_FILE})
+  include(${ITK_USE_FILE}) # creates ITK_DIR
 else(ITK_FOUND)
   message(FATAL_ERROR "ITK not found. Please set ITK_DIR")
 endif(ITK_FOUND)
 
-find_package(Qt4 REQUIRED) # creates QT_QMAKE_EXECUTABLE
+find_package(Qt4 REQUIRED)
 if(QT_USE_FILE)
   include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${QT_INCLUDE_DIR})
-  include(${QT_USE_FILE})
+  include(${QT_USE_FILE}) # creates QT_QMAKE_EXECUTABLE
   add_definitions(-DQT_GUI_LIBS -DQT_CORE_LIB -DQT3_SUPPORT)
 else(QT_USE_FILE)
   message(FATAL_ERROR, "QT not found. Please set QT_DIR.")
 endif(QT_USE_FILE)
 
-find_package(GenerateCLP REQUIRED) # creates GenerateCLP_DIR ModuleDescriptionParser_DIR TCLAP_DIR
+find_package(GenerateCLP REQUIRED)
 if(GenerateCLP_FOUND)
-  include(${GenerateCLP_USE_FILE})
+  include(${GenerateCLP_USE_FILE}) # creates GenerateCLP_DIR ModuleDescriptionParser_DIR TCLAP_DIR
 else(GenerateCLP_FOUND)
   message(FATAL_ERROR "GenerateCLP not found. Please set GenerateCLP_DIR")
 endif(GenerateCLP_FOUND)
-
-set(FFTW_DIR CACHE PATH "Install directory for FFTW containing ./include , ./lib/libfftw3f.a and ./lib/libfftw3.a")
 
 #======================================================================================
 # Compile package
 set( COMPILE_PACKAGE OFF CACHE BOOL "Compiles all the external projects and tools" )
 if(COMPILE_PACKAGE)
-
-  # Librairies needed only for external tools
-  find_package(VTK REQUIRED) # creates VTK_DIR
-  if (VTK_FOUND)
-    set(VTK_USE_QVTK TRUE)
-    set(VTK_USE_GUISUPPORT TRUE)
-    include(${VTK_USE_FILE})
-  else(VTK_FOUND)
-    message(FATAL_ERROR, "VTK not found. Please set VTK_DIR.")
-  endif (VTK_FOUND)
-
-  find_package(SlicerExecutionModel REQUIRED) # creates SlicerExecutionModel_DIR
-  if(SlicerExecutionModel_FOUND)
-    include(${SlicerExecutionModel_USE_FILE})
-    include(${SlicerExecutionModel_CMAKE_DIR}/SEMMacroBuildCLI.cmake)
-  else(SlicerExecutionModel_FOUND)
-    message(FATAL_ERROR "SlicerExecutionModel not found. Please set SlicerExecutionModel_DIR")
-  endif(SlicerExecutionModel_FOUND)
 
   # External packages to compile
   set( ExtProjList
@@ -64,10 +44,45 @@ if(COMPILE_PACKAGE)
     ANTS # ANTS, WarpImageMultiTransform, WarpTensorImageMultiTransform
     ResampleDTI # ResampleDTIlogEuclidean
     DTIReg # DTI-Reg, DTI-Reg_Scalar_ANTS.bms, DTI-Reg_Scalar_BRAINS.bms
+    teem # unu
+    MriWatcher # MriWatcher
+    NIRALUtilities # ImageMath, CropDTI
     )
   foreach( tool ${ExtProjList})
     set( COMPILE_EXTERNAL_${tool} ON CACHE BOOL "" )
   endforeach()
+
+  # Librairies needed only for external tools
+  find_package(VTK REQUIRED)
+  if (VTK_FOUND)
+    set(VTK_USE_QVTK TRUE)
+    set(VTK_USE_GUISUPPORT TRUE)
+    include(${VTK_USE_FILE}) # creates VTK_DIR
+  else(VTK_FOUND)
+    message(FATAL_ERROR, "VTK not found. Please set VTK_DIR.")
+  endif (VTK_FOUND)
+
+  find_package(SlicerExecutionModel REQUIRED)
+  if(SlicerExecutionModel_FOUND)
+    include(${SlicerExecutionModel_USE_FILE}) # creates SlicerExecutionModel_DIR (DTI-Reg)
+    include(${SlicerExecutionModel_CMAKE_DIR}/SEMMacroBuildCLI.cmake)
+  else(SlicerExecutionModel_FOUND)
+    message(FATAL_ERROR "SlicerExecutionModel not found. Please set SlicerExecutionModel_DIR")
+  endif(SlicerExecutionModel_FOUND)
+
+  if(COMPILE_EXTERNAL_AtlasWerks) # FFTW and FLTK only needed for AtlasWerks
+    set(FFTW_DIR CACHE PATH "Path to the fftw install folder (./include, ./lib/libfftw3f.a)")
+    if(NOT FFTW_DIR)
+      message(FATAL_ERROR "FFTW not set. Please set FFTW_DIR manually")
+    endif()
+
+    find_package(FLTK REQUIRED)
+    if(FLTK_FOUND)
+      include_directories(${FLTK_INCLUDE_DIR}) # creates FLTK_DIR
+    else(FLTK_FOUND)
+      message(FATAL_ERROR "FLTK not found. Please set FLTK_DIR")
+    endif(FLTK_FOUND)
+  endif(COMPILE_EXTERNAL_AtlasWerks)
 
   # File containing add_external for all tools
   include( FindExternalTools.cmake ) # Go execute the given cmake script, and get back into this script when done
