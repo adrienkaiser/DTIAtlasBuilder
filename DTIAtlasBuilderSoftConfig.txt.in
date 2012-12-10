@@ -5,6 +5,6 @@ dtiprocess=${dtiprocessPath}
 BRAINSFit=${BRAINSFitPath}
 GreedyAtlas=${GreedyAtlasPath}
 dtiaverage=${dtiaveragePath}
-DTI-Reg=${DTIRegPath}
+DTI-Reg=${DTI-RegPath}
 unu=${unuPath}
 MriWatcher=${MriWatcherPath}
