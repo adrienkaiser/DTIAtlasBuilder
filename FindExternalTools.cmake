@@ -87,8 +87,8 @@ macro( AddToolMacro Proj ) # ex: Proj = dtiprocessTK , tools = dtiprocess, dtiav
         ${LOCAL_CMAKE_BUILD_OPTIONS}
         -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
         -DCMAKE_INSTALL_PREFIX:PATH=${Proj}-install # ${CMAKE_INSTALL_PREFIX}
-#        -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${Proj}-build/bin # ${EXECUTABLE_OUTPUT_PATH}
-#        -DEXECUTABLE_OUTPUT_PATH:PATH=${Proj}-build/bin # ${EXECUTABLE_OUTPUT_PATH}
+#        -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${Proj}-build/bin # not ${EXECUTABLE_OUTPUT_PATH} because a lot of executables will be generated in the output folder
+#        -DEXECUTABLE_OUTPUT_PATH:PATH=${Proj}-build/bin # not ${EXECUTABLE_OUTPUT_PATH} because a lot of executables will be generated in the output folder
         ${CMAKE_ExtraARGS}
       INSTALL_COMMAND ""
 # DEPENDS ITK VTK FFTWF FFTWD CLAPACK ${FLTK_PREREQ}
@@ -104,6 +104,39 @@ endmacro( AddToolMacro )
 
 #====================================================================
 #====================================================================
+## Libraries for tools =============================================
+
+find_package(VTK REQUIRED)
+if (VTK_FOUND)
+  set(VTK_USE_QVTK TRUE)
+  set(VTK_USE_GUISUPPORT TRUE)
+  include(${VTK_USE_FILE}) # creates VTK_DIR
+else(VTK_FOUND)
+  message(FATAL_ERROR, "VTK not found. Please set VTK_DIR.")
+endif (VTK_FOUND)
+
+find_package(SlicerExecutionModel REQUIRED)
+if(SlicerExecutionModel_FOUND)
+  include(${SlicerExecutionModel_USE_FILE}) # creates SlicerExecutionModel_DIR (DTI-Reg)
+  include(${SlicerExecutionModel_CMAKE_DIR}/SEMMacroBuildCLI.cmake)
+else(SlicerExecutionModel_FOUND)
+  message(FATAL_ERROR "SlicerExecutionModel not found. Please set SlicerExecutionModel_DIR")
+endif(SlicerExecutionModel_FOUND)
+
+if(COMPILE_EXTERNAL_AtlasWerks) # FFTW and FLTK only needed for AtlasWerks
+  set(FFTW_DIR CACHE PATH "Path to the fftw install folder (./include, ./lib/libfftw3f.a)")
+  if(NOT FFTW_DIR)
+    message(FATAL_ERROR "FFTW not set. Please set FFTW_DIR manually")
+  endif()
+
+ # find_package(FLTK REQUIRED)
+  if(FLTK_FOUND)
+    include_directories(${FLTK_INCLUDE_DIR}) # creates FLTK_DIR
+  else(FLTK_FOUND)
+ #   message(FATAL_ERROR "FLTK not found. Please set FLTK_DIR")
+  endif(FLTK_FOUND)
+endif(COMPILE_EXTERNAL_AtlasWerks)
+
 #====================================================================
 #===== TOOLS ========================================================
 #       ||
@@ -131,7 +164,7 @@ set( Tools
 AddToolMacro( dtiprocessTK ) # AddToolMacro( proj )
 
 # ===== AtlasWerks ================================================================
-# code from https://github.com/Chaircrusher/AtlasWerksBuilder/blob/master/CMakeLists.txt
+# code for external tools from https://github.com/Chaircrusher/AtlasWerksBuilder/blob/master/CMakeLists.txt
 set( SourceCodeArgs
   URL "http://www.sci.utah.edu/releases/atlaswerks_v0.1.4/AtlasWerks_0.1.4_Linux.tgz"
   URL_MD5 05fc867564e3340d0d448dd0daab578a
@@ -142,14 +175,14 @@ set( CMAKE_ExtraARGS
   -DFLTK_DIR:PATH=${FLTK_DIR}
   -DatlasWerks_COMPILE_APP_IMMAP:BOOL=OFF # Because needs FTLK
   -DFFTWF_LIB:PATH=${FFTW_DIR}/lib/libfftw3f.a # FFTW in float
-#	-DFFTWF_THREADS_LIB:PATH=${Prereqs}/lib/libfftw3f_threads.a
   -DFFTWD_LIB:PATH=${FFTW_DIR}/lib/libfftw3.a # FFTW in double
-#	-DFFTWD_THREADS_LIB:PATH=${Prereqs}/lib/libfftw3_threads.a
   -DFFTW_INCLUDE:PATH=${FFTW_DIR}/include
-#	-DatlasWerks_COMPILE_APP_ImageConvert:BOOL=OFF
-#	${BuildGUIFlag}
-#	"-DLAPACK_LIBS:STRING=lapack blas f2c"
-#	"-DLAPACK_LIBS_SEARCH_DIRS:STRING=${Prereqs}/lib"
+#  -DFFTWD_THREADS_LIB:PATH=${Prereqs}/lib/libfftw3_threads.a
+#  -DFFTWF_THREADS_LIB:PATH=${Prereqs}/lib/libfftw3f_threads.a
+#  -DatlasWerks_COMPILE_APP_ImageConvert:BOOL=OFF
+#  ${BuildGUIFlag}
+#  "-DLAPACK_LIBS:STRING=lapack blas f2c"
+#  "-DLAPACK_LIBS_SEARCH_DIRS:STRING=${Prereqs}/lib"
   )
 set( Tools
   GreedyAtlas
