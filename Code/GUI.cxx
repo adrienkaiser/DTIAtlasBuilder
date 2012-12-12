@@ -2545,9 +2545,13 @@ int GUI::checkImage(std::string Image) // returns 1 if not an image, 2 if not a 
  //           MAIN FUNCTIONS            //
 /////////////////////////////////////////
 
-void GUI::Compute() /*SLOT*/
+int GUI::Compute() /*SLOT*/
 {
-	if( m_ErrorDetectedInConstructor && m_noGUI ) ExitProgram();
+	if( m_ErrorDetectedInConstructor && m_noGUI )
+	{
+		ExitProgram();
+		return -1;
+	}
 	else
 	{
 
@@ -2566,27 +2570,29 @@ void GUI::Compute() /*SLOT*/
 			}
 			else // OK Output
 			{
+				int WritingOutStatus = LaunchScriptWriter();
 
-				if(LaunchScriptWriter()==-1) 
-				{
-					std::cout<<"| Clearing previous cases in vectors..."<<std::endl; // command line display
-					m_CasesPath.clear();
-					m_scriptwriter->clearCasesPath();
-					if(m_noGUI) ExitProgram(); // no possibility to change because no GUI so QUIT
-					return;
-				}
 				std::cout<<"| Clearing previous cases in vectors..."<<std::endl; // command line display
 				m_CasesPath.clear();
 				m_scriptwriter->clearCasesPath();
-				LaunchScriptRunner();
+
+				if(WritingOutStatus==-1) 
+				{
+					if(m_noGUI) ExitProgram(); // no possibility to change options because no GUI so QUIT
+					return -1;
+				}
+
+				return LaunchScriptRunner(); // else
 
 			} // else of if(OutputFolderLineEdit->text().isEmpty())
 
 		} // else of if[Case]
 
 		if(m_noGUI) ExitProgram(); // Only 1 compute in nogui mode
+		return -1;
 
 	} // else of if( m_ErrorDetectedInConstructor && m_noGUI )
+
 }
 
 int GUI::LaunchScriptWriter()
@@ -3102,7 +3108,7 @@ int GUI::LaunchScriptWriter()
 	return 0;
 }
 
-void GUI::LaunchScriptRunner()
+int GUI::LaunchScriptRunner()
 {
 	std::cout<<"| Script Running..."<<std::endl; // command line display
 
@@ -3117,32 +3123,49 @@ void GUI::LaunchScriptRunner()
 
 	std::cout<<"| $ " << program << std::endl;
 
-	int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
-
-	if(pid==0) // we are in the  son : the father just keeps on running (window), the son will execute the script
+	if(!m_noGUI)
 	{
-		int ExitCode = system( program.c_str() ); // son freezes here during execution of the script
+		int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
 
-		sigval value;
-		value.sival_int = ExitCode;
-		sigqueue(getppid(),SIGUSR1, value);
+		if(pid==0) // we are in the  son : the father just keeps on running (window), the son will execute the script
+		{
+			int ExitCode = system( program.c_str() ); // son freezes here during execution of the script
 
-		_exit(0); // son ends // exit terminates the calling process after cleanup; _exit terminates it immediately.
+			sigval value;
+			value.sival_int = ExitCode;
+			sigqueue(getppid(),SIGUSR1, value); // send a signal to the father (main window) with the value of the exit code of the script
+
+			_exit(0); // son ends // exit terminates the calling process after cleanup; _exit terminates it immediately.
+		}
+
+		return 0;
 	}
+	else // using QProcess if noGui -> "freeze" the process
+	{
+		QProcess * ScriptProcess = new QProcess;
+		int ExitCode = ScriptProcess->execute( program.c_str() ); // stuck here during execution of the scripts
+
+		if(ExitCode==0)
+		{
+			RunningCompleted();
+			return 0;
+		}
+		else
+		{
+			RunningFailed();
+			return -1;
+		}
+	}
+
+	return -1;
 
 /* If need to not freeze the main window :
 -> wait() or waitpid() make the process wait for the end of a son => FREEZE !!
 
 execl( program.c_str() , program.c_str(), NULL); // we REPLACE the son process by our command while the father is still running normally
 kill(getpid(),SIGKILL); // the son kills himself
-waitpid( pid, &ExitCode ,0); // waiting for the son to finish (the value of pid is the pid of the son if we are in the father) (the last 0 is the options => not used)
+waitpid(pid, &ExitCode, 0); 
 if(ExitCode==0) kill(getppid(),SIGUSR1); // signal to the father than execution is done OK
-*/
-
-/* Using QProcess : (freeze)
-	QProcess * ScriptProcess = new QProcess;
-
-	int ExitCode = ScriptProcess->execute( program.c_str() ); // stuck here during execution of the scripts
 */
 }
 
@@ -3180,7 +3203,7 @@ void GUI::RunningFailed()
 
 void GUI::ProgressBar(int Progress) // value sent by python script in signal
 {
-	progressBar->setValue( Progress ); // crashes when refreshed too quickly
+	if(!m_noGUI) progressBar->setValue( Progress ); // crashes when refreshed too quickly
 
 /*	int nbCases=CaseListWidget->count();
 	int nbLoops=NbLoopsSpinBox->value();

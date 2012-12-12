@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 CMAKE_POLICY(VERSION 2.8)
 
-enable_testing()
+set(BUILD_TESTING ON CACHE BOOL "Build, configure and copy testing files")
 
 project(DTIAtlasBuilder)
 set(Slicer_SKIP_PROJECT_COMMAND ON) # Useful for Slicer Extension
@@ -85,7 +85,7 @@ if(COMPILE_PACKAGE)
   configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/DTIAtlasBuilderSoftConfig.txt.in ${EXECUTABLE_OUTPUT_PATH}/DTIAtlasBuilderSoftConfig.txt ) # configure and copy with (tool)Path
 #  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/DTIAtlasBuilderSoftConfig.txt DESTINATION ${CMAKE_INSTALL_PREFIX}) # will create the install folder if doesn't exist and copy the file in it
 
-  message("When CMake done, run \"make\" to download and compile tools, and then run \"make install\" to copy all the needed executables in the output folder : ${EXECUTABLE_OUTPUT_PATH}.\nEnter e to exit this message, and then g to generate and get CMake done.")
+#  message("When CMake done, run \"make\" to download and compile tools, and then run \"make install\" to copy all the needed executables in the output folder : ${EXECUTABLE_OUTPUT_PATH}.\nEnter e to exit this message, and then g to generate and get CMake done.")
 
 endif(COMPILE_PACKAGE)
 
@@ -94,25 +94,27 @@ endif(COMPILE_PACKAGE)
 set(DTIABsourcesFolder ${CMAKE_CURRENT_SOURCE_DIR}/Code)
 QT4_WRAP_CPP(QtProject_HEADERS_MOC ${DTIABsourcesFolder}/GUI.h)
 QT4_WRAP_UI(UI_FILES ${DTIABsourcesFolder}/GUIwindow.ui)
-set(sources ${DTIABsourcesFolder}/DTIAtlasBuilder.cxx ${DTIABsourcesFolder}/GUI.h ${DTIABsourcesFolder}/GUI.cxx ${DTIABsourcesFolder}/ScriptWriter.h ${DTIABsourcesFolder}/ScriptWriter.cxx ${QtProject_HEADERS_MOC} ${UI_FILES})
-GENERATECLP(sources ${DTIABsourcesFolder}/DTIAtlasBuilder.xml) # include the GCLP file to the project
-add_executable(DTIAtlasBuilder ${sources})  # add the files contained by "sources" to the project
+set(DTIABsources ${DTIABsourcesFolder}/DTIAtlasBuilder.cxx ${DTIABsourcesFolder}/GUI.h ${DTIABsourcesFolder}/GUI.cxx ${DTIABsourcesFolder}/ScriptWriter.h ${DTIABsourcesFolder}/ScriptWriter.cxx ${QtProject_HEADERS_MOC} ${UI_FILES})
+GENERATECLP(DTIABsources ${DTIABsourcesFolder}/DTIAtlasBuilder.xml) # include the GCLP file to the project
+add_executable(DTIAtlasBuilder ${DTIABsources})  # add the files contained by "DTIABsources" to the project
 target_link_libraries(DTIAtlasBuilder ${QT_LIBRARIES} ${ITK_LIBRARIES})
 #install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/bin/DTIAtlasBuilder DESTINATION ${CMAKE_INSTALL_PREFIX}) # will create the install folder if doesn't exist and copy the program in it
 
 #======================================================================================
-# Testing for DTIAtlasBuilder # add_test(testName Command)
-add_test(TestGUI ${EXECUTABLE_OUTPUT_PATH}/DTIAtlasBuilder) # Should just display the gui
-add_test(TestGUIparameters ${EXECUTABLE_OUTPUT_PATH}/DTIAtlasBuilder --parameter_file ${CMAKE_CURRENT_BINARY_DIR}/Testing/TestGUIparameters.txt) # Should just display the gui with the parameters in it
-add_test(TestGUIrun ${EXECUTABLE_OUTPUT_PATH}/DTIAtlasBuilder --parameter_file ${CMAKE_CURRENT_SOURCE_DIR}/Testing/TestGUIparameters.txt) # Should display the window and user should run the pipeline
-configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/Testing/ReadMe.txt ${CMAKE_CURRENT_BINARY_DIR}/Testing/ReadMe.txt ) # copy the readme
-configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/Testing/TestGUIparameters.txt.in ${CMAKE_CURRENT_BINARY_DIR}/Testing/TestGUIparameters.txt ) # configure and copy
-configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/Testing/TestGUIparameters.csv.in ${CMAKE_CURRENT_BINARY_DIR}/Testing/TestGUIparameters.csv ) # configure and copy
-if(COMPILE_PACKAGE) # Informative display
-  message("When installed, run \"ctest\" in the build directory to launch tests and see if the program is working.")
-else(COMPILE_PACKAGE)
-  message("When CMake done, run \"make\" to compile the program, and then run \"ctest\" in the build directory to launch tests and see if the program is working.\nEnter e to exit this message, and then g to generate and get CMake done.")
-endif(COMPILE_PACKAGE)
+# Testing for DTIAtlasBuilder
+if(BUILD_TESTING)
+  set(TestingSRCdirectory ${CMAKE_CURRENT_SOURCE_DIR}/Testing)
+  set(TestingBINdirectory ${CMAKE_CURRENT_BINARY_DIR}/Testing)
+  set(TestDataFolder ${CMAKE_CURRENT_SOURCE_DIR}/Data/Testing)
+  # Compile DTIAB as static library to use ITKtest to compare output image to reference
+  add_library(DTIAtlasBuilderLib STATIC ${DTIABsources})
+  set_target_properties(DTIAtlasBuilderLib PROPERTIES COMPILE_FLAGS "-Dmain=ModuleEntryPoint") # replace the main in DTIAtlasBuilder.cxx by the itkTest function ModuleEntryPoint
+  target_link_libraries(DTIAtlasBuilderLib ${QT_LIBRARIES} ${ITK_LIBRARIES})
+  set_target_properties(DTIAtlasBuilderLib PROPERTIES LABELS DTIAtlasBuilder)
+  # Create Tests
+  enable_testing()
+  add_subdirectory( ${TestingSRCdirectory} ) # contains a CMakeLists.txt
+endif()
 
 # For Slicer Extension
 if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )

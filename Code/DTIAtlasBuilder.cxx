@@ -7,7 +7,7 @@
 
 #include "DTIAtlasBuilderCLP.h" //generated when ccmake
 
-GUI *OtherGUI;
+GUI *OtherGUI; // for the progress bar
 
 void ProgressBarSigHandler(int sig, siginfo_t *info, void *extra) // signaled by python script each time a step is done
 {
@@ -47,11 +47,13 @@ int main(int argc, char* argv[])
 	sigaction(SIGUSR2, &action2, NULL);
 
 /* Launch App */
-	if(noGUI) AtlasGUI.Compute();
+	if(noGUI) return AtlasGUI.Compute();
 	else
 	{
 		AtlasGUI.show();
 		return app.exec();
 	}
+
+	return -1;
 }
 
