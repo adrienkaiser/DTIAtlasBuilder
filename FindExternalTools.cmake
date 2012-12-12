@@ -96,7 +96,9 @@ macro( AddToolMacro Proj ) # ex: Proj = dtiprocessTK , tools = dtiprocess, dtiav
     )
     # Install step : copy all needed executables to ${EXECUTABLE_OUTPUT_PATH}
     foreach( tool ${Tools} )
-      install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${Proj}-build/bin/${tool} DESTINATION ${EXECUTABLE_OUTPUT_PATH}) # bin/${tool} ${CMAKE_INSTALL_PREFIX}
+      if(NOT ${tool} STREQUAL "MriWatcher") # MriWatcher is not in a ./bin directory -> install step specified manually
+        install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${Proj}-build/bin/${tool} DESTINATION ${EXECUTABLE_OUTPUT_PATH}) # bin/${tool} ${CMAKE_INSTALL_PREFIX}
+      endif()
     endforeach()
 
   endif(COMPILE_EXTERNAL_${Proj})
@@ -117,7 +119,7 @@ endif (VTK_FOUND)
 
 find_package(SlicerExecutionModel REQUIRED)
 if(SlicerExecutionModel_FOUND)
-  include(${SlicerExecutionModel_USE_FILE}) # creates SlicerExecutionModel_DIR (DTI-Reg)
+  include(${SlicerExecutionModel_USE_FILE}) # creates SlicerExecutionModel_DIR (DTI-Reg & BRAINSFit)
   include(${SlicerExecutionModel_CMAKE_DIR}/SEMMacroBuildCLI.cmake)
 else(SlicerExecutionModel_FOUND)
   message(FATAL_ERROR "SlicerExecutionModel not found. Please set SlicerExecutionModel_DIR")
@@ -129,13 +131,22 @@ if(COMPILE_EXTERNAL_AtlasWerks) # FFTW and FLTK only needed for AtlasWerks
     message(FATAL_ERROR "FFTW not set. Please set FFTW_DIR manually")
   endif()
 
- # find_package(FLTK REQUIRED)
+  find_package(FLTK REQUIRED)
   if(FLTK_FOUND)
     include_directories(${FLTK_INCLUDE_DIR}) # creates FLTK_DIR
   else(FLTK_FOUND)
- #   message(FATAL_ERROR "FLTK not found. Please set FLTK_DIR")
+    message(FATAL_ERROR "FLTK not found. Please set FLTK_DIR")
   endif(FLTK_FOUND)
 endif(COMPILE_EXTERNAL_AtlasWerks)
+
+if(COMPILE_EXTERNAL_DTIReg)
+  find_package(BatchMake REQUIRED)
+  if(BatchMake_FOUND)
+    include(${BatchMake_USE_FILE})
+  else(BatchMake_FOUND)
+    message(FATAL_ERROR "BatchMake not found. Please set BatchMake_DIR. " )
+  endif(BatchMake_FOUND )
+endif(COMPILE_EXTERNAL_DTIReg)
 
 #====================================================================
 #===== TOOLS ========================================================
@@ -156,6 +167,7 @@ set( CMAKE_ExtraARGS
   -DGenerateCLP_DIR:PATH=${GenerateCLP_DIR}
   -DModuleDescriptionParser_DIR:PATH=${ModuleDescriptionParser_DIR}
   -DTCLAP_DIR:PATH=${TCLAP_DIR}
+  -DSlicerExecutionModel_DIR:PATH=${SlicerExecutionModel_DIR}
   )
 set( Tools
   dtiprocess
@@ -198,7 +210,7 @@ set( CMAKE_ExtraARGS
   -DBUILD_TESTING:BOOL=OFF
   -DBUILD_SHARED_LIBS:BOOL=OFF # ${BUILD_SHARED_LIBS}
   -DSuperBuild_BRAINSTools_USE_GIT:BOOL=${USE_GIT_PROTOCOL}
-  -DITK_VERSION_MAJOR:STRING=3
+  -DITK_VERSION_MAJOR:STRING=4
   -DITK_DIR:PATH=${ITK_DIR}
   -DGenerateCLP_DIR:PATH=${GenerateCLP_DIR}
   -DModuleDescriptionParser_DIR:PATH=${ModuleDescriptionParser_DIR}
@@ -214,7 +226,7 @@ set( CMAKE_ExtraARGS
   -DUSE_BRAINSSurfaceTools:BOOL=OFF
   -DUSE_DebugImageViewer:BOOL=OFF
   -DUSE_GTRACT:BOOL=OFF
-  -DUSE_SYSTEM_ITK=ON
+#  -DUSE_SYSTEM_ITK=ON # Recompile ITK so it works for sure
   -DUSE_SYSTEM_SlicerExecutionModel=ON
   -DUSE_SYSTEM_VTK=ON
   )
@@ -243,8 +255,7 @@ AddToolMacro( ANTS  )
 
 # ===== ResampleDTIlogEuclidean =====================================================
 set( SourceCodeArgs
-  SVN_REPOSITORY "http://svn.slicer.org/Slicer4/trunk/Modules/CLI/ResampleDTIVolume"
-  SVN_REVISION -r 20422
+  URL "http://www.insight-journal.org/download/sourcecode/742/11/SourceCode11_ResampleDTIInsightJournal2.tar.gz"
   )
 set( CMAKE_ExtraARGS
   ""
@@ -265,10 +276,12 @@ set( CMAKE_ExtraARGS
   -DANTSTOOL:PATH=${ANTSPath}
   -DBRAINSDemonWarpTOOL:PATH=${BRAINSDemonWarpPath}
   -DBRAINSFitTOOL:PATH=${BRAINSFitPath}
+  -DBatchMake_DIR:PATH=${BatchMake_DIR}
+  -DSlicerExecutionModel_DIR:PATH=${SlicerExecutionModel_DIR}
   -DCOMPILE_EXTERNAL_dtiprocess:BOOL=OFF
   -DOPT_USE_SYSTEM_BatchMake:BOOL=ON
   -DOPT_USE_SYSTEM_ITK:BOOL=ON
-  -DOPT_USE_SYSTEM_SlicerExecution:BOOL=ON
+  -DOPT_USE_SYSTEM_SlicerExecutionModel:BOOL=ON
   -DResampleDTITOOL:PATH=${ResampleDTIlogEuclideanPath}
   -DWARPIMAGEMULTITRANSFORMTOOL:PATH=${WarpImageMultiTransformPath}
   -DWARPTENSORIMAGEMULTITRANSFORMTOOL:PATH=${WarpTensorImageMultiTransformPath}
@@ -304,6 +317,9 @@ set( Tools
   MriWatcher
   )
 AddToolMacro( MriWatcher )
+if(COMPILE_EXTERNAL_MriWatcher)
+  install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${Proj}-build/MriWatcher DESTINATION ${EXECUTABLE_OUTPUT_PATH}) # Specified manually because not in a ./bin directory
+endif()
 
 # ===== NIRALUtilities ===================================================================
 set( SourceCodeArgs

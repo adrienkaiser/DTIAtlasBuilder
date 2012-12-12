@@ -1,7 +1,7 @@
 DTIAtlasBuilderParameterFileVersion=1
-Output Folder=${CMAKE_CURRENT_BINARY_DIR}/Testing
+Output Folder=${CMAKE_CURRENT_BINARY_DIR}
 Atlas Template=
-SafetyMargin=false
+SafetyMargin=true
 Loops for the registration=1
 BRAINSFit Affine Tfm Mode=useCenterOfHeadAlign
 Overwrite=false
@@ -14,4 +14,4 @@ Tensor transformation=Preservation of the Principal Direction (PPD)
 DTI Average Statistics Method=Principal Geodesic Analysis (PGA)
 DTIRegMethod=BRAINS=Diffeomorphic;Use computed affine transform;1;5;300,50,30,20,15
 GridProcessing=
-CSV Dataset File=${CMAKE_CURRENT_BINARY_DIR}/Testing/TestGUIparameters.csv
+CSV Dataset File=${CMAKE_CURRENT_BINARY_DIR}/TestGUIparameters.csv

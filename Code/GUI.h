@@ -56,7 +56,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 /*CHECK IMAGE*/	int checkImage(std::string Image); // returns 1 if not an image, 2 if not a dti, otherwise 0
 
 /*MAIN FUNCT*/	int LaunchScriptWriter(); // returns -1 if failed, otherwise 0
-		void LaunchScriptRunner();
+		int LaunchScriptRunner();
 
 		void RunningCompleted();
 		void RunningFailed();
@@ -103,7 +103,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 
 /*WIDGETCHANGE*/void WidgetHasChangedParamNoSaved();
 
-/*MAIN FUNCT*/	void Compute();
+/*MAIN FUNCT*/	int Compute();
 
 	signals: // none
 
