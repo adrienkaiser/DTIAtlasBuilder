@@ -977,7 +977,7 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # st
 			{
 			Script = Script + "\t\tif os.system(GlobalDefFieldCommand2)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] DTI-Reg: Computing global deformation fields\')\n";
 
-			Script = Script + "\t\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GlobDbleToFloatCommand)\n";
+			Script = Script + "\t\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GlobDbleToFloatCommand2)\n";
 			Script = Script + "\t\tif os.system(GlobDbleToFloatCommand2)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] unu: Converting the deformed images from double to float DTI\')\n";
 
 			Script = Script + "\t\tprint(\"\\n||Case \" + str(case+1) + \" => $ \" + GeneDTIRegCaseFACommand)\n";

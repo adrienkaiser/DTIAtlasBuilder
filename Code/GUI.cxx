@@ -204,6 +204,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 
 // Look for the config file in the executable directory
 	std::string path= itksys::SystemTools::GetRealPath( itksys::SystemTools::GetFilenamePath(commandRan).c_str() ); // get the place where the running executable is
+	if(path=="") path="."; // If called by itself = either in the PATH or in the current directory : will be found either way by find_program
 	std::string SoftConfigPath= path + "/DTIAtlasBuilderSoftConfig.txt";
 	if( access( SoftConfigPath.c_str() , F_OK) == 0 ) if( LoadConfig(QString( SoftConfigPath.c_str() )) == -1 ) m_ErrorDetectedInConstructor=true; // if file exists
 

@@ -388,7 +388,7 @@ as an Affine transform already computed, it will be used as an input for the Aff
       </widget>
       <widget class="QWidget" name="AWTab">
        <attribute name="title">
-        <string>AtlasWerks Atlas</string>
+        <string>Diffeomorphic Atlas</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_12">
         <item>
@@ -400,7 +400,7 @@ as an Affine transform already computed, it will be used as an input for the Aff
            </sizepolicy>
           </property>
           <property name="title">
-           <string>AtlasWerks</string>
+           <string>GreedyAtlas Scale Levels</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_4">
            <item>
@@ -1611,7 +1611,7 @@ paths configured.</string>
          <string>QC with MriWatcher</string>
         </property>
         <property name="text">
-         <string>AW Deformable QC</string>
+         <string>Diffeomorphic QC</string>
         </property>
        </widget>
       </item>
@@ -1674,7 +1674,7 @@ paths configured.</string>
          </sizepolicy>
         </property>
         <property name="text">
-         <string>                       </string>
+         <string/>
         </property>
        </widget>
       </item>
