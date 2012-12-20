@@ -1,0 +1,11 @@
+# Configure Step
+message("[] Configuring FFTWF...")
+execute_process(COMMAND sh ${CMAKE_CURRENT_BINARY_DIR}/FFTW/configure --prefix=${CMAKE_CURRENT_BINARY_DIR}/FFTW-install --enable-static --enable-float --enable-threads WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/FFTW-build)
+
+# Build Step
+message("[] Building FFTWF...")
+execute_process(COMMAND make WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/FFTW-build)
+
+# Install Step
+message("[] Installing FFTWF...")
+execute_process(COMMAND make install WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/FFTW-build)

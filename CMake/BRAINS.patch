@@ -1,0 +1,22 @@
+*** BRAINS/BRAINSCommonLib/BuildScripts/CMakeBRAINS3BuildMacros.cmake	2012-12-19 15:07:52.503901000 -0500
+--- BRAINS/BRAINSCommonLib/BuildScripts/CMakeBRAINS3BuildMacros.cmake	2012-12-19 15:30:17.477885547 -0500
+***************
+*** 44,49 ****
+--- 44,50 ----
+    if(BRAINSTools_INSTALL_DEVELOPMENT)
+      SEMMacroBuildCLI(
+        NAME "${BRAINS_SEM_NAME}"
++         EXECUTABLE_ONLY
+          ${BUILD_STATIC_LIBRARY}
+          ADDITIONAL_SRCS "${BRAINS_SEM_ADDITIONAL_SRCS}"
+          LOGO_HEADER "${BRAINSCommonLib_BUILDSCRIPTS_DIR}/BRAINSLogo.h"
+***************
+*** 60,65 ****
+--- 61,67 ----
+    else()
+      SEMMacroBuildCLI(
+        NAME "${BRAINS_SEM_NAME}"
++         EXECUTABLE_ONLY
+          ${BUILD_STATIC_LIBRARY}
+          ADDITIONAL_SRCS "${BRAINS_SEM_ADDITIONAL_SRCS}"
+          LOGO_HEADER "${BRAINSCommonLib_BUILDSCRIPTS_DIR}/BRAINSLogo.h"
