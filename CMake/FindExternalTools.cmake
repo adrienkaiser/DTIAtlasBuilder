@@ -137,16 +137,6 @@ if(COMPILE_EXTERNAL_AtlasWerks) # FFTW D + F build one on(after) another
   set(FFTW_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install)
 endif(COMPILE_EXTERNAL_AtlasWerks)
 
-# BatchMake
-if(COMPILE_EXTERNAL_DTIReg) # BatchMake only needed for DTIReg
-  find_package(BatchMake REQUIRED)
-  if(BatchMake_FOUND)
-    include(${BatchMake_USE_FILE})
-  else(BatchMake_FOUND)
-    message(FATAL_ERROR "BatchMake not found. Please set BatchMake_DIR. " )
-  endif(BatchMake_FOUND )
-endif(COMPILE_EXTERNAL_DTIReg)
-
 if(COMPILE_EXTERNAL_dtiprocessTK AND ITK_FOUND) # dtiprocess needs v3Compatible version of ITKv4
   if( NOT DEFINED ITKV3_COMPATIBILITY OR NOT ${ITKV3_COMPATIBILITY} )
  #   message( FATAL_ERROR "dtiprocessTK: Please choose ITKv4 compiled with the \"ITKV3_COMPATIBILITY\" variable set to ON, if you want to compile dtiprocessTK.") # If not, you may have compilation errors" )
@@ -160,12 +150,12 @@ set(RecompileSEM OFF)
 if(COMPILE_EXTERNAL_dtiprocessTK OR COMPILE_EXTERNAL_BRAINS OR COMPILE_EXTERNAL_ANTS OR COMPILE_EXTERNAL_ResampleDTI) # If one of these tools needed, need to recompile ITK so the version is OK
   set(RecompileITK ON) # Automatically recompile SlicerExecutionModel
 else() # If no need, recompile ITK or SEM only if not found
-  find_package(ITK REQUIRED)
+  find_package(ITK) # Not required because will be recompiled if not found
   if(ITK_FOUND)
     include(${ITK_USE_FILE}) # set ITK_DIR
 
     # If ITK not recompiled, look for SlicerExecutionModel
-    find_package(SlicerExecutionModel REQUIRED)
+    find_package(SlicerExecutionModel) # Not required because will be recompiled if not found
     if(SlicerExecutionModel_FOUND)
       include(${SlicerExecutionModel_USE_FILE}) # creates SlicerExecutionModel_DIR (DTI-Reg & BRAINSFit)
     else(SlicerExecutionModel_FOUND)
@@ -239,6 +229,41 @@ if(RecompileSEM)
   set(TCLAP_DIR ${SlicerExecutionModel_DIR}/tclap)
   list(APPEND ITK_DEPEND SlicerExecutionModel)
 endif(RecompileSEM)
+
+# BatchMake for DTI-Reg
+set(BatchMake_DEPEND "")
+if(COMPILE_EXTERNAL_DTIReg) # BatchMake only needed for DTIReg
+  find_package(BatchMake) # Not required because will be recompiled if not found
+  if(BatchMake_FOUND)
+    include(${BatchMake_USE_FILE})
+  else(BatchMake_FOUND)
+    message(WARNING "BatchMake not found. It will be downloaded and recompiled.")
+    # If not found, recompile it
+    ExternalProject_Add(BatchMake
+      GIT_REPOSITORY ${git_protocol}://batchmake.org/BatchMake.git
+      GIT_TAG "43d21fcccd09e5a12497bc1fb924bc6d5718f98c" # !! Update to have the patch done
+      SOURCE_DIR BatchMake
+      BINARY_DIR BatchMake-build
+      CMAKE_GENERATOR ${gen}
+      CMAKE_ARGS
+        -DBUILD_SHARED_LIBS:BOOL=OFF
+        -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
+        -DBUILD_TESTING:BOOL=OFF
+        -DUSE_FLTK:BOOL=OFF
+        -DDASHBOARD_SUPPORT:BOOL=OFF
+        -DGRID_SUPPORT:BOOL=OFF
+        -DUSE_SPLASHSCREEN:BOOL=OFF
+        -DITK_DIR:PATH=${ITK_DIR}
+      INSTALL_COMMAND ""
+      PATCH_COMMAND patch -p0 -d ${CMAKE_CURRENT_BINARY_DIR} -i ${CMAKE_CURRENT_SOURCE_DIR}/CMake/BatchMake.patch # !! no "" # !! patch doesn't exist on windows !
+      DEPENDS ${ITK_DEPEND}
+      )
+    set(BatchMake_DIR ${CMAKE_CURRENT_BINARY_DIR}/BatchMake-build)
+    set(BatchMake_ITK_DIR ${ITK_DIR}) # If batchmake recompiled, no include(${BatchMake_USE_FILE}) has been done so BatchMake_ITK_DIR does not exist, and we used ${ITK_DIR} to compile it.
+    set(BatchMake_DEPEND BatchMake)
+  endif(BatchMake_FOUND )
+endif(COMPILE_EXTERNAL_DTIReg)
+
 
 #====================================================================
 #===== TOOLS ========================================================
@@ -436,7 +461,7 @@ set( CMAKE_ExtraARGS
   -DWARPIMAGEMULTITRANSFORMTOOL:PATH=${WarpImageMultiTransformPath}
   -DWARPTENSORIMAGEMULTITRANSFORMTOOL:PATH=${WarpTensorImageMultiTransformPath}
   -DdtiprocessTOOL:PATH=${dtiprocessPath}
-  DEPENDS ${ITK_DEPEND}
+  DEPENDS ${ITK_DEPEND} ${BatchMake_DEPEND}
   )
 set( Tools
   DTI-Reg

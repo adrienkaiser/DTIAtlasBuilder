@@ -1,0 +1,38 @@
+*** BatchMake/Testing/Code/CMakeLists.txt	2012-12-14 11:57:34.296885853 -0500
+--- BatchMake/Testing/Code/CMakeLists.txt	2012-12-14 11:58:07.922885757 -0500
+***************
+*** 5,11 ****
+  SET(BATCHMAKE_TESTS ${CXX_TEST_PATH}/BatchMakeTests)
+  
+  ADD_EXECUTABLE(BatchMakeMemoryTest BatchMakeMemoryTest.cxx)
+! TARGET_LINK_LIBRARIES(BatchMakeMemoryTest itksys ITKIO)
+  
+  IF(DASHBOARD_SUPPORT)
+  
+--- 5,11 ----
+  SET(BATCHMAKE_TESTS ${CXX_TEST_PATH}/BatchMakeTests)
+  
+  ADD_EXECUTABLE(BatchMakeMemoryTest BatchMakeMemoryTest.cxx)
+! TARGET_LINK_LIBRARIES(BatchMakeMemoryTest ${ITK_LIBRARIES})
+  
+  IF(DASHBOARD_SUPPORT)
+
+*** BatchMake/Utilities/CMakeLists.txt	2012-12-14 11:57:15.049901236 -0500
+--- BatchMakeITKv4/Utilities/CMakeLists.txt	2012-12-14 11:57:52.246891042 -0500
+***************
+*** 54,60 ****
+  #  Build BatchMakeUtilities Library
+  
+  ADD_LIBRARY(BatchMakeUtilities ${BatchMakeUtilities_SRCS} ${BatchMakeUtilities_HDRS})
+! TARGET_LINK_LIBRARIES(BatchMakeUtilities ITKCommon ITKIO itksys)
+  
+  IF(USE_FLTK)
+    TARGET_LINK_LIBRARIES(BatchMakeUtilities ${FLTK_LIBRARIES} FLU)
+--- 54,60 ----
+  #  Build BatchMakeUtilities Library
+  
+  ADD_LIBRARY(BatchMakeUtilities ${BatchMakeUtilities_SRCS} ${BatchMakeUtilities_HDRS})
+! TARGET_LINK_LIBRARIES(BatchMakeUtilities ${ITK_LIBRARIES})
+  
+  IF(USE_FLTK)
+    TARGET_LINK_LIBRARIES(BatchMakeUtilities ${FLTK_LIBRARIES} FLU)

@@ -42,6 +42,7 @@ set(CompareParametersdtiprocessFA
 set(DTIABParameters
   --nogui # no need if ITKv4 -> already in DTIAtlasBuilderTest.cxx
   --parameter_file ${TestingBINdirectory}/TestGUIparameters.txt
+  --configuration_file ${CMAKE_CURRENT_BINARY_DIR}/../../bin/DTIAtlasBuilderSoftConfig.txt
   )
 
 
