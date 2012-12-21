@@ -199,13 +199,16 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	m_FromConstructor=1; // do not test GA path if 'Default' called from constructor -> test at the end of constructor
 
 /* SET the soft config */
+// set the path to the executable directory for FindProgram
+	std::string DTIABExecutablePath= itksys::SystemTools::GetRealPath( itksys::SystemTools::GetFilenamePath(commandRan).c_str() ); // get the place where the running executable is
+	if(DTIABExecutablePath=="") DTIABExecutablePath= itksys::SystemTools::GetCurrentWorkingDirectory(); // If called by itself ($ DTIAtlasBuilder) = either in the PATH or in the current directory : will be found either way by find_program
+	m_FindProgramDTIABExecDirVec.push_back(DTIABExecutablePath); // FindProgram will search in the executable directory too
+
 // look for the programs with the itk function
 	ConfigDefault();
 
 // Look for the config file in the executable directory
-	std::string path= itksys::SystemTools::GetRealPath( itksys::SystemTools::GetFilenamePath(commandRan).c_str() ); // get the place where the running executable is
-	if(path=="") path="."; // If called by itself = either in the PATH or in the current directory : will be found either way by find_program
-	std::string SoftConfigPath= path + "/DTIAtlasBuilderSoftConfig.txt";
+	std::string SoftConfigPath= DTIABExecutablePath + "/DTIAtlasBuilderSoftConfig.txt";
 	if( access( SoftConfigPath.c_str() , F_OK) == 0 ) if( LoadConfig(QString( SoftConfigPath.c_str() )) == -1 ) m_ErrorDetectedInConstructor=true; // if file exists
 
 // Look for the config file in the current directory
@@ -2164,29 +2167,29 @@ void GUI::ConfigDefault() /*SLOT*/
 
 	std::string program;
 	std::string notFound;
-
-	program = itksys::SystemTools::FindProgram("ImageMath");
+std::cout<<m_FindProgramDTIABExecDirVec[0]<<std::endl;
+	program = itksys::SystemTools::FindProgram("ImageMath",m_FindProgramDTIABExecDirVec);
 	if(program.empty()) { if(ImagemathPath->text().isEmpty()) notFound = notFound + "> ImageMath\n"; }
 	else ImagemathPath->setText(QString(program.c_str()));
 
-	program = itksys::SystemTools::FindProgram("ResampleDTIlogEuclidean");
+	program = itksys::SystemTools::FindProgram("ResampleDTIlogEuclidean",m_FindProgramDTIABExecDirVec);
 	if(program.empty()) { if(ResampPath->text().isEmpty()) notFound = notFound + "> ResampleDTIlogEuclidean\n"; }
 	else ResampPath->setText(QString(program.c_str()));
 
-	program = itksys::SystemTools::FindProgram("CropDTI");
+	program = itksys::SystemTools::FindProgram("CropDTI",m_FindProgramDTIABExecDirVec);
 	if(program.empty()) { if(CropDTIPath->text().isEmpty()) notFound = notFound + "> CropDTI\n"; }
 	else CropDTIPath->setText(QString(program.c_str()));
 
-	program = itksys::SystemTools::FindProgram("dtiprocess");
+	program = itksys::SystemTools::FindProgram("dtiprocess",m_FindProgramDTIABExecDirVec);
 	if(program.empty()) { if(dtiprocPath->text().isEmpty()) notFound = notFound + "> dtiprocess\n"; }
 	else dtiprocPath->setText(QString(program.c_str()));
 
-	program = itksys::SystemTools::FindProgram("BRAINSFit");
+	program = itksys::SystemTools::FindProgram("BRAINSFit",m_FindProgramDTIABExecDirVec);
 	if(program.empty()) { if(BRAINSFitPath->text().isEmpty()) notFound = notFound + "> BRAINSFit\n"; }
 	else BRAINSFitPath->setText(QString(program.c_str()));
 
 	bool GAToTest=false;
-	program = itksys::SystemTools::FindProgram("GreedyAtlas");
+	program = itksys::SystemTools::FindProgram("GreedyAtlas",m_FindProgramDTIABExecDirVec);
 	if(program.empty()) { if(GAPath->text().isEmpty()) notFound = notFound + "> GreedyAtlas\n"; }
 	else
 	{
@@ -2194,13 +2197,13 @@ void GUI::ConfigDefault() /*SLOT*/
 		GAPath->setText(QString(program.c_str()));	
 	}
 
-	program = itksys::SystemTools::FindProgram("dtiaverage");
+	program = itksys::SystemTools::FindProgram("dtiaverage",m_FindProgramDTIABExecDirVec);
 	if(program.empty()) { if(dtiavgPath->text().isEmpty()) notFound = notFound + "> dtiaverage\n"; }
 	else dtiavgPath->setText(QString(program.c_str()));
 
 	bool DTIRegToTest=false;
-	program = itksys::SystemTools::FindProgram("DTI-Reg_1.1.2");
-	if(program.empty()) program = itksys::SystemTools::FindProgram("DTI-Reg"); // if 1.1.2 not found, look for "DTI-Reg" alone
+	program = itksys::SystemTools::FindProgram("DTI-Reg_1.1.2",m_FindProgramDTIABExecDirVec);
+	if(program.empty()) program = itksys::SystemTools::FindProgram("DTI-Reg",m_FindProgramDTIABExecDirVec); // if 1.1.2 not found, look for "DTI-Reg" alone
 	if(program.empty()) { if(DTIRegPath->text().isEmpty()) notFound = notFound + "> DTI-Reg\n"; }
 	else
 	{
@@ -2208,11 +2211,11 @@ void GUI::ConfigDefault() /*SLOT*/
 		DTIRegPath->setText(QString(program.c_str()));	
 	}
 
-	program = itksys::SystemTools::FindProgram("unu");
+	program = itksys::SystemTools::FindProgram("unu",m_FindProgramDTIABExecDirVec);
 	if(program.empty()) { if(unuPath->text().isEmpty()) notFound = notFound + "> unu\n"; }
 	else unuPath->setText(QString(program.c_str()));
 
-	program = itksys::SystemTools::FindProgram("MriWatcher");
+	program = itksys::SystemTools::FindProgram("MriWatcher",m_FindProgramDTIABExecDirVec);
 	if(program.empty()) { if(MriWatcherPath->text().isEmpty()) notFound = notFound + "> MriWatcher\n"; }
 	else MriWatcherPath->setText(QString(program.c_str()));
 
@@ -2303,9 +2306,9 @@ void GUI::ResetSoft(int softindex) /*SLOT*/ //softwares: 1=ImageMath, 2=Resample
 
 	std::cout<<"| Searching the software \'"<< soft <<"\'..."; // command line display
 
-	std::string program = itksys::SystemTools::FindProgram(soft.c_str());
+	std::string program = itksys::SystemTools::FindProgram(soft.c_str(),m_FindProgramDTIABExecDirVec);
 
-	if(program.empty() && soft=="DTI-Reg_1.1.2") program = itksys::SystemTools::FindProgram("DTI-Reg"); // if 1.1.2 not found, look for "DTI-Reg"
+	if(program.empty() && soft=="DTI-Reg_1.1.2") program = itksys::SystemTools::FindProgram("DTI-Reg",m_FindProgramDTIABExecDirVec); // if 1.1.2 not found, look for "DTI-Reg"
 
 
 	bool GAToTest=false;
@@ -2788,62 +2791,62 @@ int GUI::LaunchScriptWriter()
 
 		if(ImagemathPath->text().isEmpty())
 		{
-			programPath = itksys::SystemTools::FindProgram("ImageMath");
+			programPath = itksys::SystemTools::FindProgram("ImageMath",m_FindProgramDTIABExecDirVec);
 			if(programPath.empty()) notFound = notFound + "> ImageMath\n";
 			else ImagemathPath->setText(QString(programPath.c_str()));
 		}
 		if(ResampPath->text().isEmpty())
 		{
-			programPath = itksys::SystemTools::FindProgram("ResampleDTIlogEuclidean");
+			programPath = itksys::SystemTools::FindProgram("ResampleDTIlogEuclidean",m_FindProgramDTIABExecDirVec);
 			if(programPath.empty()) notFound = notFound + "> ResampleDTIlogEuclidean\n";
 			else ResampPath->setText(QString(programPath.c_str()));
 		}
 		if(CropDTIPath->text().isEmpty())
 		{
-			programPath = itksys::SystemTools::FindProgram("CropDTI");
+			programPath = itksys::SystemTools::FindProgram("CropDTI",m_FindProgramDTIABExecDirVec);
 			if(programPath.empty()) notFound = notFound + "> CropDTI\n";
 			else CropDTIPath->setText(QString(programPath.c_str()));
 		}
 		if(dtiprocPath->text().isEmpty())
 		{
-			programPath = itksys::SystemTools::FindProgram("dtiprocess");
+			programPath = itksys::SystemTools::FindProgram("dtiprocess",m_FindProgramDTIABExecDirVec);
 			if(programPath.empty()) notFound = notFound + "> dtiprocess\n";
 			else dtiprocPath->setText(QString(programPath.c_str()));
 		}
 		if(BRAINSFitPath->text().isEmpty())
 		{
-			programPath = itksys::SystemTools::FindProgram("BRAINSFit");
+			programPath = itksys::SystemTools::FindProgram("BRAINSFit",m_FindProgramDTIABExecDirVec);
 			if(programPath.empty()) notFound = notFound + "> BRAINSFit\n";
 			else BRAINSFitPath->setText(QString(programPath.c_str()));
 		}
 		if(GAPath->text().isEmpty())
 		{
-			programPath = itksys::SystemTools::FindProgram("GreedyAtlas");
+			programPath = itksys::SystemTools::FindProgram("GreedyAtlas",m_FindProgramDTIABExecDirVec);
 			if(programPath.empty()) notFound = notFound + "> GreedyAtlas\n";
 			else GAPath->setText(QString(programPath.c_str()));
 		}
 		if(dtiavgPath->text().isEmpty())
 		{
-			programPath = itksys::SystemTools::FindProgram("dtiaverage");
+			programPath = itksys::SystemTools::FindProgram("dtiaverage",m_FindProgramDTIABExecDirVec);
 			if(programPath.empty()) notFound = notFound + "> dtiaverage\n";
 			else dtiavgPath->setText(QString(programPath.c_str()));
 		}
 		if(DTIRegPath->text().isEmpty())
 		{
-			programPath = itksys::SystemTools::FindProgram("DTI-Reg_1.1.2");
-			if(programPath.empty()) programPath = itksys::SystemTools::FindProgram("DTI-Reg"); // if 1.1.2 not found, look for "DTI-Reg"
+			programPath = itksys::SystemTools::FindProgram("DTI-Reg_1.1.2",m_FindProgramDTIABExecDirVec);
+			if(programPath.empty()) programPath = itksys::SystemTools::FindProgram("DTI-Reg",m_FindProgramDTIABExecDirVec); // if 1.1.2 not found, look for "DTI-Reg"
 			if(programPath.empty()) notFound = notFound + "> DTI-Reg\n";
 			else DTIRegPath->setText(QString(programPath.c_str()));
 		}
 		if(unuPath->text().isEmpty())
 		{
-			programPath = itksys::SystemTools::FindProgram("unu");
+			programPath = itksys::SystemTools::FindProgram("unu",m_FindProgramDTIABExecDirVec);
 			if(programPath.empty()) notFound = notFound + "> unu\n";
 			else unuPath->setText(QString(programPath.c_str()));
 		}
 		if(MriWatcherPath->text().isEmpty())
 		{
-			programPath = itksys::SystemTools::FindProgram("MriWatcher");
+			programPath = itksys::SystemTools::FindProgram("MriWatcher",m_FindProgramDTIABExecDirVec);
 			if(programPath.empty()) notFound = notFound + "> MriWatcher\n";
 			else MriWatcherPath->setText(QString(programPath.c_str()));
 		}
