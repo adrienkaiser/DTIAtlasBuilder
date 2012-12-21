@@ -36,10 +36,14 @@ if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
     include(${Slicer_USE_FILE})
   endif()
 
-#  set (EXECUTABLE_OUTPUT_PATH ${SlicerExecutionModel_DEFAULT_CLI_RUNTIME_OUTPUT_DIRECTORY} CACHE PATH "Single output directory for building all executables.")
-  set (EXECUTABLE_OUTPUT_PATH ${SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION} CACHE PATH "Single output directory for building all executables.")
   # SlicerExecutionModel_DEFAULT_CLI_RUNTIME_OUTPUT_DIRECTORY and SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION defined in Slicer_USE_FILE
+  # If build as Slicer Extension, CMAKE_INSTALL_PREFIX is set to Extensions/DTIAtlaBuilder
+  # SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION is ./lib/Slicer4.2/cli_module -> not install not cli modules in it
+  set(INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/${SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION}) # Set for DTIAtlasBuilder and config file
+  set(NOCLI_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
 
+else( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
+  set(INSTALL_DIR ${CMAKE_INSTALL_PREFIX})
 endif( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
 
 set( COMPILE_PACKAGE ON CACHE BOOL "Compiles all the external projects and tools" )
@@ -79,7 +83,7 @@ set( ExtProjList # External packages to compile
   BRAINS # BRAINSFit, BRAINSDemonWarp
   ANTS # ANTS, WarpImageMultiTransform, WarpTensorImageMultiTransform
   ResampleDTI # ResampleDTIlogEuclidean
-  DTIReg # DTI-Reg, DTI-Reg_Scalar_ANTS.bms, DTI-Reg_Scalar_BRAINS.bms
+  DTIReg # DTI-Reg
   teem # unu
   MriWatcher # MriWatcher
   NIRALUtilities # ImageMath, CropDTI
@@ -106,8 +110,6 @@ if(COMPILE_PACKAGE)
 
   # Define COMPILE_EXTERNAL_* variables
   if( NOT DTIAtlasBuilder_BUILD_SLICER_EXTENSION ) # no Slicer extension -> recompile all
-    # Executable output path : folder with all the needed executables together
-    set (EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin CACHE PATH "Single output directory for building all executables.")
 
     foreach( tool ${ExtProjList})
       set( COMPILE_EXTERNAL_${tool} ON CACHE BOOL "Compile external ${tool}" )
@@ -132,10 +134,10 @@ if(COMPILE_PACKAGE)
   include( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindExternalTools.cmake ) # Go execute the given cmake script, and get back into this script when done
 
   # Update the paths to the program in the configuration file, and copy it to the executable directory
-  configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/DTIAtlasBuilderSoftConfig.txt.in ${EXECUTABLE_OUTPUT_PATH}/DTIAtlasBuilderSoftConfig.txt ) # configure and copy with (tool)Path
-#  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/DTIAtlasBuilderSoftConfig.txt DESTINATION ${CMAKE_INSTALL_PREFIX}) # will create the install folder if doesn't exist and copy the file in it
+  configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/DTIAtlasBuilderSoftConfig.txt.in ${INSTALL_DIR}/DTIAtlasBuilderSoftConfig.txt ) # configure and copy with (tool)Path
+#  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/DTIAtlasBuilderSoftConfig.txt DESTINATION ${INSTALL_DIR}) # will create the install folder if doesn't exist and copy the file in it
 
-#  message("When CMake done, run \"make\" to download and compile tools, and then run \"make install\" to copy all the needed executables in the output folder : ${EXECUTABLE_OUTPUT_PATH}.\nEnter e to exit this message, and then g to generate and get CMake done.")
+#  message("When CMake done, run \"make\" to download and compile tools, and then run \"make install\" to copy all the needed executables in the output folder : ${INSTALL_DIR}.\nEnter e to exit this message, and then g to generate and get CMake done.")
 
 else(COMPILE_PACKAGE) # Hide unuseful variables
   foreach( proj ${ExtProjList})
@@ -163,11 +165,11 @@ ExternalProject_Add(DTIAtlasBuilder # DTIAtlasBuilder added as Externalproject i
     -DQT_QMAKE_EXECUTABLE:PATH=${QT_QMAKE_EXECUTABLE}
     -DBUILD_TESTING:BOOL=${BUILD_TESTING}
     -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
-    -DEXECUTABLE_OUTPUT_PATH:PATH=${EXECUTABLE_OUTPUT_PATH}
     -DLIBRARY_OUTPUT_PATH:PATH=${LIBRARY_OUTPUT_PATH}
   INSTALL_COMMAND ""
   DEPENDS ${ITK_DEPEND}
 )
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/DTIAtlasBuilder DESTINATION ${INSTALL_DIR})
 
 # For Slicer Extension
 if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
