@@ -86,14 +86,15 @@ add_test(NAME TestnoGUIFinalOutput COMMAND ${NoGUITestCommand}
 add_executable(DTIAtlasBuilderGUITest DTIAtlasBuilderGUITest.cxx)
 target_link_libraries(DTIAtlasBuilderGUITest DTIAtlasBuilderLib)
 set_target_properties(DTIAtlasBuilderGUITest PROPERTIES LABELS DTIAtlasBuilder)
-add_test(NAME TestGUI COMMAND ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilderGUITest)
+add_test(NAME TestGUI COMMAND ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilderGUITest ${CMAKE_CURRENT_BINARY_DIR}/../../bin/DTIAtlasBuilderSoftConfig.txt) # The config file will be read as argv[1] (no GenerateCLP)
 
 
 ## Test 6 : Open the GUI for 10 sec with a param file, check the content of the QLineEdit and close it
 add_executable(DTIAtlasBuilderGUITestLabels DTIAtlasBuilderGUITestLabels.cxx)
 target_link_libraries(DTIAtlasBuilderGUITestLabels DTIAtlasBuilderLib)
 set_target_properties(DTIAtlasBuilderGUITestLabels PROPERTIES LABELS DTIAtlasBuilder)
-add_test(NAME TestGUILabels COMMAND ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilderGUITestLabels ${TestingBINdirectory}/TestGUIparameters.txt ${TestingBINdirectory}) # The parameter file will be read as argv[1] (no GenerateCLP)
+add_test(NAME TestGUILabels COMMAND ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilderGUITestLabels ${TestingBINdirectory}/TestGUIparameters.txt ${CMAKE_CURRENT_BINARY_DIR}/../../bin/DTIAtlasBuilderSoftConfig.txt ${TestingBINdirectory})
+# The parameter file will be read as argv[1] (no GenerateCLP) and config file argv[2] # argv[3] is the folder to check to content of LineEdit
 
 
 # Configure (Replace paths) and Copy needed files

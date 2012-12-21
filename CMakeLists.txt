@@ -104,15 +104,29 @@ set( ToolsList # Needed tools -> to hide unuseful TOOL* variables
   )
 if(COMPILE_PACKAGE)
 
+  # Define COMPILE_EXTERNAL_* variables
   if( NOT DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
     # Executable output path : folder with all the needed executables together
     set (EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin CACHE PATH "Single output directory for building all executables.")
-  endif()
 
-  foreach( tool ${ExtProjList})
-    set( COMPILE_EXTERNAL_${tool} ON CACHE BOOL "Compile external ${tool}" )
-    mark_as_advanced(CLEAR COMPILE_EXTERNAL_${tool}) # Show variable if been hidden
-  endforeach()
+    foreach( tool BRAINS teem ) # Already in Slicer -> not recompiled
+      set( COMPILE_EXTERNAL_${tool} OFF CACHE BOOL "Compile external ${tool}" )
+      mark_as_advanced(CLEAR COMPILE_EXTERNAL_${tool}) # Show variable if been hidden
+    endforeach()
+
+    foreach( tool dtiprocessTK AtlasWerks ANTS ResampleDTI DTIReg MriWatcher NIRALUtilities ) # Not in Slicer -> recompile
+      set( COMPILE_EXTERNAL_${tool} ON CACHE BOOL "Compile external ${tool}" )
+      mark_as_advanced(CLEAR COMPILE_EXTERNAL_${tool}) # Show variable if been hidden
+    endforeach()
+
+  else() # no Slicer extension -> recompile all
+
+    foreach( tool ${ExtProjList})
+      set( COMPILE_EXTERNAL_${tool} ON CACHE BOOL "Compile external ${tool}" )
+      mark_as_advanced(CLEAR COMPILE_EXTERNAL_${tool}) # Show variable if been hidden
+    endforeach()
+
+  endif()
 
   # File containing add_external for all tools
   include( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindExternalTools.cmake ) # Go execute the given cmake script, and get back into this script when done

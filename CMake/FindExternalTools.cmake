@@ -36,11 +36,11 @@ endmacro( SetPathsSystem )
 macro( FindToolsMacro Proj )
   set( AllToolsFound ON )
   foreach( tool ${Tools} )
-    find_program( TOOL${tool}Sys ${tool} PATHS ${CMAKE_CURRENT_BINARY_DIR}/${Proj}-build ${CMAKE_CURRENT_BINARY_DIR}/${Proj}-build/bin) # search in the build directories, in case the executable has already been compiled
+    find_program( TOOL${tool}Sys ${tool}) # search TOOL${tool}Sys in the PATH
     if(${TOOL${tool}Sys} STREQUAL "TOOL${tool}Sys-NOTFOUND") # If program not found, give a warning message and set AllToolsFound variable to OFF
       message( WARNING "${tool} not found. CMake external will download and compile the whole ${Proj} package" )
       set( AllToolsFound OFF )
-    endif()
+    endif() # Found on system
   endforeach()
 endmacro()
 
@@ -170,6 +170,7 @@ else() # If no need, recompile ITK or SEM only if not found
 endif() # COMPILE_EXTERNAL_dtiprocessTK OR COMPILE_EXTERNAL_BRAINS OR COMPILE_EXTERNAL_ANTS OR COMPILE_EXTERNAL_ResampleDTI
 
 set(ITK_DEPEND "")
+set(RecompileBatchMake OFF)
 if(RecompileITK)
   # Download and compile ITKv4
   ExternalProject_Add(ITKv4 # BRAINSStandAlone/SuperBuild/External_ITKv4.cmake
@@ -201,6 +202,7 @@ if(RecompileITK)
   set(ITK_DIR ${CMAKE_CURRENT_BINARY_DIR}/ITKv4-build) # Use the downloaded ITK for all tools
   set(ITK_DEPEND ITKv4)
   set(RecompileSEM ON) # If recompile ITK, recompile SlicerExecutionModel
+  set(RecompileBatchMake ON) # If recompile ITK, recompile BatchMake
 endif(RecompileITK)
 
 if(RecompileSEM)
@@ -238,7 +240,11 @@ if(COMPILE_EXTERNAL_DTIReg) # BatchMake only needed for DTIReg
     include(${BatchMake_USE_FILE})
   else(BatchMake_FOUND)
     message(WARNING "BatchMake not found. It will be downloaded and recompiled.")
-    # If not found, recompile it
+    set(RecompileBatchMake ON) # If not found, recompile it
+  endif(BatchMake_FOUND )
+endif(COMPILE_EXTERNAL_DTIReg)
+
+if(RecompileBatchMake)
     ExternalProject_Add(BatchMake
       GIT_REPOSITORY ${git_protocol}://batchmake.org/BatchMake.git
       GIT_TAG "43d21fcccd09e5a12497bc1fb924bc6d5718f98c" # !! Update to have the patch done
@@ -261,9 +267,7 @@ if(COMPILE_EXTERNAL_DTIReg) # BatchMake only needed for DTIReg
     set(BatchMake_DIR ${CMAKE_CURRENT_BINARY_DIR}/BatchMake-build)
     set(BatchMake_ITK_DIR ${ITK_DIR}) # If batchmake recompiled, no include(${BatchMake_USE_FILE}) has been done so BatchMake_ITK_DIR does not exist, and we used ${ITK_DIR} to compile it.
     set(BatchMake_DEPEND BatchMake)
-  endif(BatchMake_FOUND )
-endif(COMPILE_EXTERNAL_DTIReg)
-
+endif(RecompileBatchMake)
 
 #====================================================================
 #===== TOOLS ========================================================

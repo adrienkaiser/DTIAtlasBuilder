@@ -4,19 +4,19 @@
 // DTIAtlasBuildder includes
 #include "GUI.h"
 
-int main(int argc, char * argv[] ) // called with $ DTIAtlasBuilderGUITestLabels (paramFileConfigured) (TestBinFolder)
+int main(int argc, char * argv[] ) // called with $ DTIAtlasBuilderGUITestLabels (paramFileConfigured) (configFile) (TestBinFolder)
 {
-  if( argc < 3 ) return -1;
+  if( argc < 4 ) return -1;
 
   QApplication app(argc, argv); // create a QApplication
 
-  GUI TestGUI(argv[1],"","",false,false,argv[0]); // create a GUI object : GUI(ParamFile,ConfigFile,CSVFile,Overwrite,noGUI,argv[0])
+  GUI TestGUI(argv[1],argv[2],"",false,false,argv[0]); // create a GUI object : GUI(ParamFile,ConfigFile,CSVFile,Overwrite,noGUI,argv[0])
 
   TestGUI.show(); // open the window
 
   QTimer::singleShot(2000, qApp, SLOT(quit())); // close the window after 2000ms = 2s
 
-  if(TestGUI.OutputFolderLineEdit->text().toStdString() != argv[2]) return -1;
+  if(TestGUI.OutputFolderLineEdit->text().toStdString() != argv[3]) return -1;
 
   return app.exec();
 }
