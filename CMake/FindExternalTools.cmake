@@ -14,7 +14,8 @@ macro( SetPathsRecompile )
   foreach( tool ${Tools} )
  #   set(InstallPath ${CMAKE_INSTALL_PREFIX}) # Non cache variable so its value can change and be updated
     set(TOOL${tool} ${EXECUTABLE_OUTPUT_PATH}/${tool} CACHE STRING "Path to the ${tool} executable")
-    set(${tool}Path ${TOOL${tool}}) # ${proj}Path =  variable changed in the DTIAB config file (non cache)
+    get_filename_component(${tool}Path ${TOOL${tool}} REALPATH ABSOLUTE) # Set the real path in the config file
+#    set(${tool}Path ${TOOL${tool}}) # ${proj}Path =  variable changed in the DTIAB config file (non cache)
     mark_as_advanced(CLEAR TOOL${tool}) # Show the option in the gui
     if(DEFINED TOOL${tool}Sys)
       mark_as_advanced(FORCE TOOL${tool}Sys) # Hide the unuseful option in the gui
@@ -24,7 +25,8 @@ endmacro( SetPathsRecompile )
 
 macro( SetPathsSystem )
   foreach( tool ${Tools} )
-    set(${tool}Path ${TOOL${tool}Sys})
+    get_filename_component(${tool}Path ${TOOL${tool}}Sys REALPATH ABSOLUTE) # Set the real path in the config file
+#    set(${tool}Path ${TOOL${tool}Sys})
     mark_as_advanced(CLEAR TOOL${tool}Sys) # Show the option in the gui
     if(DEFINED TOOL${tool})
       mark_as_advanced(FORCE TOOL${tool}) # Hide the option in the gui
