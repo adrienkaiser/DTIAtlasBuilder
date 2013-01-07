@@ -63,7 +63,7 @@ macro( AddToolMacro Proj CLI) # CLI = Used if Slicer Extension : ON if CLI and O
 
     # If some program not found, reset all tools to the recompiled path and recompile the whole package
     if(NOT AllToolsFound) # AllToolsFound set or reset in FindToolsMacro()
-      set( COMPILE_EXTERNAL_${Proj} ON CACHE BOOL "" FORCE)
+#      set( COMPILE_EXTERNAL_${Proj} ON CACHE BOOL "" FORCE)
       SetPathsRecompile() # Uses the list "Tools"
     else()
       SetPathsSystem() # Uses the list "Tools"
