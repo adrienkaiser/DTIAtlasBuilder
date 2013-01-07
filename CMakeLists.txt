@@ -137,7 +137,7 @@ if(COMPILE_PACKAGE)
   if( NOT DTIAtlasBuilder_BUILD_SLICER_EXTENSION ) # If Slicer Extension, compiled and executed not on same system so Config file useless
     configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/DTIAtlasBuilderSoftConfig.txt.in ${INSTALL_DIR}/DTIAtlasBuilderSoftConfig.txt ) # configure and copy with (tool)Path
 #    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/DTIAtlasBuilderSoftConfig.txt DESTINATION ${INSTALL_DIR}) # will create the install folder if doesn't exist and copy the file in it
-  endif( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
+  endif( NOT DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
 
 #  message("When CMake done, run \"make\" to download and compile tools, and then run \"make install\" to copy all the needed executables in the output folder : ${INSTALL_DIR}.\nEnter e to exit this message, and then g to generate and get CMake done.")
 
