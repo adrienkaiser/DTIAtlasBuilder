@@ -2172,7 +2172,7 @@ void GUI::ConfigDefault() /*SLOT*/
 
 	std::string program;
 	std::string notFound;
-std::cout<<m_FindProgramDTIABExecDirVec[0]<<std::endl;
+
 	program = itksys::SystemTools::FindProgram("ImageMath",m_FindProgramDTIABExecDirVec);
 	if(program.empty()) { if(ImagemathPath->text().isEmpty()) notFound = notFound + "> ImageMath\n"; }
 	else ImagemathPath->setText(QString(program.c_str()));
