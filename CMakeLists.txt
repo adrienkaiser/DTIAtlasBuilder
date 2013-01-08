@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 CMAKE_POLICY(VERSION 2.8)
 
-set(BUILD_TESTING ON CACHE BOOL "Build, configure and copy testing files")
+set(BUILD_TESTING ON CACHE BOOL "Build, configure and copy testing files" FORCE) # FORCE for the Slicer Extension
 
 project(DTIAtlasBuilder)
 set(Slicer_SKIP_PROJECT_COMMAND ON) # Useful for Slicer Extension
@@ -40,8 +40,8 @@ if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
   # SlicerExecutionModel_DEFAULT_CLI_RUNTIME_OUTPUT_DIRECTORY and SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION defined in Slicer_USE_FILE
   # If build as Slicer Extension, CMAKE_INSTALL_PREFIX is set to Extensions/DTIAtlaBuilder
   # SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION is ./lib/Slicer4.2/cli_module -> not install not cli modules in it
-  set(INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/${SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION}) # Set for DTIAtlasBuilder and config file
-  set(NOCLI_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
+  set(INSTALL_DIR ${SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION}) # Set for DTIAtlasBuilder
+  set(NOCLI_INSTALL_DIR bin)
 
 else( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
   set(INSTALL_DIR ${CMAKE_INSTALL_PREFIX})
