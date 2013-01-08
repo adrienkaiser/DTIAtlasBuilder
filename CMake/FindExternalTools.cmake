@@ -92,17 +92,14 @@ macro( AddToolMacro Proj CLI) # CLI = Used if Slicer Extension : ON if CLI and O
 
       if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION ) # check if variable if defined, and not differ if ON or OFF
 
-message("Proj=${Proj} (CLI=${CLI})")
         if(${CLI}) # Install in Extensions/DTIAtlaBuilder/lib/Slicer4.X/cli_module
           foreach( tool ${Tools} )
               install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${Proj}-build/bin/${tool} DESTINATION ${INSTALL_DIR})
           endforeach()
-message("installed in ${INSTALL_DIR}")
         else(${CLI}) # Install in Extensions/DTIAtlaBuilder/bin
           foreach( tool ${Tools} )
               install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${Proj}-build/bin/${tool} DESTINATION ${NOCLI_INSTALL_DIR})
           endforeach()
-message("installed in ${NOCLI_INSTALL_DIR}")
         endif(${CLI})
 
       else( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
