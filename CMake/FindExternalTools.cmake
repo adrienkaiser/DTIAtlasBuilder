@@ -40,7 +40,7 @@ macro( FindToolsMacro Proj )
   foreach( tool ${Tools} )
     find_program( TOOL${tool}Sys ${tool}) # search TOOL${tool}Sys in the PATH
     if(${TOOL${tool}Sys} STREQUAL "TOOL${tool}Sys-NOTFOUND") # If program not found, give a warning message and set AllToolsFound variable to OFF
-      message( WARNING "${tool} not found. CMake external will download and compile the whole ${Proj} package" )
+      message( WARNING "${tool} not found. It will not be recompiled, so either set it to ON, or get ${Proj} manually." )
       set( AllToolsFound OFF )
     endif() # Found on system
   endforeach()
@@ -89,18 +89,24 @@ macro( AddToolMacro Proj CLI) # CLI = Used if Slicer Extension : ON if CLI and O
 
     # Install step : copy all needed executables to ${INSTALL_DIR}
     if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
+message("Proj=${Proj} CLI=${CLI}")
+message("INSTALL_DIR=${INSTALL_DIR} NOCLI_INSTALL_DIR=${NOCLI_INSTALL_DIR}")
       if(CLI) # Install in Extensions/DTIAtlaBuilder/lib/Slicer4.X/cli_module
+
         foreach( tool ${Tools} )
           if(NOT ${tool} STREQUAL "MriWatcher") # MriWatcher is not in a ./bin directory -> install step specified manually after calling macro
             install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${Proj}-build/bin/${tool} DESTINATION ${INSTALL_DIR})
           endif()
         endforeach()
+
       else(CLI) # Install in Extensions/DTIAtlaBuilder/bin
+
         foreach( tool ${Tools} )
           if(NOT ${tool} STREQUAL "MriWatcher") # MriWatcher is not in a ./bin directory -> install step specified manually after calling macro
             install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${Proj}-build/bin/${tool} DESTINATION ${NOCLI_INSTALL_DIR})
           endif()
         endforeach()
+
       endif(CLI)
 
     else( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
@@ -130,8 +136,7 @@ endif (VTK_FOUND)
 
 # FFTW
 if(COMPILE_EXTERNAL_AtlasWerks) # FFTW D + F build one on(after) another
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CMake/InstallFFTWD.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install/InstallFFTWD.cmake)
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CMake/InstallFFTWF.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install/InstallFFTWF.cmake)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CMake/InstallFFTW.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install/InstallFFTW.cmake @ONLY) # @ONLY to ignore ${} variables
   set(FFTW_URL "http://www.fftw.org/fftw-3.3.3.tar.gz")
   set(FFTW_URL_MD5 0a05ca9c7b3bfddc8278e7c40791a1c2)
   ExternalProject_Add(FFTWD    # FFTW has no CMakeLists.txt # Example : Slicer/SuperBuild/External_python.cmake
@@ -142,7 +147,7 @@ if(COMPILE_EXTERNAL_AtlasWerks) # FFTW D + F build one on(after) another
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW-build
     CONFIGURE_COMMAND ""
     INSTALL_COMMAND ""
-    BUILD_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install/InstallFFTWD.cmake # -P <file> = Process script mode
+    BUILD_COMMAND ${CMAKE_COMMAND} -DFFTWTYPE:STRING=FFTWD -P ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install/InstallFFTW.cmake # -DARGNAME:TYPE=VALUE -P <cmake file> = Process script mode
     )
   ExternalProject_Add(FFTWF    # FFTW has no CMakeLists.txt # Example : Slicer/SuperBuild/External_python.cmake
     URL ${FFTW_URL}
@@ -152,7 +157,7 @@ if(COMPILE_EXTERNAL_AtlasWerks) # FFTW D + F build one on(after) another
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW-build
     CONFIGURE_COMMAND ""
     INSTALL_COMMAND ""
-    BUILD_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install/InstallFFTWF.cmake # -P <file> = Process script mode
+    BUILD_COMMAND ${CMAKE_COMMAND} -DFFTWTYPE:STRING=FFTWF -P ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install/InstallFFTW.cmake # -DARGNAME:TYPE=VALUE -P <cmake file> = Process script mode
     DEPENDS FFTWD # So they are not done at the same time if threads
     )
   set(FFTW_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install)
@@ -322,7 +327,7 @@ set( Tools
   dtiprocess
   dtiaverage
   )
-AddToolMacro( dtiprocessTK ON) # AddToolMacro( proj CLI) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
+AddToolMacro( dtiprocessTK OFF) # AddToolMacro( proj CLI) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
 
 # ===== AtlasWerks ================================================================
 # code for external tools from https://github.com/Chaircrusher/AtlasWerksBuilder/blob/master/CMakeLists.txt

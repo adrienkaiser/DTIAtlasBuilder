@@ -1,0 +1,19 @@
+if(FFTWTYPE STREQUAL FFTWD)
+  set(FFTW_CONFIGURE_EXTRA_ARG "")
+message("set var double")
+elseif(FFTWTYPE STREQUAL FFTWF)
+  set(FFTW_CONFIGURE_EXTRA_ARG --enable-float)
+message("set var float")
+endif()
+message("FFTWTYPE=${FFTWTYPE} | FFTW_CONFIGURE_EXTRA_ARG=${FFTW_CONFIGURE_EXTRA_ARG}")
+# Configure Step
+message("[] Configuring ${FFTWTYPE}...")
+#execute_process(COMMAND sh @CMAKE_CURRENT_BINARY_DIR@/FFTW/configure --prefix=@CMAKE_CURRENT_BINARY_DIR@/FFTW-install --enable-static --enable-threads ${FFTW_CONFIGURE_EXTRA_ARG} WORKING_DIRECTORY @CMAKE_CURRENT_BINARY_DIR@/FFTW-build)
+
+# Build Step
+message("[] Building ${FFTWTYPE}...")
+#execute_process(COMMAND make WORKING_DIRECTORY @CMAKE_CURRENT_BINARY_DIR@/FFTW-build)
+
+# Install Step
+message("[] Installing ${FFTWTYPE}...")
+#execute_process(COMMAND make install WORKING_DIRECTORY @CMAKE_CURRENT_BINARY_DIR@/FFTW-build)

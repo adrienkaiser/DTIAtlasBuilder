@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 CMAKE_POLICY(VERSION 2.8)
 
-set(BUILD_TESTING ON CACHE BOOL "Build, configure and copy testing files" FORCE) # FORCE for the Slicer Extension
+set(BUILD_TESTING ON CACHE BOOL "Build, configure and copy testing files")
 
 project(DTIAtlasBuilder)
 set(Slicer_SKIP_PROJECT_COMMAND ON) # Useful for Slicer Extension
@@ -41,7 +41,7 @@ if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
   # If build as Slicer Extension, CMAKE_INSTALL_PREFIX is set to Extensions/DTIAtlaBuilder
   # SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION is ./lib/Slicer4.2/cli_module -> not install not cli modules in it
   set(INSTALL_DIR ${SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION}) # Set for DTIAtlasBuilder
-  set(NOCLI_INSTALL_DIR bin)
+  set(NOCLI_INSTALL_DIR ExternalBin)
 
 else( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
   set(INSTALL_DIR ${CMAKE_INSTALL_PREFIX})
@@ -100,7 +100,7 @@ set( ToolsList # Needed tools -> to hide unuseful TOOL* variables
   WarpTensorImageMultiTransform
   ResampleDTIlogEuclidean
   DTI-Reg
-  DTI-Reg_Scalar_ANTS.bms
+  DTI-Reg_Scalar_ANTS.bms # doesn't exist anymore in the new DTI-Reg version
   DTI-Reg_Scalar_BRAINS.bms
   MriWatcher
   ImageMath

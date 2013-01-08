@@ -204,9 +204,9 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	if(DTIABExecutablePath=="") DTIABExecutablePath= itksys::SystemTools::GetCurrentWorkingDirectory(); // If called by itself ($ DTIAtlasBuilder) = either in the PATH or in the current directory : will be found either way by find_program
 	m_FindProgramDTIABExecDirVec.push_back(DTIABExecutablePath); // FindProgram will search in the executable directory too
 
-	// If DTIAB is built as an SlicerExtension, the executable will be in Ext/lib/Slicer4.2/cli_modules and the tools will be in Ext/bin
+	// If DTIAB is built as an SlicerExtension, the executable will be in Ext/lib/Slicer4.2/cli_modules and the tools will be in Ext/ExternalBin
 	// If no SicerExtension, find_program will just search there and find nothing -> no problem
-	std::string DTIABSlicerExtensionBinDir = DTIABExecutablePath + "/../../../bin";
+	std::string DTIABSlicerExtensionBinDir = DTIABExecutablePath + "/../../../ExternalBin";
 	m_FindProgramDTIABExecDirVec.push_back(DTIABSlicerExtensionBinDir);
 
 // look for the programs with the itk function
