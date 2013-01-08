@@ -87,35 +87,33 @@ macro( AddToolMacro Proj CLI) # CLI = Used if Slicer Extension : ON if CLI and O
       INSTALL_COMMAND "" # So the install step of the external project is not done
     )
 
-    # Install step : copy all needed executables to ${INSTALL_DIR}
-    if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
-message("Proj=${Proj} CLI=${CLI}")
-message("INSTALL_DIR=${INSTALL_DIR} NOCLI_INSTALL_DIR=${NOCLI_INSTALL_DIR}")
-      if(CLI) # Install in Extensions/DTIAtlaBuilder/lib/Slicer4.X/cli_module
+    # Install step : copy all needed executables to ${INSTALL_DIR} or ${NOCLI_INSTALL_DIR}
+    if(NOT ${Proj} STREQUAL "MriWatcher") # MriWatcher is not in a ./bin directory -> install step specified manually after calling macro
+
+      if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION ) # check if variable if defined, and not differ if ON or OFF
+
+message("Proj=${Proj} (CLI=${CLI})")
+        if(${CLI}) # Install in Extensions/DTIAtlaBuilder/lib/Slicer4.X/cli_module
+          foreach( tool ${Tools} )
+              install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${Proj}-build/bin/${tool} DESTINATION ${INSTALL_DIR})
+          endforeach()
+message("installed in ${INSTALL_DIR}")
+        else(${CLI}) # Install in Extensions/DTIAtlaBuilder/bin
+          foreach( tool ${Tools} )
+              install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${Proj}-build/bin/${tool} DESTINATION ${NOCLI_INSTALL_DIR})
+          endforeach()
+message("installed in ${NOCLI_INSTALL_DIR}")
+        endif(${CLI})
+
+      else( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
 
         foreach( tool ${Tools} )
-          if(NOT ${tool} STREQUAL "MriWatcher") # MriWatcher is not in a ./bin directory -> install step specified manually after calling macro
             install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${Proj}-build/bin/${tool} DESTINATION ${INSTALL_DIR})
-          endif()
         endforeach()
 
-      else(CLI) # Install in Extensions/DTIAtlaBuilder/bin
+      endif( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
 
-        foreach( tool ${Tools} )
-          if(NOT ${tool} STREQUAL "MriWatcher") # MriWatcher is not in a ./bin directory -> install step specified manually after calling macro
-            install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${Proj}-build/bin/${tool} DESTINATION ${NOCLI_INSTALL_DIR})
-          endif()
-        endforeach()
-
-      endif(CLI)
-
-    else( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
-      foreach( tool ${Tools} )
-        if(NOT ${tool} STREQUAL "MriWatcher") # MriWatcher is not in a ./bin directory -> install step specified manually after calling macro
-          install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${Proj}-build/bin/${tool} DESTINATION ${INSTALL_DIR})
-        endif()
-      endforeach()
-    endif( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
+    endif() # NOT ${tool} STREQUAL "MriWatcher"
 
   endif(COMPILE_EXTERNAL_${Proj})
 endmacro( AddToolMacro )
