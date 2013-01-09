@@ -1,0 +1,54 @@
+*** AtlasWerks/CMakeLists.txt	2013-01-09 17:05:10.072443636 -0500
+--- AtlasWerks/CMakeLists.txt	2013-01-09 17:06:39.506947396 -0500
+***************
+*** 315,328 ****
+  # * applications must add link libraries ${FFTWF_LIB} or ${FFTWF_THREADS_LIB}
+  MARK_AS_ADVANCED(LAPACK_LIBS)
+  SET(LAPACK_LIBS
+!   "lapack blas"
+    CACHE STRING
+    "The LAPACK libraries (lapack, blas, possibly gfortran)"
+    )
+  
+  MARK_AS_ADVANCED(LAPACK_LIBS_SEARCH_DIRS)
+  SET(LAPACK_LIBS_SEARCH_DIRS
+!   "/usr/local/lib;/usr/lib;/usr/local/lib64;/usr/lib64"
+    CACHE STRING
+    "Locations to search for LAPACK libs"
+    )
+--- 315,328 ----
+  # * applications must add link libraries ${FFTWF_LIB} or ${FFTWF_THREADS_LIB}
+  MARK_AS_ADVANCED(LAPACK_LIBS)
+  SET(LAPACK_LIBS
+!   "lapack blas f2c"
+    CACHE STRING
+    "The LAPACK libraries (lapack, blas, possibly gfortran)"
+    )
+  
+  MARK_AS_ADVANCED(LAPACK_LIBS_SEARCH_DIRS)
+  SET(LAPACK_LIBS_SEARCH_DIRS
+!   "@CMAKE_CURRENT_BINARY_DIR@/CLAPACK-build/SRC;@CMAKE_CURRENT_BINARY_DIR@/CLAPACK-build/BLAS/SRC;@CMAKE_CURRENT_BINARY_DIR@/CLAPACK-build/F2CLIBS/libf2c"
+    CACHE STRING
+    "Locations to search for LAPACK libs"
+    )
+***************
+*** 339,345 ****
+    find_library(atlasWerks_${_library}_LIBRARY
+      NAMES ${_library}
+      PATHS ${LAPACK_LIBS_SEARCH_DIRS}
+!     ENV LD_LIBRARY_PATH
+      )
+    if(atlasWerks_${_library}_LIBRARY)
+      #message(STATUS "${_library} found!: ${atlasWerks_${_library}_LIBRARY}")
+--- 339,349 ----
+    find_library(atlasWerks_${_library}_LIBRARY
+      NAMES ${_library}
+      PATHS ${LAPACK_LIBS_SEARCH_DIRS}
+!     NO_DEFAULT_PATH
+!     NO_CMAKE_PATH
+!     NO_CMAKE_ENVIRONMENT_PATH
+!     NO_SYSTEM_ENVIRONMENT_PATH
+!     NO_CMAKE_SYSTEM_PATH
+      )
+    if(atlasWerks_${_library}_LIBRARY)
+      #message(STATUS "${_library} found!: ${atlasWerks_${_library}_LIBRARY}")
