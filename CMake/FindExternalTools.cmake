@@ -129,7 +129,7 @@ else(VTK_FOUND)
   message(FATAL_ERROR, "VTK not found. Please set VTK_DIR.")
 endif (VTK_FOUND)
 
-# FFTW and LAPACK for GreedyAtlas
+# FFTW and CLAPACK for GreedyAtlas
 if(COMPILE_EXTERNAL_AtlasWerks) # FFTW D + F build one on(after) another
   # FFTW
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CMake/InstallFFTW.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install/InstallFFTW.cmake @ONLY) # @ONLY to ignore ${} variables
@@ -158,24 +158,21 @@ if(COMPILE_EXTERNAL_AtlasWerks) # FFTW D + F build one on(after) another
     )
   set(FFTW_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install)
 
-  # LAPACK (from http://www.nitrc.org/projects/spharm-pdm)
-  ExternalProject_Add(LAPACK
-    URL ${lapack_file}
-    URL_MD5 ${lapack_md5}
-    DOWNLOAD_DIR ${CMAKE_CURRENT_BINARY_DIR}/LAPACK-build
-    SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/LAPACK
-    BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/LAPACK-build
+  # CLAPACK (from http://www.nitrc.org/projects/spharm-pdm or https://github.com/Slicer/Slicer/blob/master-411/SuperBuild/External_CLAPACK.cmake)
+  ExternalProject_Add(CLAPACK
+    URL "http://www.netlib.org/clapack/clapack-3.2.1-CMAKE.tgz"
+    URL_MD5 4fd18eb33f3ff8c5d65a7d43913d661b
+    SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/CLAPACK
+    BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/CLAPACK-build
     CMAKE_GENERATOR ${gen}
     CMAKE_ARGS
-#      ${COMMON_EXTERNAL_PROJECT_ARGS}
+      -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
       -DBUILD_EXAMPLES:BOOL=OFF
       -DBUILD_TESTING:BOOL=OFF
-#      ${${proj}_CMAKE_OPTIONS}
-    INSTALL_COMMAND ""
-    DEPENDS ""
-    BUILD_COMMAND ${BUILD_COMMAND_STRING}
+    INSTALL_COMMAND "" # No install step
     )
-  install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/LAPACK-build/lib/liblapack.so.3 DESTINATION ${NOCLI_INSTALL_DIR}) # liblapack.so will be found in the same directory than GreedyAtlas
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CMake/AtlasWerksLAPACK.patch.in ${CMAKE_CURRENT_BINARY_DIR}/AtlasWerksLAPACK.patch @ONLY)
+  # In the patch : search before in the recompiled CLAPACK because needs to be compiled statically
 endif(COMPILE_EXTERNAL_AtlasWerks)
 
 # ITK and SlicerExecutionModel
@@ -373,7 +370,8 @@ set( CMAKE_ExtraARGS
   -DatlasWerks_COMPILE_APP_TX_APPLY:BOOL=OFF
   -DatlasWerks_COMPILE_APP_TX_WERKS:BOOL=OFF
   -DatlasWerks_COMPILE_APP_UTILITIES:BOOL=OFF
-  DEPENDS ${ITK_DEPEND} FFTWD FFTWF LAPACK # Not CMake Arg -> directly after CMakeArg in ExternalProject_Add()
+  DEPENDS ${ITK_DEPEND} FFTWD FFTWF CLAPACK # Not CMake Arg -> directly after CMakeArg in ExternalProject_Add()
+  PATCH_COMMAND patch -p0 -d ${CMAKE_CURRENT_BINARY_DIR} -i ${CMAKE_CURRENT_BINARY_DIR}/AtlasWerksLAPACK.patch # !! no "" # !! patch doesn't exist on windows !
   )
 set( Tools
   GreedyAtlas

@@ -181,6 +181,6 @@ install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/DTIAtlasBuild
 # For Slicer Extension
 if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
   if(NOT Slicer_SOURCE_DIR)
-    include(${Slicer_EXTENSION_CPACK})
+    include(${Slicer_EXTENSION_CPACK}) # So we can make package
   endif()
 endif( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
