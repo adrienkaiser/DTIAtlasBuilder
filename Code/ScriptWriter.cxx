@@ -694,9 +694,6 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, len(allc
 		Script = Script + "\tAverageCommand = AverageCommand + DTIforAVG\n";
 		Script = Script + "\tcase += 1\n";
 	Script = Script + "AverageCommand = AverageCommand + \"--tensor_output \" + DTIAverage\n";
-	if(m_AverageStatMethod.compare("Principal Geodesic Analysis (PGA)")==0)		Script = Script + "AverageCommand = AverageCommand + \" -m pga\"\n";
-	if(m_AverageStatMethod.compare("Euclidean")==0) 	Script = Script + "AverageCommand = AverageCommand + \" -m euclidean\"\n";
-	if(m_AverageStatMethod.compare("Log Euclidean")==0)	Script = Script + "AverageCommand = AverageCommand + \" -m log-euclidean\"\n";
 	Script = Script + "print(\"=> $ \" + AverageCommand)\n";
 	Script = Script + "nbStepsDone += 1\n";
 	if(m_Overwrite==1)Script = Script + "if 1 : \n";
@@ -863,9 +860,6 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, len(allc
 		Script = Script + "\tAverageCommand2 = AverageCommand2 + DTIforAVG2\n";
 		Script = Script + "\tcase += 1\n";
 	Script = Script + "AverageCommand2 = AverageCommand2 + \"--tensor_output \" + DTIAverage2\n";
-	if(m_AverageStatMethod.compare("Principal Geodesic Analysis (PGA)")==0)		Script = Script + "AverageCommand2 = AverageCommand2 + \" -m pga\"\n";
-	if(m_AverageStatMethod.compare("Euclidean")==0) 	Script = Script + "AverageCommand2 = AverageCommand2 + \" -m euclidean\"\n";
-	if(m_AverageStatMethod.compare("Log Euclidean")==0)	Script = Script + "AverageCommand2 = AverageCommand2 + \" -m log-euclidean\"\n";
 	Script = Script + "print(\"=> $ \" + AverageCommand2)\n";
 	Script = Script + "nbStepsDone += 1\n";
 	if(m_Overwrite==1)Script = Script + "if 1 : \n";
@@ -1229,11 +1223,6 @@ void ScriptWriter::setInterpolLogOption(std::string InterpolLogOption)
 void ScriptWriter::setTensorTfm(std::string TensTfm)
 {
 	m_TensTfm = TensTfm;
-}
-
-void ScriptWriter::setAverageStatMethod(std::string Method)
-{
-	m_AverageStatMethod = Method;
 }
 
 void ScriptWriter::setSoftPath(std::vector < std::string > SoftPath) // 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=GreedyAtlas, 7=dtiaverage, 8=DTI-Reg, 9=unu

@@ -1,0 +1,10 @@
+ImageMath=${CMAKE_CURRENT_BINARY_DIR}/NIRALUtilities-build/bin/ImageMath
+ResampleDTIlogEuclidean=${CMAKE_CURRENT_BINARY_DIR}/ResampleDTI-build/bin/ResampleDTIlogEuclidean
+CropDTI=${CMAKE_CURRENT_BINARY_DIR}/NIRALUtilities-build/bin/CropDTI
+dtiprocess=${CMAKE_CURRENT_BINARY_DIR}/dtiprocessTK-build/bin/dtiprocess
+BRAINSFit=${CMAKE_CURRENT_BINARY_DIR}/BRAINS-build/bin/BRAINSFit
+GreedyAtlas=${CMAKE_CURRENT_BINARY_DIR}/AtlasWerks-build/bin/GreedyAtlas
+dtiaverage=${CMAKE_CURRENT_BINARY_DIR}/dtiprocessTK-build/bin/dtiaverage
+DTI-Reg=${CMAKE_CURRENT_BINARY_DIR}/DTIReg-build/bin/DTI-Reg
+unu=${CMAKE_CURRENT_BINARY_DIR}/teem-build/bin/unu
+MriWatcher=${CMAKE_CURRENT_BINARY_DIR}/MriWatcher-build/MriWatcher

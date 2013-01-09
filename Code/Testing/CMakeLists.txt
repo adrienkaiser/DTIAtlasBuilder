@@ -3,7 +3,7 @@ CMAKE_POLICY(VERSION 2.8)
 
 
 ## Test 1 : Usage
-add_test(NAME TestUsage COMMAND ${CMAKE_CURRENT_BINARY_DIR}/../../bin/DTIAtlasBuilder --help) # Should just display the Usage : ${CMAKE_CURRENT_BINARY_DIR} = bin/Testing -> need to ../bin/
+add_test(NAME TestUsage COMMAND ${CMAKE_CURRENT_BINARY_DIR}/../DTIAtlasBuilder --help) # Should just display the Usage : ${CMAKE_CURRENT_BINARY_DIR} = DTIAtlasBuilder-build/Testing -> need to ../
 set(EXECUTABLE_OUTPUT_PATH ${TestingBINdirectory}) # So the test executables go to the right place
 
 ## ITKtest Tests
@@ -42,9 +42,8 @@ set(CompareParametersdtiprocessFA
 set(DTIABParameters
   --nogui # no need if ITKv4 -> already in DTIAtlasBuilderTest.cxx
   --parameter_file ${TestingBINdirectory}/TestGUIparameters.txt
-  --configuration_file ${CMAKE_CURRENT_BINARY_DIR}/../../bin/DTIAtlasBuilderSoftConfig.txt
+  --configuration_file ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilderSoftConfig.txt # Testing config file
   )
-
 
 ## Test 2 : Affine Atlas automatic QC
 # Test with ITKtest that will compare the 2 given images after pipeline has been ran
@@ -86,14 +85,14 @@ add_test(NAME TestnoGUIFinalOutput COMMAND ${NoGUITestCommand}
 add_executable(DTIAtlasBuilderGUITest DTIAtlasBuilderGUITest.cxx)
 target_link_libraries(DTIAtlasBuilderGUITest DTIAtlasBuilderLib)
 set_target_properties(DTIAtlasBuilderGUITest PROPERTIES LABELS DTIAtlasBuilder)
-add_test(NAME TestGUI COMMAND ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilderGUITest ${CMAKE_CURRENT_BINARY_DIR}/../../bin/DTIAtlasBuilderSoftConfig.txt) # The config file will be read as argv[1] (no GenerateCLP)
+add_test(NAME TestGUI COMMAND ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilderGUITest ${CMAKE_CURRENT_BINARY_DIR}/bin/DTIAtlasBuilderSoftConfig.txt) # The config file will be read as argv[1] (no GenerateCLP)
 
 
 ## Test 6 : Open the GUI for 10 sec with a param file, check the content of the QLineEdit and close it
 add_executable(DTIAtlasBuilderGUITestLabels DTIAtlasBuilderGUITestLabels.cxx)
 target_link_libraries(DTIAtlasBuilderGUITestLabels DTIAtlasBuilderLib)
 set_target_properties(DTIAtlasBuilderGUITestLabels PROPERTIES LABELS DTIAtlasBuilder)
-add_test(NAME TestGUILabels COMMAND ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilderGUITestLabels ${TestingBINdirectory}/TestGUIparameters.txt ${CMAKE_CURRENT_BINARY_DIR}/../../bin/DTIAtlasBuilderSoftConfig.txt ${TestingBINdirectory})
+add_test(NAME TestGUILabels COMMAND ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilderGUITestLabels ${TestingBINdirectory}/TestGUIparameters.txt ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilderSoftConfig.txt ${TestingBINdirectory})
 # The parameter file will be read as argv[1] (no GenerateCLP) and config file argv[2] # argv[3] is the folder to check to content of LineEdit
 
 

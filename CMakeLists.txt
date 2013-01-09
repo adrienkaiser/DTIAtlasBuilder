@@ -140,6 +140,10 @@ if(COMPILE_PACKAGE)
 #    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/DTIAtlasBuilderSoftConfig.txt DESTINATION ${INSTALL_DIR}) # will create the install folder if doesn't exist and copy the file in it
   endif( NOT DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
 
+  # Config file for testing (paths to the built softwares in build directory) = before installing
+  if(BUILD_TESTING)
+    configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/Code/Testing/DTIAtlasBuilderSoftConfig.txt.in ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/Testing/DTIAtlasBuilderSoftConfig.txt)
+  endif(BUILD_TESTING)
 #  message("When CMake done, run \"make\" to download and compile tools, and then run \"make install\" to copy all the needed executables in the output folder : ${INSTALL_DIR}.\nEnter e to exit this message, and then g to generate and get CMake done.")
 
 else(COMPILE_PACKAGE) # Hide unuseful variables
