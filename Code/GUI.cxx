@@ -174,7 +174,6 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	QObject::connect(gamma1DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
 	QObject::connect(maxPerturbation1DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
 	QObject::connect(TensTfmComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(averageStatMethodComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
 	QObject::connect(InterpolTypeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
 	QObject::connect(TensInterpolComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
 	QObject::connect(RegMethodcomboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
@@ -907,7 +906,6 @@ void GUI::SaveParameters(QString ParamBrowseName,QString CSVFileName)
 		else stream << endl;
 
 		stream << "Tensor transformation=" << TensTfmComboBox->currentText()<< endl;
-		stream << "DTI Average Statistics Method=" << averageStatMethodComboBox->currentText() << endl;
 
 		stream << "DTIRegMethod=" << RegMethodcomboBox->currentText() ;
 		if( RegMethodcomboBox->currentText()==QString("ANTS") ) 
@@ -1328,32 +1326,6 @@ int GUI::LoadParameters(QString paramFile)
 		}
 		if( list.at(1).contains(QString("Preservation of the Principal Direction (PPD)")) ) TensTfmComboBox->setCurrentIndex(0);
 		else if( list.at(1).contains(QString("Finite Strain (FS)")) ) TensTfmComboBox->setCurrentIndex(1);
-		else
-		{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-			return -1;
-		}
-
-		line = stream.readLine();
-		list = line.split("=");
-		if(!list.at(0).contains(QString("DTI Average Statistics Method")))
-		{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-			return -1;
-		}
-		if( list.at(1).contains(QString("Principal Geodesic Analysis (PGA)")) ) averageStatMethodComboBox->setCurrentIndex(0);
-		else if( list.at(1).contains(QString("Log Euclidean")) ) averageStatMethodComboBox->setCurrentIndex(2);
-		else if( list.at(1).contains(QString("Euclidean")) ) averageStatMethodComboBox->setCurrentIndex(1);
 		else
 		{
 			if(!m_noGUI) 
@@ -2734,8 +2706,6 @@ int GUI::LaunchScriptWriter()
 	if( TensInterpolComboBox->currentText()==QString("Non Log Euclidean") ) m_scriptwriter->setInterpolLogOption(m_nologComboBox->currentText().toStdString());
 
 	m_scriptwriter->setTensorTfm(TensTfmComboBox->currentText().toStdString());
-
-	m_scriptwriter->setAverageStatMethod(averageStatMethodComboBox->currentText().toStdString());
 
 /* Final Resamp options */
 

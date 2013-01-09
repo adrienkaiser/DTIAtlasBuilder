@@ -129,8 +129,9 @@ else(VTK_FOUND)
   message(FATAL_ERROR, "VTK not found. Please set VTK_DIR.")
 endif (VTK_FOUND)
 
-# FFTW
+# FFTW and LAPACK for GreedyAtlas
 if(COMPILE_EXTERNAL_AtlasWerks) # FFTW D + F build one on(after) another
+  # FFTW
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CMake/InstallFFTW.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install/InstallFFTW.cmake @ONLY) # @ONLY to ignore ${} variables
   set(FFTW_URL "http://www.fftw.org/fftw-3.3.3.tar.gz")
   set(FFTW_URL_MD5 0a05ca9c7b3bfddc8278e7c40791a1c2)
@@ -156,6 +157,25 @@ if(COMPILE_EXTERNAL_AtlasWerks) # FFTW D + F build one on(after) another
     DEPENDS FFTWD # So they are not done at the same time if threads
     )
   set(FFTW_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install)
+
+  # LAPACK (from http://www.nitrc.org/projects/spharm-pdm)
+  ExternalProject_Add(LAPACK
+    URL ${lapack_file}
+    URL_MD5 ${lapack_md5}
+    DOWNLOAD_DIR ${CMAKE_CURRENT_BINARY_DIR}/LAPACK-build
+    SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/LAPACK
+    BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/LAPACK-build
+    CMAKE_GENERATOR ${gen}
+    CMAKE_ARGS
+#      ${COMMON_EXTERNAL_PROJECT_ARGS}
+      -DBUILD_EXAMPLES:BOOL=OFF
+      -DBUILD_TESTING:BOOL=OFF
+#      ${${proj}_CMAKE_OPTIONS}
+    INSTALL_COMMAND ""
+    DEPENDS ""
+    BUILD_COMMAND ${BUILD_COMMAND_STRING}
+    )
+  install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/LAPACK-build/lib/liblapack.so.3 DESTINATION ${NOCLI_INSTALL_DIR}) # liblapack.so will be found in the same directory than GreedyAtlas
 endif(COMPILE_EXTERNAL_AtlasWerks)
 
 # ITK and SlicerExecutionModel
@@ -188,7 +208,7 @@ set(ITK_DEPEND "")
 set(RecompileBatchMake OFF)
 if(RecompileITK)
   # Download and compile ITKv4
-  ExternalProject_Add(ITKv4 # BRAINSStandAlone/SuperBuild/External_ITKv4.cmake
+  ExternalProject_Add(ITKv4 # BRAINSStandAlone/SuperBuild/External_ITKv4.cmake # !! All args needed as they are
     GIT_REPOSITORY "${git_protocol}://itk.org/ITK.git"
     GIT_TAG 555049f830d1c09f8d4d95904f429290467d39ab #2012-12-16 ITKv4.3.0
     SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/ITKv4
@@ -353,7 +373,7 @@ set( CMAKE_ExtraARGS
   -DatlasWerks_COMPILE_APP_TX_APPLY:BOOL=OFF
   -DatlasWerks_COMPILE_APP_TX_WERKS:BOOL=OFF
   -DatlasWerks_COMPILE_APP_UTILITIES:BOOL=OFF
-  DEPENDS ${ITK_DEPEND} FFTWD FFTWF # Not CMake Arg -> directly after CMakeArg in ExternalProject_Add()
+  DEPENDS ${ITK_DEPEND} FFTWD FFTWF LAPACK # Not CMake Arg -> directly after CMakeArg in ExternalProject_Add()
   )
 set( Tools
   GreedyAtlas

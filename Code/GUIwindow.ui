@@ -979,76 +979,6 @@ as an Affine transform already computed, it will be used as an input for the Aff
          </widget>
         </item>
         <item>
-         <widget class="QGroupBox" name="groupBox">
-          <property name="title">
-           <string>Average computation</string>
-          </property>
-          <layout class="QVBoxLayout" name="verticalLayout_17">
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_6">
-             <item>
-              <widget class="QLabel" name="averageStatMethodLabel">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>DTI Average Statistics Method :</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QComboBox" name="averageStatMethodComboBox">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="currentIndex">
-                <number>0</number>
-               </property>
-               <item>
-                <property name="text">
-                 <string>Principal Geodesic Analysis (PGA)</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Euclidean</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Log Euclidean</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer_3">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeType">
-                <enum>QSizePolicy::Expanding</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item>
          <spacer name="verticalSpacer_2">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -1701,7 +1631,7 @@ paths configured.</string>
      <x>0</x>
      <y>0</y>
      <width>1045</width>
-     <height>25</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
