@@ -778,7 +778,7 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # st
 		std::string BRAINSExecDir = itksys::SystemTools::GetRealPath( itksys::SystemTools::GetFilenamePath(m_SoftPath[4]).c_str() );
 		std::string dtiprocessExecDir = itksys::SystemTools::GetRealPath( itksys::SystemTools::GetFilenamePath(m_SoftPath[3]).c_str() );
 		std::string ResampExecDir = itksys::SystemTools::GetRealPath( itksys::SystemTools::GetFilenamePath(m_SoftPath[1]).c_str() );
-		Script = Script + "\tGlobalDefFieldCommand = GlobalDefFieldCommand + \" --ProgramsPathsVector " + m_DTIRegExtraPath + ";" + BRAINSExecDir + ";" + dtiprocessExecDir + ";" + ResampExecDir + "\"\n";
+		Script = Script + "\tGlobalDefFieldCommand = GlobalDefFieldCommand + \" --ProgramsPathsVector " + m_DTIRegExtraPath + "," + BRAINSExecDir + "," + dtiprocessExecDir + "," + ResampExecDir + "\"\n";
 /* m_DTIRegOptions[]
 0	RegMethod
 	ANTS
@@ -792,9 +792,8 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # st
 	BRAINS
 	1	BRegType
 	2	TfmMode
-	3	Sigma
-	4	NbPyrLev
-	5	PyrLevIt
+	3	NbPyrLev
+	4	PyrLevIt
 */
 		if( m_DTIRegOptions[0].compare("BRAINS")==0 )
 		{
@@ -802,9 +801,8 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # st
 			if(m_DTIRegOptions[1].compare("GreedyDiffeo (SyN)")==0) Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSRegistrationType GreedyDiffeo\"\n";
 			else if(m_DTIRegOptions[1].compare("SpatioTempDiffeo (SyN)")==0) Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSRegistrationType SpatioTempDiffeo\"\n";
 			else Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSRegistrationType " + m_DTIRegOptions[1] + "\"\n";
-			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSSmoothDefFieldSigma " + m_DTIRegOptions[3] + "\"\n";
-			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSnumberOfPyramidLevels " + m_DTIRegOptions[4] + "\"\n";
-			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSarrayOfPyramidLevelIterations " + m_DTIRegOptions[5] + "\"\n";
+			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSnumberOfPyramidLevels " + m_DTIRegOptions[3] + "\"\n";
+			Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSarrayOfPyramidLevelIterations " + m_DTIRegOptions[4] + "\"\n";
 			if(m_DTIRegOptions[2].compare("Use computed affine transform")==0) Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --initialAffine \" + alltfms[case]\n";
 			else Script = Script + "\tGlobalDefFieldCommand= GlobalDefFieldCommand + \" --BRAINSinitializeTransformMode " + m_DTIRegOptions[2] + "\"\n";
 			Script = Script + "\tBRAINSTempTfm = FinalResampPath + \"/First_Resampling/Case\" + str(case+1) + \"_FA_AffReg.txt\"\n"; // so that nothing is stored in the same dir than the Atlas
@@ -918,7 +916,7 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # st
 
 		// give DTI-Reg the paths to the binary directories of ANTS (6), BRAINS (5) and ResampleDTIlogEuclidean (2) | m_DTIRegExtraPath is supposed to contain ANTS
 		// ANTSExecDir, BRAINSExecDir, ResampExecDir defined in the previous resampling
-		Script = Script + "\tGlobalDefFieldCommand2 = GlobalDefFieldCommand2 + \" --ProgramsPathsVector " + m_DTIRegExtraPath + ";" + BRAINSExecDir + ";" + dtiprocessExecDir + ";" + ResampExecDir + "\"\n";
+		Script = Script + "\tGlobalDefFieldCommand2 = GlobalDefFieldCommand2 + \" --ProgramsPathsVector " + m_DTIRegExtraPath + "," + BRAINSExecDir + "," + dtiprocessExecDir + "," + ResampExecDir + "\"\n";
 
 /* m_DTIRegOptions[]
 0	RegMethod
@@ -933,9 +931,8 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # st
 	BRAINS
 	1	BRegType
 	2	TfmMode
-	3	Sigma
-	4	NbPyrLev
-	5	PyrLevIt
+	3	NbPyrLev
+	4	PyrLevIt
 */
 		if( m_DTIRegOptions[0].compare("BRAINS")==0 )
 		{
@@ -943,9 +940,8 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # st
 			if(m_DTIRegOptions[1].compare("GreedyDiffeo (SyN)")==0) Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSRegistrationType GreedyDiffeo\"\n";
 			else if(m_DTIRegOptions[1].compare("SpatioTempDiffeo (SyN)")==0) Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSRegistrationType SpatioTempDiffeo\"\n";
 			else Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSRegistrationType " + m_DTIRegOptions[1] + "\"\n";
-			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSSmoothDefFieldSigma " + m_DTIRegOptions[3] + "\"\n";
-			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSnumberOfPyramidLevels " + m_DTIRegOptions[4] + "\"\n";
-			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSarrayOfPyramidLevelIterations " + m_DTIRegOptions[5] + "\"\n";
+			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSnumberOfPyramidLevels " + m_DTIRegOptions[3] + "\"\n";
+			Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSarrayOfPyramidLevelIterations " + m_DTIRegOptions[4] + "\"\n";
 			if(m_DTIRegOptions[2].compare("Use computed affine transform")==0) Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --initialAffine \" + alltfms[case]\n";
 			else Script = Script + "\tGlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --BRAINSinitializeTransformMode " + m_DTIRegOptions[2] + "\"\n";
 			Script = Script + "\tBRAINSTempTfm2 = FinalResampPath + \"/Second_Resampling/Case\" + str(case+1) + \"_FA_AffReg.txt\"\n"; // so that nothing is stored in the same dir than the Atlas
@@ -1261,7 +1257,6 @@ void ScriptWriter::setDTIRegOptions(std::vector < std::string > DTIRegOptions)
 	BRAINS
 		BRegType
 		TfmMode
-		Sigma
 		NbPyrLev
 		PyrLevIt
 */

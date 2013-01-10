@@ -144,7 +144,6 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		/*BRAINS*/
 		QComboBox *m_BRegTypeComboBox;
 		QComboBox *m_TfmModeComboBox;
-		QDoubleSpinBox *m_SigmaDble;
 		QSpinBox *m_NbPyrLevSpin;
 		QLineEdit *m_PyrLevItLine;
 		/*ANTS*/
