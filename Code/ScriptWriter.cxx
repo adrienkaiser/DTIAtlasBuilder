@@ -411,7 +411,7 @@ if( m_useGridProcess ) Script = Script + "\t\tTestGridProcess( FilesFolder, 0, 0
 
 	Script = Script + "# Display errors\n";
 	Script = Script + "if len(ErrorList) >0 :\n";
-		Script = Script + "\tprint(\"\\n=> \" + len(ErrorList) + \" errors detected during the followind operations:\")\n";
+		Script = Script + "\tprint(\"\\n=> \" + str(len(ErrorList)) + \" errors detected during the followind operations:\")\n";
 		Script = Script + "\tfor error in ErrorList : print(\'\\n\' + error)\n";
 		Script = Script + "\tsys.exit(1)\n";
 	Script = Script + "else:\n";
@@ -1001,7 +1001,7 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, len(allc
 
 	Script = Script + "# Display errors\n";
 	Script = Script + "if len(ErrorList) >0 :\n";
-		Script = Script + "\tprint(\"\\n=> \" + len(ErrorList) + \" errors detected during the followind operations:\")\n";
+		Script = Script + "\tprint(\"\\n=> \" + str(len(ErrorList)) + \" errors detected during the followind operations:\")\n";
 		Script = Script + "\tfor error in ErrorList : print(\'\\n\' + error)\n";
 		Script = Script + "\tsys.exit(1)\n";
 	Script = Script + "else:\n";
