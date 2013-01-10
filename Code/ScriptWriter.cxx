@@ -771,6 +771,7 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # st
 		Script = Script + "\tGlobalDefField = FinalResampPath + \"/First_Resampling/Case\" + str(case+1) + \"_GlobalDeformationField.nrrd\"\n";
 		Script = Script + "\tFinalDef = FinalResampPath + \"/First_Resampling/Case\" + str(case+1) + \"_DeformedDTI.nrrd\"\n";
 		Script = Script + "\tGlobalDefFieldCommand=\"" + m_SoftPath[7] + " --fixedVolume \" + DTIAverage + \" --movingVolume \" + origDTI + \" --outputDeformationFieldVolume \" + GlobalDefField + \" --outputVolume \" + FinalDef\n";
+		Script = Script + "\tGlobalDefFieldCommand = GlobalDefFieldCommand + \" --ProgramsPathsVector " + m_SoftPath[6] + ";" + m_SoftPath[5] + ";" + m_SoftPath[2] + "\"\n"; // give DTI-Reg the paths to the binary directories of ANTS (6), BRAINS (5) and ResampleDTIlogEuclidean (2)
 /* m_DTIRegOptions[]
 0	RegMethod
 	ANTS
