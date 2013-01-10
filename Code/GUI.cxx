@@ -184,7 +184,6 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	QObject::connect(m_nologComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
 	QObject::connect(m_BRegTypeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
 	QObject::connect(m_TfmModeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(m_SigmaDble, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
 	QObject::connect(m_NbPyrLevSpin, SIGNAL(valueChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
 	QObject::connect(m_PyrLevItLine, SIGNAL(textChanged(QString)), this, SLOT(WidgetHasChangedParamNoSaved()));
 	QObject::connect(m_ARegTypeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
@@ -391,12 +390,6 @@ void GUI::InitOptions()
 	m_TfmModeComboBox->addItem("Use computed affine transform");
 	m_TfmModeComboBox->setCurrentIndex(4);
 	BRAINSWidgetVLayout->addWidget(m_TfmModeComboBox);
-
-	QLabel *SigmaLabel = new QLabel("Smooth Deformation Field Sigma:", this);
-	BRAINSLabelVLayout->addWidget(SigmaLabel);
-	m_SigmaDble = new QDoubleSpinBox(this);
-	m_SigmaDble->setValue(1);
-	BRAINSWidgetVLayout->addWidget(m_SigmaDble);
 
 	QLabel *NbPyrLevLabel = new QLabel("Number Of Pyramid Levels:", this);
 	BRAINSLabelVLayout->addWidget(NbPyrLevLabel);
@@ -932,7 +925,7 @@ void GUI::SaveParameters(QString ParamBrowseName,QString CSVFileName)
 			if(m_SmoothOffCheck->isChecked()) stream << ";1" << endl;
 			else stream << ";0" << endl;
 		}
-		else stream << "=" << m_BRegTypeComboBox->currentText() << ";" << m_TfmModeComboBox->currentText() << ";" << m_SigmaDble->value() << ";" << m_NbPyrLevSpin->value() << ";" << m_PyrLevItLine->text() << endl;
+		else stream << "=" << m_BRegTypeComboBox->currentText() << ";" << m_TfmModeComboBox->currentText() << ";" << m_NbPyrLevSpin->value() << ";" << m_PyrLevItLine->text() << endl;
 
 		stream << "GridProcessing=";
 		if( GridProcesscheckBox->isChecked() ) stream << GridProcessCmdLineEdit->text() <<endl;
@@ -1386,7 +1379,7 @@ int GUI::LoadParameters(QString paramFile)
 		{
 			RegMethodcomboBox->setCurrentIndex(0);
 			QStringList param= list.at(2).split(";");
-			if( param.size()!=5 )
+			if( param.size()!=4 )
 			{
 				if(!m_noGUI) 
 				{
@@ -1430,9 +1423,8 @@ int GUI::LoadParameters(QString paramFile)
 				return -1;
 			}
 
-			m_SigmaDble->setValue( param.at(2).toDouble() );
-			m_NbPyrLevSpin->setValue( param.at(3).toInt() );
-			m_PyrLevItLine->setText( param.at(4) );
+			m_NbPyrLevSpin->setValue( param.at(2).toInt() );
+			m_PyrLevItLine->setText( param.at(3) );
 		}
 		else if( list.at(1).contains(QString("ANTS")) )
 		{
@@ -2771,11 +2763,6 @@ int GUI::LaunchScriptWriter()
 	{
 		DTIRegOptions.push_back(m_BRegTypeComboBox->currentText().toStdString());
 		DTIRegOptions.push_back(m_TfmModeComboBox->currentText().toStdString());
-
-		std::ostringstream out;
-		out << m_SigmaDble->value();
-		std::string Sigma_str = out.str();
-		DTIRegOptions.push_back(Sigma_str);
 
 		std::ostringstream out1;
 		out1 << m_NbPyrLevSpin->value();
