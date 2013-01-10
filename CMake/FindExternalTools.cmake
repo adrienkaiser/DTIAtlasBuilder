@@ -491,7 +491,7 @@ set( SourceCodeArgs
   SVN_REPOSITORY "https://www.nitrc.org/svn/dtireg/trunk"
   SVN_USERNAME slicerbot
   SVN_PASSWORD slicer
-  SVN_REVISION -r 26 # 12/20/2012
+  SVN_REVISION -r 27 # 01/09/2013
   )
 set( CMAKE_ExtraARGS
   -DANTSTOOL:PATH=${ANTSPath}
