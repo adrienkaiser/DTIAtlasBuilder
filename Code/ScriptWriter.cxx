@@ -8,6 +8,7 @@
 /*itk classes*/
 #include "itkImage.h"
 #include "itkImageFileReader.h"
+#include <itksys/SystemTools.hxx> // for GetFilenamePath()
 
 #include "ScriptWriter.h"
 
@@ -771,7 +772,13 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # st
 		Script = Script + "\tGlobalDefField = FinalResampPath + \"/First_Resampling/Case\" + str(case+1) + \"_GlobalDeformationField.nrrd\"\n";
 		Script = Script + "\tFinalDef = FinalResampPath + \"/First_Resampling/Case\" + str(case+1) + \"_DeformedDTI.nrrd\"\n";
 		Script = Script + "\tGlobalDefFieldCommand=\"" + m_SoftPath[7] + " --fixedVolume \" + DTIAverage + \" --movingVolume \" + origDTI + \" --outputDeformationFieldVolume \" + GlobalDefField + \" --outputVolume \" + FinalDef\n";
-		Script = Script + "\tGlobalDefFieldCommand = GlobalDefFieldCommand + \" --ProgramsPathsVector " + m_SoftPath[6] + ";" + m_SoftPath[5] + ";" + m_SoftPath[2] + "\"\n"; // give DTI-Reg the paths to the binary directories of ANTS (6), BRAINS (5) and ResampleDTIlogEuclidean (2)
+
+		// give DTI-Reg the paths to the binary directories of BRAINS (4), dtiprocess (3) and ResampleDTIlogEuclidean (1) (ANTS given in option in the GUI : DTIRegExtraPath)
+		// m_SoftPath[] contains executables, and DTI-Reg only needs the paths
+		std::string BRAINSExecDir = itksys::SystemTools::GetRealPath( itksys::SystemTools::GetFilenamePath(m_SoftPath[4]).c_str() );
+		std::string dtiprocessExecDir = itksys::SystemTools::GetRealPath( itksys::SystemTools::GetFilenamePath(m_SoftPath[3]).c_str() );
+		std::string ResampExecDir = itksys::SystemTools::GetRealPath( itksys::SystemTools::GetFilenamePath(m_SoftPath[1]).c_str() );
+		Script = Script + "\tGlobalDefFieldCommand = GlobalDefFieldCommand + \" --ProgramsPathsVector " + m_DTIRegExtraPath + ";" + BRAINSExecDir + ";" + dtiprocessExecDir + ";" + ResampExecDir + "\"\n";
 /* m_DTIRegOptions[]
 0	RegMethod
 	ANTS
@@ -908,6 +915,10 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # st
 		Script = Script + "\tGlobalDefField2 = FinalResampPath + \"/Second_Resampling/Case\" + str(case+1) + \"_GlobalDeformationField.nrrd\"\n";
 		Script = Script + "\tFinalDef2 = FinalResampPath + \"/Second_Resampling/Case\" + str(case+1) + \"_FinalDeformedDTI.nrrd\"\n";
 		Script = Script + "\tGlobalDefFieldCommand2=\"" + m_SoftPath[7] + " --fixedVolume \" + DTIAverage2 + \" --movingVolume \" + origDTI2 + \" --outputDeformationFieldVolume \" + GlobalDefField2 + \" --outputVolume \" + FinalDef2\n";
+
+		// give DTI-Reg the paths to the binary directories of ANTS (6), BRAINS (5) and ResampleDTIlogEuclidean (2) | m_DTIRegExtraPath is supposed to contain ANTS
+		// ANTSExecDir, BRAINSExecDir, ResampExecDir defined in the previous resampling
+		Script = Script + "\tGlobalDefFieldCommand2 = GlobalDefFieldCommand2 + \" --ProgramsPathsVector " + m_DTIRegExtraPath + ";" + BRAINSExecDir + ";" + dtiprocessExecDir + ";" + ResampExecDir + "\"\n";
 
 /* m_DTIRegOptions[]
 0	RegMethod
@@ -1254,6 +1265,11 @@ void ScriptWriter::setDTIRegOptions(std::vector < std::string > DTIRegOptions)
 		NbPyrLev
 		PyrLevIt
 */
+}
+
+void ScriptWriter::setDTIRegExtraPath(std::string DTIRegExtraPath)
+{
+	m_DTIRegExtraPath=DTIRegExtraPath;
 }
 
 void ScriptWriter::setBFAffineTfmMode(std::string BFAffineTfmMode)

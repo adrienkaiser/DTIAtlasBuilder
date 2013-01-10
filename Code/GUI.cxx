@@ -70,6 +70,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	QObject::connect(BrowseCSVPushButton, SIGNAL(clicked()), this, SLOT(ReadCSVSlot()));
 	QObject::connect(SaveCSVPushButton, SIGNAL(clicked()), this, SLOT(SaveCSVDatasetBrowse()));
 	QObject::connect(BrowseOutputPushButton, SIGNAL(clicked()), this, SLOT(OpenOutputBrowseWindow()));
+	QObject::connect(BrowseDTIRegExtraPathPushButton, SIGNAL(clicked()), this, SLOT(OpenDTIRegExtraPathBrowseWindow()));
 	QObject::connect(TemplateBrowsePushButton, SIGNAL(clicked()), this, SLOT(OpenTemplateBrowseWindow()));
 	QObject::connect(AddPushButton, SIGNAL(clicked()), this, SLOT(OpenAddCaseBrowseWindow()));
 	QObject::connect(RemovePushButton, SIGNAL(clicked()), this, SLOT(RemoveSelectedCases()));
@@ -176,6 +177,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	QObject::connect(TensTfmComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
 	QObject::connect(InterpolTypeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
 	QObject::connect(TensInterpolComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+	QObject::connect(DTIRegExtraPathlineEdit, SIGNAL(textChanged(QString)), this, SLOT(WidgetHasChangedParamNoSaved()));
 	QObject::connect(RegMethodcomboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
 	QObject::connect(m_windowComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
 	QObject::connect(m_BSplineComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
@@ -563,6 +565,20 @@ void GUI::OpenOutputBrowseWindow() /*SLOT*/
 }
 
   /////////////////////////////////////////
+ //               DTI-Reg               //
+/////////////////////////////////////////
+
+void GUI::OpenDTIRegExtraPathBrowseWindow() /*SLOT*/
+{
+	QString DTIRegExtraPathBrowse=QFileDialog::getExistingDirectory(this);
+	if(!DTIRegExtraPathBrowse.isEmpty())
+	{
+		DTIRegExtraPathlineEdit->setText(DTIRegExtraPathBrowse);
+	}
+	
+}
+
+  /////////////////////////////////////////
  //              TEMPLATE               //
 /////////////////////////////////////////
 
@@ -906,6 +922,8 @@ void GUI::SaveParameters(QString ParamBrowseName,QString CSVFileName)
 		else stream << endl;
 
 		stream << "Tensor transformation=" << TensTfmComboBox->currentText()<< endl;
+
+		stream << "DTIReg Extra Path=" << DTIRegExtraPathlineEdit->text()<< endl;
 
 		stream << "DTIRegMethod=" << RegMethodcomboBox->currentText() ;
 		if( RegMethodcomboBox->currentText()==QString("ANTS") ) 
@@ -1338,6 +1356,20 @@ int GUI::LoadParameters(QString paramFile)
 		}
 
 /* Final Resampling parameters */
+		line = stream.readLine();
+		list = line.split("=");
+		if(!list.at(0).contains(QString("DTIReg Extra Path")))
+		{
+			if(!m_noGUI) 
+			{
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				std::cout<<"FAILED"<<std::endl; // command line display
+			}
+			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			return -1;
+		}
+		DTIRegExtraPathlineEdit->setText(list.at(1));
+
 		line = stream.readLine();
 		list = line.split("=");
 		if(!list.at(0).contains(QString("DTIRegMethod")))
@@ -2708,6 +2740,8 @@ int GUI::LaunchScriptWriter()
 	m_scriptwriter->setTensorTfm(TensTfmComboBox->currentText().toStdString());
 
 /* Final Resamp options */
+
+	m_scriptwriter->setDTIRegExtraPath(DTIRegExtraPathlineEdit->text().toStdString());
 
 	std::vector < std::string > DTIRegOptions;
 
