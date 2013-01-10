@@ -44,6 +44,7 @@ class ScriptWriter
 		void setTensorTfm(std::string TensTfm);
 		void setSoftPath(std::vector < std::string > SoftPath);
 		void setDTIRegOptions(std::vector < std::string > DTIRegOptions);
+		void setDTIRegExtraPath(std::string DTIRegExtraPath);
 		void setBFAffineTfmMode(std::string BFAffineTfmMode);
 		void setGridProcess(bool useGridProcess);
 		void setGridCommand(std::string GridCommand);
@@ -66,6 +67,7 @@ class ScriptWriter
 		std::string m_TensTfm;
 		std::vector < std::string > m_SoftPath; // contains the path to the softwares: 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=AtlasWerks, 7=dtiaverage, 8=DTI-Reg, 9=unu
 		std::vector < std::string > m_DTIRegOptions;
+		std::string m_DTIRegExtraPath;
 		std::string m_BFAffineTfmMode;
 		bool m_useGridProcess;
 		std::string m_GridCommand;

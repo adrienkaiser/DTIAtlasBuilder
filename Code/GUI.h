@@ -70,6 +70,8 @@ class GUI : public QMainWindow, public Ui::MainWindow
 
 /*OUTPUT*/	void OpenOutputBrowseWindow();
 
+/*DTIREG*/	void OpenDTIRegExtraPathBrowseWindow();
+
 /*TEMPLATE*/	void OpenTemplateBrowseWindow();
 
 /*QC*/		void DisplayAffineQC();
