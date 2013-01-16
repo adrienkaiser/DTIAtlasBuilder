@@ -21,12 +21,14 @@ if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
 
   if(NOT Slicer_SOURCE_DIR)
     set(EXTENSION_NAME DTIAtlasBuilder)
-    set(EXTENSION_HOMEPAGE "https://github.com/NIRALUser/DTIAtlasBuilder")
+    set(EXTENSION_HOMEPAGE "http://www.nitrc.org/projects/dtiatlasbuilder")
     set(EXTENSION_CATEGORY "Diffusion")
     set(EXTENSION_CONTRIBUTORS "Adrien Kaiser (UNC)")
-    set(EXTENSION_DESCRIPTION "DTI Atlas Builder")
-    set(EXTENSION_ACKNOWLEDGEMENTS "")
+    set(EXTENSION_DESCRIPTION "A tool to create a DTI Atlas Image from a set of DTI Images")
+    set(EXTENSION_ICONURL "http://www.nitrc.org/project/screenshot.php?group_id=312&screenshot_id=575")
+    set(EXTENSION_SCREENSHOTURLS "http://www.slicer.org/slicerWiki/images/thumb/b/b8/DTIEstim-B0-crop.png/193px-DTIEstim-B0-crop.png http://www.slicer.org/slicerWiki/images/thumb/9/90/FiberTrack-fibers.png/138px-FiberTrack-fibers.png")
     set(EXTENSION_STATUS Beta)
+    set(EXTENSION_DEPENDS "NA")
     set(EXTENSION_BUILD_SUBDIRECTORY DTIAtlasBuilder-build)
   endif()
 
@@ -136,8 +138,8 @@ if(COMPILE_PACKAGE)
 
   # Update the paths to the program in the configuration file, and copy it to the executable directory
   if( NOT DTIAtlasBuilder_BUILD_SLICER_EXTENSION ) # If Slicer Extension, compiled and executed not on same system so Config file useless
-    configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/DTIAtlasBuilderSoftConfig.txt.in ${INSTALL_DIR}/DTIAtlasBuilderSoftConfig.txt ) # configure and copy with (tool)Path
-#    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/DTIAtlasBuilderSoftConfig.txt DESTINATION ${INSTALL_DIR}) # will create the install folder if doesn't exist and copy the file in it
+    configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/DTIAtlasBuilderSoftConfig.txt.in ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilderSoftConfig.txt ) # configure and copy with (tool)Path
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilderSoftConfig.txt DESTINATION ${INSTALL_DIR}) # will create the install folder if doesn't exist and copy the file in it at install step
   endif( NOT DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
 
   # Config file for testing (paths to the built softwares in build directory) = before installing
