@@ -33,8 +33,8 @@ set(DTIABsources DTIAtlasBuilder.cxx GUI.h GUI.cxx ScriptWriter.h ScriptWriter.c
 GENERATECLP(DTIABsources DTIAtlasBuilder.xml) # include the GCLP file to the project
 add_executable(DTIAtlasBuilder ${DTIABsources})  # add the files contained by "DTIABsources" to the project
 target_link_libraries(DTIAtlasBuilder ${QT_LIBRARIES} ${ITK_LIBRARIES})
-#set_target_properties(DTIAtlasBuilder PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})
-#install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/bin/DTIAtlasBuilder DESTINATION ${CMAKE_INSTALL_PREFIX}) # will create the install folder if doesn't exist and copy the program in it
+
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder DESTINATION ${INSTALL_DIR})
 
 #======================================================================================
 # For Slicer Extension -> will create target "ExperimentalUpload" inside inner build. !! Needs to be before add testing
@@ -50,6 +50,53 @@ if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
   include(${Slicer_USE_FILE})
   set( ITK_DIR ${ITK_DIR_TMP} CACHE PATH "ITK PATH" FORCE )
   set( SlicerExecutionModel_DIR ${SlicerExecutionModel_DIR_TMP} CACHE PATH "SlicerExecutionModel PATH" FORCE )
+
+  # Install step for external projects: need to be here if SlicerExtension because make ExperimentalUpload done in inner build directory
+  # Here ${CMAKE_CURRENT_BINARY_DIR} is the inner build directory
+  if(COMPILE_EXTERNAL_dtiprocessTK)
+    foreach( tool dtiaverage dtiprocess )
+      install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/dtiprocessTK-build/bin/${tool} DESTINATION ${NOCLI_INSTALL_DIR})
+    endforeach()
+  endif(COMPILE_EXTERNAL_dtiprocessTK)
+
+  if(COMPILE_EXTERNAL_AtlasWerks)
+    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/AtlasWerks-build/bin/GreedyAtlas DESTINATION ${NOCLI_INSTALL_DIR})
+  endif(COMPILE_EXTERNAL_AtlasWerks)
+
+  if(COMPILE_EXTERNAL_BRAINS)
+    foreach( tool BRAINSFit BRAINSDemonWarp )
+      install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/BRAINS-build/bin/${tool} DESTINATION ${NOCLI_INSTALL_DIR})
+    endforeach()
+  endif(COMPILE_EXTERNAL_BRAINS)
+
+  if(COMPILE_EXTERNAL_ANTS)
+    foreach( tool ANTS WarpImageMultiTransform WarpTensorImageMultiTransform )
+      install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/ANTS-build/bin/${tool} DESTINATION ${NOCLI_INSTALL_DIR})
+    endforeach()
+  endif(COMPILE_EXTERNAL_ANTS)
+
+  if(COMPILE_EXTERNAL_ResampleDTI)
+    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/ResampleDTI-build/bin/ResampleDTIlogEuclidean DESTINATION ${INSTALL_DIR})
+  endif(COMPILE_EXTERNAL_ResampleDTI)
+
+  if(COMPILE_EXTERNAL_DTIReg)
+    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/DTIReg-build/bin/DTI-Reg DESTINATION ${INSTALL_DIR})
+  endif(COMPILE_EXTERNAL_DTIReg)
+
+  if(COMPILE_EXTERNAL_teem)
+    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/teem-build/bin/unu DESTINATION ${NOCLI_INSTALL_DIR})
+  endif(COMPILE_EXTERNAL_teem)
+
+  if(COMPILE_EXTERNAL_MriWatcher)
+    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/MriWatcher-build/MriWatcher DESTINATION ${NOCLI_INSTALL_DIR})
+  endif(COMPILE_EXTERNAL_MriWatcher)
+
+  if(COMPILE_EXTERNAL_NIRALUtilities)
+    foreach( tool ImageMath CropDTI )
+      install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/NIRALUtilities-build/bin/${tool} DESTINATION ${NOCLI_INSTALL_DIR})
+    endforeach()
+  endif(COMPILE_EXTERNAL_NIRALUtilities)
+
 endif( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
 
 #======================================================================================

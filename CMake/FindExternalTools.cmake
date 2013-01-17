@@ -80,36 +80,19 @@ macro( AddToolMacro Proj CLI) # CLI = Used if Slicer Extension : ON if CLI and O
       SOURCE_DIR DTIAtlasBuilder-build/${Proj} # creates the folder if it doesn't exist
       CMAKE_GENERATOR ${gen}
       CMAKE_ARGS
-        ${LOCAL_CMAKE_BUILD_OPTIONS}
-        -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
+        ${COMMON_BUILD_OPTIONS_FOR_EXTERNALPACKAGES}
         -DCMAKE_INSTALL_PREFIX:PATH=DTIAtlasBuilder-build/${Proj}-install
         ${CMAKE_ExtraARGS}
       INSTALL_COMMAND "" # So the install step of the external project is not done
     )
 
-    # Install step : copy all needed executables to ${INSTALL_DIR} or ${NOCLI_INSTALL_DIR}
+    # Install step : copy all needed executables to ${INSTALL_DIR}
     if(NOT ${Proj} STREQUAL "MriWatcher") # MriWatcher is not in a ./bin directory -> install step specified manually after calling macro
-
-      if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION ) # check if variable if defined, and not differ if ON or OFF
-
-        if(${CLI}) # Install in Extensions/DTIAtlaBuilder/lib/Slicer4.X/cli_module
-          foreach( tool ${Tools} )
-              install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/${Proj}-build/bin/${tool} DESTINATION ${INSTALL_DIR})
-          endforeach()
-        else(${CLI}) # Install in Extensions/DTIAtlaBuilder/bin
-          foreach( tool ${Tools} )
-              install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/${Proj}-build/bin/${tool} DESTINATION ${NOCLI_INSTALL_DIR})
-          endforeach()
-        endif(${CLI})
-
-      else( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
-
+      if( NOT DTIAtlasBuilder_BUILD_SLICER_EXTENSION ) # If Slicer Extension, install is done in the inner build directory
         foreach( tool ${Tools} )
             install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/${Proj}-build/bin/${tool} DESTINATION ${INSTALL_DIR})
         endforeach()
-
-      endif( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
-
+      endif( NOT DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
     endif() # NOT ${tool} STREQUAL "MriWatcher"
 
   endif(COMPILE_EXTERNAL_${Proj})
@@ -166,7 +149,7 @@ if(COMPILE_EXTERNAL_AtlasWerks) # FFTW D + F build one on(after) another
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/CLAPACK-build
     CMAKE_GENERATOR ${gen}
     CMAKE_ARGS
-      -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
+      ${COMMON_BUILD_OPTIONS_FOR_EXTERNALPACKAGES}
       -DBUILD_EXAMPLES:BOOL=OFF
       -DBUILD_TESTING:BOOL=OFF
     INSTALL_COMMAND "" # No install step
@@ -212,13 +195,12 @@ if(RecompileITK)
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/ITKv4-build
     CMAKE_GENERATOR ${gen}
     CMAKE_ARGS # !! ALL options need to be here for all tools to compile with this version of ITK
+      ${COMMON_BUILD_OPTIONS_FOR_EXTERNALPACKAGES}
       -Wno-dev
       --no-warn-unused-cli
-      -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
       -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}/ITKv4-install
       -DBUILD_EXAMPLES:BOOL=OFF
       -DBUILD_TESTING:BOOL=OFF
-      -DBUILD_SHARED_LIBS:BOOL=OFF
       -DITK_LEGACY_REMOVE:BOOL=OFF
       -DITKV3_COMPATIBILITY:BOOL=ON
       -DITK_BUILD_ALL_MODULES:BOOL=ON
@@ -226,12 +208,11 @@ if(RecompileITK)
       -DKWSYS_USE_MD5:BOOL=ON # Required by SlicerExecutionModel
       -DUSE_WRAP_ITK:BOOL=OFF ## HACK:  QUICK CHANGE
       -DITK_USE_SYSTEM_DCMTK:BOOL=OFF
-      -DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=${CMAKE_CURRENT_BINARY_DIR}/ITKv4-build/lib # Needed for BRAINSTools to compile
-      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=${CMAKE_CURRENT_BINARY_DIR}/ITKv4-build/lib # Needed for BRAINSTools to compile
-      -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${CMAKE_CURRENT_BINARY_DIR}/ITKv4-build/bin # Needed for BRAINSTools to compile
-    INSTALL_COMMAND ""
+#      -DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=${CMAKE_CURRENT_BINARY_DIR}/ITKv4-build/lib # Needed for BRAINSTools to compile
+#      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=${CMAKE_CURRENT_BINARY_DIR}/ITKv4-build/lib # Needed for BRAINSTools to compile
+#      -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${CMAKE_CURRENT_BINARY_DIR}/ITKv4-build/bin # Needed for BRAINSTools to compile
     )
-  set(ITK_DIR ${CMAKE_CURRENT_BINARY_DIR}/ITKv4-build) # Use the downloaded ITK for all tools
+  set(ITK_DIR ${CMAKE_CURRENT_BINARY_DIR}/ITKv4-install/lib/cmake/ITK-4.3) # Use the downloaded ITK for all tools
   set(ITK_DEPEND ITKv4)
   set(RecompileSEM ON) # If recompile ITK, recompile SlicerExecutionModel
   set(RecompileBatchMake ON) # If recompile ITK, recompile BatchMake
@@ -246,9 +227,9 @@ if(RecompileSEM)
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/SlicerExecutionModel-build
     CMAKE_GENERATOR ${gen}
     CMAKE_ARGS
+      ${COMMON_BUILD_OPTIONS_FOR_EXTERNALPACKAGES}
       -Wno-dev
       --no-warn-unused-cli
-      -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
       -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}/SlicerExecutionModel-install
       -DBUILD_SHARED_LIBS:BOOL=OFF
       -DBUILD_EXAMPLES:BOOL=OFF
@@ -284,8 +265,8 @@ if(RecompileBatchMake)
       BINARY_DIR BatchMake-build
       CMAKE_GENERATOR ${gen}
       CMAKE_ARGS
+        ${COMMON_BUILD_OPTIONS_FOR_EXTERNALPACKAGES}
         -DBUILD_SHARED_LIBS:BOOL=OFF
-        -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
         -DBUILD_TESTING:BOOL=OFF
         -DUSE_FLTK:BOOL=OFF
         -DDASHBOARD_SUPPORT:BOOL=OFF
@@ -551,12 +532,8 @@ set( Tools
   MriWatcher
   )
 AddToolMacro( MriWatcher OFF) # AddToolMacro( proj CLI) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
-if(COMPILE_EXTERNAL_MriWatcher)
-  if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION ) 
-    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/MriWatcher-build/MriWatcher DESTINATION ${NOCLI_INSTALL_DIR})
-  else( DTIAtlasBuilder_BUILD_SLICER_EXTENSION ) 
-    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/MriWatcher-build/MriWatcher DESTINATION ${INSTALL_DIR}) # Specified manually because not in a ./bin directory
-  endif( DTIAtlasBuilder_BUILD_SLICER_EXTENSION ) 
+if(COMPILE_EXTERNAL_MriWatcher AND NOT DTIAtlasBuilder_BUILD_SLICER_EXTENSION)
+  install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/MriWatcher-build/MriWatcher DESTINATION ${INSTALL_DIR}) # Specified manually because not in a ./bin directory
 endif()
 
 # ===== NIRALUtilities ===================================================================
