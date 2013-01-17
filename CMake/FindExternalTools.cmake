@@ -76,13 +76,13 @@ macro( AddToolMacro Proj CLI) # CLI = Used if Slicer Extension : ON if CLI and O
     # Add project
     ExternalProject_Add(${Proj}
       ${SourceCodeArgs} # No difference between args passed separated with ';', spaces or return to line
-      BINARY_DIR ${Proj}-build
-      SOURCE_DIR ${Proj} # creates the folder if it doesn't exist
+      BINARY_DIR DTIAtlasBuilder-build/${Proj}-build
+      SOURCE_DIR DTIAtlasBuilder-build/${Proj} # creates the folder if it doesn't exist
       CMAKE_GENERATOR ${gen}
       CMAKE_ARGS
         ${LOCAL_CMAKE_BUILD_OPTIONS}
         -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
-        -DCMAKE_INSTALL_PREFIX:PATH=${Proj}-install
+        -DCMAKE_INSTALL_PREFIX:PATH=DTIAtlasBuilder-build/${Proj}-install
         ${CMAKE_ExtraARGS}
       INSTALL_COMMAND "" # So the install step of the external project is not done
     )
@@ -94,18 +94,18 @@ macro( AddToolMacro Proj CLI) # CLI = Used if Slicer Extension : ON if CLI and O
 
         if(${CLI}) # Install in Extensions/DTIAtlaBuilder/lib/Slicer4.X/cli_module
           foreach( tool ${Tools} )
-              install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${Proj}-build/bin/${tool} DESTINATION ${INSTALL_DIR})
+              install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/${Proj}-build/bin/${tool} DESTINATION ${INSTALL_DIR})
           endforeach()
         else(${CLI}) # Install in Extensions/DTIAtlaBuilder/bin
           foreach( tool ${Tools} )
-              install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${Proj}-build/bin/${tool} DESTINATION ${NOCLI_INSTALL_DIR})
+              install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/${Proj}-build/bin/${tool} DESTINATION ${NOCLI_INSTALL_DIR})
           endforeach()
         endif(${CLI})
 
       else( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
 
         foreach( tool ${Tools} )
-            install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${Proj}-build/bin/${tool} DESTINATION ${INSTALL_DIR})
+            install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/${Proj}-build/bin/${tool} DESTINATION ${INSTALL_DIR})
         endforeach()
 
       endif( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
@@ -320,10 +320,10 @@ endif(RecompileBatchMake)
 
 # ===== dtiprocessTK ==============================================================
 set( SourceCodeArgs
-  SVN_REPOSITORY "https://www.nitrc.org/svn/dtiprocess/branches/Slicer4Extension/dtiprocess"
+  SVN_REPOSITORY "https://www.nitrc.org/svn/dtiprocess/branches/Slicer4Extension"#/dtiprocess"
   SVN_USERNAME slicerbot
   SVN_PASSWORD slicer
-  SVN_REVISION -r 113 # 12/20/2012 updated for ITKv4.3.0
+  SVN_REVISION -r 137 # 01/16/2013 # 113 # 12/20/2012 updated for ITKv4.3.0
   )
 set( CMAKE_ExtraARGS
   -DBUILD_TESTING:BOOL=OFF
@@ -333,6 +333,7 @@ set( CMAKE_ExtraARGS
   -DModuleDescriptionParser_DIR:PATH=${ModuleDescriptionParser_DIR}
   -DTCLAP_DIR:PATH=${TCLAP_DIR}
   -DSlicerExecutionModel_DIR:PATH=${SlicerExecutionModel_DIR}
+  -DDTIProcess_BUILD_SLICER_EXTENSION:BOOL=OFF
   DEPENDS ${ITK_DEPEND}
   )
 set( Tools
@@ -552,9 +553,9 @@ set( Tools
 AddToolMacro( MriWatcher OFF) # AddToolMacro( proj CLI) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
 if(COMPILE_EXTERNAL_MriWatcher)
   if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION ) 
-    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/MriWatcher-build/MriWatcher DESTINATION ${NOCLI_INSTALL_DIR})
+    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/MriWatcher-build/MriWatcher DESTINATION ${NOCLI_INSTALL_DIR})
   else( DTIAtlasBuilder_BUILD_SLICER_EXTENSION ) 
-    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/MriWatcher-build/MriWatcher DESTINATION ${INSTALL_DIR}) # Specified manually because not in a ./bin directory
+    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/MriWatcher-build/MriWatcher DESTINATION ${INSTALL_DIR}) # Specified manually because not in a ./bin directory
   endif( DTIAtlasBuilder_BUILD_SLICER_EXTENSION ) 
 endif()
 
