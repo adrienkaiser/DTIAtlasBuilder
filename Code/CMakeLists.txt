@@ -37,6 +37,22 @@ target_link_libraries(DTIAtlasBuilder ${QT_LIBRARIES} ${ITK_LIBRARIES})
 #install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/bin/DTIAtlasBuilder DESTINATION ${CMAKE_INSTALL_PREFIX}) # will create the install folder if doesn't exist and copy the program in it
 
 #======================================================================================
+# For Slicer Extension -> will create target "ExperimentalUpload" inside inner build. !! Needs to be before add testing
+if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
+  # Unset variables because Slicer will try to set it again and ERROR
+  set( ITK_DIR_TMP ${ITK_DIR} )
+  unset( ITK_DIR CACHE )
+  unset( ITK_DIR )
+  set( SlicerExecutionModel_DIR_TMP ${SlicerExecutionModel_DIR} )
+  unset( SlicerExecutionModel_DIR )
+  unset( SlicerExecutionModel_DIR CACHE )
+  find_package(Slicer REQUIRED)
+  include(${Slicer_USE_FILE})
+  set( ITK_DIR ${ITK_DIR_TMP} CACHE PATH "ITK PATH" FORCE )
+  set( SlicerExecutionModel_DIR ${SlicerExecutionModel_DIR_TMP} CACHE PATH "SlicerExecutionModel PATH" FORCE )
+endif( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
+
+#======================================================================================
 # Testing for DTIAtlasBuilder
 if(BUILD_TESTING)
   set(TestingSRCdirectory ${CMAKE_CURRENT_SOURCE_DIR}/Testing)
@@ -47,7 +63,15 @@ if(BUILD_TESTING)
   target_link_libraries(DTIAtlasBuilderLib ${QT_LIBRARIES} ${ITK_LIBRARIES})
   set_target_properties(DTIAtlasBuilderLib PROPERTIES LABELS DTIAtlasBuilder)
   # Create Tests
-  enable_testing()
+  include(CTest)
   add_subdirectory( ${TestingSRCdirectory} ) # contains a CMakeLists.txt
 #  include_directories( ${TestingSRCdirectory} ) # contains a CMakeLists.txt
 endif()
+
+# For Slicer Extension
+if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
+  if(NOT Slicer_SOURCE_DIR)
+    set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${CMAKE_BINARY_DIR};${EXTENSION_NAME};ALL;/")
+    include(${Slicer_EXTENSION_CPACK}) # So we can make package
+  endif()
+endif( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
