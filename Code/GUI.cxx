@@ -46,7 +46,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 
 	m_ErrorDetectedInConstructor=false;
 
-	ExecStatusLabel->setText("                       "); // fill with spaces
+//	ExecStatusLabel->setText("                       "); // fill with spaces
 
 /* Script writing object */
 	m_scriptwriter = new ScriptWriter; // delete in "void GUI::ExitProgram()"
@@ -3113,9 +3113,9 @@ int GUI::LaunchScriptRunner()
 	std::cout<<"| Script Running..."<<std::endl; // command line display
 
 	ComputepushButton->setEnabled(false);
-	m_ScriptRunning=true;
-	progressBar->setValue(0);
-	ExecStatusLabel->setText("                       "); // fill with spaces
+//	m_ScriptRunning=true;
+//	progressBar->setValue(0);
+//	ExecStatusLabel->setText("                       "); // fill with spaces
 
 /* Running the Script: */
 	std::string program;
@@ -3131,9 +3131,9 @@ int GUI::LaunchScriptRunner()
 		{
 			int ExitCode = system( program.c_str() ); // son freezes here during execution of the script
 
-			sigval value;
-			value.sival_int = ExitCode;
-			sigqueue(getppid(),SIGUSR1, value); // send a signal to the father (main window) with the value of the exit code of the script
+//			sigval value;
+//			value.sival_int = ExitCode;
+//			sigqueue(getppid(),SIGUSR1, value); // send a signal to the father (main window) with the value of the exit code of the script
 
 			_exit(0); // son ends // exit terminates the calling process after cleanup; _exit terminates it immediately.
 		}
@@ -3171,13 +3171,13 @@ if(ExitCode==0) kill(getppid(),SIGUSR1); // signal to the father than execution 
 
 void GUI::RunningCompleted()
 {
-	progressBar->setValue(100); // if the progress steps don't go until 100
+//	progressBar->setValue(100); // if the progress steps don't go until 100
 	ComputepushButton->setEnabled(true);
 	m_ScriptRunning=false;
 
 	if(!m_noGUI)
 	{
-		ExecStatusLabel->setText("Executed without errors");
+//		ExecStatusLabel->setText("Executed without errors");
 		QMessageBox::information(this, "Running Completed", "Running Completed !");
 	}
 	std::cout<<"| Running Completed !"<<std::endl; // command line display
@@ -3185,13 +3185,13 @@ void GUI::RunningCompleted()
 
 void GUI::RunningFailed()
 {
-	progressBar->setValue(100); // if the progress steps don't go until 100
+//	progressBar->setValue(100); // if the progress steps don't go until 100
 	ComputepushButton->setEnabled(true);
 	m_ScriptRunning=false;
 
 	if(!m_noGUI)
 	{
-		ExecStatusLabel->setText("Executed with errors");
+//		ExecStatusLabel->setText("Executed with errors");
 		QMessageBox::information(this, "Running Failed", "Running Failed...");
 	}
 	std::cout<<"| Running Failed..."<<std::endl; // command line display
@@ -3203,7 +3203,8 @@ void GUI::RunningFailed()
 
 void GUI::ProgressBar(int Progress) // value sent by python script in signal
 {
-	if(!m_noGUI) progressBar->setValue( Progress ); // crashes when refreshed too quickly
+//	if(!m_noGUI) progressBar->setValue( Progress ); // crashes when refreshed too quickly
+	std::cout<<Progress<<"/100 complete"<<std::endl;
 
 /*	int nbCases=CaseListWidget->count();
 	int nbLoops=NbLoopsSpinBox->value();

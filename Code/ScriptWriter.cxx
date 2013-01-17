@@ -49,9 +49,9 @@ void ScriptWriter::Preprocess (std::string MainPID_str)
 	Script = Script + "#!/usr/bin/python\n\n";
 	Script = Script + "import os\n"; // To run a shell command : os.system("[shell command]")
 	Script = Script + "import sys\n"; // to return an exit code
-	Script = Script + "import signal\n";
-	Script = Script + "import ctypes\n"; // for sigqueue : send a signal with a value in it to another process
-	Script = Script + "libc = ctypes.CDLL(\"libc.so.6\")\n\n"; // load c lib
+//	Script = Script + "import signal\n";
+//	Script = Script + "import ctypes\n"; // for sigqueue : send a signal with a value in it to another process
+//	Script = Script + "libc = ctypes.CDLL(\"libc.so.6\")\n\n"; // load c lib
 
 	Script = Script + "print(\"\\n============ Pre processing =============\")\n\n";
 
@@ -200,13 +200,13 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0, 0) # 
 		if(m_Overwrite==1)
 		{
 			Script = Script + "\tif os.system(CropCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] CropDTI: Cropping DTI image\')\n";
-			Script = Script + "\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
+//			Script = Script + "\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
 		}
 		else
 		{
 			Script = Script + "\tif not os.path.isfile(croppedDTI) :\n";
 				Script = Script + "\t\tif os.system(CropCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] CropDTI: Cropping DTI image\')\n";
-				Script = Script + "\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
+//				Script = Script + "\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
 			Script = Script + "\telse : " + GridProcessFileExistIndent1 + "print(\"=> The file \\'\" + croppedDTI + \"\\' already exists so the command will not be executed\")\n" + GridProcessFileExistCmd1;
 		}
 		Script = Script + "\tcase += 1\n\n";
@@ -228,13 +228,13 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, len(allc
 		if(m_Overwrite==1)
 		{
 			Script = Script + "\tif os.system(GeneFACommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] dtiprocess: Generating FA of DTI image\')\n";
-			Script = Script + "\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
+//			Script = Script + "\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
 		}
 		else
 		{
 			Script = Script + "\tif not os.path.isfile(FA) :\n";
 				Script = Script + "\t\tif os.system(GeneFACommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] dtiprocess: Generating FA of DTI image\')\n";
-				Script = Script + "\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
+//				Script = Script + "\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
 			Script = Script + "\telse : " + GridProcessFileExistIndent1 + "print(\"=> The file \\'\" + FA + \"\\' already exists so the command will not be executed\")\n" + GridProcessFileExistCmd1;
 		}
 
@@ -265,13 +265,13 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, len(allc
 			if(m_Overwrite==1)
 			{
 				Script = Script + "\t\tif os.system(NormFACommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] ImageMath: Normalizing FA image\')\n";
-				Script = Script + "\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
+//				Script = Script + "\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
 			}
 			else
 			{
 				Script = Script + "\t\tif not os.path.isfile(NormFA) :\n";
 					Script = Script + "\t\t\tif os.system(NormFACommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] ImageMath: Normalizing FA image\')\n";
-					Script = Script + "\t\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
+//					Script = Script + "\t\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
 				Script = Script + "\t\telse : " + GridProcessFileExistIndent2 + "print(\"=> The file \\'\" + NormFA + \"\\' already exists so the command will not be executed\")\n" + GridProcessFileExistCmd2;
 			}
 			Script = Script + "\t\tcase += 1\n\n";
@@ -296,13 +296,13 @@ if( m_useGridProcess ) Script = Script + "\tTestGridProcess( FilesFolder, len(al
 			if(m_Overwrite==1)
 			{
 				Script = Script + "\t\tif os.system(AffineCommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] BRAINSFit: Affine Registration of FA image\')\n";
-				Script = Script + "\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
+//				Script = Script + "\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
 			}
 			else 
 			{
 				Script = Script + "\t\tif not os.path.isfile(LinearTranstfm) or not os.path.isfile(LinearTrans) :\n";
 					Script = Script + "\t\t\tif os.system(AffineCommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] BRAINSFit: Affine Registration of FA image\')\n";
-					Script = Script + "\t\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
+//					Script = Script + "\t\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
 				Script = Script + "\t\telif os.path.isfile(LinearTranstfm) : " + GridProcessFileExistIndent2 + "print(\"=> The file \\'\" + LinearTranstfm + \"\\' already exists so the command will not be executed\")\n" + GridProcessFileExistCmd2;
 				Script = Script + "\t\telif os.path.isfile(LinearTrans) : " + GridProcessFileExistIndent2 + "print(\"=> The file \\'\" + LinearTrans + \"\\' already exists so the command will not be executed\")\n" + GridProcessFileExistCmd2;
 			}
@@ -327,13 +327,13 @@ if( m_useGridProcess ) Script = Script + "\tTestGridProcess( FilesFolder, len(al
 			if(m_Overwrite==1)
 			{
 				Script = Script + "\t\tif os.system(ImplementCommand)!=0: ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] BRAINSFit: Implementing the Affine Registration on FA image\')\n";
-				Script = Script + "\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
+//				Script = Script + "\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
 			}
 			else
 			{
 				Script = Script + "\t\tif not os.path.isfile(LinearTransDTI) :\n";
 					Script = Script + "\t\t\tif os.system(ImplementCommand)!=0: ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] ResampleDTIlogEuclidean: Implementing the Affine Registration on FA image\')\n";
-					Script = Script + "\t\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
+//					Script = Script + "\t\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
 				Script = Script + "\t\telse : " + GridProcessFileExistIndent2 + "print(\"=> The file \\'\" + LinearTransDTI + \"\\' already exists so the command will not be executed\")\n" + GridProcessFileExistCmd2;
 			}
 			Script = Script + "\t\tcase += 1\n\n";
@@ -355,13 +355,13 @@ if( m_useGridProcess ) Script = Script + "\tTestGridProcess( FilesFolder, len(al
 			if(m_Overwrite==1)
 			{
 				Script = Script + "\t\tif os.system(GeneLoopFACommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] dtiprocess: Generating FA of affine registered images\')\n";
-				Script = Script + "\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
+//				Script = Script + "\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
 			}
 			else
 			{
 				Script = Script + "\t\tif not os.path.isfile(LoopFA) :\n";
 					Script = Script + "\t\t\tif os.system(GeneLoopFACommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] dtiprocess: Generating FA of affine registered images\')\n";
-					Script = Script + "\t\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
+//					Script = Script + "\t\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
 				Script = Script + "\t\telse : " + GridProcessFileExistIndent2 + "print(\"=> The file \\'\" + LoopFA + \"\\' already exists so the command will not be executed\")\n" + GridProcessFileExistCmd2;
 			}
 			Script = Script + "\t\tcase += 1\n\n";
@@ -391,13 +391,13 @@ if( m_useGridProcess ) Script = Script + "\tTestGridProcess( FilesFolder, len(al
 			if(m_Overwrite==1)
 			{
 				Script = Script + "\t\tif os.system(AverageCommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'] dtiaverage: Computing FA Average of registered images\')\n";
-				Script = Script + "\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
+//				Script = Script + "\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
 			}
 			else
 			{
 				Script = Script + "\t\tif not os.path.isfile(FAAverage) :\n";
 					Script = Script + "\t\t\tif os.system(AverageCommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'] dtiaverage: Computing FA Average of registered images\')\n";
-					Script = Script + "\t\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
+//					Script = Script + "\t\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
 				Script = Script + "\t\telse : " + GridProcessFileExistIndent2 + "print(\"=> The file \\'\" + FAAverage + \"\\' already exists so the command will not be executed\")\n" + GridProcessFileExistCmdNoCase2;
 			}
 
@@ -434,9 +434,9 @@ void ScriptWriter::AtlasBuilding(std::string MainPID_str)
 	Script = Script + "#!/usr/bin/python\n\n";
 	Script = Script + "import os\n"; ///// To run a shell command : os.system("[shell command]")
 	Script = Script + "import sys\n"; // to return an exit code
-	Script = Script + "import signal\n";
-	Script = Script + "import ctypes\n"; // for sigqueue : send a signal with a value in it to another process
-	Script = Script + "libc = ctypes.CDLL(\"libc.so.6\")\n\n"; // load c lib
+//	Script = Script + "import signal\n";
+//	Script = Script + "import ctypes\n"; // for sigqueue : send a signal with a value in it to another process
+//	Script = Script + "libc = ctypes.CDLL(\"libc.so.6\")\n\n"; // load c lib
 
 	Script = Script + "print(\"\\n============ Atlas Building =============\")\n\n";
 
@@ -579,7 +579,7 @@ void ScriptWriter::AtlasBuilding(std::string MainPID_str)
 	if(m_Overwrite==1)Script = Script + "if 1 :\n";
 	else Script = Script + "if not os.path.isfile(DeformPath + \"/MeanImage.mhd\") :\n";
 		Script = Script + "\tif os.system(AtlasBCommand)!=0 : ErrorList.append(\'GreedyAtlas: Computing non-linear atlas from affine registered images\')\n";
-		Script = Script + "\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
+//		Script = Script + "\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
 if( m_useGridProcess ) Script = Script + "\tTestGridProcess( FilesFolder, 0) # stays in the function until all process is done : 0 makes the function look for \'file\'\n\n";
 
 		Script = Script + "\tprint(\"\\n======== Renaming the files generated by GreedyAtlas =========\")\n";
@@ -677,7 +677,7 @@ if(m_Overwrite==0) Script = Script + "else : print(\"=> The file \\'\" + DeformP
 			Script = Script + "\t\tif os.system(FinalResampGridCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] Applying deformation fields to original DTIs\')\n";
 			}
 
-			Script = Script + "\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
+//			Script = Script + "\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
 
 if(m_Overwrite==0) Script = Script + "\telse : " + GridProcessFileExistIndent1 + "print(\"=> The file \\'\" + FinalDTI + \"\\' already exists so the command will not be executed\")\n" + GridProcessFileExistCmd1;
 		Script = Script + "\tcase += 1\n\n";
@@ -727,7 +727,7 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, len(allc
 		Script = Script + "\tif os.system(AverageGridCommand)!=0 : ErrorList.append(\'Computing the final DTI average\')\n";
 		}
 
-		Script = Script + "\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
+//		Script = Script + "\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
 if(m_Overwrite==0) Script = Script + "else : " + GridProcessFileExistIndent + "print(\"=> The file \\'\" + DTIAverage + \"\\' already exists so the command will not be executed\")\n" + GridProcessFileExistCmdNoCase;
 
 if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # stays in the function until all process is done : 0 makes the function look for \'file\'\n\n";
@@ -847,7 +847,7 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # st
 			Script = Script + "\t\tif os.system(GlobDefFieldGridCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] Computing global deformation fields\')\n";
 			}
 
-			Script = Script + "\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
+//			Script = Script + "\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
 if(m_Overwrite==0) Script = Script + "\telse : " + GridProcessFileExistIndent1 + "print(\"=> The file \\'\" + FinalDef + \"\\' already exists so the command will not be executed\")\n" + GridProcessFileExistCmd1;
 		Script = Script + "\tcase += 1\n\n";
 
@@ -898,7 +898,7 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, len(allc
 		Script = Script + "\tif os.system(Average2GridCommand)!=0 : ErrorList.append(\'Recomputing the final DTI average\')\n";
 		}
 
-		Script = Script + "\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
+//		Script = Script + "\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
 if(m_Overwrite==0) Script = Script + "else : " + GridProcessFileExistIndent + "print(\"=> The file \\'\" + DTIAverage2 + \"\\' already exists so the command will not be executed\")\n" + GridProcessFileExistCmdNoCase;
 
 if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # stays in the function until all process is done : 0 makes the function look for \'file\'\n\n";
@@ -991,7 +991,7 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # st
 			Script = Script + "\t\tif os.system(GlobDefField2GridCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] Recomputing global deformation fields\')\n";
 			}
 
-			Script = Script + "\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
+//			Script = Script + "\t\tlibc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
 if(m_Overwrite==0) Script = Script + "\telse : " + GridProcessFileExistIndent1 + "print(\"=> The file \\'\" + FinalDef2 + \"\\' already exists so the command will not be executed\")\n" + GridProcessFileExistCmd1;
 		Script = Script + "\tcase += 1\n\n";
 
