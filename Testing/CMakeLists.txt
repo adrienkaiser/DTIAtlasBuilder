@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 CMAKE_POLICY(VERSION 2.8)
 
-
 ## Test 1 : Usage
 add_test(NAME TestUsage COMMAND ${CMAKE_CURRENT_BINARY_DIR}/../DTIAtlasBuilder --help) # Should just display the Usage : ${CMAKE_CURRENT_BINARY_DIR} = DTIAtlasBuilder-build/Testing -> need to ../
 set(EXECUTABLE_OUTPUT_PATH ${TestingBINdirectory}) # So the test executables go to the right place
