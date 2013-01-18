@@ -48,7 +48,7 @@ endmacro()
 
 #===== Macro add tool ===============================================
  # if SourceCodeArgs or CMAKE_ExtraARGS passed to the macro as arguments, only the first word is used (each element of the list is taken as ONE argument) => use as "global variables"
-macro( AddToolMacro Proj CLI) # CLI = Used if Slicer Extension : ON if CLI and OFF if NotCLI
+macro( AddToolMacro Proj )
 
   # Update and test tools
   if(COMPILE_EXTERNAL_${Proj}) # If need to recompile, just set the paths here
@@ -81,19 +81,21 @@ macro( AddToolMacro Proj CLI) # CLI = Used if Slicer Extension : ON if CLI and O
       CMAKE_GENERATOR ${gen}
       CMAKE_ARGS
         ${COMMON_BUILD_OPTIONS_FOR_EXTERNALPACKAGES}
-        -DCMAKE_INSTALL_PREFIX:PATH=DTIAtlasBuilder-build/${Proj}-install
-        ${CMAKE_ExtraARGS}
+       -DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/${Proj}-build/bin
+       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/${Proj}-build/bin
+       -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/${Proj}-build/bin
+       -DCMAKE_BUNDLE_OUTPUT_DIRECTORY:PATH=${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/${Proj}-build/bin
+       -DCMAKE_INSTALL_PREFIX:PATH=DTIAtlasBuilder-build/${Proj}-install
+       ${CMAKE_ExtraARGS}
       INSTALL_COMMAND "" # So the install step of the external project is not done
     )
 
     # Install step : copy all needed executables to ${INSTALL_DIR}
-    if(NOT ${Proj} STREQUAL "MriWatcher") # MriWatcher is not in a ./bin directory -> install step specified manually after calling macro
-      if( NOT DTIAtlasBuilder_BUILD_SLICER_EXTENSION ) # If Slicer Extension, install is done in the inner build directory
-        foreach( tool ${Tools} )
-            install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/${Proj}-build/bin/${tool} DESTINATION ${INSTALL_DIR})
-        endforeach()
-      endif( NOT DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
-    endif() # NOT ${tool} STREQUAL "MriWatcher"
+    if( NOT DTIAtlasBuilder_BUILD_SLICER_EXTENSION ) # If Slicer Extension, install is done in the inner build directory (DTIAtlasBuilder.cmake)
+      foreach( tool ${Tools} )
+          install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/${Proj}-build/bin/${tool} DESTINATION ${INSTALL_DIR})
+      endforeach()
+    endif( NOT DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
 
   endif(COMPILE_EXTERNAL_${Proj})
 endmacro( AddToolMacro )
@@ -266,6 +268,10 @@ if(RecompileBatchMake)
       CMAKE_GENERATOR ${gen}
       CMAKE_ARGS
         ${COMMON_BUILD_OPTIONS_FOR_EXTERNALPACKAGES}
+        -DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=${CMAKE_CURRENT_BINARY_DIR}/BatchMake-build/bin
+        -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=${CMAKE_CURRENT_BINARY_DIR}/BatchMake-build/bin
+        -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${CMAKE_CURRENT_BINARY_DIR}/BatchMake-build/bin
+        -DCMAKE_BUNDLE_OUTPUT_DIRECTORY:PATH=${CMAKE_CURRENT_BINARY_DIR}/BatchMake-build/bin
         -DBUILD_SHARED_LIBS:BOOL=OFF
         -DBUILD_TESTING:BOOL=OFF
         -DUSE_FLTK:BOOL=OFF
@@ -321,7 +327,7 @@ set( Tools
   dtiprocess
   dtiaverage
   )
-AddToolMacro( dtiprocessTK OFF) # AddToolMacro( proj CLI) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
+AddToolMacro( dtiprocessTK ) # AddToolMacro( proj ) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
 
 # ===== AtlasWerks ================================================================
 # code for external tools from https://github.com/Chaircrusher/AtlasWerksBuilder/blob/master/CMakeLists.txt
@@ -353,12 +359,12 @@ set( CMAKE_ExtraARGS
   -DatlasWerks_COMPILE_APP_TX_WERKS:BOOL=OFF
   -DatlasWerks_COMPILE_APP_UTILITIES:BOOL=OFF
   DEPENDS ${ITK_DEPEND} FFTWD FFTWF CLAPACK # Not CMake Arg -> directly after CMakeArg in ExternalProject_Add()
-  PATCH_COMMAND patch -p0 -d ${CMAKE_CURRENT_BINARY_DIR} -i ${CMAKE_CURRENT_BINARY_DIR}/AtlasWerksLAPACK.patch # !! no "" # !! patch doesn't exist on windows !
+  PATCH_COMMAND patch -p0 -d ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build -i ${CMAKE_CURRENT_BINARY_DIR}/AtlasWerksLAPACK.patch # !! no "" # !! patch doesn't exist on windows !
   )
 set( Tools
   GreedyAtlas
   )
-AddToolMacro( AtlasWerks OFF) # AddToolMacro( proj CLI) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
+AddToolMacro( AtlasWerks ) # AddToolMacro( proj ) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
 
 # ===== BRAINSFit =============================================================
 set( SourceCodeArgs
@@ -413,13 +419,13 @@ set( CMAKE_ExtraARGS
   -DUSE_GTRACT:BOOL=OFF
   -DLOCAL_SEM_EXECUTABLE_ONLY:BOOL=ON # Variable used in SlicerExecutionModel/CMake/SEMMacroBuildCLI.cmake:l.120 : if true, will only create executable without shared lib lib(exec)Lib.so
   DEPENDS ${ITK_DEPEND} # So ITK is compiled before
-  PATCH_COMMAND patch -p0 -d ${CMAKE_CURRENT_BINARY_DIR} -i ${CMAKE_CURRENT_SOURCE_DIR}/CMake/BRAINS.patch # !! no "" # !! patch doesn't exist on windows !
+  PATCH_COMMAND patch -p0 -d ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build -i ${CMAKE_CURRENT_SOURCE_DIR}/CMake/BRAINS.patch # !! no "" # !! patch doesn't exist on windows !
   )
 set( Tools
   BRAINSFit
   BRAINSDemonWarp
   )
-AddToolMacro( BRAINS OFF) # AddToolMacro( proj CLI) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
+AddToolMacro( BRAINS ) # AddToolMacro( proj ) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
 
 # ===== ANTS/WarpMultiTransform =====================================================
 set( SourceCodeArgs
@@ -447,7 +453,7 @@ set( Tools
   WarpImageMultiTransform
   WarpTensorImageMultiTransform
   )
-AddToolMacro( ANTS OFF) # AddToolMacro( proj CLI) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
+AddToolMacro( ANTS ) # AddToolMacro( proj ) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
 
 # ===== ResampleDTIlogEuclidean =====================================================
 set( SourceCodeArgs
@@ -466,7 +472,7 @@ set( CMAKE_ExtraARGS
 set( Tools
   ResampleDTIlogEuclidean
   )
-AddToolMacro( ResampleDTI ON) # AddToolMacro( proj CLI) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
+AddToolMacro( ResampleDTI ) # AddToolMacro( proj ) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
 
 # ===== DTI-Reg =====================================================================
 set( SourceCodeArgs
@@ -498,7 +504,7 @@ set( CMAKE_ExtraARGS
 set( Tools
   DTI-Reg
   )
-AddToolMacro( DTIReg ON ) # AddToolMacro( proj CLI) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
+AddToolMacro( DTIReg ) # AddToolMacro( proj ) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
 
 # ===== teem (unu) =====================================================================
 set( SourceCodeArgs
@@ -514,7 +520,7 @@ set( CMAKE_ExtraARGS
 set( Tools
   unu
   )
-AddToolMacro( teem OFF) # AddToolMacro( proj CLI) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
+AddToolMacro( teem ) # AddToolMacro( proj ) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
 
 # ===== MriWatcher =====================================================================
 set( SourceCodeArgs
@@ -531,10 +537,7 @@ set( CMAKE_ExtraARGS
 set( Tools
   MriWatcher
   )
-AddToolMacro( MriWatcher OFF) # AddToolMacro( proj CLI) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
-if(COMPILE_EXTERNAL_MriWatcher AND NOT DTIAtlasBuilder_BUILD_SLICER_EXTENSION)
-  install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/MriWatcher-build/MriWatcher DESTINATION ${INSTALL_DIR}) # Specified manually because not in a ./bin directory
-endif()
+AddToolMacro( MriWatcher ) # AddToolMacro( proj ) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
 
 # ===== NIRALUtilities ===================================================================
 set( SourceCodeArgs
@@ -565,5 +568,5 @@ set( Tools
   ImageMath
   CropDTI
   )
-AddToolMacro( NIRALUtilities OFF) # AddToolMacro( proj CLI) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
+AddToolMacro( NIRALUtilities ) # AddToolMacro( proj ) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
 

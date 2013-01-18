@@ -34,8 +34,6 @@ GENERATECLP(DTIABsources DTIAtlasBuilder.xml) # include the GCLP file to the pro
 add_executable(DTIAtlasBuilder ${DTIABsources})  # add the files contained by "DTIABsources" to the project
 target_link_libraries(DTIAtlasBuilder ${QT_LIBRARIES} ${ITK_LIBRARIES})
 
-install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder DESTINATION ${INSTALL_DIR})
-
 #======================================================================================
 # For Slicer Extension -> will create target "ExperimentalUpload" inside inner build. !! Needs to be before add testing
 if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
@@ -43,16 +41,24 @@ if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
   set( ITK_DIR_TMP ${ITK_DIR} )
   unset( ITK_DIR CACHE )
   unset( ITK_DIR )
+  set( ITK_LIBRARIES_TMP ${ITK_LIBRARIES} )
+  unset( ITK_LIBRARIES CACHE )
+  unset( ITK_LIBRARIES )
   set( SlicerExecutionModel_DIR_TMP ${SlicerExecutionModel_DIR} )
   unset( SlicerExecutionModel_DIR )
   unset( SlicerExecutionModel_DIR CACHE )
+
   find_package(Slicer REQUIRED)
   include(${Slicer_USE_FILE})
+
   set( ITK_DIR ${ITK_DIR_TMP} CACHE PATH "ITK PATH" FORCE )
+  set( ITK_LIBRARIES ${ITK_LIBRARIES_TMP} CACHE PATH "ITK PATH" FORCE )
   set( SlicerExecutionModel_DIR ${SlicerExecutionModel_DIR_TMP} CACHE PATH "SlicerExecutionModel PATH" FORCE )
 
   # Install step for external projects: need to be here if SlicerExtension because make ExperimentalUpload done in inner build directory
   # Here ${CMAKE_CURRENT_BINARY_DIR} is the inner build directory
+  install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder DESTINATION ${INSTALL_DIR})
+
   if(COMPILE_EXTERNAL_dtiprocessTK)
     foreach( tool dtiaverage dtiprocess )
       install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/dtiprocessTK-build/bin/${tool} DESTINATION ${NOCLI_INSTALL_DIR})
@@ -88,7 +94,7 @@ if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
   endif(COMPILE_EXTERNAL_teem)
 
   if(COMPILE_EXTERNAL_MriWatcher)
-    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/MriWatcher-build/MriWatcher DESTINATION ${NOCLI_INSTALL_DIR})
+    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/MriWatcher-build/bin/MriWatcher DESTINATION ${NOCLI_INSTALL_DIR})
   endif(COMPILE_EXTERNAL_MriWatcher)
 
   if(COMPILE_EXTERNAL_NIRALUtilities)
@@ -104,7 +110,7 @@ endif( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
 if(BUILD_TESTING)
   set(TestingSRCdirectory ${CMAKE_CURRENT_SOURCE_DIR}/Testing)
   set(TestingBINdirectory ${CMAKE_CURRENT_BINARY_DIR}/Testing)
-  set(TestDataFolder ${CMAKE_CURRENT_SOURCE_DIR}/../Data/Testing)
+  set(TestDataFolder ${CMAKE_CURRENT_SOURCE_DIR}/Data/Testing)
   add_library(DTIAtlasBuilderLib STATIC ${DTIABsources})
   set_target_properties(DTIAtlasBuilderLib PROPERTIES COMPILE_FLAGS "-Dmain=ModuleEntryPoint") # replace the main in DTIAtlasBuilder.cxx by the itkTest function ModuleEntryPoint
   target_link_libraries(DTIAtlasBuilderLib ${QT_LIBRARIES} ${ITK_LIBRARIES})
