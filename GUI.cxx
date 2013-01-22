@@ -20,7 +20,7 @@
 #include <vector>
 #include <cstdlib> // for getenv() and exit()
 #include <signal.h> // for kill()
-#include <sys/wait.h> // for waitpid(): see function "void GUI::LaunchScriptRunner()" at the end
+//#include <sys/wait.h> // for waitpid(): see function "void GUI::LaunchScriptRunner()" at the end
 #include <csignal> // for signal()
 
 /*itk classes*/
