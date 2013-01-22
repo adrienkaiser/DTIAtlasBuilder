@@ -193,14 +193,14 @@ if(RecompileITK)
   ExternalProject_Add(ITKv4 # BRAINSStandAlone/SuperBuild/External_ITKv4.cmake # !! All args needed as they are
     GIT_REPOSITORY "${git_protocol}://itk.org/ITK.git"
     GIT_TAG 555049f830d1c09f8d4d95904f429290467d39ab #2012-12-16 ITKv4.3.0
-    SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/ITKv4
-    BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/ITKv4-build
+    SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/I4
+    BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/I4-b
     CMAKE_GENERATOR ${gen}
     CMAKE_ARGS # !! ALL options need to be here for all tools to compile with this version of ITK
       ${COMMON_BUILD_OPTIONS_FOR_EXTERNALPACKAGES}
       -Wno-dev
       --no-warn-unused-cli
-      -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}/ITKv4-install
+      -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}/I4-i
       -DBUILD_EXAMPLES:BOOL=OFF
       -DBUILD_TESTING:BOOL=OFF
       -DITK_LEGACY_REMOVE:BOOL=OFF
@@ -214,7 +214,7 @@ if(RecompileITK)
 #      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=${CMAKE_CURRENT_BINARY_DIR}/ITKv4-build/lib # Needed for BRAINSTools to compile
 #      -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${CMAKE_CURRENT_BINARY_DIR}/ITKv4-build/bin # Needed for BRAINSTools to compile
     )
-  set(ITK_DIR ${CMAKE_CURRENT_BINARY_DIR}/ITKv4-install/lib/cmake/ITK-4.3) # Use the downloaded ITK for all tools
+  set(ITK_DIR ${CMAKE_CURRENT_BINARY_DIR}/I4-i/lib/cmake/ITK-4.3) # Use the downloaded ITK for all tools
   set(ITK_DEPEND ITKv4)
   set(RecompileSEM ON) # If recompile ITK, recompile SlicerExecutionModel
   set(RecompileBatchMake ON) # If recompile ITK, recompile BatchMake
@@ -558,7 +558,7 @@ set( SourceCodeArgs
   SVN_REPOSITORY "https://www.nitrc.org/svn/niral_utilities/trunk"
   SVN_USERNAME slicerbot
   SVN_PASSWORD slicer
-  SVN_REVISION -r 38 # 12/13/2012
+  SVN_REVISION -r 40 # 01/22/2013
   )
 set( CMAKE_ExtraARGS
   -DCOMPILE_CONVERTITKFORMATS:BOOL=OFF
