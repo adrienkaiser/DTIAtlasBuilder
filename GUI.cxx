@@ -272,7 +272,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 		DTIRegFound=false; // so it will not test the version
 	}
 	if(unuPath->text().isEmpty()) notFound = notFound + "> unu\n";
-	if(MriWatcherPath->text().isEmpty()) notFound = notFound + "> MriWatcher\n";
+	if(MriWatcherPath->text().isEmpty()) notFound = notFound + "> MriWatcher (Program will work, but QC will not be available)\n";
 
 	if( !notFound.empty() )
 	{
@@ -672,6 +672,13 @@ void GUI::DisplayResampQC() /*SLOT*/
 		int status = system( program.c_str() );
 		_exit(status); // son ends
 	}
+}
+
+void GUI::DisableQC() // disable QC buttons
+{
+	AffineQCButton->setEnabled(false);
+	DeformQCButton->setEnabled(false);
+	ResampQCButton->setEnabled(false);
 }
 
   /////////////////////////////////////////
@@ -2083,7 +2090,7 @@ int GUI::LoadConfig(QString configFile) // returns -1 if fails, otherwise 0
 				return -1;
 			}
 			if(!list.at(1).isEmpty()) MriWatcherPath->setText(list.at(1));
-			else if(MriWatcherPath->text().isEmpty()) notFound = notFound + "> MriWatcher\n";
+			else if(MriWatcherPath->text().isEmpty()) notFound = notFound + "> MriWatcher (Program will work, but QC will not be available)\n";
 
 			std::cout<<"DONE"<<std::endl; // command line display
 
@@ -2217,7 +2224,7 @@ void GUI::ConfigDefault() /*SLOT*/
 	else unuPath->setText(QString(program.c_str()));
 
 	program = itksys::SystemTools::FindProgram("MriWatcher",m_FindProgramDTIABExecDirVec);
-	if(program.empty()) { if(MriWatcherPath->text().isEmpty()) notFound = notFound + "> MriWatcher\n"; }
+	if(program.empty()) { if(MriWatcherPath->text().isEmpty()) notFound = notFound + "> MriWatcher (Program will work, but QC will not be available)\n"; }
 	else MriWatcherPath->setText(QString(program.c_str()));
 
 	std::cout<<"DONE"<<std::endl; // command line display
@@ -2843,7 +2850,7 @@ int GUI::LaunchScriptWriter()
 		if(MriWatcherPath->text().isEmpty())
 		{
 			programPath = itksys::SystemTools::FindProgram("MriWatcher",m_FindProgramDTIABExecDirVec);
-			if(programPath.empty()) notFound = notFound + "> MriWatcher\n";
+			if(programPath.empty()) DisableQC(); // notFound = notFound + "> MriWatcher (Program will work, but QC will not be available)\n";
 			else MriWatcherPath->setText(QString(programPath.c_str()));
 		}
 
@@ -2957,11 +2964,12 @@ int GUI::LaunchScriptWriter()
 	{
 		if(!m_noGUI)
 		{
-			std::string text = "The file \'" + MriWatcherPath->text().toStdString() + "\' is not executable";
+			std::string text = "The file \'" + MriWatcherPath->text().toStdString() + "\' is not executable: program will work, but QC will not be available";
 			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
 		}
-		else std::cout<<"| The file \'" << MriWatcherPath->text().toStdString() << "\' is not executable" << std::endl;
-		return -1;
+		else std::cout<<"| The file \'" << MriWatcherPath->text().toStdString() << "\' is not executable: program will work, but QC will not be available" << std::endl;
+		DisableQC();
+//		return -1;
 	}
 
 	std::vector < std::string > SoftPath;

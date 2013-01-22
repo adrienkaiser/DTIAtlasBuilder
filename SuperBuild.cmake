@@ -56,7 +56,7 @@ if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
     set(EXTENSION_CATEGORY "Diffusion")
     set(EXTENSION_CONTRIBUTORS "Adrien Kaiser (UNC)")
     set(EXTENSION_DESCRIPTION "A tool to create a DTI Atlas Image from a set of DTI Images")
-    set(EXTENSION_ICONURL "http://www.nitrc.org/project/screenshot.php?group_id=312&screenshot_id=575")
+    set(EXTENSION_ICONURL "https://www.nitrc.org/project/screenshot.php?group_id=636&screenshot_id=607")
     set(EXTENSION_SCREENSHOTURLS "http://www.slicer.org/slicerWiki/images/thumb/b/b8/DTIEstim-B0-crop.png/193px-DTIEstim-B0-crop.png http://www.slicer.org/slicerWiki/images/thumb/9/90/FiberTrack-fibers.png/138px-FiberTrack-fibers.png")
     set(EXTENSION_STATUS Beta)
     set(EXTENSION_DEPENDS "NA")
@@ -150,14 +150,14 @@ if(COMPILE_PACKAGE)
       mark_as_advanced(CLEAR COMPILE_EXTERNAL_${tool}) # Show variable if been hidden
     endforeach()
 
-  else() # Slicer extension -> recompile only tools that are not in Slicer
+  else() # Slicer extension -> recompile only tools that are not in Slicer + not MriWatcher
 
-   foreach( tool BRAINS teem ) # Already in Slicer -> not recompiled
+   foreach( tool BRAINS teem MriWatcher ) # Already in Slicer -> not recompiled # MriWatcher needs GLUT so disable if Slicer Extension because glut not necesseraly installed
       set( COMPILE_EXTERNAL_${tool} OFF CACHE BOOL "Compile external ${tool}" )
       mark_as_advanced(CLEAR COMPILE_EXTERNAL_${tool}) # Show variable if been hidden
     endforeach()
 
-    foreach( tool dtiprocessTK AtlasWerks ANTS ResampleDTI DTIReg MriWatcher NIRALUtilities ) # Not in Slicer -> recompile
+    foreach( tool dtiprocessTK AtlasWerks ANTS ResampleDTI DTIReg NIRALUtilities ) # Not in Slicer -> recompile
       set( COMPILE_EXTERNAL_${tool} ON CACHE BOOL "Compile external ${tool}" )
       mark_as_advanced(CLEAR COMPILE_EXTERNAL_${tool}) # Show variable if been hidden
     endforeach()

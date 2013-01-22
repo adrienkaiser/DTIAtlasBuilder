@@ -254,7 +254,7 @@ if(COMPILE_EXTERNAL_DTIReg) # BatchMake only needed for DTIReg
   if(BatchMake_FOUND)
     include(${BatchMake_USE_FILE})
   else(BatchMake_FOUND)
-    message(WARNING "BatchMake not found. It will be downloaded and recompiled.")
+    message("BatchMake not found. It will be downloaded and recompiled.") # Not a Warning = just info
     set(RecompileBatchMake ON) # If not found, recompile it
   endif(BatchMake_FOUND )
 endif(COMPILE_EXTERNAL_DTIReg)
@@ -286,6 +286,20 @@ if(RecompileBatchMake)
     set(BatchMake_ITK_DIR ${ITK_DIR}) # If batchmake recompiled, no include(${BatchMake_USE_FILE}) has been done so BatchMake_ITK_DIR does not exist, and we used ${ITK_DIR} to compile it.
     set(BatchMake_DEPEND BatchMake)
 endif(RecompileBatchMake)
+
+
+## GLUT for MriWatcher -> disable MriWatcher if Slicer Ext for the moment
+#  ExternalProject_Add(GLUT    # FFTW has no CMakeLists.txt # Example : Slicer/SuperBuild/External_python.cmake
+#    URL http://www.opengl.org/resources/libraries/glut/glut-3.7.tar.gz
+#    URL_MD5 dc932666e2a1c8a0b148a4c32d111ef3 # $ md5sum (file)
+#    DOWNLOAD_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install
+#    SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW
+#    BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW-build
+#    CONFIGURE_COMMAND ""
+#    INSTALL_COMMAND ""
+#    BUILD_COMMAND ${CMAKE_COMMAND} -DFFTWTYPE:STRING=FFTWD -P ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install/InstallFFTW.cmake # -DARGNAME:TYPE=VALUE -P <cmake file> = Process script mode
+#    )
+#set(GLUT_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/GLUT-install/include)
 
 #====================================================================
 #===== TOOLS ========================================================
