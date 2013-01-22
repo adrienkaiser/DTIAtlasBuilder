@@ -3121,7 +3121,7 @@ int GUI::LaunchScriptRunner()
 	std::cout<<"| Script Running..."<<std::endl; // command line display
 
 	ComputepushButton->setEnabled(false);
-//	m_ScriptRunning=true;
+	m_ScriptRunning=true;
 //	progressBar->setValue(0);
 //	ExecStatusLabel->setText("                       "); // fill with spaces
 
@@ -3142,6 +3142,9 @@ int GUI::LaunchScriptRunner()
 //			sigval value;
 //			value.sival_int = ExitCode;
 //			sigqueue(getppid(),SIGUSR1, value); // send a signal to the father (main window) with the value of the exit code of the script
+
+			if(ExitCode==0) kill(getppid(),SIGUSR1);
+			else kill(getppid(),SIGUSR2);
 
 			_exit(0); // son ends // exit terminates the calling process after cleanup; _exit terminates it immediately.
 		}
