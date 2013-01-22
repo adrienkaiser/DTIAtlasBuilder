@@ -42,6 +42,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 
 /*CASES*/	void CheckCasesIndex();
 
+/* QC */	void DisableQC(); // <=> disable QC buttons
 /*DATASET*/	int ReadCSV(QString CSVfile); // returns -1 if fails, otherwise 0
 		void SaveCSVResults(int Crop, int nbLoops);
 
