@@ -109,6 +109,8 @@ else(QT_USE_FILE)
   message(FATAL_ERROR, "QT not found. Please set QT_DIR.")
 endif(QT_USE_FILE)
 
+find_package(Git REQUIRED) # So error while configuring and not building if Git missing -> sets GIT_EXECUTABLE
+
 #======================================================================================
 # Compile package
 set( ExtProjList # External packages to compile
@@ -208,6 +210,7 @@ ExternalProject_Add(DTIAtlasBuilder # DTIAtlasBuilder added as Externalproject i
     -DQT_QMAKE_EXECUTABLE:PATH=${QT_QMAKE_EXECUTABLE}
     -DBUILD_TESTING:BOOL=${BUILD_TESTING}
     -DLIBRARY_OUTPUT_PATH:PATH=${LIBRARY_OUTPUT_PATH}
+    -DGIT_EXECUTABLE:PATH=${GIT_EXECUTABLE} # needed when does include(Slicer) for Slicer ext
     # Installation step
     -DINSTALL_DIR:PATH=${INSTALL_DIR}
     -DNOCLI_INSTALL_DIR:PATH=${NOCLI_INSTALL_DIR}
