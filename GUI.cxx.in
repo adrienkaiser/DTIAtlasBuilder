@@ -31,6 +31,8 @@
 #include "GUI.h"
 #include "ScriptWriter.h"
 
+#define DTIAtlasBuilder_BUILD_SLICER_EXTENSION ${SlicerExtCXXVar} // set when configuring
+
   /////////////////////////////////////////
  //            CONSTRUCTOR              //
 /////////////////////////////////////////
@@ -208,6 +210,8 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	// If no SicerExtension, find_program will just search there and find nothing -> no problem
 	std::string DTIABSlicerExtensionBinDir = DTIABExecutablePath + "/../../../ExternalBin";
 	m_FindProgramDTIABExecDirVec.push_back(DTIABSlicerExtensionBinDir);
+
+	if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION) DTIRegExtraPathlineEdit->setText( QString( DTIABSlicerExtensionBinDir.c_str() )); // DTIAtlasBuilder_BUILD_SLICER_EXTENSION is defined as constant variable when configuring
 
 // look for the programs with the itk function
 	ConfigDefault();
@@ -2887,7 +2891,7 @@ int GUI::LaunchScriptWriter()
 			std::string text = "The file \'" + ResampPath->text().toStdString() + "\' is not executable";
 			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
 		}
-		else std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
+		else std::cout<<"| The file \'" << ResampPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
 	if(access(CropDTIPath->text().toStdString().c_str(), X_OK) != 0 )
@@ -2897,7 +2901,7 @@ int GUI::LaunchScriptWriter()
 			std::string text = "The file \'" + CropDTIPath->text().toStdString() + "\' is not executable";
 			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
 		}
-		else std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
+		else std::cout<<"| The file \'" << CropDTIPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
 	if(access(dtiprocPath->text().toStdString().c_str(), X_OK) != 0 )
@@ -2907,7 +2911,7 @@ int GUI::LaunchScriptWriter()
 			std::string text = "The file \'" + dtiprocPath->text().toStdString() + "\' is not executable";
 			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
 		}
-		else std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
+		else std::cout<<"| The file \'" << dtiprocPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
 	if(access(BRAINSFitPath->text().toStdString().c_str(), X_OK) != 0 )
@@ -2917,7 +2921,7 @@ int GUI::LaunchScriptWriter()
 			std::string text = "The file \'" + BRAINSFitPath->text().toStdString() + "\' is not executable";
 			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
 		}
-		else std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
+		else std::cout<<"| The file \'" << BRAINSFitPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
 	if(access(GAPath->text().toStdString().c_str(), X_OK) != 0 )
@@ -2927,7 +2931,7 @@ int GUI::LaunchScriptWriter()
 			std::string text = "The file \'" + GAPath->text().toStdString() + "\' is not executable";
 			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
 		}
-		else std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
+		else std::cout<<"| The file \'" << GAPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
 	if(access(dtiavgPath->text().toStdString().c_str(), X_OK) != 0 )
@@ -2937,7 +2941,7 @@ int GUI::LaunchScriptWriter()
 			std::string text = "The file \'" + dtiavgPath->text().toStdString() + "\' is not executable";
 			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
 		}
-		else std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
+		else std::cout<<"| The file \'" << dtiavgPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
 	if(access(DTIRegPath->text().toStdString().c_str(), X_OK) != 0 )
@@ -2947,7 +2951,7 @@ int GUI::LaunchScriptWriter()
 			std::string text = "The file \'" + DTIRegPath->text().toStdString() + "\' is not executable";
 			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
 		}
-		else std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
+		else std::cout<<"| The file \'" << DTIRegPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
 	if(access(unuPath->text().toStdString().c_str(), X_OK) != 0 )
@@ -2960,12 +2964,14 @@ int GUI::LaunchScriptWriter()
 		else std::cout<<"| The file \'" << unuPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
-	if(access(MriWatcherPath->text().toStdString().c_str(), X_OK) != 0 )
+
+	if(MriWatcherPath->text().isEmpty()) DisableQC();
+	else if(access(MriWatcherPath->text().toStdString().c_str(), X_OK) != 0)
 	{
 		if(!m_noGUI)
 		{
 			std::string text = "The file \'" + MriWatcherPath->text().toStdString() + "\' is not executable: program will work, but QC will not be available";
-			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+			QMessageBox::warning(this, "Non executable File", QString(text.c_str()) );
 		}
 		else std::cout<<"| The file \'" << MriWatcherPath->text().toStdString() << "\' is not executable: program will work, but QC will not be available" << std::endl;
 		DisableQC();
