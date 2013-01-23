@@ -190,17 +190,17 @@ set(ITK_DEPEND "")
 set(RecompileBatchMake OFF)
 if(RecompileITK)
   # Download and compile ITKv4
-  ExternalProject_Add(ITKv4 # BRAINSStandAlone/SuperBuild/External_ITKv4.cmake # !! All args needed as they are
+  ExternalProject_Add(I4 # BRAINSStandAlone/SuperBuild/External_ITKv4.cmake # !! All args needed as they are # Name shorten from ITKv4 because Windows ITKv4 path limited to 50 chars
     GIT_REPOSITORY "${git_protocol}://itk.org/ITK.git"
     GIT_TAG 555049f830d1c09f8d4d95904f429290467d39ab #2012-12-16 ITKv4.3.0
-    SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/I4
-    BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/I4-b
+    SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/I4 # Path shorten from ITKv4 because Windows SOURCE_DIR path limited to 50 chars
+    BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/I4-b # Path shorten from ITKv4 because Windows SOURCE_DIR path limited to 50 chars
     CMAKE_GENERATOR ${gen}
     CMAKE_ARGS # !! ALL options need to be here for all tools to compile with this version of ITK
       ${COMMON_BUILD_OPTIONS_FOR_EXTERNALPACKAGES}
       -Wno-dev
       --no-warn-unused-cli
-      -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}/I4-i
+      -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}/I4-i # Path shorten from ITKv4 because Windows SOURCE_DIR path limited to 50 chars
       -DBUILD_EXAMPLES:BOOL=OFF
       -DBUILD_TESTING:BOOL=OFF
       -DITK_LEGACY_REMOVE:BOOL=OFF
@@ -214,8 +214,8 @@ if(RecompileITK)
 #      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=${CMAKE_CURRENT_BINARY_DIR}/ITKv4-build/lib # Needed for BRAINSTools to compile
 #      -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${CMAKE_CURRENT_BINARY_DIR}/ITKv4-build/bin # Needed for BRAINSTools to compile
     )
-  set(ITK_DIR ${CMAKE_CURRENT_BINARY_DIR}/I4-i/lib/cmake/ITK-4.3) # Use the downloaded ITK for all tools
-  set(ITK_DEPEND ITKv4)
+  set(ITK_DIR ${CMAKE_CURRENT_BINARY_DIR}/I4-i/lib/cmake/ITK-4.3) # Use the downloaded ITK for all tools # Path shorten from ITKv4 because Windows SOURCE_DIR path limited to 50 chars
+  set(ITK_DEPEND I4)
   set(RecompileSEM ON) # If recompile ITK, recompile SlicerExecutionModel
   set(RecompileBatchMake ON) # If recompile ITK, recompile BatchMake
 endif(RecompileITK)

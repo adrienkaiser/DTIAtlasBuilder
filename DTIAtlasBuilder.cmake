@@ -29,7 +29,13 @@ endif(QT_USE_FILE)
 # Compile step for DTIAtlasBuilder
 QT4_WRAP_CPP(QtProject_HEADERS_MOC GUI.h)
 QT4_WRAP_UI(UI_FILES GUIwindow.ui)
-set(DTIABsources DTIAtlasBuilder.cxx GUI.h GUI.cxx ScriptWriter.h ScriptWriter.cxx ${QtProject_HEADERS_MOC} ${UI_FILES})
+if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION)
+  set(SlicerExtCXXVar "true")
+else(DTIAtlasBuilder_BUILD_SLICER_EXTENSION)
+  set(SlicerExtCXXVar "false")
+endif(DTIAtlasBuilder_BUILD_SLICER_EXTENSION)
+configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/GUI.cxx.in ${CMAKE_CURRENT_BINARY_DIR}/GUI.cxx ) # configure and copy : to set SlicerExtCXXVar (DTIAtlasBuilder_BUILD_SLICER_EXTENSION is "ON" or "OFF" -> not in c++)
+set(DTIABsources DTIAtlasBuilder.cxx GUI.h ${CMAKE_CURRENT_BINARY_DIR}/GUI.cxx ScriptWriter.h ScriptWriter.cxx ${QtProject_HEADERS_MOC} ${UI_FILES})
 GENERATECLP(DTIABsources DTIAtlasBuilder.xml) # include the GCLP file to the project
 add_executable(DTIAtlasBuilder ${DTIABsources})  # add the files contained by "DTIABsources" to the project
 target_link_libraries(DTIAtlasBuilder ${QT_LIBRARIES} ${ITK_LIBRARIES})
