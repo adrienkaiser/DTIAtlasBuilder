@@ -1022,6 +1022,12 @@ void ScriptWriter::MainScript()
 	Script = Script + "import os\n"; ///// To run a shell command : os.system("[shell command]")
 	Script = Script + "import time\n"; // to compute the execution time
 	Script = Script + "import sys\n\n"; // to return an exit code
+
+	// Display python version used
+	Script = Script + "print(\"\\n[] Script running with Python version:\")\n";
+	Script = Script + "os.system(\"which python\")\n\n";
+
+
 	Script = Script + "print(\"\\n=============== Main Script ================\")\n\n";
 
 	Script = Script + "OutputPath= \"" + m_OutputPath + "/DTIAtlas\"\n";

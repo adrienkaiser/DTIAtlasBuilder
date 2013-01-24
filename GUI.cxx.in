@@ -2372,11 +2372,11 @@ int GUI::testGA() /*SLOT*/ // returns 0 if version ok, -1 if bad version
 	Process->start( program.c_str() ); // try to find the version => returns nothing if not the right version
 
 	Process->waitForReadyRead();
-	QByteArray BA =  Process->readAllStandardOutput();
+	QByteArray BA =  Process->readAllStandardOutput(); // int BA.size() // std::string s = BA.data(); std::cout<<s<<std::endl;
 
 	std::cout<<"DONE"<<std::endl;
 
-	if(BA.size()==0) // if notinh displayed in std output, '--version' does not exists so it is not the right version
+	if(BA.size()==0) // if nothing displayed in std output, '--version' does not exists so it is not the right version
 	{
 		if(!m_noGUI) 
 		{
@@ -3124,6 +3124,26 @@ int GUI::LaunchScriptWriter()
 
 int GUI::LaunchScriptRunner()
 {
+	// Find and display Python version used
+	std::string PythonPath = itksys::SystemTools::FindProgram("python",m_FindProgramDTIABExecDirVec);
+	if(PythonPath.empty())
+	{
+		if(!m_noGUI)
+		{
+			std::string PythonNotFoundtext = "Python has not been found. Please install python before running DTIAtlasBuilder.";
+			QMessageBox::critical(this, "Python not found", QString(PythonNotFoundtext.c_str()) );
+		}
+		else std::cout<<"| Python has not been found. Please install python before running DTIAtlasBuilder." << std::endl;
+		return -1;
+	}
+	else // python found : search for the version
+	{
+		std::cout<<"| Python found: "<< PythonPath <<". Version:"<<std::endl;
+		QProcess * FindPythonVersionProcess = new QProcess;
+		std::string FindPythonVersionCommand= PythonPath + " --version";
+		FindPythonVersionProcess->execute( FindPythonVersionCommand.c_str() );
+	}
+
 	std::cout<<"| Script Running..."<<std::endl; // command line display
 
 	ComputepushButton->setEnabled(false);
@@ -3137,7 +3157,7 @@ int GUI::LaunchScriptRunner()
 
 	std::cout<<"| $ " << program << std::endl;
 
-	if(!m_noGUI)
+	if(!m_noGUI) // If GUI, not freeze it = use fork()
 	{
 		int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
 
@@ -3174,7 +3194,7 @@ int GUI::LaunchScriptRunner()
 		}
 	}
 
-	return -1;
+	return -1; // not supposed to be reached
 
 /* If need to not freeze the main window :
 -> wait() or waitpid() make the process wait for the end of a son => FREEZE !!
