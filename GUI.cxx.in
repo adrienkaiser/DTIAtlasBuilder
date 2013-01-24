@@ -32,6 +32,7 @@
 #include "ScriptWriter.h"
 
 #define DTIAtlasBuilder_BUILD_SLICER_EXTENSION ${SlicerExtCXXVar} // set when configuring
+#define Platform "${Platform}" // set when configuring = "win", "mac", or "linux"
 
   /////////////////////////////////////////
  //            CONSTRUCTOR              //
@@ -206,12 +207,21 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	if(DTIABExecutablePath=="") DTIABExecutablePath= itksys::SystemTools::GetCurrentWorkingDirectory(); // If called by itself ($ DTIAtlasBuilder) = either in the PATH or in the current directory : will be found either way by find_program
 	m_FindProgramDTIABExecDirVec.push_back(DTIABExecutablePath); // FindProgram will search in the executable directory too
 
-	// If DTIAB is built as an SlicerExtension, the executable will be in Ext/lib/Slicer4.2/cli_modules and the tools will be in Ext/ExternalBin
-	// If no SicerExtension, find_program will just search there and find nothing -> no problem
-	std::string DTIABSlicerExtensionBinDir = DTIABExecutablePath + "/../../../ExternalBin";
-	m_FindProgramDTIABExecDirVec.push_back(DTIABSlicerExtensionBinDir);
+	// If DTIAB is built as an SlicerExtension, give the path to the folder containing external non cli tools
+	// If no SicerExtension, find_program will just search there and find nothing -> not an issue
+	std::string DTIABSlicerExtensionExternalBinDir;
+	if(Platform == "linux") DTIABSlicerExtensionExternalBinDir = DTIABExecutablePath + "/../../../ExternalBin"; // the executable will be in Ext/lib/Slicer4.2/cli_modules and the tools will be in Ext/ExternalBin
+	else if(Platform == "mac") DTIABSlicerExtensionExternalBinDir = DTIABExecutablePath + "/../ExternalBin";
+	else if(Platform == "win") DTIABSlicerExtensionExternalBinDir = DTIABExecutablePath + "/../../../ExternalBin";
+	else
+	{
+		std::cout<<"An error occured while configuring GUI.cxx. The constant variable \"Platform\" defined at line 35 should contain either \"mac\", \"win\" or \"linux\". Abort."<<std::endl;
+		exit(-1);
+	}
+	m_FindProgramDTIABExecDirVec.push_back(DTIABSlicerExtensionExternalBinDir);
 
-	if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION) DTIRegExtraPathlineEdit->setText( QString( DTIABSlicerExtensionBinDir.c_str() )); // DTIAtlasBuilder_BUILD_SLICER_EXTENSION is defined as constant variable when configuring
+	// Because ANTS is in DTIABSlicerExtensionExternalBinDir
+	if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION) DTIRegExtraPathlineEdit->setText( QString( DTIABSlicerExtensionExternalBinDir.c_str() )); // DTIAtlasBuilder_BUILD_SLICER_EXTENSION is defined as constant variable when configuring
 
 // look for the programs with the itk function
 	ConfigDefault();
