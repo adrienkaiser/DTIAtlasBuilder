@@ -27,13 +27,13 @@ elseif(ITK_VERSION_MAJOR EQUAL 4) # BRAINS/BRAINSCommonLib/BuildScripts/CMakeBRA
 endif()
 
 set(CompareParametersImageMathFA
-  --compareIntensityTolerance 100 # pixel OK if in range [value-100;value+100] => FA between 0 and 10000 (ImageMath)
+  --compareIntensityTolerance 200 # pixel OK if in range [value-200;value+200] => FA between 0 and 10000 (ImageMath)
   --compareRadiusTolerance 1 # pixel OK if one of neighbors in the given radius is in the tolerance range
   --compareNumberOfPixelsTolerance 50 # Set the number of pixels that are allowed to fail
   )
 
 set(CompareParametersdtiprocessFA
-  --compareIntensityTolerance 0.1 # pixel OK if in range [value-0.1;value+0.1] => FA between 0 and 1 (dtiprocess)
+  --compareIntensityTolerance 0.2 # pixel OK if in range [value-0.1;value+0.1] => FA between 0 and 1 (dtiprocess)
   --compareRadiusTolerance 1 # pixel OK if one of neighbors in the given radius is in the tolerance range
   --compareNumberOfPixelsTolerance 50 # Set the number of pixels that are allowed to fail
   )
