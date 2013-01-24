@@ -40,7 +40,7 @@ set(CompareParametersdtiprocessFA
 
 set(DTIABParameters
   --nogui # no need if ITKv4 -> already in DTIAtlasBuilderTest.cxx
-  --parameter_file ${TestingBINdirectory}/TestGUIparameters.txt
+  --parameter_file ${TestingBINdirectory}/TestGUIparametersBRAINS.txt
   --configuration_file ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilderSoftConfig.txt # Testing config file
   )
 
@@ -70,33 +70,47 @@ add_test(NAME TestnoGUIDiffeomorphicOutput COMMAND ${NoGUITestCommand}
 
 ## Test 4 : Final Atlas automatic QC
 # will not run the pipeline again because already ran : will just compare the images
-add_test(NAME TestnoGUIFinalOutput COMMAND ${NoGUITestCommand}
+add_test(NAME TestnoGUIBRAINSFinalOutput COMMAND ${NoGUITestCommand}
   --compare
-    ${TestDataFolder}/TestFinalAtlasFA.nrrd # Ref : baseline
+    ${TestDataFolder}/TestBRAINSFinalAtlasFA.nrrd # Ref : baseline
     ${TestingBINdirectory}/DTIAtlas/4_Final_Resampling/FinalAtlasFA.nrrd # Final Output
   ${CompareParametersdtiprocessFA}
   ${NameOfMain} # After this line, give the parameters to use in DTIAtlasBuilder
     ${DTIABParameters}
   )
 
+## Test 5 : ANTS Final Atlas automatic QC
+# will run the pipeline again to compute with ANTS
+add_test(NAME TestnoGUIANTSFinalOutput COMMAND ${NoGUITestCommand}
+  --compare
+    ${TestDataFolder}/TestANTSFinalAtlasFA.nrrd # Ref : baseline
+    ${TestingBINdirectory}/DTIAtlas/4_Final_Resampling/FinalAtlasFA.nrrd # Final Output with ANTS
+  ${CompareParametersdtiprocessFA}
+  ${NameOfMain} # After this line, give the parameters to use in DTIAtlasBuilder
+    --nogui # no need if ITKv4 -> already in DTIAtlasBuilderTest.cxx
+    --overwrite # Overwrite so it is computed with ANTS
+    --parameter_file ${TestingBINdirectory}/TestGUIparametersANTS.txt
+    --configuration_file ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilderSoftConfig.txt # Testing config file
+  )
 
-## Test 5 : Open the GUI for 10 sec and close it
+## Test 6 : Open the GUI for 10 sec and close it
 add_executable(DTIAtlasBuilderGUITest DTIAtlasBuilderGUITest.cxx)
 target_link_libraries(DTIAtlasBuilderGUITest DTIAtlasBuilderLib)
 set_target_properties(DTIAtlasBuilderGUITest PROPERTIES LABELS DTIAtlasBuilder)
 add_test(NAME TestGUI COMMAND ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilderGUITest ${CMAKE_CURRENT_BINARY_DIR}/bin/DTIAtlasBuilderSoftConfig.txt) # The config file will be read as argv[1] (no GenerateCLP)
 
 
-## Test 6 : Open the GUI for 10 sec with a param file, check the content of the QLineEdit and close it
+## Test 7 : Open the GUI for 10 sec with a param file, check the content of the QLineEdit and close it
 add_executable(DTIAtlasBuilderGUITestLabels DTIAtlasBuilderGUITestLabels.cxx)
 target_link_libraries(DTIAtlasBuilderGUITestLabels DTIAtlasBuilderLib)
 set_target_properties(DTIAtlasBuilderGUITestLabels PROPERTIES LABELS DTIAtlasBuilder)
-add_test(NAME TestGUILabels COMMAND ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilderGUITestLabels ${TestingBINdirectory}/TestGUIparameters.txt ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilderSoftConfig.txt ${TestingBINdirectory})
+add_test(NAME TestGUILabels COMMAND ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilderGUITestLabels ${TestingBINdirectory}/TestGUIparametersBRAINS.txt ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilderSoftConfig.txt ${TestingBINdirectory})
 # The parameter file will be read as argv[1] (no GenerateCLP) and config file argv[2] # argv[3] is the folder to check to content of LineEdit
 
 
 # Configure (Replace paths) and Copy needed files
-configure_file( ${TestingSRCdirectory}/TestGUIparameters.txt.in ${TestingBINdirectory}/TestGUIparameters.txt )
+configure_file( ${TestingSRCdirectory}/TestGUIparametersBRAINS.txt.in ${TestingBINdirectory}/TestGUIparametersBRAINS.txt )
+configure_file( ${TestingSRCdirectory}/TestGUIparametersANTS.txt.in ${TestingBINdirectory}/TestGUIparametersANTS.txt )
 configure_file( ${TestingSRCdirectory}/TestGUIparameters.csv.in ${TestingBINdirectory}/TestGUIparameters.csv )
 
 

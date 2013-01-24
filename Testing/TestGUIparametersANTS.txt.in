@@ -12,6 +12,6 @@ Resampling Interpolation Algorithm=Linear
 Tensor interpolation=Log Euclidean
 Tensor transformation=Preservation of the Principal Direction (PPD)
 DTIReg Extra Path=${CMAKE_CURRENT_BINARY_DIR}/../ANTS-build/bin
-DTIRegMethod=BRAINS=Diffeomorphic;Use computed affine transform;5;300,50,30,20,15
+DTIRegMethod=ANTS=SpatioTempDiffeo (SyN);0.25;100x50x25;Cross-Correlation (CC);2;3;0
 GridProcessing=
 CSV Dataset File=${CMAKE_CURRENT_BINARY_DIR}/TestGUIparameters.csv
