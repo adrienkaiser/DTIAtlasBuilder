@@ -1,9 +1,9 @@
 DTIAtlasBuilder
 ===============
 
-Find the tool on NITRC : https://www.nitrc.org/projects/dtiatlasbuilder
+Find the tool on NITRC : http://www.nitrc.org/projects/dtiatlasbuilder
 
-And GitHub : https://github.com/NIRALUser/DTIAtlasBuilder
+And GitHub : http://github.com/NIRALUser/DTIAtlasBuilder
 
 Contact : akaiser@unc.edu
 

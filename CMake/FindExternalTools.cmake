@@ -1,10 +1,10 @@
 # Find external tools
 
 # Git protocol
-option(USE_GIT_PROTOCOL "If behind a firewall turn this off to use https instead." ON)
+option(USE_GIT_PROTOCOL "If behind a firewall turn this off to use http instead." ON)
 set(git_protocol "git")
 if(NOT USE_GIT_PROTOCOL)
-  set(git_protocol "https")
+  set(git_protocol "http")
 else(NOT USE_GIT_PROTOCOL)
   set(git_protocol "git")
 endif()
@@ -143,7 +143,7 @@ if(COMPILE_EXTERNAL_AtlasWerks) # FFTW D + F build one on(after) another
     )
   set(FFTW_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install)
 
-  # CLAPACK (from http://www.nitrc.org/projects/spharm-pdm or https://github.com/Slicer/Slicer/blob/master-411/SuperBuild/External_CLAPACK.cmake)
+  # CLAPACK (from http://www.nitrc.org/projects/spharm-pdm or http://github.com/Slicer/Slicer/blob/master-411/SuperBuild/External_CLAPACK.cmake)
   ExternalProject_Add(CLAPACK
     URL "http://www.netlib.org/clapack/clapack-3.2.1-CMAKE.tgz"
     URL_MD5 4fd18eb33f3ff8c5d65a7d43913d661b
@@ -321,7 +321,7 @@ endif(RecompileBatchMake)
 
 # ===== dtiprocessTK ==============================================================
 set( SourceCodeArgs
-  SVN_REPOSITORY "https://www.nitrc.org/svn/dtiprocess/branches/Slicer4Extension"#/dtiprocess"
+  SVN_REPOSITORY "http://www.nitrc.org/svn/dtiprocess/branches/Slicer4Extension"#/dtiprocess"
   SVN_USERNAME slicerbot
   SVN_PASSWORD slicer
   SVN_REVISION -r 137 # 01/16/2013 # 113 # 12/20/2012 updated for ITKv4.3.0
@@ -344,7 +344,7 @@ set( Tools
 AddToolMacro( dtiprocessTK ) # AddToolMacro( proj ) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
 
 # ===== AtlasWerks ================================================================
-# code for external tools from https://github.com/Chaircrusher/AtlasWerksBuilder/blob/master/CMakeLists.txt
+# code for external tools from http://github.com/Chaircrusher/AtlasWerksBuilder/blob/master/CMakeLists.txt
 set( SourceCodeArgs
   URL "http://www.sci.utah.edu/releases/atlaswerks_v0.1.4/AtlasWerks_0.1.4_Linux.tgz"
   URL_MD5 05fc867564e3340d0d448dd0daab578a
@@ -386,7 +386,7 @@ set( SourceCodeArgs
   GIT_TAG "dd7ad3926a01fbdd098ea858fb95012ca16fb236" # 12/18/2012
 # "ff94032edafbc46a95f51db4bce894f0120b5992" : Slicer4 version # /devel/linux/Slicer4_linux64/Slicer/SuperBuild/External_BRAINSTools.cmake -> compiles but segfault
 # "31dcba577ee1bac5c4680fc9d7c830d6074020a9" : 12/13/2012
-# "98a46a2b08da882d46f04cbf0d539c2b73348049" # version from https://www.nitrc.org/svn/dtiprep/trunk/SuperBuild/External_BRAINSTools.cmake -> compiles but run error "undefined symbol: ModuleEntryPoint"
+# "98a46a2b08da882d46f04cbf0d539c2b73348049" # version from http://www.nitrc.org/svn/dtiprep/trunk/SuperBuild/External_BRAINSTools.cmake -> compiles but run error "undefined symbol: ModuleEntryPoint"
   )
 
 set( CMAKE_ExtraARGS
@@ -443,7 +443,7 @@ AddToolMacro( BRAINS ) # AddToolMacro( proj ) + uses SourceCodeArgs CMAKE_ExtraA
 
 # ===== ANTS/WarpMultiTransform =====================================================
 set( SourceCodeArgs
-  SVN_REPOSITORY "https://advants.svn.sourceforge.net/svnroot/advants/trunk"
+  SVN_REPOSITORY "http://advants.svn.sourceforge.net/svnroot/advants/trunk"
   SVN_USERNAME slicerbot
   SVN_PASSWORD slicer
   SVN_REVISION -r 1685 # 12/13/2012
@@ -474,7 +474,7 @@ set( SourceCodeArgs
   GIT_REPOSITORY "${git_protocol}://github.com/booboo69500/ResampleDTIlogEuclidean.git" # Francois Budin's repositery
   GIT_TAG "e78a9ea00d73a11cc52b3c457e32f1302a3403d4" # 12/20/2012
 #  URL "http://www.insight-journal.org/download/sourcecode/742/11/SourceCode11_ResampleDTIInsightJournal2.tar.gz"
-# https://github.com/midas-journal/midas-journal-742/tree/master/ResampleDTIInsightJournal
+# http://github.com/midas-journal/midas-journal-742/tree/master/ResampleDTIInsightJournal
   )
 set( CMAKE_ExtraARGS
   -DBUILD_TESTING:BOOL=OFF
@@ -490,7 +490,7 @@ AddToolMacro( ResampleDTI ) # AddToolMacro( proj ) + uses SourceCodeArgs CMAKE_E
 
 # ===== DTI-Reg =====================================================================
 set( SourceCodeArgs
-  SVN_REPOSITORY "https://www.nitrc.org/svn/dtireg/trunk"
+  SVN_REPOSITORY "http://www.nitrc.org/svn/dtireg/trunk"
   SVN_USERNAME slicerbot
   SVN_PASSWORD slicer
   SVN_REVISION -r 29 # 01/10/2013
@@ -522,7 +522,7 @@ AddToolMacro( DTIReg ) # AddToolMacro( proj ) + uses SourceCodeArgs CMAKE_ExtraA
 
 # ===== teem (unu) =====================================================================
 set( SourceCodeArgs
-  SVN_REPOSITORY "https://teem.svn.sourceforge.net/svnroot/teem/teem/trunk"
+  SVN_REPOSITORY "http://teem.svn.sourceforge.net/svnroot/teem/teem/trunk"
   SVN_USERNAME slicerbot
   SVN_PASSWORD slicer
   SVN_REVISION -r 5888 # 12/13/2012
@@ -538,7 +538,7 @@ AddToolMacro( teem ) # AddToolMacro( proj ) + uses SourceCodeArgs CMAKE_ExtraARG
 
 # ===== MriWatcher =====================================================================
 set( SourceCodeArgs
-  SVN_REPOSITORY "https://www.nitrc.org/svn/mriwatcher/branches/mriwatcher_qt4"
+  SVN_REPOSITORY "http://www.nitrc.org/svn/mriwatcher/branches/mriwatcher_qt4"
   SVN_USERNAME slicerbot
   SVN_PASSWORD slicer
   SVN_REVISION -r 16 # 12/13/2012
@@ -555,7 +555,7 @@ AddToolMacro( MriWatcher ) # AddToolMacro( proj ) + uses SourceCodeArgs CMAKE_Ex
 
 # ===== NIRALUtilities ===================================================================
 set( SourceCodeArgs
-  SVN_REPOSITORY "https://www.nitrc.org/svn/niral_utilities/trunk"
+  SVN_REPOSITORY "http://www.nitrc.org/svn/niral_utilities/trunk"
   SVN_USERNAME slicerbot
   SVN_PASSWORD slicer
   SVN_REVISION -r 40 # 01/22/2013
