@@ -250,7 +250,7 @@ endif(RecompileSEM)
 # BatchMake for DTI-Reg (after ITK)
 set(BatchMake_DEPEND "")
 if(COMPILE_EXTERNAL_DTIReg) # BatchMake only needed for DTIReg
-  find_package(BatchMake) # Not required because will be recompiled if not found
+  find_package(BatchMake QUIET) # Not required because will be recompiled if not found # No warning displaid
   if(BatchMake_FOUND)
     include(${BatchMake_USE_FILE})
   else(BatchMake_FOUND)
