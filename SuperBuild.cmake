@@ -71,10 +71,16 @@ if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
   endif()
 
   # SlicerExecutionModel_DEFAULT_CLI_RUNTIME_OUTPUT_DIRECTORY and SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION defined in Slicer_USE_FILE
-  # If build as Slicer Extension, CMAKE_INSTALL_PREFIX is set to Extensions/DTIAtlaBuilder
-  # SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION is ./lib/Slicer4.2/cli_module -> not install not cli modules in it
-  set(INSTALL_DIR ${SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION}) # Set for DTIAtlasBuilder
-  set(NOCLI_INSTALL_DIR ExternalBin)
+  # SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION is [sthg]/cli_module : must contain only CLIs
+  # If build as Slicer Extension, CMAKE_INSTALL_PREFIX is set to [ExtensionsFolder]/DTIAtlaBuilder
+  set(INSTALL_DIR ${SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION}) # Set for DTIAtlasBuilder and other cli modules
+  if(APPLE) # On mac, Ext/cli_modules/DTIAtlasBuilder so Ext/ExternalBin is ../ExternalBin
+    set(NOCLI_INSTALL_DIR ${SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION}/../ExternalBin)
+  elseif(WIN32) # On Windows : ??
+    set(NOCLI_INSTALL_DIR ${SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION}/../../../ExternalBin)
+  else() # Linux : Ext/lib/Slicer4.2/cli_modules/DTIAtlasBuilder so Ext/ExternalBin is ../../../ExternalBin
+    set(NOCLI_INSTALL_DIR ${SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION}/../../../ExternalBin)
+  endif()
 
 else( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
   set(INSTALL_DIR ${CMAKE_INSTALL_PREFIX})

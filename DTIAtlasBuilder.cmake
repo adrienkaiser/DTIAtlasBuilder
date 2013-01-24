@@ -27,13 +27,22 @@ endif(QT_USE_FILE)
 
 #======================================================================================
 # Compile step for DTIAtlasBuilder
-QT4_WRAP_CPP(QtProject_HEADERS_MOC GUI.h)
-QT4_WRAP_UI(UI_FILES GUIwindow.ui)
-if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION)
+if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION) # to configure GUI.cxx
   set(SlicerExtCXXVar "true")
 else(DTIAtlasBuilder_BUILD_SLICER_EXTENSION)
   set(SlicerExtCXXVar "false")
 endif(DTIAtlasBuilder_BUILD_SLICER_EXTENSION)
+
+if(APPLE) # to configure GUI.cxx
+  set(Platform "mac")
+elseif(WIN32)
+  set(Platform "win")
+else()
+  set(Platform "linux")
+endif()
+
+QT4_WRAP_CPP(QtProject_HEADERS_MOC GUI.h)
+QT4_WRAP_UI(UI_FILES GUIwindow.ui)
 configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/GUI.cxx.in ${CMAKE_CURRENT_BINARY_DIR}/GUI.cxx ) # configure and copy : to set SlicerExtCXXVar (DTIAtlasBuilder_BUILD_SLICER_EXTENSION is "ON" or "OFF" -> not in c++)
 set(DTIABsources DTIAtlasBuilder.cxx GUI.h ${CMAKE_CURRENT_BINARY_DIR}/GUI.cxx ScriptWriter.h ScriptWriter.cxx ${QtProject_HEADERS_MOC} ${UI_FILES})
 GENERATECLP(DTIABsources DTIAtlasBuilder.xml) # include the GCLP file to the project
