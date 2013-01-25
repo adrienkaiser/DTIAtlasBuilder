@@ -48,6 +48,7 @@ class ScriptWriter
 		void setBFAffineTfmMode(std::string BFAffineTfmMode);
 		void setGridProcess(bool useGridProcess);
 		void setGridCommand(std::string GridCommand);
+		void setPythonPath(std::string PythonPath);
 
 	private:
 /* VALUES */
@@ -71,6 +72,7 @@ class ScriptWriter
 		std::string m_BFAffineTfmMode;
 		bool m_useGridProcess;
 		std::string m_GridCommand;
+		std::string m_PythonPath;
 
 /* SCRIPTS */
 		std::string m_Script_Preprocess; //contains the whole Script for Pre processing

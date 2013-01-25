@@ -120,6 +120,8 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		bool m_ErrorDetectedInConstructor; // useful in --nogui mode to exit the program without trying the compute function
 		bool m_ScriptRunning;
 		std::vector< std::string > m_FindProgramDTIABExecDirVec;
+		std::string m_DTIABSlicerExtensionExternalBinDir;
+		std::string m_PythonPath;
 
 /*CASES*/	std::vector < QLineEdit* > m_CasesQ; // index begin at 0
 		std::vector < std::string > m_CasesPath; // index begin at 0
