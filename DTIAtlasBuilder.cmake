@@ -118,6 +118,15 @@ if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
     endforeach()
   endif(COMPILE_EXTERNAL_NIRALUtilities)
 
+  # Python # Needed to use the python compiled with Slicer # "PYTHON_EXECUTABLE" given in SlicerConfig.cmake when find_package(Slicer REQUIRED)
+  if(WIN32)
+    set(SlicerPythonExec ${PYTHON_EXECUTABLE})
+  else() # On Unix, "PYTHON_EXECUTABLE" is customPython* -> replace "customPython" by "python" (which also exists)
+    get_filename_component(SlicerPythonExecDir ${PYTHON_EXECUTABLE} PATH) # get the directory
+    set(SlicerPythonExec ${SlicerPythonExecDir}/python)
+  endif()
+   install(PROGRAMS ${SlicerPythonExec} DESTINATION ${NOCLI_INSTALL_DIR})
+
 endif( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
 
 #======================================================================================

@@ -1024,8 +1024,8 @@ void ScriptWriter::MainScript()
 	Script = Script + "import sys\n\n"; // to return an exit code
 
 	// Display python version used
-	Script = Script + "print(\"\\n[] Script running with Python version:\")\n";
-	Script = Script + "os.system(\"which python\")\n\n";
+//	Script = Script + "print(\"\\n[] Script running with Python version:\")\n";
+//	Script = Script + "os.system(\"which python\")\n\n";
 
 
 	Script = Script + "print(\"\\n=============== Main Script ================\")\n\n";
@@ -1038,12 +1038,12 @@ void ScriptWriter::MainScript()
 
 /* Call the other scripts */
 	Script = Script + "# Call the Preprocess script\n";
-	Script = Script + "PrePScriptCommand= OutputPath + \"/Script/DTIAtlasBuilder_Preprocess.script\"\n";
+	Script = Script + "PrePScriptCommand= \"" + m_PythonPath + " \" + OutputPath + \"/Script/DTIAtlasBuilder_Preprocess.script\"\n"; // PythonPath contains already a space after the command
 	Script = Script + "print(\"\\n=> $ \" + PrePScriptCommand)\n";
 	Script = Script + "if os.system(PrePScriptCommand)!=0 : ErrorList.append(\'=> Errors detected in preprocessing\')\n\n";
 
 	Script = Script + "# Call the Atlas Building script\n";
-	Script = Script + "AtlasBuildingCommand= OutputPath + \"/Script/DTIAtlasBuilder_AtlasBuilding.script\"\n";
+	Script = Script + "AtlasBuildingCommand= \"" + m_PythonPath + " \" + OutputPath + \"/Script/DTIAtlasBuilder_AtlasBuilding.script\"\n";
 	Script = Script + "print(\"\\n=> $ \" + AtlasBuildingCommand)\n";
 	Script = Script + "if os.system(AtlasBuildingCommand)!=0 : ErrorList.append(\'=> Errors detected in atlas building\')\n\n";
 
@@ -1286,5 +1286,10 @@ void ScriptWriter::setGridProcess(bool useGridProcess)
 void ScriptWriter::setGridCommand(std::string GridCommand)
 {
 	m_GridCommand = GridCommand;
+}
+
+void ScriptWriter::setPythonPath(std::string PythonPath)
+{
+	m_PythonPath = PythonPath;
 }
 
