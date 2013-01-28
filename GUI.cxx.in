@@ -11,7 +11,7 @@
 #include <QComboBox>
 #include <QStackedWidget>
 #include <QLineEdit>
-
+#include <QTimer>
 #include <QDebug>
 
 /*std classes*/
@@ -27,6 +27,48 @@
 #include "itkImage.h"
 #include "itkImageFileReader.h"
 #include <itksys/SystemTools.hxx> // for FindProgram() and GetFilenamePath()
+//#include <itksys/Process.h> // itksysProcess
+
+/* Values of the C variables:
+F_OK= 0
+W_OK= 2
+R_OK= 4
+X_OK= 1
+*/
+mode_t ITKmode_F_OK = 0;
+mode_t ITKmode_W_OK = 2;
+mode_t ITKmode_R_OK = 4;
+mode_t ITKmode_X_OK = 1;
+
+/* Process variables in itksys/Process.h
+itksysProcess_State_Starting  	= 0
+itksysProcess_State_Error  	= 1
+itksysProcess_State_Exception  	= 2
+itksysProcess_State_Executing  	= 3
+itksysProcess_State_Exited  	= 4
+itksysProcess_State_Expired  	= 5
+itksysProcess_State_Killed  	= 6
+itksysProcess_State_Disowned  	= 7
+*/
+
+/*
+itksysProcess* TestProcess = itksysProcess_New();
+char const* tab[] = {"sleep","5",NULL};
+std::vector<const char*> cmd;
+cmd.push_back("sleep");
+cmd.push_back("5");
+cmd.push_back(0);
+itksysProcess_SetCommand(TestProcess, tab);
+itksysProcess_SetCommand(TestProcess, &*cmd.begin());
+itksysProcess_SetOption(TestProcess, itksysProcess_Option_Detach, 1); // In another independant process = idem fork()
+itksysProcess_SetPipeShared( TestProcess, itksysProcess_Pipe_STDERR, 1); // Needed to have the std outputs in the terminal
+itksysProcess_SetPipeShared( TestProcess, itksysProcess_Pipe_STDOUT, 1);
+itksysProcess_Execute(TestProcess);
+itksysProcess_WaitForExit(TestProcess,NULL); // NULL = no timeout
+int ExitCode=itksysProcess_GetExitCode(TestProcess);
+std::cout<<ExitCode<<std::endl;
+itksysProcess_Delete(TestProcess);
+*/
 
 #include "GUI.h"
 #include "ScriptWriter.h"
@@ -62,6 +104,10 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	m_noGUI=noGUI;
 	if( overwrite ) OverwritecheckBox->setChecked(true);
 	m_ScriptRunning=false;
+	m_ScriptQProcess = new QProcess;
+	QObject::connect(m_ScriptQProcess, SIGNAL(finished(int)), this, SLOT(ScriptQProcessDone(int)));
+	m_ScriptRunningQTimer = new QTimer(this);
+	QObject::connect(m_ScriptRunningQTimer, SIGNAL(timeout()), this, SLOT(UpdateScriptRunningGUIDisplay()));
 
 /* Initialize the options */
 	InitOptions();
@@ -227,15 +273,15 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 
 // Look for the config file in the executable directory
 	std::string SoftConfigPath= DTIABExecutablePath + "/DTIAtlasBuilderSoftConfig.txt";
-	if( access( SoftConfigPath.c_str() , F_OK) == 0 ) if( LoadConfig(QString( SoftConfigPath.c_str() )) == -1 ) m_ErrorDetectedInConstructor=true; // if file exists
+	if( itksys::SystemTools::GetPermissions(SoftConfigPath.c_str(),ITKmode_F_OK) ) if( LoadConfig(QString( SoftConfigPath.c_str() )) == -1 ) m_ErrorDetectedInConstructor=true; // if file exists
 
 // Look for the config file in the current directory
 	std::string CurrentPath = itksys::SystemTools::GetRealPath( itksys::SystemTools::GetCurrentWorkingDirectory().c_str() ); //GetRealPath() to remove symlinks
 	SoftConfigPath = CurrentPath + "/DTIAtlasBuilderSoftConfig.txt";
-	if( access( SoftConfigPath.c_str() , F_OK) == 0 ) if( LoadConfig(QString( SoftConfigPath.c_str() )) == -1 ) m_ErrorDetectedInConstructor=true; // if file exists
+	if( itksys::SystemTools::GetPermissions( SoftConfigPath.c_str() , ITKmode_F_OK) ) if( LoadConfig(QString( SoftConfigPath.c_str() )) == -1 ) m_ErrorDetectedInConstructor=true; // if file exists
 
 // Look for the config file in the env variable
-	const char * value = getenv("DTIAtlasBuilderSoftPath");
+	const char * value = itksys::SystemTools::GetEnv("DTIAtlasBuilderSoftPath"); // C function = const char * getenv(const char *)
 	if (value!=NULL) 
 	{
 		printf ("| Environment variable read. The config file is \'%s\'\n",value);
@@ -245,7 +291,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 
 /* Look for the parameter file in the current directory */
 	std::string ParamPath = CurrentPath + "/DTIAtlasBuilderParameters.txt";
-	if( access( ParamPath.c_str() , F_OK) == 0 ) if( LoadParameters(QString( ParamPath.c_str() )) == -1 ) m_ErrorDetectedInConstructor=true;
+	if( itksys::SystemTools::GetPermissions( ParamPath.c_str() , ITKmode_F_OK) ) if( LoadParameters(QString( ParamPath.c_str() )) == -1 ) m_ErrorDetectedInConstructor=true;
 
 /* Load Parameters from Command Line => cmd line arguments a taking into account at last and change the parameters at last because they have priority */
 	if( !ParamFile.empty() )
@@ -601,8 +647,7 @@ void GUI::OpenTemplateBrowseWindow() /*SLOT*/
  //           QUALITY CONTROL           //
 /////////////////////////////////////////
 
-void GUI::DisplayAffineQC() /*SLOT*/ 
-
+void GUI::DisplayAffineQC() /*SLOT*/
 {
 	std::ostringstream out;
 	out << NbLoopsSpinBox->value();
@@ -616,23 +661,27 @@ void GUI::DisplayAffineQC() /*SLOT*/
 		outi << i;
 		std::string outi_str = outi.str();
 		path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/1_Affine_Registration/Loop" + nbLoops_str + "/Case" + outi_str + "_Loop" + nbLoops_str + "_FinalFA.nrrd";
-		if( access(path.c_str(), F_OK) == 0 ) program = program + " " + path;
+		if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
 	}
 	std::ostringstream out1;
 	out1 << NbLoopsSpinBox->value()-1;
 	std::string nbLoops1_str = out1.str();
 	path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/1_Affine_Registration/Loop" + nbLoops1_str + "/Loop" + nbLoops1_str + "_FAAverage.nrrd";
-	if( access(path.c_str(), F_OK) == 0 ) program = program + " " + path;
+	if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
 
-	std::cout<<"| $ " << program << std::endl;
+	// Display cmd line
+	std::cout<<"| $ "<<program.c_str()<<std::endl;
 
-	int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
+	QProcess* QCQProcess = new QProcess;
+	QCQProcess->start(program.c_str());
+
+/*	int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
 
 	if(pid==0) // we are in the son
 	{
 		int status = system( program.c_str() );
 		_exit(status); // son ends
-	}
+	}*/
 }
 
 void GUI::DisplayDeformQC() /*SLOT*/
@@ -645,20 +694,23 @@ void GUI::DisplayDeformQC() /*SLOT*/
 		outi << i;
 		std::string outi_str = outi.str();
 		path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/3_Diffeomorphic_Atlas/Case" + outi_str + "_DiffeomorphicFA.nrrd";
-		if( access(path.c_str(), F_OK) == 0 ) program = program + " " + path;
+		if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
 	}
 	path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/3_Diffeomorphic_Atlas/DiffeomorphicAtlasFA.nrrd";
-	if( access(path.c_str(), F_OK) == 0 ) program = program + " " + path;
+	if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
 
 	std::cout<<"| $ " << program << std::endl;
 
-	int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
+	QProcess* QCQProcess = new QProcess;
+	QCQProcess->start(program.c_str());
+
+/*	int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
 
 	if(pid==0) // we are in the son
 	{
 		int status = system( program.c_str() );
 		_exit(status); // son ends
-	}
+	}*/
 }
 
 void GUI::DisplayResampQC() /*SLOT*/
@@ -671,20 +723,23 @@ void GUI::DisplayResampQC() /*SLOT*/
 		outi << i;
 		std::string outi_str = outi.str();
 		path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/4_Final_Resampling/Second_Resampling/Case" + outi_str + "_FinalDeformedFA.nrrd";
-		if( access(path.c_str(), F_OK) == 0 ) program = program + " " + path;
+		if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
 	}
 	path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/4_Final_Resampling/FinalAtlasFA.nrrd";
-	if( access(path.c_str(), F_OK) == 0 ) program = program + " " + path;
+	if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
 
 	std::cout<<"| $ " << program << std::endl;
 
-	int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
+	QProcess* QCQProcess = new QProcess;
+	QCQProcess->start(program.c_str());
+
+/*	int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
 
 	if(pid==0) // we are in the son
 	{
 		int status = system( program.c_str() );
 		_exit(status); // son ends
-	}
+	}*/
 }
 
 void GUI::DisableQC() // disable QC buttons
@@ -755,7 +810,7 @@ int GUI::ReadCSV(QString CSVfile)
 	if(!CSVfile.isEmpty())
 	{
 
-		if( access(CSVfile.toStdString().c_str(), F_OK) == 0 ) // Test if the csv file exists => unistd::access() returns 0 if F(file)_OK
+		if( itksys::SystemTools::GetPermissions(CSVfile.toStdString().c_str(), ITKmode_F_OK) ) // Test if the csv file exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
 		{
 
 			QFile file(CSVfile);
@@ -991,7 +1046,7 @@ void GUI::LoadParametersSlot() /*SLOT*/
 
 int GUI::LoadParameters(QString paramFile)
 {
-	if( access(paramFile.toStdString().c_str(), F_OK) == 0 ) // Test if the config file exists => unistd::access() returns 0 if F(file)_OK
+	if( itksys::SystemTools::GetPermissions(paramFile.toStdString().c_str(), ITKmode_F_OK) ) // Test if the csv file exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
 	{
 
 	QFile file(paramFile);
@@ -1570,7 +1625,7 @@ int GUI::LoadParameters(QString paramFile)
 
 void GUI::GenerateXMLForAW()
 {	
-	if( access((m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration_AW").c_str(), F_OK) != 0 ) // Test if the main folder does not exists => unistd::access() returns 0 if F(file)_OK
+	if( ! itksys::SystemTools::GetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration_AW").c_str(), ITKmode_F_OK) )// Test if the non linear folder does not exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
 	{
 		std::cout<<"| Creating Non Linear Registration directory..."<<std::endl; // command line display
 		QProcess * mkdirMainProcess = new QProcess;
@@ -1748,7 +1803,7 @@ Num. Iterations       : 50
 
 void GUI::GenerateXMLForGA() // Greedy Atlas
 {	
-	if( access((m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration").c_str(), F_OK) != 0 ) // Test if the main folder does not exists => unistd::access() returns 0 if F(file)_OK
+	if( ! itksys::SystemTools::GetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration").c_str(), ITKmode_F_OK) ) // Test if the main folder does not exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
 	{
 		std::cout<<"| Creating Non Linear Registration directory..."<<std::endl; // command line display
 		QProcess * mkdirMainProcess = new QProcess;
@@ -1932,7 +1987,7 @@ void GUI::LoadConfigSlot() /*SLOT*/
 
 int GUI::LoadConfig(QString configFile) // returns -1 if fails, otherwise 0
 {
-	if( access(configFile.toStdString().c_str(), F_OK) == 0 ) // Test if the config file exists => unistd::access() returns 0 if F(file)_OK
+	if( itksys::SystemTools::GetPermissions(configFile.toStdString().c_str(), ITKmode_F_OK) ) // Test if the config file exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
 	{
 		std::cout<<"| Loading Configuration file \'"<< configFile.toStdString() <<"\'..."; // command line display
 
@@ -2632,7 +2687,7 @@ int GUI::LaunchScriptWriter()
 	for(int i=0; i < CaseListWidget->count() ;i++) 
 	{
 		std::string CurrentCase = CaseListWidget->item(i)->text().toStdString().substr( CaseListWidget->item(i)->text().split(":").at(0).size()+2 );
-		if( access(CurrentCase.c_str(), F_OK) != 0 ) // Test if the case files exist => unistd::access() returns 0 if F(file)_OK
+		if( ! itksys::SystemTools::GetPermissions(CurrentCase.c_str(), ITKmode_F_OK) ) // Test if the case files exist => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
 		{
 			if(!m_noGUI)
 			{
@@ -2669,13 +2724,13 @@ int GUI::LaunchScriptWriter()
 
 /* Output */
 	m_OutputPath=OutputFolderLineEdit->text();
-	if( access(m_OutputPath.toStdString().c_str(), F_OK) != 0 ) // Test if the folder exists => unistd::access() returns 0 if F(file)_OK
+	if( ! itksys::SystemTools::GetPermissions(m_OutputPath.toStdString().c_str(), ITKmode_F_OK) ) // Test if the folder exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
 	{
 		if(!m_noGUI) QMessageBox::critical(this, "No Output Folder", "The output folder does not exist");
 		else std::cout<<"| The output folder does not exist"<<std::endl;
 		return -1;
 	}
-	if( access(m_OutputPath.toStdString().c_str(), W_OK) != 0 ) // Test if the program can write in the output folder => unistd::access() returns 0 if W(write)_OK
+	if( ! itksys::SystemTools::GetPermissions(m_OutputPath.toStdString().c_str(), ITKmode_W_OK) ) // Test if the program can write in the output folder => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
 	{
 		if(!m_noGUI) QMessageBox::critical(this, "Output Folder Unwritable", "Please give an output folder authorized in reading");
 		else std::cout<<"| Please give an output folder authorized in reading"<<std::endl;
@@ -2683,7 +2738,7 @@ int GUI::LaunchScriptWriter()
 	}
 	m_scriptwriter->setOutputPath(m_OutputPath.toStdString());
 
-	if( access((m_OutputPath.toStdString() + "/DTIAtlas").c_str(), F_OK) != 0 ) // Test if the main folder does not exists => unistd::access() returns 0 if F(file)_OK
+	if( ! itksys::SystemTools::GetPermissions((m_OutputPath.toStdString() + "/DTIAtlas").c_str(), ITKmode_F_OK) ) // Test if the main folder does not exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
 	{
 		std::cout<<"| Creating Main directory..."<<std::endl; // command line display
 		QProcess * mkdirMainProcess = new QProcess;
@@ -2692,7 +2747,7 @@ int GUI::LaunchScriptWriter()
 		ExitCode = mkdirMainProcess->execute( program.c_str() );
 	}
 
-	if( access((m_OutputPath.toStdString() + "/DTIAtlas/Script").c_str(), F_OK) != 0 ) // Test if the script folder does not exists => unistd::access() returns 0 if F(file)_OK
+	if( ! itksys::SystemTools::GetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script").c_str(), ITKmode_F_OK) ) // Test if the script folder does not exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
 	{
 		std::cout<<"| Creating Script directory..."<<std::endl; // command line display
 		QProcess * mkdirScriptProcess = new QProcess;
@@ -2704,7 +2759,7 @@ int GUI::LaunchScriptWriter()
 /* Template */
 	if (!TemplateLineEdit->text().isEmpty()) 
 	{
-		if( access(TemplateLineEdit->text().toStdString().c_str(), F_OK) != 0 ) // Test if the case files exist => unistd::access() returns 0 if F(file)_OK
+		if( ! itksys::SystemTools::GetPermissions(TemplateLineEdit->text().toStdString().c_str(), ITKmode_F_OK) ) // Test if the case files exist => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
 		{
 			if(!m_noGUI)
 			{
@@ -2799,7 +2854,7 @@ int GUI::LaunchScriptWriter()
 /* Checking if all the programs have been given */
 	if(ImagemathPath->text().isEmpty() || ResampPath->text().isEmpty() || CropDTIPath->text().isEmpty() || dtiprocPath->text().isEmpty() || BRAINSFitPath->text().isEmpty() || GAPath->text().isEmpty() || dtiavgPath->text().isEmpty() || DTIRegPath->text().isEmpty() || unuPath->text().isEmpty() || MriWatcherPath->text().isEmpty()) // if any path is missing => check in the config file and in the PATH
 	{
-		char * value = getenv("DTIAtlasBuilderSoftPath");
+		const char * value = itksys::SystemTools::GetEnv("DTIAtlasBuilderSoftPath"); // C function = const char * getenv(const char *)
 		if (value) LoadConfig( QString(value) ); // replace the paths by the paths given in the config file
 
 		std::string programPath;
@@ -2883,7 +2938,7 @@ int GUI::LaunchScriptWriter()
 	if(testDTIReg()==-1) return -1;
 
 /* Checking if the given files are executable */
-	if(access(ImagemathPath->text().toStdString().c_str(), X_OK)!=0 )
+	if(! itksys::SystemTools::GetPermissions(ImagemathPath->text().toStdString().c_str(), ITKmode_X_OK))
 	{
 		if(!m_noGUI)
 		{
@@ -2893,7 +2948,7 @@ int GUI::LaunchScriptWriter()
 		else std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
-	if(access(ResampPath->text().toStdString().c_str(), X_OK) != 0 )
+	if(! itksys::SystemTools::GetPermissions(ResampPath->text().toStdString().c_str(), ITKmode_X_OK) )
 	{
 		if(!m_noGUI)
 		{
@@ -2903,7 +2958,7 @@ int GUI::LaunchScriptWriter()
 		else std::cout<<"| The file \'" << ResampPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
-	if(access(CropDTIPath->text().toStdString().c_str(), X_OK) != 0 )
+	if(! itksys::SystemTools::GetPermissions(CropDTIPath->text().toStdString().c_str(), ITKmode_X_OK) )
 	{
 		if(!m_noGUI)
 		{
@@ -2913,7 +2968,7 @@ int GUI::LaunchScriptWriter()
 		else std::cout<<"| The file \'" << CropDTIPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
-	if(access(dtiprocPath->text().toStdString().c_str(), X_OK) != 0 )
+	if(! itksys::SystemTools::GetPermissions(dtiprocPath->text().toStdString().c_str(), ITKmode_X_OK) )
 	{
 		if(!m_noGUI)
 		{
@@ -2923,7 +2978,7 @@ int GUI::LaunchScriptWriter()
 		else std::cout<<"| The file \'" << dtiprocPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
-	if(access(BRAINSFitPath->text().toStdString().c_str(), X_OK) != 0 )
+	if(! itksys::SystemTools::GetPermissions(BRAINSFitPath->text().toStdString().c_str(), ITKmode_X_OK) )
 	{
 		if(!m_noGUI)
 		{
@@ -2933,7 +2988,7 @@ int GUI::LaunchScriptWriter()
 		else std::cout<<"| The file \'" << BRAINSFitPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
-	if(access(GAPath->text().toStdString().c_str(), X_OK) != 0 )
+	if(! itksys::SystemTools::GetPermissions(GAPath->text().toStdString().c_str(), ITKmode_X_OK) )
 	{
 		if(!m_noGUI)
 		{
@@ -2943,7 +2998,7 @@ int GUI::LaunchScriptWriter()
 		else std::cout<<"| The file \'" << GAPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
-	if(access(dtiavgPath->text().toStdString().c_str(), X_OK) != 0 )
+	if(! itksys::SystemTools::GetPermissions(dtiavgPath->text().toStdString().c_str(), ITKmode_X_OK) )
 	{
 		if(!m_noGUI)
 		{
@@ -2953,7 +3008,7 @@ int GUI::LaunchScriptWriter()
 		else std::cout<<"| The file \'" << dtiavgPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
-	if(access(DTIRegPath->text().toStdString().c_str(), X_OK) != 0 )
+	if(! itksys::SystemTools::GetPermissions(DTIRegPath->text().toStdString().c_str(), ITKmode_X_OK) )
 	{
 		if(!m_noGUI)
 		{
@@ -2963,7 +3018,7 @@ int GUI::LaunchScriptWriter()
 		else std::cout<<"| The file \'" << DTIRegPath->text().toStdString() << "\' is not executable" << std::endl;
 		return -1;
 	}
-	if(access(unuPath->text().toStdString().c_str(), X_OK) != 0 )
+	if(! itksys::SystemTools::GetPermissions(unuPath->text().toStdString().c_str(), ITKmode_X_OK) )
 	{
 		if(!m_noGUI)
 		{
@@ -2975,7 +3030,7 @@ int GUI::LaunchScriptWriter()
 	}
 
 	if(MriWatcherPath->text().isEmpty()) DisableQC();
-	else if(access(MriWatcherPath->text().toStdString().c_str(), X_OK) != 0)
+	else if(! itksys::SystemTools::GetPermissions(MriWatcherPath->text().toStdString().c_str(), ITKmode_X_OK) != 0)
 	{
 		if(!m_noGUI)
 		{
@@ -3007,7 +3062,7 @@ int GUI::LaunchScriptWriter()
 	if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION) // Use the python executable copied from the Slicer build tree (python-build/bin/python) to the ExternalBin folder
 	{
 		m_PythonPath = m_DTIABSlicerExtensionExternalBinDir + "/python";
-		if(access(m_PythonPath.c_str(), X_OK) != 0) m_PythonPath=""; // If Slicer Extension and testing, ExternalBin folder does not exist so just leave it // access returns 0 if ok, -1 if not ok
+		if(! itksys::SystemTools::GetPermissions(m_PythonPath.c_str(), ITKmode_X_OK) ) m_PythonPath=""; // If Slicer Extension and testing, ExternalBin folder does not exist so just leave it // itksys::SystemTools::GetPermissions() returns true if ok, -1 if not ok
 	}
 	if( m_PythonPath.empty() ) // Find and display Python version used // If not slicer ext -> empty, if slicer ext and test -> empty
 	{
@@ -3052,7 +3107,7 @@ int GUI::LaunchScriptWriter()
 	m_scriptwriter->setGridCommand( GridProcessCmdLineEdit->text().toStdString() );
 
 /* Launch writing */
-	m_scriptwriter->WriteScript( getpid() ); // Master Function : get pid to send a signal to Qt process to move progress bar
+	m_scriptwriter->WriteScript(); // Master Function : get pid to send a signal to Qt process to move progress bar
 
 /* XML file for GreedyAtlas */
 	GenerateXMLForGA();
@@ -3146,30 +3201,44 @@ int GUI::LaunchScriptWriter()
 	}
 
 /* Give the right to user to execute the scripts */
-	QProcess * chmodProcess = new QProcess;
+/*	QProcess * chmodProcess = new QProcess;
 	program = "chmod u+x " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Preprocess.script " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_AtlasBuilding.script " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Main.script "; // 'chmod u+x = user+execute'
 	if( GridProcesscheckBox->isChecked() ) program = program + m_OutputPath.toStdString() + "/DTIAtlas/Script/RunCommandOnServer.script";
 	std::cout<<"| $ " << program << std::endl;
 	ExitCode = chmodProcess->execute( program.c_str() );
+*/
+	itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Preprocess.script ").c_str(), ITKmode_X_OK);
+	itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_AtlasBuilding.script ").c_str(), ITKmode_X_OK);
+	itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Main.script ").c_str(), ITKmode_X_OK);
+	if( GridProcesscheckBox->isChecked() ) itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/RunCommandOnServer.script ").c_str(), ITKmode_X_OK);
 	
 	return 0;
 }
 
 int GUI::LaunchScriptRunner()
 {
-	std::cout<<"| Script Running..."<<std::endl; // command line display
-
 	ComputepushButton->setEnabled(false);
 	m_ScriptRunning=true;
+	ScriptRunningDisplayQLabel->setText("");
 //	progressBar->setValue(0);
 //	ExecStatusLabel->setText("                       "); // fill with spaces
 
 /* Running the Script: */ // python path found before writing script : contains already a space after the command
 	std::string program;
 	program = m_PythonPath + " " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Main.script"; // 
-
 	std::cout<<"| $ " << program << std::endl;
 
+	std::cout<<"| Script Running..."; // command line display
+
+	std::string LogFilePath = m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder.log";
+	m_ScriptQProcess->setStandardOutputFile(LogFilePath.c_str(), QIODevice::Append); // Truncate = overwrite // Append= write after what's written
+
+	m_ScriptQProcess->start( program.c_str(), QIODevice::ReadOnly );
+
+	m_ScriptRunningQTimer->start(1000); // To update display in cmd line (display dots)
+
+	return 0;
+/*
 	if(!m_noGUI) // If GUI, not freeze it = use fork()
 	{
 		int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
@@ -3190,25 +3259,7 @@ int GUI::LaunchScriptRunner()
 
 		return 0;
 	}
-	else // using QProcess if noGui -> "freeze" the process
-	{
-		QProcess * ScriptProcess = new QProcess;
-		int ExitCode = ScriptProcess->execute( program.c_str() ); // stuck here during execution of the scripts
-
-		if(ExitCode==0)
-		{
-			RunningCompleted();
-			return 0;
-		}
-		else
-		{
-			RunningFailed();
-			return -1;
-		}
-	}
-
-	return -1; // not supposed to be reached
-
+*/
 /* If need to not freeze the main window :
 -> wait() or waitpid() make the process wait for the end of a son => FREEZE !!
 
@@ -3219,11 +3270,34 @@ if(ExitCode==0) kill(getppid(),SIGUSR1); // signal to the father than execution 
 */
 }
 
+
+void GUI::UpdateScriptRunningGUIDisplay() /*SLOT*/
+{
+	if(ScriptRunningDisplayQLabel->text().size()>=5) ScriptRunningDisplayQLabel->setText(""); // display only 5 dots
+
+	QString ScriptRunningDisplay = ScriptRunningDisplayQLabel->text() + ".";
+	ScriptRunningDisplayQLabel->setText(ScriptRunningDisplay);
+}
+
+void GUI::ScriptQProcessDone(int ExitCode) /*SLOT*/
+{
+	m_ScriptRunningQTimer->stop();
+	std::cout<<std::endl;
+
+	if(ExitCode==0) RunningCompleted();
+	else RunningFailed();
+
+	std::string LogFileText = "| Log file written in: \"" + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder.log\"";
+	std::cout<<LogFileText<<std::endl;
+	ScriptRunningDisplayQLabel->setText(ScriptRunningDisplayQLabel->text() + QString(LogFileText.c_str()));
+}
+
 void GUI::RunningCompleted()
 {
 //	progressBar->setValue(100); // if the progress steps don't go until 100
 	ComputepushButton->setEnabled(true);
 	m_ScriptRunning=false;
+	ScriptRunningDisplayQLabel->setText("Running Completed ");
 
 	if(!m_noGUI)
 	{
@@ -3238,6 +3312,7 @@ void GUI::RunningFailed()
 //	progressBar->setValue(100); // if the progress steps don't go until 100
 	ComputepushButton->setEnabled(true);
 	m_ScriptRunning=false;
+	ScriptRunningDisplayQLabel->setText("Running Failed ");
 
 	if(!m_noGUI)
 	{
