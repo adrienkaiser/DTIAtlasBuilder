@@ -16,7 +16,7 @@
  //         WRITING FUNCTIONS           //
 /////////////////////////////////////////
 
-void ScriptWriter::WriteScript(int MainPID)
+void ScriptWriter::WriteScript()
 {
 	std::cout<<"|"<<std::endl; // command line display
 	std::cout<<"| Number of Cases: "<<m_CasesPath.size()<<std::endl; // command line display
@@ -31,16 +31,12 @@ void ScriptWriter::WriteScript(int MainPID)
 	out << m_nbLoops;
 	m_nbLoops_str = out.str();
 
-	std::ostringstream outss;
-	outss << MainPID;
-	std::string MainPID_str = outss.str();
-
-	Preprocess(MainPID_str);
-	AtlasBuilding(MainPID_str);
+	Preprocess();
+	AtlasBuilding();
 	MainScript();
 }
 
-void ScriptWriter::Preprocess (std::string MainPID_str)
+void ScriptWriter::Preprocess ()
 {
 	std::string Script;
 
@@ -425,7 +421,7 @@ if( m_useGridProcess ) Script = Script + "\t\tTestGridProcess( FilesFolder, 0, 0
  //           ATLAS BUILDING            //
 /////////////////////////////////////////
 
-void ScriptWriter::AtlasBuilding(std::string MainPID_str)
+void ScriptWriter::AtlasBuilding()
 {
 	std::string Script;
 
@@ -1027,6 +1023,9 @@ void ScriptWriter::MainScript()
 //	Script = Script + "print(\"\\n[] Script running with Python version:\")\n";
 //	Script = Script + "os.system(\"which python\")\n\n";
 
+	// Display current date and time (for log file)
+	Script = Script + "print(\"\\nThe current date and time are:\")\n";
+	Script = Script + "print( time.strftime(\'%x %X %Z\') )\n\n";
 
 	Script = Script + "print(\"\\n=============== Main Script ================\")\n\n";
 

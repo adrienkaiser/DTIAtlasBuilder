@@ -107,6 +107,9 @@ class GUI : public QMainWindow, public Ui::MainWindow
 /*WIDGETCHANGE*/void WidgetHasChangedParamNoSaved();
 
 /*MAIN FUNCT*/	int Compute();
+		void ScriptQProcessDone(int);
+		void UpdateScriptRunningGUIDisplay();
+
 
 	signals: // none
 
@@ -161,6 +164,8 @@ class GUI : public QMainWindow, public Ui::MainWindow
 
 /*MAIN FUNCT*/	ScriptWriter* m_scriptwriter; ////contains the writing pipeline
 		int m_NeedToBeCropped;
+		QProcess * m_ScriptQProcess;
+		QTimer * m_ScriptRunningQTimer;
 
 };
 #endif

@@ -183,9 +183,9 @@ if(COMPILE_PACKAGE)
 
   # Config file for testing (paths to the built softwares in build directory) = before installing
   if(BUILD_TESTING)
-    if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION ) # if Slicer Ext, BRAINSFit and unu not recompiled so set to empty in test config file
-      set(BRAINSFITpathTestingConfigFile "")
-      set(unupathTestingConfigFile "")
+    if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION ) # if Slicer Ext, BRAINSFit and unu not recompiled so set to Slicer binary dirs in test config file
+      set(BRAINSFITpathTestingConfigFile ${Slicer_HOME}/${Slicer_CLIMODULES_BIN_DIR}/BRAINSFit) # BRAINSFit built in cli modules dir # Slicer_CLIMODULES_BIN_DIR is a relative path
+      set(unupathTestingConfigFile ${Teem_DIR}/bin/unu) # Teem_DIR set when find_package(Slicer) in SlicerConfig.cmake 
     else( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
       set(BRAINSFITpathTestingConfigFile ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/BRAINS-build/bin/BRAINSFit)
       set(unupathTestingConfigFile ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/teem-build/bin/unu)
