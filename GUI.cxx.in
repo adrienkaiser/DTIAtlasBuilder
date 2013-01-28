@@ -3221,7 +3221,6 @@ int GUI::LaunchScriptRunner()
 	m_ScriptRunning=true;
 	ScriptRunningDisplayQLabel->setText("");
 //	progressBar->setValue(0);
-//	ExecStatusLabel->setText("                       "); // fill with spaces
 
 /* Running the Script: */ // python path found before writing script : contains already a space after the command
 	std::string program;
@@ -3233,9 +3232,15 @@ int GUI::LaunchScriptRunner()
 	std::string LogFilePath = m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder.log";
 	m_ScriptQProcess->setStandardOutputFile(LogFilePath.c_str(), QIODevice::Append); // Truncate = overwrite // Append= write after what's written
 
-	m_ScriptQProcess->start( program.c_str(), QIODevice::ReadOnly );
-
-	m_ScriptRunningQTimer->start(1000); // To update display in cmd line (display dots)
+	if(m_noGUI) // !! no log file in the case of nogui (execute will write the stdout in the console, as it is the same process)
+	{
+		m_ScriptQProcess->execute( program.c_str() ); // execute will stay stuck in the program and wait for the script to be done
+	}
+	else
+	{
+		m_ScriptQProcess->start( program.c_str() ); // start will just start the program in another process
+		m_ScriptRunningQTimer->start(1000); // To update display in cmd line (display dots)
+	}
 
 	return 0;
 /*
@@ -3270,7 +3275,6 @@ if(ExitCode==0) kill(getppid(),SIGUSR1); // signal to the father than execution 
 */
 }
 
-
 void GUI::UpdateScriptRunningGUIDisplay() /*SLOT*/
 {
 	if(ScriptRunningDisplayQLabel->text().size()>=5) ScriptRunningDisplayQLabel->setText(""); // display only 5 dots
@@ -3281,15 +3285,21 @@ void GUI::UpdateScriptRunningGUIDisplay() /*SLOT*/
 
 void GUI::ScriptQProcessDone(int ExitCode) /*SLOT*/
 {
-	m_ScriptRunningQTimer->stop();
-	std::cout<<std::endl;
+	if(!m_noGUI) // no timer if no GUI
+	{
+		m_ScriptRunningQTimer->stop();
+		std::cout<<std::endl;
+	}
 
 	if(ExitCode==0) RunningCompleted();
 	else RunningFailed();
 
-	std::string LogFileText = "| Log file written in: \"" + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder.log\"";
-	std::cout<<LogFileText<<std::endl;
-	ScriptRunningDisplayQLabel->setText(ScriptRunningDisplayQLabel->text() + QString(LogFileText.c_str()));
+	if(!m_noGUI)
+	{
+		std::string LogFileText = "| Log file written in: \"" + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder.log\"";
+		std::cout<<LogFileText<<std::endl;
+		ScriptRunningDisplayQLabel->setText(ScriptRunningDisplayQLabel->text() + QString(LogFileText.c_str()));
+	}
 }
 
 void GUI::RunningCompleted()
@@ -3299,11 +3309,7 @@ void GUI::RunningCompleted()
 	m_ScriptRunning=false;
 	ScriptRunningDisplayQLabel->setText("Running Completed ");
 
-	if(!m_noGUI)
-	{
-//		ExecStatusLabel->setText("Executed without errors");
-		QMessageBox::information(this, "Running Completed", "Running Completed !");
-	}
+	if(!m_noGUI) QMessageBox::information(this, "Running Completed", "Running Completed !");
 	std::cout<<"| Running Completed !"<<std::endl; // command line display
 }
 
@@ -3314,11 +3320,7 @@ void GUI::RunningFailed()
 	m_ScriptRunning=false;
 	ScriptRunningDisplayQLabel->setText("Running Failed ");
 
-	if(!m_noGUI)
-	{
-//		ExecStatusLabel->setText("Executed with errors");
-		QMessageBox::information(this, "Running Failed", "Running Failed...");
-	}
+	if(!m_noGUI) QMessageBox::information(this, "Running Failed", "Running Failed...");
 	std::cout<<"| Running Failed..."<<std::endl; // command line display
 }
 
