@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 2.8)
 CMAKE_POLICY(VERSION 2.8)
 
+## Remove possible existing output folder already computed to rerun all tests
+message("Removing possible existing test output folder")
+file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlas)
+
 ## Test 1 : Usage
 add_test(NAME TestUsage COMMAND ${CMAKE_CURRENT_BINARY_DIR}/../DTIAtlasBuilder --help) # Should just display the Usage : ${CMAKE_CURRENT_BINARY_DIR} = DTIAtlasBuilder-build/Testing -> need to ../
 set(EXECUTABLE_OUTPUT_PATH ${TestingBINdirectory}) # So the test executables go to the right place
