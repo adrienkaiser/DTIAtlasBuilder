@@ -262,7 +262,7 @@ endif(COMPILE_EXTERNAL_DTIReg)
 if(RecompileBatchMake)
     ExternalProject_Add(BatchMake
       GIT_REPOSITORY ${git_protocol}://batchmake.org/BatchMake.git
-      GIT_TAG "0abb2faca1251f808ab3d0b820cc27b570a994f1" # 08-26-2012 updated for ITKv4 # "43d21fcccd09e5a12497bc1fb924bc6d5718f98c" # used in DTI-Reg 12-21-2012
+      GIT_TAG "8addbdb62f0135ba01ffe12ddfc32121b6d66ef5" # 01-30-2013 # "0abb2faca1251f808ab3d0b820cc27b570a994f1" # 08-26-2012 updated for ITKv4 # "43d21fcccd09e5a12497bc1fb924bc6d5718f98c" # used in DTI-Reg 12-21-2012
       SOURCE_DIR BatchMake
       BINARY_DIR BatchMake-build
       CMAKE_GENERATOR ${gen}
@@ -321,10 +321,10 @@ endif(RecompileBatchMake)
 
 # ===== dtiprocessTK ==============================================================
 set( SourceCodeArgs
-  SVN_REPOSITORY "http://www.nitrc.org/svn/dtiprocess/branches/Slicer4Extension"#/dtiprocess"
+  SVN_REPOSITORY "http://www.nitrc.org/svn/dtiprocess/branches/Slicer4Extension" # /dtiprocess"
   SVN_USERNAME slicerbot
   SVN_PASSWORD slicer
-  SVN_REVISION -r 137 # 01/16/2013 # 113 # 12/20/2012 updated for ITKv4.3.0
+  SVN_REVISION -r 144 # 01/30/2013 version modified by Adrien for windows compilation # 137 # 01/16/2013 # 113 # 12/20/2012 updated for ITKv4.3.0
   )
 set( CMAKE_ExtraARGS
   -DBUILD_TESTING:BOOL=OFF
