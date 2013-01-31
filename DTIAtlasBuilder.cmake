@@ -135,7 +135,7 @@ if(BUILD_TESTING)
   set(TestingSRCdirectory ${CMAKE_CURRENT_SOURCE_DIR}/Testing)
   set(TestingBINdirectory ${CMAKE_CURRENT_BINARY_DIR}/Testing)
   set(TestDataFolder ${CMAKE_CURRENT_SOURCE_DIR}/Data/Testing)
-  add_library(DTIAtlasBuilderLib STATIC ${DTIABsources})
+  add_library(DTIAtlasBuilderLib STATIC ${DTIABsources}) # STATIC is also the default
   set_target_properties(DTIAtlasBuilderLib PROPERTIES COMPILE_FLAGS "-Dmain=ModuleEntryPoint") # replace the main in DTIAtlasBuilder.cxx by the itkTest function ModuleEntryPoint
   target_link_libraries(DTIAtlasBuilderLib ${QT_LIBRARIES} ${ITK_LIBRARIES})
   set_target_properties(DTIAtlasBuilderLib PROPERTIES LABELS DTIAtlasBuilder)
