@@ -324,7 +324,7 @@ set( SourceCodeArgs
   SVN_REPOSITORY "http://www.nitrc.org/svn/dtiprocess/branches/Slicer4Extension" # /dtiprocess"
   SVN_USERNAME slicerbot
   SVN_PASSWORD slicer
-  SVN_REVISION -r 144 # 01/30/2013 version modified by Adrien for windows compilation # 137 # 01/16/2013 # 113 # 12/20/2012 updated for ITKv4.4.0
+  SVN_REVISION -r 149 # 01/31/2013 # 144 # 01/30/2013 version modified by Adrien for windows compilation # 137 # 01/16/2013 # 113 # 12/20/2012 updated for ITKv4.4.0
   )
 set( CMAKE_ExtraARGS
   -DBUILD_TESTING:BOOL=OFF
@@ -384,7 +384,7 @@ AddToolMacro( AtlasWerks ) # AddToolMacro( proj ) + uses SourceCodeArgs CMAKE_Ex
 # ===== BRAINSFit =============================================================
 set( SourceCodeArgs
   GIT_REPOSITORY "${git_protocol}://github.com/BRAINSia/BRAINSStandAlone.git"
-  GIT_TAG "dd7ad3926a01fbdd098ea858fb95012ca16fb236" # 12/18/2012
+  GIT_TAG "f74d63d753eee09ef14a1ae8e3f3d8f1f465afa9" # 01-30-2013 fix bug with ITK4.4 # "dd7ad3926a01fbdd098ea858fb95012ca16fb236" # 12/18/2012
 # "ff94032edafbc46a95f51db4bce894f0120b5992" : Slicer4 version # /devel/linux/Slicer4_linux64/Slicer/SuperBuild/External_BRAINSTools.cmake -> compiles but segfault
 # "31dcba577ee1bac5c4680fc9d7c830d6074020a9" : 12/13/2012
 # "98a46a2b08da882d46f04cbf0d539c2b73348049" # version from http://www.nitrc.org/svn/dtiprep/trunk/SuperBuild/External_BRAINSTools.cmake -> compiles but run error "undefined symbol: ModuleEntryPoint"
@@ -473,8 +473,8 @@ AddToolMacro( ANTS ) # AddToolMacro( proj ) + uses SourceCodeArgs CMAKE_ExtraARG
 
 # ===== ResampleDTIlogEuclidean =====================================================
 set( SourceCodeArgs
-  GIT_REPOSITORY "${git_protocol}://github.com/booboo69500/ResampleDTIlogEuclidean.git" # Francois Budin's repositery
-  GIT_TAG "e78a9ea00d73a11cc52b3c457e32f1302a3403d4" # 12/20/2012
+  GIT_REPOSITORY "${git_protocol}://github.com/NIRALUser/ResampleDTIlogEuclidean.git"
+  GIT_TAG "b97310969a105f81ee20d80e5c860f6ad4dd3911" # 01/31/2013 fix comp with ITK4.4# "e78a9ea00d73a11cc52b3c457e32f1302a3403d4" # 12/20/2012
 #  URL "http://www.insight-journal.org/download/sourcecode/742/11/SourceCode11_ResampleDTIInsightJournal2.tar.gz"
 # http://github.com/midas-journal/midas-journal-742/tree/master/ResampleDTIInsightJournal
   )
