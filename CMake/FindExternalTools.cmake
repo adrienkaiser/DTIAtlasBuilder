@@ -181,7 +181,7 @@ else() # If no need, recompile ITK or SEM only if not found
     endif(SlicerExecutionModel_FOUND)
 
   else(ITK_FOUND)
-    message(WARNING "ITK not found. ITKv4.3.0 will be downloaded and recompiled.")
+    message(WARNING "ITK not found. ITKv4.4.0 will be downloaded and recompiled.")
     set(RecompileITK ON) # Automatically recompile SlicerExecutionModel
   endif(ITK_FOUND)
 endif() # COMPILE_EXTERNAL_dtiprocessTK OR COMPILE_EXTERNAL_BRAINS OR COMPILE_EXTERNAL_ANTS OR COMPILE_EXTERNAL_ResampleDTI
@@ -192,7 +192,7 @@ if(RecompileITK)
   # Download and compile ITKv4
   ExternalProject_Add(I4 # BRAINSStandAlone/SuperBuild/External_ITKv4.cmake # !! All args needed as they are # Name shorten from ITKv4 because Windows ITKv4 path limited to 50 chars
     GIT_REPOSITORY "${git_protocol}://itk.org/ITK.git"
-    GIT_TAG 555049f830d1c09f8d4d95904f429290467d39ab #2012-12-16 ITKv4.3.0
+    GIT_TAG 3c03e162c7e287b81115e2175898482998b50a34 # master 01-31-13 4.4.0 : fixed extra itk namespaces # 555049f830d1c09f8d4d95904f429290467d39ab #2012-12-16 ITKv4.3.0
     SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/I4 # Path shorten from ITKv4 because Windows SOURCE_DIR path limited to 50 chars
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/I4-b # Path shorten from ITKv4 because Windows SOURCE_DIR path limited to 50 chars
     CMAKE_GENERATOR ${gen}
@@ -214,7 +214,7 @@ if(RecompileITK)
 #      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=${CMAKE_CURRENT_BINARY_DIR}/ITKv4-build/lib # Needed for BRAINSTools to compile
 #      -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${CMAKE_CURRENT_BINARY_DIR}/ITKv4-build/bin # Needed for BRAINSTools to compile
     )
-  set(ITK_DIR ${CMAKE_CURRENT_BINARY_DIR}/I4-i/lib/cmake/ITK-4.3) # Use the downloaded ITK for all tools # Path shorten from ITKv4 because Windows SOURCE_DIR path limited to 50 chars
+  set(ITK_DIR ${CMAKE_CURRENT_BINARY_DIR}/I4-i/lib/cmake/ITK-4.4) # Use the downloaded ITK for all tools # Path shorten from ITKv4 because Windows SOURCE_DIR path limited to 50 chars
   set(ITK_DEPEND I4)
   set(RecompileSEM ON) # If recompile ITK, recompile SlicerExecutionModel
   set(RecompileBatchMake ON) # If recompile ITK, recompile BatchMake
@@ -324,7 +324,7 @@ set( SourceCodeArgs
   SVN_REPOSITORY "http://www.nitrc.org/svn/dtiprocess/branches/Slicer4Extension" # /dtiprocess"
   SVN_USERNAME slicerbot
   SVN_PASSWORD slicer
-  SVN_REVISION -r 144 # 01/30/2013 version modified by Adrien for windows compilation # 137 # 01/16/2013 # 113 # 12/20/2012 updated for ITKv4.3.0
+  SVN_REVISION -r 144 # 01/30/2013 version modified by Adrien for windows compilation # 137 # 01/16/2013 # 113 # 12/20/2012 updated for ITKv4.4.0
   )
 set( CMAKE_ExtraARGS
   -DBUILD_TESTING:BOOL=OFF
