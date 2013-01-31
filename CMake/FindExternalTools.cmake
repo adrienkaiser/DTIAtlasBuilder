@@ -474,7 +474,7 @@ AddToolMacro( ANTS ) # AddToolMacro( proj ) + uses SourceCodeArgs CMAKE_ExtraARG
 # ===== ResampleDTIlogEuclidean =====================================================
 set( SourceCodeArgs
   GIT_REPOSITORY "${git_protocol}://github.com/NIRALUser/ResampleDTIlogEuclidean.git"
-  GIT_TAG "b97310969a105f81ee20d80e5c860f6ad4dd3911" # 01/31/2013 fix comp with ITK4.4# "e78a9ea00d73a11cc52b3c457e32f1302a3403d4" # 12/20/2012
+  GIT_TAG "0742e96d312469d8dbb33d40900064f22fb01a06" # 01/31/2013 fix comp with ITK4.4 + stat lib windows linkage error # "e78a9ea00d73a11cc52b3c457e32f1302a3403d4" # 12/20/2012
 #  URL "http://www.insight-journal.org/download/sourcecode/742/11/SourceCode11_ResampleDTIInsightJournal2.tar.gz"
 # http://github.com/midas-journal/midas-journal-742/tree/master/ResampleDTIInsightJournal
   )
