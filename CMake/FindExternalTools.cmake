@@ -176,7 +176,7 @@ if(COMPILE_EXTERNAL_AtlasWerks) # FFTW D + F build one on(after) another
       -DBUILD_TESTING:BOOL=OFF
     INSTALL_COMMAND "" # No install step
     )
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CMake/CMakeLists-AtlasWerksLAPACK-Patched.txt.in ${CMAKE_CURRENT_BINARY_DIR}/CMakeLists-AtlasWerksLAPACK-Patched.txt @ONLY)
+  #configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CMake/CMakeLists-AtlasWerksLAPACK-Patched.txt.in ${CMAKE_CURRENT_BINARY_DIR}/CMakeLists-AtlasWerksLAPACK-Patched.txt @ONLY)
   # In the patch : search before in the recompiled CLAPACK because needs to be compiled statically
 endif(COMPILE_EXTERNAL_AtlasWerks)
 
@@ -375,7 +375,7 @@ set( SourceCodeArgs
 #URL_MD5 05fc867564e3340d0d448dd0daab578a
 
   GIT_REPOSITORY "${git_protocol}://github.com/BRAINSia/AtlasWerks.git"
-  GIT_TAG "ecd6891216ccbc7ccf3fdb589182ae503189a960" # 02-01-2013 fix bug with clang mac build
+  GIT_TAG "4a3e02b9e6aa9ad527c9b1df4b0ab31c737cbd78" # 02-01-2013 fix bug with clang mac build
   )
 set( CMAKE_ExtraARGS
   -DCMAKE_C_COMPILER:PATH=${CMAKE_C_COMPILER}
@@ -386,6 +386,7 @@ set( CMAKE_ExtraARGS
   -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
   -DITK_DIR:PATH=${ITK_DIR}
   -DVTK_DIR:PATH=${VTK_DIR}
+  -DLAPACK_DIR:PATH=${CMAKE_CURRENT_BINARY_DIR}/CLAPACK-build
 #  -DFFTW_INSTALL_BASE_PATH:PATH=${FFTW_DIR} # will use find_library to find the libs
   -DFFTW_DIR:PATH=${FFTW_DIR}
   -DFFTW_INCLUDE_PATH:PATH=${FFTW_DIR}/include # will be used to set FFTW_INSTALL_BASE_PATH by finding the path = remove the /include
