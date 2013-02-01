@@ -176,7 +176,7 @@ if(COMPILE_EXTERNAL_AtlasWerks) # FFTW D + F build one on(after) another
       -DBUILD_TESTING:BOOL=OFF
     INSTALL_COMMAND "" # No install step
     )
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CMake/CMakeLists-AtlasWerksLAPACK-Patched.txt.in ${CMAKE_CURRENT_BINARY_DIR}/CMakeLists-AtlasWerksLAPACK-Patched.txt @ONLY)
+  #configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CMake/CMakeLists-AtlasWerksLAPACK-Patched.txt.in ${CMAKE_CURRENT_BINARY_DIR}/CMakeLists-AtlasWerksLAPACK-Patched.txt @ONLY)
   # In the patch : search before in the recompiled CLAPACK because needs to be compiled statically
 endif(COMPILE_EXTERNAL_AtlasWerks)
 
@@ -368,11 +368,12 @@ set( SourceCodeArgs
 #  URL "http://www.sci.utah.edu/releases/atlaswerks_v0.1.4/AtlasWerks_0.1.4_Linux.tgz"
 #  URL_MD5 05fc867564e3340d0d448dd0daab578a
   GIT_REPOSITORY "${git_protocol}://github.com/BRAINSia/AtlasWerks.git"
-  GIT_TAG "ecd6891216ccbc7ccf3fdb589182ae503189a960" # 02-01-2013 fix bug with clang mac build
+  GIT_TAG "4a3e02b9e6aa9ad527c9b1df4b0ab31c737cbd78" # 02-01-2013 fix bug with clang mac build
   )
 set( CMAKE_ExtraARGS
   -DITK_DIR:PATH=${ITK_DIR}
   -DVTK_DIR:PATH=${VTK_DIR}
+  -DLAPACK_DIR:PATH=${CMAKE_CURRENT_BINARY_DIR}/CLAPACK-build
 #  -DFFTW_INSTALL_BASE_PATH:PATH=${FFTW_DIR} # will use find_library to find the libs
 #  -DFFTWF_LIB:PATH=${FFTW_DIR}/lib/libfftw3f.a # FFTW in float
 #  -DFFTWD_LIB:PATH=${FFTW_DIR}/lib/libfftw3.a # FFTW in double # needed for AtlasWerks to configure, not to compile with
