@@ -548,7 +548,7 @@ set( SourceCodeArgs
   SVN_REPOSITORY "http://www.nitrc.org/svn/dtireg/trunk"
   SVN_USERNAME slicerbot
   SVN_PASSWORD slicer
-  SVN_REVISION -r 35 # 01/11/2013
+  SVN_REVISION -r 35 # 02/11/2013
   )
 set( CMAKE_ExtraARGS
   -DCMAKE_C_COMPILER:PATH=${CMAKE_C_COMPILER}
