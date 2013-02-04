@@ -823,8 +823,11 @@ int GUI::ReadCSV(QString CSVfile)
 				while(!stream.atEnd()) //read all the lines
 				{
 					QString line = stream.readLine();
-					QStringList list = line.split(m_CSVseparator);
-					if( list.at(0) != "id" )  CaseListWidget->addItem( list.at(1) ); //display in the Widget so that some can be removed
+					if(line != "")
+					{
+						QStringList list = line.split(m_CSVseparator);
+						if( list.at(0) != "id" && list.at(0) != "")  CaseListWidget->addItem( list.at(1) ); //display in the Widget so that some can be removed
+					}
 				}
 				CheckCasesIndex();
 	
