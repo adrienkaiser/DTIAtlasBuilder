@@ -6,16 +6,22 @@ message("Removing possible existing test output folder")
 file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlas)
 
 ## Test 1 : Usage
-add_test(NAME TestUsage COMMAND ${CMAKE_CURRENT_BINARY_DIR}/../DTIAtlasBuilder --help) # Should just display the Usage : ${CMAKE_CURRENT_BINARY_DIR} = DTIAtlasBuilder-build/Testing -> need to ../
+add_test(NAME TestUsage COMMAND ${Slicer_LAUNCH_COMMAND} $<TARGET_FILE:DTIAtlasBuilder> --help) # Should just display the Usage : ${CMAKE_CURRENT_BINARY_DIR} = DTIAtlasBuilder-build/Testing -> need to ../
 set(EXECUTABLE_OUTPUT_PATH ${TestingBINdirectory}) # So the test executables go to the right place
 
 ## ITKtest Tests
 # Compile the program that will be run to : run pipeline and then compare output with reference
+
+set(BUILD_SHARED_LIBS OFF) # for the preprocessor variable "BUILD_SHARED_LIBS" on Windows
+
 if(ITK_VERSION_MAJOR EQUAL 3)
   add_executable(DTIAtlasBuilderTest DTIAtlasBuilderTestITKv${ITK_VERSION_MAJOR}.cxx) # This executable will run pipeline and then compare output with reference
   target_link_libraries(DTIAtlasBuilderTest DTIAtlasBuilderLib)
   set_target_properties(DTIAtlasBuilderTest PROPERTIES LABELS DTIAtlasBuilder)
-  set(NoGUITestCommand ${Slicer_LAUNCH_COMMAND} ${TestingBINdirectory}/DTIAtlasBuilderTest)
+  if(BUILD_SHARED_LIBS)
+    set_target_properties(DTIAtlasBuilderTest PROPERTIES COMPILE_FLAGS "-DBUILD_SHARED_LIBS") # definition of the variable for c++ preprocessor
+  endif(BUILD_SHARED_LIBS)
+  set(NoGUITestCommand ${Slicer_LAUNCH_COMMAND} $<TARGET_FILE:DTIAtlasBuilderTest>) # Slicer_LAUNCH_COMMAND will launch the Slicer environment # TARGET_FILE so path not given directly = no need to be known
   set(NameOfMain ModuleEntryPoint)
 elseif(ITK_VERSION_MAJOR EQUAL 4) # BRAINS/BRAINSCommonLib/BuildScripts/CMakeBRAINS3BuildMacros.cmake : macro MakeTestDriverFromSEMTool
   set(CMAKE_TESTDRIVER_BEFORE_TESTMAIN "#include \"itkTestDriverBeforeTest.inc\"")
@@ -26,7 +32,10 @@ elseif(ITK_VERSION_MAJOR EQUAL 4) # BRAINS/BRAINSCommonLib/BuildScripts/CMakeBRA
     )
   add_executable(DTIAtlasBuilderTestDriver DTIAtlasBuilderTestDriver.cxx DTIAtlasBuilderTestITKv${ITK_VERSION_MAJOR}.cxx)
   target_link_libraries(DTIAtlasBuilderTestDriver DTIAtlasBuilderLib ${ITKTestKernel_LIBRARIES}) # ITKTestKernel_LIBRARIES only defined in ITKv4
-  set(NoGUITestCommand ${LAUNCH_EXE} $<TARGET_FILE:DTIAtlasBuilderTestDriver>) # Slicer_LAUNCH_COMMAND will launch the Slicer environment
+  if(BUILD_SHARED_LIBS)
+    set_target_properties(DTIAtlasBuilderTestDriver PROPERTIES COMPILE_FLAGS "-DBUILD_SHARED_LIBS") # definition of the variable for c++ preprocessor
+  endif(BUILD_SHARED_LIBS)
+  set(NoGUITestCommand ${Slicer_LAUNCH_COMMAND} $<TARGET_FILE:DTIAtlasBuilderTestDriver>) # Slicer_LAUNCH_COMMAND will launch the Slicer environment # TARGET_FILE so path not given directly = no need to be known
   set(NameOfMain DTIAtlasBuilderTestITKv4)
 endif()
 
@@ -101,14 +110,15 @@ add_test(NAME TestnoGUIANTSFinalOutput COMMAND ${NoGUITestCommand}
 add_executable(DTIAtlasBuilderGUITest DTIAtlasBuilderGUITest.cxx)
 target_link_libraries(DTIAtlasBuilderGUITest DTIAtlasBuilderLib)
 set_target_properties(DTIAtlasBuilderGUITest PROPERTIES LABELS DTIAtlasBuilder)
-add_test(NAME TestGUI COMMAND ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilderGUITest ${CMAKE_CURRENT_BINARY_DIR}/bin/DTIAtlasBuilderSoftConfig.txt) # The config file will be read as argv[1] (no GenerateCLP)
+add_test(NAME TestGUI COMMAND ${Slicer_LAUNCH_COMMAND} $<TARGET_FILE:DTIAtlasBuilderGUITest> ${CMAKE_CURRENT_BINARY_DIR}/bin/DTIAtlasBuilderSoftConfig.txt) # The config file will be read as argv[1] (no GenerateCLP)
+# Slicer_LAUNCH_COMMAND will launch the Slicer environment # TARGET_FILE so path not given directly = no need to be known
 
 
 ## Test 7 : Open the GUI for 10 sec with a param file, check the content of the QLineEdit and close it
 add_executable(DTIAtlasBuilderGUITestLabels DTIAtlasBuilderGUITestLabels.cxx)
 target_link_libraries(DTIAtlasBuilderGUITestLabels DTIAtlasBuilderLib)
 set_target_properties(DTIAtlasBuilderGUITestLabels PROPERTIES LABELS DTIAtlasBuilder)
-add_test(NAME TestGUILabels COMMAND ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilderGUITestLabels ${TestingBINdirectory}/TestGUIparametersBRAINS.txt ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilderSoftConfig.txt ${TestingBINdirectory})
+add_test(NAME TestGUILabels COMMAND ${Slicer_LAUNCH_COMMAND} $<TARGET_FILE:DTIAtlasBuilderGUITestLabels> ${TestingBINdirectory}/TestGUIparametersBRAINS.txt ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilderSoftConfig.txt ${TestingBINdirectory})
 # The parameter file will be read as argv[1] (no GenerateCLP) and config file argv[2] # argv[3] is the folder to check to content of LineEdit
 
 
@@ -124,3 +134,5 @@ if(COMPILE_PACKAGE)
 else(COMPILE_PACKAGE)
 #  message("When CMake done, run \"make\" to compile the program, and then run \"ctest\" in the build directory to launch tests and see if the program is working.\nEnter e to exit this message, and then g to generate and get CMake done.")
 endif(COMPILE_PACKAGE)
+
+
