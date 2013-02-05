@@ -8,7 +8,7 @@ set(Slicer_SKIP_PROJECT_COMMAND ON) # Useful for Slicer Extension because includ
 
 # External Projects
 include(ExternalProject) # "ExternalProject" is the module that will allow to compile tools
-if(CMAKE_EXTRA_GENERATOR) # Extra generator ??
+if(CMAKE_EXTRA_GENERATOR) # CMake Generator = make, nmake..
   set(gen "${CMAKE_EXTRA_GENERATOR} - ${CMAKE_GENERATOR}")
 else()
   set(gen "${CMAKE_GENERATOR}")
@@ -76,7 +76,7 @@ if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
   set(INSTALL_DIR ${SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION}) # Set for DTIAtlasBuilder and other cli modules
   if(APPLE) # On mac, Ext/cli_modules/DTIAtlasBuilder so Ext/ExternalBin is ../ExternalBin
     set(NOCLI_INSTALL_DIR ${SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION}/../ExternalBin)
-  elseif(WIN32) # On Windows : ??
+  elseif(WIN32) # On Windows : idem Linux : Ext/lib/Slicer4.2/cli_modules/DTIAtlasBuilder so Ext/ExternalBin is ../../../ExternalBin
     set(NOCLI_INSTALL_DIR ${SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION}/../../../ExternalBin)
   else() # Linux : Ext/lib/Slicer4.2/cli_modules/DTIAtlasBuilder so Ext/ExternalBin is ../../../ExternalBin
     set(NOCLI_INSTALL_DIR ${SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION}/../../../ExternalBin)
@@ -169,6 +169,10 @@ if(COMPILE_PACKAGE)
       set( COMPILE_EXTERNAL_${tool} ON CACHE BOOL "Compile external ${tool}" )
       mark_as_advanced(CLEAR COMPILE_EXTERNAL_${tool}) # Show variable if been hidden
     endforeach()
+
+    if(WIN32) # AtlasWerks does not compile on windows yet, so do not try to compile it
+      set( COMPILE_EXTERNAL_AtlasWerks OFF CACHE BOOL "Compile external AtlasWerks" FORCE)
+    if(WIN32)
 
   endif()
 
