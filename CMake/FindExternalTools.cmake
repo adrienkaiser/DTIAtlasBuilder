@@ -117,28 +117,22 @@ endif (VTK_FOUND)
 # FFTW and CLAPACK for GreedyAtlas
 if(COMPILE_EXTERNAL_AtlasWerks) # FFTW D + F build one on(after) another
   # FFTW
-  set(FFTW_URL "http://www.fftw.org/fftw-3.3.3.tar.gz")
-  set(FFTW_URL_MD5 0a05ca9c7b3bfddc8278e7c40791a1c2)
-  ExternalProject_Add(FFTWD    # FFTW has no CMakeLists.txt # Example : Slicer/SuperBuild/External_python.cmake
-    URL ${FFTW_URL}
-    URL_MD5 ${FFTW_URL_MD5}
+  if(WIN32) # If windows, no recompilation so just download binary
+    set(FFTW_DOWNLOAD_ARGS
+        URL "ftp://ftp.fftw.org/pub/fftw/fftw-3.3.3-dll64.zip")
+  else(WIN32) # Download source code and recompile
+    set(FFTW_DOWNLOAD_ARGS
+        URL "http://www.fftw.org/fftw-3.3.3.tar.gz"
+        URL_MD5 0a05ca9c7b3bfddc8278e7c40791a1c2)
+  endif(WIN32)
+  ExternalProject_Add(FFTW    # FFTW has no CMakeLists.txt # Example : Slicer/SuperBuild/External_python.cmake
+    ${FFTW_DOWNLOAD_ARGS}
     DOWNLOAD_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install
     SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW-build
     CONFIGURE_COMMAND ""
     INSTALL_COMMAND ""
-    BUILD_COMMAND ${CMAKE_COMMAND} -DTOP_BINARY_DIR:PATH=${CMAKE_CURRENT_BINARY_DIR} -DFFTWTYPE:STRING=FFTWD -P ${CMAKE_CURRENT_SOURCE_DIR}/CMake/InstallFFTW.cmake # -DARGNAME:TYPE=VALUE -P <cmake file> = Process script mode
-    )
-  ExternalProject_Add(FFTWF    # FFTW has no CMakeLists.txt # Example : Slicer/SuperBuild/External_python.cmake
-    URL ${FFTW_URL}
-    URL_MD5 ${FFTW_URL_MD5}
-    DOWNLOAD_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install # put the archive in the install directory
-    SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW
-    BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW-build
-    CONFIGURE_COMMAND ""
-    INSTALL_COMMAND ""
-    BUILD_COMMAND ${CMAKE_COMMAND} -DTOP_BINARY_DIR:PATH=${CMAKE_CURRENT_BINARY_DIR} -DFFTWTYPE:STRING=FFTWF -P ${CMAKE_CURRENT_SOURCE_DIR}/CMake/InstallFFTW.cmake # -DARGNAME:TYPE=VALUE -P <cmake file> = Process script mode
-    DEPENDS FFTWD # So they are not done at the same time if threads
+    BUILD_COMMAND ${CMAKE_COMMAND} -DTOP_BINARY_DIR:PATH=${CMAKE_CURRENT_BINARY_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/CMake/InstallFFTW.cmake # -DARGNAME:TYPE=VALUE -P <cmake file> = Process script mode
     )
   set(FFTW_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install)
 
@@ -223,7 +217,7 @@ if(RecompileSEM)
   # Download and compile SlicerExecutionModel with the downloaded ITKv4
   ExternalProject_Add(SlicerExecutionModel # BRAINSStandAlone/SuperBuild/External_SlicerExecutionModel.cmake
     GIT_REPOSITORY "${git_protocol}://github.com/Slicer/SlicerExecutionModel.git"
-    GIT_TAG 7365853e2b88b832831fc0e9b90f1720ec0edbbb
+    GIT_TAG aa1a088fca42e77832d8814737735c9c9b321e9a
     SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/SlicerExecutionModel
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/SlicerExecutionModel-build
     CMAKE_GENERATOR ${gen}
@@ -289,7 +283,7 @@ endif(RecompileBatchMake)
 
 
 ## GLUT for MriWatcher -> disable MriWatcher if Slicer Ext for the moment
-#  ExternalProject_Add(GLUT    # FFTW has no CMakeLists.txt # Example : Slicer/SuperBuild/External_python.cmake
+#  ExternalProject_Add(GLUT
 #    URL http://www.opengl.org/resources/libraries/glut/glut-3.7.tar.gz
 #    URL_MD5 dc932666e2a1c8a0b148a4c32d111ef3 # $ md5sum (file)
 #    DOWNLOAD_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install
@@ -297,7 +291,7 @@ endif(RecompileBatchMake)
 #    BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW-build
 #    CONFIGURE_COMMAND ""
 #    INSTALL_COMMAND ""
-#    BUILD_COMMAND ${CMAKE_COMMAND} -DFFTWTYPE:STRING=FFTWD -P ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install/InstallFFTW.cmake # -DARGNAME:TYPE=VALUE -P <cmake file> = Process script mode
+#    BUILD_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install/InstallFFTW.cmake # -DARGNAME:TYPE=VALUE -P <cmake file> = Process script mode
 #    )
 #set(GLUT_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/GLUT-install/include)
 
@@ -372,9 +366,9 @@ set( CMAKE_ExtraARGS
   -DatlasWerks_COMPILE_APP_TX_APPLY:BOOL=OFF
   -DatlasWerks_COMPILE_APP_TX_WERKS:BOOL=OFF
   -DatlasWerks_COMPILE_APP_UTILITIES:BOOL=OFF
-  DEPENDS ${ITK_DEPEND} FFTWD FFTWF CLAPACK # Not CMake Arg -> directly after CMakeArg in ExternalProject_Add()
+  DEPENDS ${ITK_DEPEND} FFTW CLAPACK # Not CMake Arg -> directly after CMakeArg in ExternalProject_Add()
 #  PATCH_COMMAND patch -p0 -d ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build -i ${CMAKE_CURRENT_BINARY_DIR}/AtlasWerksLAPACK.patch # !! no "" # !! patch doesn't exist on windows !
-  PATCH_COMMAND ${CMAKE_COMMAND} -DBASE_SOURCE_DIR:PATH=${CMAKE_CURRENT_SOURCE_DIR} -DTOP_BINARY_DIR:PATH=${CMAKE_CURRENT_BINARY_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/CMake/ApplyAtlasWerksPatches.cmake # -DARGNAME:TYPE=VALUE -P <cmake file> = Process script mode
+  PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/CMakeLists-AtlasWerksLAPACK-Patched.txt ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/AtlasWerks/CMakeLists.txt
   )
 set( Tools
   GreedyAtlas
