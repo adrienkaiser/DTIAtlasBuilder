@@ -117,7 +117,6 @@ endif (VTK_FOUND)
 # FFTW and CLAPACK for GreedyAtlas
 if(COMPILE_EXTERNAL_AtlasWerks) # FFTW D + F build one on(after) another
   # FFTW
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CMake/InstallFFTW.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install/InstallFFTW.cmake @ONLY) # @ONLY to ignore ${} variables
   set(FFTW_URL "http://www.fftw.org/fftw-3.3.3.tar.gz")
   set(FFTW_URL_MD5 0a05ca9c7b3bfddc8278e7c40791a1c2)
   ExternalProject_Add(FFTWD    # FFTW has no CMakeLists.txt # Example : Slicer/SuperBuild/External_python.cmake
@@ -128,7 +127,7 @@ if(COMPILE_EXTERNAL_AtlasWerks) # FFTW D + F build one on(after) another
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW-build
     CONFIGURE_COMMAND ""
     INSTALL_COMMAND ""
-    BUILD_COMMAND ${CMAKE_COMMAND} -DFFTWTYPE:STRING=FFTWD -P ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install/InstallFFTW.cmake # -DARGNAME:TYPE=VALUE -P <cmake file> = Process script mode
+    BUILD_COMMAND ${CMAKE_COMMAND} -DTOP_BINARY_DIR:PATH=${CMAKE_CURRENT_BINARY_DIR} -DFFTWTYPE:STRING=FFTWD -P ${CMAKE_CURRENT_SOURCE_DIR}/CMake/InstallFFTW.cmake # -DARGNAME:TYPE=VALUE -P <cmake file> = Process script mode
     )
   ExternalProject_Add(FFTWF    # FFTW has no CMakeLists.txt # Example : Slicer/SuperBuild/External_python.cmake
     URL ${FFTW_URL}
@@ -138,7 +137,7 @@ if(COMPILE_EXTERNAL_AtlasWerks) # FFTW D + F build one on(after) another
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW-build
     CONFIGURE_COMMAND ""
     INSTALL_COMMAND ""
-    BUILD_COMMAND ${CMAKE_COMMAND} -DFFTWTYPE:STRING=FFTWF -P ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install/InstallFFTW.cmake # -DARGNAME:TYPE=VALUE -P <cmake file> = Process script mode
+    BUILD_COMMAND ${CMAKE_COMMAND} -DTOP_BINARY_DIR:PATH=${CMAKE_CURRENT_BINARY_DIR} -DFFTWTYPE:STRING=FFTWF -P ${CMAKE_CURRENT_SOURCE_DIR}/CMake/InstallFFTW.cmake # -DARGNAME:TYPE=VALUE -P <cmake file> = Process script mode
     DEPENDS FFTWD # So they are not done at the same time if threads
     )
   set(FFTW_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install)
