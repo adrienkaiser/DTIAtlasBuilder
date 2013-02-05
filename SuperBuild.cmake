@@ -172,7 +172,7 @@ if(COMPILE_PACKAGE)
 
     if(WIN32) # AtlasWerks does not compile on windows yet, so do not try to compile it
       set( COMPILE_EXTERNAL_AtlasWerks OFF CACHE BOOL "Compile external AtlasWerks" FORCE)
-    if(WIN32)
+    endif(WIN32)
 
   endif()
 
