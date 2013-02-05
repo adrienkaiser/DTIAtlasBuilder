@@ -280,7 +280,7 @@ if(RecompileBatchMake)
         -DUSE_SPLASHSCREEN:BOOL=OFF
         -DITK_DIR:PATH=${ITK_DIR}
       INSTALL_COMMAND ""
-      PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/CMake/BatchMakePatchedZip.c ${CMAKE_CURRENT_BINARY_DIR}/BatchMake/Utilities/Zip/zip.c # No ""
+      PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/CMake/BatchMakePatchedZip.c ${CMAKE_CURRENT_BINARY_DIR}/BatchMake/Utilities/Zip/zip.c # No "" # Patch for windows compilation error (declaration of variable after beginning of block - "uLong year")
       DEPENDS ${ITK_DEPEND}
       )
     set(BatchMake_DIR ${CMAKE_CURRENT_BINARY_DIR}/BatchMake-build)
@@ -375,7 +375,7 @@ set( CMAKE_ExtraARGS
   -DatlasWerks_COMPILE_APP_UTILITIES:BOOL=OFF
   DEPENDS ${ITK_DEPEND} FFTWD FFTWF CLAPACK # Not CMake Arg -> directly after CMakeArg in ExternalProject_Add()
 #  PATCH_COMMAND patch -p0 -d ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build -i ${CMAKE_CURRENT_BINARY_DIR}/AtlasWerksLAPACK.patch # !! no "" # !! patch doesn't exist on windows !
-  PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/CMakeLists-AtlasWerksLAPACK-Patched.txt ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/AtlasWerks/CMakeLists.txt # No ""
+  PATCH_COMMAND ${CMAKE_COMMAND} -DBASE_SOURCE_DIR:PATH=${CMAKE_CURRENT_SOURCE_DIR} -DTOP_BINARY_DIR:PATH=${CMAKE_CURRENT_BINARY_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/CMake/ApplyAtlasWerksPatches.cmake # -DARGNAME:TYPE=VALUE -P <cmake file> = Process script mode
   )
 set( Tools
   GreedyAtlas
