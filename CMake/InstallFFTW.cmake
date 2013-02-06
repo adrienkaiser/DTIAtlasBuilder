@@ -18,7 +18,7 @@ else(WIN32) # Unix-like : recompile
   ## FFTWD
   # Configure Step
   message("[] Configuring FFTWD...")
-  execute_process(COMMAND sh ${TOP_BINARY_DIR}/FFTW/configure --prefix=${TOP_BINARY_DIR}/FFTW-install --enable-static --enable-threads WORKING_DIRECTORY ${TOP_BINARY_DIR}/FFTW-build)
+  execute_process(COMMAND sh ${TOP_BINARY_DIR}/FFTW/configure --prefix=${TOP_BINARY_DIR}/FFTW-install --enable-static --enable-threads CC=${CMAKE_C_COMPILER} WORKING_DIRECTORY ${TOP_BINARY_DIR}/FFTW-build)
   # Build Step
   message("[] Building FFTWD...")
   execute_process(COMMAND make WORKING_DIRECTORY ${TOP_BINARY_DIR}/FFTW-build)
@@ -29,7 +29,7 @@ else(WIN32) # Unix-like : recompile
   ## FFTWF
   # Configure Step
   message("[] Configuring FFTWF...")
-  execute_process(COMMAND sh ${TOP_BINARY_DIR}/FFTW/configure --prefix=${TOP_BINARY_DIR}/FFTW-install --enable-static --enable-threads --enable-float WORKING_DIRECTORY ${TOP_BINARY_DIR}/FFTW-build)
+  execute_process(COMMAND sh ${TOP_BINARY_DIR}/FFTW/configure --prefix=${TOP_BINARY_DIR}/FFTW-install --enable-static --enable-threads --enable-float CC=${CMAKE_C_COMPILER} WORKING_DIRECTORY ${TOP_BINARY_DIR}/FFTW-build)
   # Build Step
   message("[] Building FFTWF...")
   execute_process(COMMAND make WORKING_DIRECTORY ${TOP_BINARY_DIR}/FFTW-build)

@@ -261,9 +261,6 @@ ExternalProject_Add(DTIAtlasBuilder # DTIAtlasBuilder added as Externalproject i
     -DMIDAS_PACKAGE_EMAIL:STRING=${MIDAS_PACKAGE_EMAIL}
     -DMIDAS_PACKAGE_API_KEY:STRING=${MIDAS_PACKAGE_API_KEY}
   INSTALL_COMMAND ""
-  DEPENDS ${ITK_DEPEND}
+  DEPENDS ${ITK_DEPEND} ${DTIAtlasBuilderExternalToolsDependencies} # DTIAtlasBuilderExternalToolsDependencies contains the names of all the recompiles softwares so DTIAB is compiled last (for install)
 )
 
-if( NOT DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
-  install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/DTIAtlasBuilder DESTINATION ${INSTALL_DIR})
-endif( NOT DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
