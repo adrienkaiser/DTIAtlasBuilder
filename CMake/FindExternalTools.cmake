@@ -90,12 +90,7 @@ macro( AddToolMacro Proj )
       INSTALL_COMMAND "" # So the install step of the external project is not done
     )
 
-    # Install step : copy all needed executables to ${INSTALL_DIR}
-    if( NOT DTIAtlasBuilder_BUILD_SLICER_EXTENSION ) # If Slicer Extension, install is done in the inner build directory (DTIAtlasBuilder.cmake)
-      foreach( tool ${Tools} )
-          install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/${Proj}-build/bin/${tool} DESTINATION ${INSTALL_DIR})
-      endforeach()
-    endif( NOT DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
+    list(APPEND DTIAtlasBuilderExternalToolsDependencies ${Proj})
 
   endif(COMPILE_EXTERNAL_${Proj})
 endmacro( AddToolMacro )
@@ -131,6 +126,9 @@ if(COMPILE_EXTERNAL_AtlasWerks) # FFTW D + F build one on(after) another
     SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW-build
     CONFIGURE_COMMAND ""
+    CMAKE_GENERATOR ${gen}
+    CMAKE_ARGS
+      ${COMMON_BUILD_OPTIONS_FOR_EXTERNALPACKAGES} # So we can give CC to configure*
     INSTALL_COMMAND ""
     BUILD_COMMAND ${CMAKE_COMMAND} -DTOP_BINARY_DIR:PATH=${CMAKE_CURRENT_BINARY_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/CMake/InstallFFTW.cmake # -DARGNAME:TYPE=VALUE -P <cmake file> = Process script mode
     )
