@@ -80,6 +80,12 @@ if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
   endif(WIN32)
   install(PROGRAMS ${SlicerPythonExec} DESTINATION ${NOCLI_INSTALL_DIR})
 
+  # Create sym links during install step
+  if(APPLE)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CMake/lib DESTINATION ${INSTALL_DIR}/..)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CMake/Frameworks DESTINATION ${INSTALL_DIR}/..)
+  endif(APPLE)
+
 endif( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
 
 #===== Macro install tool ===============================================
