@@ -170,6 +170,10 @@ if(COMPILE_PACKAGE)
       mark_as_advanced(CLEAR COMPILE_EXTERNAL_${tool}) # Show variable if been hidden
     endforeach()
 
+    if(APPLE) # unu is not recompiled with Slicer on MacOS
+      set( COMPILE_EXTERNAL_teem ON CACHE BOOL "Compile external teem" FORCE)
+    endif(APPLE)
+
     if(WIN32) # AtlasWerks does not compile on windows yet, so do not try to compile it
       set( COMPILE_EXTERNAL_AtlasWerks OFF CACHE BOOL "Compile external AtlasWerks" FORCE)
     endif(WIN32)

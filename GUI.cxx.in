@@ -264,6 +264,13 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	}
 	m_FindProgramDTIABExecDirVec.push_back(m_DTIABSlicerExtensionExternalBinDir);
 
+	// On Mac if Slicer Ext, paths to BRAINS (compiled within Slicer) are not set in the PATH env var, so add it to the search vector
+	if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION && Platform=="mac")
+	{
+		std::string SlicerExtMacBRAINSPath = m_DTIABSlicerExtensionExternalBinDir + "/../../../cli_modules"
+		m_FindProgramDTIABExecDirVec.push_back(SlicerExtMacBRAINSPath);
+	}
+
 	// Because ANTS is in m_DTIABSlicerExtensionExternalBinDir when Slicer Ext
 	if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION) DTIRegExtraPathlineEdit->setText( QString( m_DTIABSlicerExtensionExternalBinDir.c_str() )); // DTIAtlasBuilder_BUILD_SLICER_EXTENSION is defined as constant variable when configuring
 
