@@ -82,8 +82,9 @@ if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
 
   # Create sym links during install step
   if(APPLE)
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CMake/lib DESTINATION ${INSTALL_DIR}/..)
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CMake/Frameworks DESTINATION ${INSTALL_DIR}/..)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/InstallApple/lib DESTINATION ${INSTALL_DIR}/..)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/InstallApple/Frameworks DESTINATION ${INSTALL_DIR}/..)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/InstallApple/AppleCreateLinkLibs.sh DESTINATION ${INSTALL_DIR}/../share)
   endif(APPLE)
 
 endif( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
