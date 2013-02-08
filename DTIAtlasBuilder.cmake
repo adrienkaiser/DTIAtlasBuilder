@@ -34,19 +34,19 @@ else(DTIAtlasBuilder_BUILD_SLICER_EXTENSION)
 endif(DTIAtlasBuilder_BUILD_SLICER_EXTENSION)
 
 if(APPLE) # to configure GUI.cxx
-  set(Platform "mac")
+  set(Platform 1) # values defined at the beginning of GUI.cxx
 elseif(WIN32)
-  set(Platform "win")
+  set(Platform 2)
 else()
-  set(Platform "linux")
+  set(Platform 3)
 endif()
 
 QT4_WRAP_CPP(QtProject_HEADERS_MOC GUI.h)
 QT4_WRAP_UI(UI_FILES GUIwindow.ui)
-configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/GUI.cxx.in ${CMAKE_CURRENT_BINARY_DIR}/GUI.cxx ) # configure and copy : to set SlicerExtCXXVar (DTIAtlasBuilder_BUILD_SLICER_EXTENSION is "ON" or "OFF" -> not in c++)
-set(DTIABsources DTIAtlasBuilder.cxx GUI.h ${CMAKE_CURRENT_BINARY_DIR}/GUI.cxx ScriptWriter.h ScriptWriter.cxx ${QtProject_HEADERS_MOC} ${UI_FILES})
+set(DTIABsources DTIAtlasBuilder.cxx GUI.h GUI.cxx ScriptWriter.h ScriptWriter.cxx ${QtProject_HEADERS_MOC} ${UI_FILES})
 GENERATECLP(DTIABsources DTIAtlasBuilder.xml) # include the GCLP file to the project
 add_executable(DTIAtlasBuilder ${DTIABsources})  # add the files contained by "DTIABsources" to the project
+set_target_properties(DTIAtlasBuilder PROPERTIES COMPILE_FLAGS "-DDTIAtlasBuilder_BUILD_SLICER_EXTENSION=${SlicerExtCXXVar} -DPlatform=${Platform}") # Add preprocessor definitions
 target_link_libraries(DTIAtlasBuilder ${QT_LIBRARIES} ${ITK_LIBRARIES})
 install(TARGETS DTIAtlasBuilder DESTINATION ${INSTALL_DIR}) # same if Slicer Ext or not
 
@@ -180,7 +180,7 @@ if(BUILD_TESTING)
   set(TestingBINdirectory ${CMAKE_CURRENT_BINARY_DIR}/Testing)
   set(TestDataFolder ${CMAKE_CURRENT_SOURCE_DIR}/Data/Testing)
   add_library(DTIAtlasBuilderLib STATIC ${DTIABsources}) # STATIC is also the default
-  set_target_properties(DTIAtlasBuilderLib PROPERTIES COMPILE_FLAGS "-Dmain=ModuleEntryPoint") # replace the main in DTIAtlasBuilder.cxx by the itkTest function ModuleEntryPoint
+  set_target_properties(DTIAtlasBuilderLib PROPERTIES COMPILE_FLAGS "-Dmain=ModuleEntryPoint -DDTIAtlasBuilder_BUILD_SLICER_EXTENSION=${SlicerExtCXXVar} -DPlatform=${Platform}") # replace the main in DTIAtlasBuilder.cxx by the itkTest function ModuleEntryPoint
   target_link_libraries(DTIAtlasBuilderLib ${QT_LIBRARIES} ${ITK_LIBRARIES})
   set_target_properties(DTIAtlasBuilderLib PROPERTIES LABELS DTIAtlasBuilder)
   # Create Tests
