@@ -73,8 +73,10 @@ itksysProcess_Delete(TestProcess);
 #include "GUI.h"
 #include "ScriptWriter.h"
 
-#define DTIAtlasBuilder_BUILD_SLICER_EXTENSION ${SlicerExtCXXVar} // set when configuring
-#define Platform "${Platform}" // set when configuring = "win", "mac", or "linux"
+// The preprocessor variable "Platform" contains 1 (mac), 2 (win) or 3 (linux) : define these values:
+#define MAC 1
+#define WIN 2
+#define LIN 3
 
   /////////////////////////////////////////
  //            CONSTRUCTOR              //
@@ -108,6 +110,13 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	QObject::connect(m_ScriptQProcess, SIGNAL(finished(int)), this, SLOT(ScriptQProcessDone(int)));
 	m_ScriptRunningQTimer = new QTimer(this);
 	QObject::connect(m_ScriptRunningQTimer, SIGNAL(timeout()), this, SLOT(UpdateScriptRunningGUIDisplay()));
+
+/* Error message if windows or mac */
+	if(Platform == MAC || Platform == WIN)
+	{
+		if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION) QMessageBox::critical(this, "DTIAtlasBuilder not working", "This program is currently not working as it should on this platform.\nPlease do not hit the compute button, or the process will fail.\nYou can find other useful tools in Slicer:\n> DTI-Reg\n>Resample DTI Volume - log euclidean");
+		else QMessageBox::critical(this, "DTIAtlasBuilder not working", "This program is currently not working as it should on this platform.\nPlease do not hit the compute button, or the process will fail.\nIf the package was compiled or downloaded, you will find other useful tools in the specified install directory.");
+	}
 
 /* Initialize the options */
 	InitOptions();
@@ -255,19 +264,14 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 
 	// If DTIAB is built as an SlicerExtension, give the path to the folder containing external non cli tools
 	// If no SicerExtension, find_program will just search there and find nothing -> not an issue
-	if(Platform == "linux" || Platform == "win") m_DTIABSlicerExtensionExternalBinDir = DTIABExecutablePath + "/../../../ExternalBin"; // the executable will be in Ext/lib/Slicer4.2/cli_modules and the tools will be in Ext/ExternalBin
-	else if(Platform == "mac") m_DTIABSlicerExtensionExternalBinDir = DTIABExecutablePath + "/../ExternalBin";
-	else
-	{
-		std::cout<<"An error occured while configuring GUI.cxx. The constant variable \"Platform\" defined at line 35 should contain either \"mac\", \"win\" or \"linux\". Abort."<<std::endl;
-		exit(-1);
-	}
+	if(Platform == LIN || Platform == WIN) m_DTIABSlicerExtensionExternalBinDir = DTIABExecutablePath + "/../../../ExternalBin"; // the executable will be in Ext/lib/Slicer4.2/cli_modules and the tools will be in Ext/ExternalBin
+	else if(Platform == MAC) m_DTIABSlicerExtensionExternalBinDir = DTIABExecutablePath + "/../ExternalBin";
 	m_FindProgramDTIABExecDirVec.push_back(m_DTIABSlicerExtensionExternalBinDir);
 
 	// On Mac if Slicer Ext, paths to BRAINS (compiled within Slicer) are not set in the PATH env var, so add it to the search vector
-	if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION && Platform=="mac")
+	if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION && Platform==MAC)
 	{
-		std::string SlicerExtMacBRAINSPath = m_DTIABSlicerExtensionExternalBinDir + "/../../../cli_modules"
+		std::string SlicerExtMacBRAINSPath = m_DTIABSlicerExtensionExternalBinDir + "/../../../cli_modules";
 		m_FindProgramDTIABExecDirVec.push_back(SlicerExtMacBRAINSPath);
 	}
 
