@@ -83,7 +83,13 @@ if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
   endif()
 
 else( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
+
+  if(APPLE OR WIN32) # If not Slicer ext, not compile because will fail at run time
+    message(FATAL_ERROR "DTIAtlasBuilder has known issues and will not run on Mac or Windows")
+  endif()
+
   set(INSTALL_DIR ${CMAKE_INSTALL_PREFIX})
+
 endif( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
 
 set( COMPILE_PACKAGE ON CACHE BOOL "Compiles all the external projects and tools" )
