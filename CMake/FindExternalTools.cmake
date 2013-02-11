@@ -100,14 +100,43 @@ endmacro( AddToolMacro )
 ## Libraries for tools =============================================
 
 # VTK
-find_package(VTK REQUIRED)
-if (VTK_FOUND)
-  set(VTK_USE_QVTK TRUE)
-  set(VTK_USE_GUISUPPORT TRUE)
-  include(${VTK_USE_FILE}) # creates VTK_DIR
-else(VTK_FOUND)
-  message(FATAL_ERROR, "VTK not found. Please set VTK_DIR.")
-endif (VTK_FOUND)
+set(RecompileVTK OFF)
+set(VTK_DEPEND "")
+if(COMPILE_EXTERNAL_dtiprocessTK OR COMPILE_EXTERNAL_AtlasWerks OR COMPILE_EXTERNAL_BRAINS OR COMPILE_EXTERNAL_ANTS OR COMPILE_EXTERNAL_NIRALUtilities)
+  find_package(VTK QUIET)
+  if (VTK_FOUND)
+    set(VTK_USE_QVTK TRUE)
+    set(VTK_USE_GUISUPPORT TRUE)
+    include(${VTK_USE_FILE}) # creates VTK_DIR
+  else(VTK_FOUND)
+    message("VTK not found. It will be downloaded and recompiled, unless a path is manually specified in the VTK_DIR variable.") # Not a Warning = just info
+    set(RecompileVTK ON) # If not found, recompile it
+  endif(VTK_FOUND)
+endif()
+
+if(RecompileVTK) # BRAINSStandAlone/SuperBuild/External_VTK.cmake
+    ExternalProject_Add(VTK
+      GIT_REPOSITORY ${git_protocol}://vtk.org/VTK.git
+      GIT_TAG "v5.10.0"
+      SOURCE_DIR VTK
+      BINARY_DIR VTK-build
+      CMAKE_GENERATOR ${gen}
+      CMAKE_ARGS
+        ${COMMON_BUILD_OPTIONS_FOR_EXTERNALPACKAGES}
+        -DBUILD_EXAMPLES:BOOL=OFF
+        -DBUILD_TESTING:BOOL=OFF
+        -DBUILD_SHARED_LIBS:BOOL=OFF
+        -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}/VTK-install
+        -DVTK_USE_PARALLEL:BOOL=ON
+        -DVTK_LEGACY_REMOVE:BOOL=OFF
+        -DVTK_WRAP_TCL:BOOL=OFF
+        #-DVTK_USE_RPATH:BOOL=ON # Unused
+        -DVTK_WRAP_PYTHON:BOOL=${VTK_WRAP_PYTHON}
+        -DVTK_INSTALL_LIB_DIR:PATH=${Slicer_INSTALL_LIB_DIR}
+      )
+    set(VTK_DIR ${CMAKE_CURRENT_BINARY_DIR}/VTK-install/lib/vtk-5.10)
+    set(VTK_DEPEND VTK)
+endif(RecompileVTK)
 
 # FFTW and CLAPACK for GreedyAtlas
 if(COMPILE_EXTERNAL_AtlasWerks) # FFTW D + F build one on(after) another
@@ -245,7 +274,7 @@ if(COMPILE_EXTERNAL_DTIReg) # BatchMake only needed for DTIReg
   if(BatchMake_FOUND)
     include(${BatchMake_USE_FILE})
   else(BatchMake_FOUND)
-    message("BatchMake not found. It will be downloaded and recompiled.") # Not a Warning = just info
+    message("BatchMake not found. It will be downloaded and recompiled, unless a path is manually specified in the BatchMake_DIR variable.") # Not a Warning = just info
     set(RecompileBatchMake ON) # If not found, recompile it
   endif(BatchMake_FOUND )
 endif(COMPILE_EXTERNAL_DTIReg)
@@ -327,7 +356,7 @@ set( CMAKE_ExtraARGS
   -DTCLAP_DIR:PATH=${TCLAP_DIR}
   -DSlicerExecutionModel_DIR:PATH=${SlicerExecutionModel_DIR}
   -DDTIProcess_BUILD_SLICER_EXTENSION:BOOL=OFF
-  DEPENDS ${ITK_DEPEND}
+  DEPENDS ${ITK_DEPEND} ${VTK_DEPEND}
   )
 set( Tools
   dtiprocess
@@ -364,7 +393,7 @@ set( CMAKE_ExtraARGS
   -DatlasWerks_COMPILE_APP_TX_APPLY:BOOL=OFF
   -DatlasWerks_COMPILE_APP_TX_WERKS:BOOL=OFF
   -DatlasWerks_COMPILE_APP_UTILITIES:BOOL=OFF
-  DEPENDS ${ITK_DEPEND} FFTW CLAPACK # Not CMake Arg -> directly after CMakeArg in ExternalProject_Add()
+  DEPENDS ${ITK_DEPEND} ${VTK_DEPEND} FFTW CLAPACK # Not CMake Arg -> directly after CMakeArg in ExternalProject_Add()
 #  PATCH_COMMAND patch -p0 -d ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build -i ${CMAKE_CURRENT_BINARY_DIR}/AtlasWerksLAPACK.patch # !! no "" # !! patch doesn't exist on windows !
   PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/CMakeLists-AtlasWerksLAPACK-Patched.txt ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/AtlasWerks/CMakeLists.txt
   )
@@ -425,7 +454,7 @@ set( CMAKE_ExtraARGS
   -DUSE_ImageCalculator:BOOL=OFF
   -DUSE_GTRACT:BOOL=OFF
   -DLOCAL_SEM_EXECUTABLE_ONLY:BOOL=ON # Variable used in SlicerExecutionModel/CMake/SEMMacroBuildCLI.cmake:l.120 : if true, will only create executable without shared lib lib(exec)Lib.so
-  DEPENDS ${ITK_DEPEND} # So ITK is compiled before
+  DEPENDS ${ITK_DEPEND} ${VTK_DEPEND} # So ITK is compiled before
 #  PATCH_COMMAND patch -p0 -d ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build -i ${CMAKE_CURRENT_SOURCE_DIR}/CMake/BRAINS.patch # !! no "" # !! patch doesn't exist on windows !
   PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/CMake/CMakeBRAINS3BuildMacros-Patched.cmake ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/BRAINS/BRAINSCommonLib/BuildScripts/CMakeBRAINS3BuildMacros.cmake
   )
@@ -454,7 +483,7 @@ set( CMAKE_ExtraARGS
   -DSlicerExecutionModel_DIR:PATH=${SlicerExecutionModel_DIR}
   -DUSE_VTK:BOOL=OFF
   -DVTK_DIR:PATH=${VTK_DIR}
-  DEPENDS ${ITK_DEPEND} 
+  DEPENDS ${ITK_DEPEND} ${VTK_DEPEND}
   )
 set( Tools
   ANTS
@@ -570,7 +599,7 @@ set( CMAKE_ExtraARGS
   -DGenerateCLP_DIR:PATH=${GenerateCLP_DIR}
   -DModuleDescriptionParser_DIR:PATH=${ModuleDescriptionParser_DIR}
   -DTCLAP_DIR:PATH=${TCLAP_DIR}
-  DEPENDS ${ITK_DEPEND}
+  DEPENDS ${ITK_DEPEND} ${VTK_DEPEND}
   )
 set( Tools
   ImageMath
