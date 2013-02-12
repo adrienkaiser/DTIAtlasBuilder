@@ -184,13 +184,12 @@ endif(COMPILE_EXTERNAL_AtlasWerks)
 set(RecompileITK OFF)
 set(RecompileSEM OFF)
 
-if(COMPILE_EXTERNAL_dtiprocessTK OR COMPILE_EXTERNAL_BRAINS OR COMPILE_EXTERNAL_ANTS OR COMPILE_EXTERNAL_ResampleDTI) # If one of these tools needed, need to recompile ITK so the version is OK
-  set(RecompileITK ON) # Automatically recompile SlicerExecutionModel
-else() # If no need, recompile ITK or SEM only if not found
-  find_package(ITK) # Not required because will be recompiled if not found
-  if(ITK_FOUND)
-    include(${ITK_USE_FILE}) # set ITK_DIR
-
+find_package(ITK QUIET) # Not required because will be recompiled if not found
+if(ITK_FOUND)
+  include(${ITK_USE_FILE}) # set ITK_DIR and ITK_VERSION_MAJOR
+  if(NOT ${ITK_VERSION_MAJOR} EQUAL 4)
+    set(RecompileITK ON)
+  else() # NO recompile ITK
     # If ITK not recompiled, look for SlicerExecutionModel
     find_package(SlicerExecutionModel) # Not required because will be recompiled if not found
     if(SlicerExecutionModel_FOUND)
@@ -199,16 +198,15 @@ else() # If no need, recompile ITK or SEM only if not found
       message(WARNING "SlicerExecutionModel not found. It will be downloaded and recompiled.")
       set(RecompileSEM ON)
     endif(SlicerExecutionModel_FOUND)
-
-  else(ITK_FOUND)
-    message(WARNING "ITK not found. ITKv4.4.0 will be downloaded and recompiled.")
-    set(RecompileITK ON) # Automatically recompile SlicerExecutionModel
-  endif(ITK_FOUND)
-endif() # COMPILE_EXTERNAL_dtiprocessTK OR COMPILE_EXTERNAL_BRAINS OR COMPILE_EXTERNAL_ANTS OR COMPILE_EXTERNAL_ResampleDTI
+  endif() # (${ITK_VERSION_MAJOR} NOT EQUAL 4)
+else(ITK_FOUND)
+  set(RecompileITK ON) # Automatically recompile SlicerExecutionModel
+endif(ITK_FOUND)
 
 set(ITK_DEPEND "")
 set(RecompileBatchMake OFF)
 if(RecompileITK)
+  message("ITKv4 not found. It will be downloaded and recompiled, unless a path is manually specified in the ITK_DIR variable.") # Not a Warning = just info
   # Download and compile ITKv4
   ExternalProject_Add(I4 # BRAINSStandAlone/SuperBuild/External_ITKv4.cmake # !! All args needed as they are # Name shorten from ITKv4 because Windows ITKv4 path limited to 50 chars
     GIT_REPOSITORY "${git_protocol}://itk.org/ITK.git"
@@ -234,7 +232,7 @@ if(RecompileITK)
 #      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=${CMAKE_CURRENT_BINARY_DIR}/ITKv4-build/lib # Needed for BRAINSTools to compile
 #      -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${CMAKE_CURRENT_BINARY_DIR}/ITKv4-build/bin # Needed for BRAINSTools to compile
     )
-  set(ITK_DIR ${CMAKE_CURRENT_BINARY_DIR}/I4-i/lib/cmake/ITK-4.4) # Use the downloaded ITK for all tools # Path shorten from ITKv4 because Windows SOURCE_DIR path limited to 50 chars
+  set(ITK_DIR ${CMAKE_CURRENT_BINARY_DIR}/I4-i/lib/cmake/ITK-4.4 FORCE) # Use the downloaded ITK for all tools # Path shorten from ITKv4 because Windows SOURCE_DIR path limited to 50 chars
   set(ITK_DEPEND I4)
   set(RecompileSEM ON) # If recompile ITK, recompile SlicerExecutionModel
   set(RecompileBatchMake ON) # If recompile ITK, recompile BatchMake
