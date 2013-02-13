@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1196</width>
-    <height>577</height>
+    <height>605</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -363,7 +363,7 @@
            <item>
             <widget class="QLabel" name="label_21">
              <property name="text">
-              <string>If you put a transformation file named CaseX_InitLinearTrans.nrrd in the foler [Output Folder]/DTIAtlas/1_Affine_Registration/
+              <string>If you put a transformation file named CaseX_InitLinearTrans.mat or CaseX_InitLinearTrans.txt in the foler [Output Folder]/DTIAtlas/1_Affine_Registration/
 as an Affine transform already computed, it will be used as an input for the Affine registration with BRAINSFit</string>
              </property>
             </widget>
