@@ -409,7 +409,7 @@ set( CMAKE_ExtraARGS
   -DatlasWerks_COMPILE_APP_TX_WERKS:BOOL=OFF
   -DatlasWerks_COMPILE_APP_UTILITIES:BOOL=OFF
 ##--  DEPENDS ${ITK_DEPEND} ${VTK_DEPEND} FFTW CLAPACK # Not CMake Arg -> directly after CMakeArg in ExternalProject_Add()
-  DEPENDS ${ITK_DEPEND} FFTWD FFTWF CLAPACK # Not CMake Arg -> directly after CMakeArg in ExternalProject_Add()
+  DEPENDS ${ITK_DEPEND} FFTW CLAPACK # Not CMake Arg -> directly after CMakeArg in ExternalProject_Add()
 ##--  PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/CMakeLists-AtlasWerksLAPACK-Patched.txt ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/AtlasWerks/CMakeLists.txt
   )
 set( Tools

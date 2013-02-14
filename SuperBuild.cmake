@@ -84,8 +84,9 @@ if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
 
 else( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
 
-  if(APPLE OR WIN32) # If not Slicer ext, not compile because will fail at run time
-    message(FATAL_ERROR "DTIAtlasBuilder has known issues and will not run on Mac or Windows")
+  option( FORCE_BUILD_ON_MAC_OR_WIN "Force Building on Known failing platforms" OFF )
+  if(NOT FORCE_BUILD_ON_MAC_OR_WIN AND ( APPLE OR WIN32 ) ) # If not Slicer ext, not compile because will fail at run time
+    message(FATAL_ERROR "DTIAtlasBuilder has known issues and will not run on Mac or Windows\nSet -DFORCE_BUILD_ON_MAC_OR_WIN:BOOL=ON to override")
   endif()
 
   set(INSTALL_DIR ${CMAKE_INSTALL_PREFIX})
