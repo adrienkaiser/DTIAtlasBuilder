@@ -365,8 +365,10 @@ AddToolMacro( dtiprocessTK ) # AddToolMacro( proj ) + uses SourceCodeArgs CMAKE_
 # ===== AtlasWerks ================================================================
 # code for external tools from http://github.com/Chaircrusher/AtlasWerksBuilder/blob/master/CMakeLists.txt
 set( SourceCodeArgs
-  URL "http://www.sci.utah.edu/releases/atlaswerks_v0.1.4/AtlasWerks_0.1.4_Linux.tgz"
-  URL_MD5 05fc867564e3340d0d448dd0daab578a
+#  URL "http://www.sci.utah.edu/releases/atlaswerks_v0.1.4/AtlasWerks_0.1.4_Linux.tgz"
+#  URL_MD5 05fc867564e3340d0d448dd0daab578a
+  GIT_REPOSITORY "${git_protocol}://github.com/BRAINSia/AtlasWerks.git"
+  GIT_TAG "ecd6891216ccbc7ccf3fdb589182ae503189a960" # 02-01-2013 fix bug with clang mac build
   )
 set( CMAKE_ExtraARGS
   -DITK_DIR:PATH=${ITK_DIR}
