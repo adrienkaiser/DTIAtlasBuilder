@@ -468,13 +468,15 @@ AddToolMacro( BRAINS ) # AddToolMacro( proj ) + uses SourceCodeArgs CMAKE_ExtraA
 
 # ===== ANTS/WarpMultiTransform =====================================================
 set( SourceCodeArgs
+  # SVN_REPOSITORY "http://advants.svn.sourceforge.net/svnroot/advants/trunk"
+  # SVN_REVISION -r 1685 # 12/13/2012
   GIT_REPOSITORY "${git_protocol}://github.com/stnava/ANTs.git"
   GIT_TAG "6cb624225fe99047b562acb1a0cb053dc98dbc50" # 2013-01-31 Move to new repository home
   )
 set( CMAKE_ExtraARGS
   -DBUILD_TESTING:BOOL=OFF
   -DBUILD_SHARED_LIBS:BOOL=OFF
-  #  -DANTS_SUPERBUILD:BOOL=OFF
+  #  -DANTS_SUPERBUILD:BOOL=OFF # because needs boost
   -DSuperBuild_ANTS_USE_GIT_PROTOCOL:BOOL=${USE_GIT_PROTOCOL}
   -DUSE_SYSTEM_ITK:BOOL=ON
   -DITK_DIR:PATH=${ITK_DIR}
