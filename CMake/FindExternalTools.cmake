@@ -396,7 +396,7 @@ set( CMAKE_ExtraARGS
   -DatlasWerks_COMPILE_APP_UTILITIES:BOOL=OFF
   DEPENDS ${ITK_DEPEND} ${VTK_DEPEND} FFTW CLAPACK # Not CMake Arg -> directly after CMakeArg in ExternalProject_Add()
 #  PATCH_COMMAND patch -p0 -d ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build -i ${CMAKE_CURRENT_BINARY_DIR}/AtlasWerksLAPACK.patch # !! no "" # !! patch doesn't exist on windows !
-  PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/CMakeLists-AtlasWerksLAPACK-Patched.txt ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/AtlasWerks/CMakeLists.txt
+#  PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/CMakeLists-AtlasWerksLAPACK-Patched.txt ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/AtlasWerks/CMakeLists.txt
   )
 set( Tools
   GreedyAtlas
