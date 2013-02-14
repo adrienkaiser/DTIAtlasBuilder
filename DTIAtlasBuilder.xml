@@ -28,7 +28,7 @@
 			<name>CSVFile</name>
 			<flag>d</flag>
 			<longflag>dataset_file</longflag>
-			<description>CSV file containing the dataset</description>
+			<description>CSV file containing the dataset. Warning: If a parameter file is given (-p), the associated dataset file will also be loaded, so it is not needed to give the dataset file again, otherwise it will be loaded twice.</description>
 			<label>Dataset File</label>
 			<channel>input</channel>
 		</file>
