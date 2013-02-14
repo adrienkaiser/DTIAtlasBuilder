@@ -159,7 +159,7 @@ if(COMPILE_EXTERNAL_AtlasWerks) # FFTW D + F build one on(after) another
     CMAKE_ARGS
       ${COMMON_BUILD_OPTIONS_FOR_EXTERNALPACKAGES} # So we can give CC to configure*
     INSTALL_COMMAND ""
-    BUILD_COMMAND ${CMAKE_COMMAND} -DTOP_BINARY_DIR:PATH=${CMAKE_CURRENT_BINARY_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/CMake/InstallFFTW.cmake # -DARGNAME:TYPE=VALUE -P <cmake file> = Process script mode
+    BUILD_COMMAND ${CMAKE_COMMAND} -DTOP_BINARY_DIR:PATH=${CMAKE_CURRENT_BINARY_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/SuperBuild/InstallFFTW.cmake # -DARGNAME:TYPE=VALUE -P <cmake file> = Process script mode
     )
   set(FFTW_DIR ${CMAKE_CURRENT_BINARY_DIR}/FFTW-install)
 
@@ -176,7 +176,7 @@ if(COMPILE_EXTERNAL_AtlasWerks) # FFTW D + F build one on(after) another
       -DBUILD_TESTING:BOOL=OFF
     INSTALL_COMMAND "" # No install step
     )
-  #configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CMake/CMakeLists-AtlasWerksLAPACK-Patched.txt.in ${CMAKE_CURRENT_BINARY_DIR}/CMakeLists-AtlasWerksLAPACK-Patched.txt @ONLY)
+  #configure_file(${CMAKE_CURRENT_SOURCE_DIR}/SuperBuild/CMakeLists-AtlasWerksLAPACK-Patched.txt.in ${CMAKE_CURRENT_BINARY_DIR}/CMakeLists-AtlasWerksLAPACK-Patched.txt @ONLY)
   # In the patch : search before in the recompiled CLAPACK because needs to be compiled statically
 endif(COMPILE_EXTERNAL_AtlasWerks)
 
@@ -298,7 +298,7 @@ if(RecompileBatchMake)
         -DUSE_SPLASHSCREEN:BOOL=OFF
         -DITK_DIR:PATH=${ITK_DIR}
       INSTALL_COMMAND ""
-      PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/CMake/BatchMakePatchedZip.c ${CMAKE_CURRENT_BINARY_DIR}/BatchMake/Utilities/Zip/zip.c # No "" # Patch for windows compilation error (declaration of variable after beginning of block - "uLong year")
+      PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/SuperBuild/BatchMakePatchedZip.c ${CMAKE_CURRENT_BINARY_DIR}/BatchMake/Utilities/Zip/zip.c # No "" # Patch for windows compilation error (declaration of variable after beginning of block - "uLong year")
       DEPENDS ${ITK_DEPEND}
       )
     set(BatchMake_DIR ${CMAKE_CURRENT_BINARY_DIR}/BatchMake-build)
@@ -457,8 +457,8 @@ set( CMAKE_ExtraARGS
   -DUSE_GTRACT:BOOL=OFF
   -DLOCAL_SEM_EXECUTABLE_ONLY:BOOL=ON # Variable used in SlicerExecutionModel/CMake/SEMMacroBuildCLI.cmake:l.120 : if true, will only create executable without shared lib lib(exec)Lib.so
   DEPENDS ${ITK_DEPEND} ${VTK_DEPEND} # So ITK is compiled before
-#  PATCH_COMMAND patch -p0 -d ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build -i ${CMAKE_CURRENT_SOURCE_DIR}/CMake/BRAINS.patch # !! no "" # !! patch doesn't exist on windows !
-#  PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/CMake/CMakeBRAINS3BuildMacros-Patched.cmake ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/BRAINS/BRAINSCommonLib/BuildScripts/CMakeBRAINS3BuildMacros.cmake
+#  PATCH_COMMAND patch -p0 -d ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build -i ${CMAKE_CURRENT_SOURCE_DIR}/SuperBuild/BRAINS.patch # !! no "" # !! patch doesn't exist on windows !
+#  PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/SuperBuild/CMakeBRAINS3BuildMacros-Patched.cmake ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/BRAINS/BRAINSCommonLib/BuildScripts/CMakeBRAINS3BuildMacros.cmake
   )
 set( Tools
   BRAINSFit

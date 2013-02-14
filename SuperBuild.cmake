@@ -189,7 +189,7 @@ if(COMPILE_PACKAGE)
   endif()
 
   # File containing add_external for all tools
-  include( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindExternalTools.cmake ) # Go execute the given cmake script, and get back into this script when done
+  include( ${CMAKE_CURRENT_SOURCE_DIR}/SuperBuild/FindExternalTools.cmake ) # Go execute the given cmake script, and get back into this script when done
 
   # Update the paths to the program in the configuration file, and copy it to the executable directory
   if( NOT DTIAtlasBuilder_BUILD_SLICER_EXTENSION ) # If Slicer Extension, compiled and executed not on same system so Config file useless
