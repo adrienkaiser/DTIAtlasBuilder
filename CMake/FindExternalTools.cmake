@@ -403,7 +403,7 @@ AddToolMacro( AtlasWerks ) # AddToolMacro( proj ) + uses SourceCodeArgs CMAKE_Ex
 # ===== BRAINSFit =============================================================
 set( SourceCodeArgs
   GIT_REPOSITORY "${git_protocol}://github.com/BRAINSia/BRAINSStandAlone.git"
-  GIT_TAG "812696334c11cca12b077bc9080836e2d92aa00e" # 01-30-2013 fix bug with ITK4.4 # "dd7ad3926a01fbdd098ea858fb95012ca16fb236" # 12/18/2012
+  GIT_TAG "1abcb55fafc1c9b94dabd33f5fcc40e248c326ba" # 01-30-2013 fix bug with ITK4.4 # "dd7ad3926a01fbdd098ea858fb95012ca16fb236" # 12/18/2012
 # "ff94032edafbc46a95f51db4bce894f0120b5992" : Slicer4 version # /devel/linux/Slicer4_linux64/Slicer/SuperBuild/External_BRAINSTools.cmake -> compiles but segfault
 # "31dcba577ee1bac5c4680fc9d7c830d6074020a9" : 12/13/2012
 # "98a46a2b08da882d46f04cbf0d539c2b73348049" # version from http://www.nitrc.org/svn/dtiprep/trunk/SuperBuild/External_BRAINSTools.cmake -> compiles but run error "undefined symbol: ModuleEntryPoint"
@@ -412,6 +412,7 @@ set( SourceCodeArgs
 set( CMAKE_ExtraARGS
   -DBUILD_TESTING:BOOL=OFF
   -DBUILD_SHARED_LIBS:BOOL=OFF
+  -DINTEGRATE_WITH_SLICER:BOOL=OFF
   -DBRAINSTools_SUPERBUILD:BOOL=OFF
   -DSuperBuild_BRAINSTools_USE_GIT:BOOL=${USE_GIT_PROTOCOL}
   -DITK_VERSION_MAJOR:STRING=4
@@ -454,7 +455,7 @@ set( CMAKE_ExtraARGS
   -DLOCAL_SEM_EXECUTABLE_ONLY:BOOL=ON # Variable used in SlicerExecutionModel/CMake/SEMMacroBuildCLI.cmake:l.120 : if true, will only create executable without shared lib lib(exec)Lib.so
   DEPENDS ${ITK_DEPEND} ${VTK_DEPEND} # So ITK is compiled before
 #  PATCH_COMMAND patch -p0 -d ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build -i ${CMAKE_CURRENT_SOURCE_DIR}/CMake/BRAINS.patch # !! no "" # !! patch doesn't exist on windows !
-  PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/CMake/CMakeBRAINS3BuildMacros-Patched.cmake ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/BRAINS/BRAINSCommonLib/BuildScripts/CMakeBRAINS3BuildMacros.cmake
+#  PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/CMake/CMakeBRAINS3BuildMacros-Patched.cmake ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/BRAINS/BRAINSCommonLib/BuildScripts/CMakeBRAINS3BuildMacros.cmake
   )
 set( Tools
   BRAINSFit
