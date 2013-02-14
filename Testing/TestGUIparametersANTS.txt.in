@@ -1,0 +1,17 @@
+DTIAtlasBuilderParameterFileVersion=1
+Output Folder=${CMAKE_CURRENT_BINARY_DIR}
+Atlas Template=
+SafetyMargin=true
+Loops for the registration=1
+BRAINSFit Affine Tfm Mode=useCenterOfHeadAlign
+Overwrite=false
+Scale Level =1,4,150,1,1,0.0001,0.001
+Scale Level =1,2,120,1,1,0.001,0.01
+Scale Level =1,1,100,0.1,0.1,0.01,0.1
+Resampling Interpolation Algorithm=Linear
+Tensor interpolation=Log Euclidean
+Tensor transformation=Preservation of the Principal Direction (PPD)
+DTIReg Extra Path=${CMAKE_CURRENT_BINARY_DIR}/../ANTS-build/bin
+DTIRegMethod=ANTS=SpatioTempDiffeo (SyN);0.25;100x50x25;Cross-Correlation (CC);2;3;0
+GridProcessing=
+CSV Dataset File=${CMAKE_CURRENT_BINARY_DIR}/TestGUIparameters.csv

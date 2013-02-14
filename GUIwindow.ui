@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1045</width>
-    <height>577</height>
+    <width>1196</width>
+    <height>605</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -363,7 +363,7 @@
            <item>
             <widget class="QLabel" name="label_21">
              <property name="text">
-              <string>If you put a transformation file named CaseX_InitLinearTrans.nrrd in the foler [Output Folder]/DTIAtlas/1_Affine_Registration/
+              <string>If you put a transformation file named CaseX_InitLinearTrans.mat or CaseX_InitLinearTrans.txt in the foler [Output Folder]/DTIAtlas/1_Affine_Registration/
 as an Affine transform already computed, it will be used as an input for the Affine registration with BRAINSFit</string>
              </property>
             </widget>
@@ -386,9 +386,9 @@ as an Affine transform already computed, it will be used as an input for the Aff
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="ResampTab">
+      <widget class="QWidget" name="AWTab">
        <attribute name="title">
-        <string>AtlasWerks Atlas</string>
+        <string>Diffeomorphic Atlas</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_12">
         <item>
@@ -400,7 +400,7 @@ as an Affine transform already computed, it will be used as an input for the Aff
            </sizepolicy>
           </property>
           <property name="title">
-           <string>AtlasWerks</string>
+           <string>GreedyAtlas Scale Levels</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_4">
            <item>
@@ -979,76 +979,6 @@ as an Affine transform already computed, it will be used as an input for the Aff
          </widget>
         </item>
         <item>
-         <widget class="QGroupBox" name="groupBox">
-          <property name="title">
-           <string>Average computation</string>
-          </property>
-          <layout class="QVBoxLayout" name="verticalLayout_17">
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_6">
-             <item>
-              <widget class="QLabel" name="averageStatMethodLabel">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>DTI Average Statistics Method :</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QComboBox" name="averageStatMethodComboBox">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="currentIndex">
-                <number>0</number>
-               </property>
-               <item>
-                <property name="text">
-                 <string>Principal Geodesic Analysis (PGA)</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Euclidean</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Log Euclidean</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer_3">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeType">
-                <enum>QSizePolicy::Expanding</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item>
          <spacer name="verticalSpacer_2">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -1063,7 +993,7 @@ as an Affine transform already computed, it will be used as an input for the Aff
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab">
+      <widget class="QWidget" name="FinalResamptab">
        <attribute name="title">
         <string>Final Resampling</string>
        </attribute>
@@ -1073,83 +1003,118 @@ as an Affine transform already computed, it will be used as an input for the Aff
           <property name="title">
            <string>DTI-Reg</string>
           </property>
-          <layout class="QHBoxLayout" name="horizontalLayout_11">
+          <layout class="QVBoxLayout" name="verticalLayout_16">
            <item>
-            <layout class="QVBoxLayout" name="verticalLayout_20">
+            <widget class="QLabel" name="label_26">
+             <property name="text">
+              <string>DTI-Reg needs a program not used by DTIAtlasBuilder (ANTS). Please give a path to a folder containing ANTS if it is in a special place (not in the PATH), so DTI-Reg can find it:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_6">
              <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_10">
-               <item>
-                <widget class="QLabel" name="label_18">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>Registration Method:</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QComboBox" name="RegMethodcomboBox">
-                 <item>
-                  <property name="text">
-                   <string>BRAINS</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>ANTS</string>
-                  </property>
-                 </item>
-                </widget>
-               </item>
-              </layout>
+              <widget class="QPushButton" name="BrowseDTIRegExtraPathPushButton">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Browse Folder containing ANTS</string>
+               </property>
+              </widget>
              </item>
              <item>
-              <layout class="QVBoxLayout" name="DTIRegOptionsVLayout"/>
+              <widget class="QLineEdit" name="DTIRegExtraPathlineEdit">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;DTI-Reg also needs BRAINS, dtiprocess and ResampleDTIlogEuclidean, which will be automatically given to DTI-Reg from the paths set in DTIAtlasBuilder&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
            <item>
-            <spacer name="horizontalSpacer_13">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <spacer name="horizontalSpacer_11">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <spacer name="horizontalSpacer_12">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
+            <layout class="QHBoxLayout" name="horizontalLayout_14">
+             <item>
+              <layout class="QVBoxLayout" name="verticalLayout_20">
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_10">
+                 <item>
+                  <widget class="QLabel" name="label_18">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="text">
+                    <string>Registration Method:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QComboBox" name="RegMethodcomboBox">
+                   <item>
+                    <property name="text">
+                     <string>BRAINS</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>ANTS</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QVBoxLayout" name="DTIRegOptionsVLayout"/>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_11">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_12">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_13">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
            </item>
           </layout>
          </widget>
@@ -1214,9 +1179,9 @@ as an Affine transform already computed, it will be used as an input for the Aff
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="AWButton">
+             <widget class="QPushButton" name="GAButton">
               <property name="text">
-               <string>AtlasWerks</string>
+               <string>GreedyAtlas</string>
               </property>
              </widget>
             </item>
@@ -1268,7 +1233,7 @@ as an Affine transform already computed, it will be used as an input for the Aff
              <widget class="QLineEdit" name="BRAINSFitPath"/>
             </item>
             <item>
-             <widget class="QLineEdit" name="AWPath"/>
+             <widget class="QLineEdit" name="GAPath"/>
             </item>
             <item>
              <widget class="QLineEdit" name="dtiavgPath"/>
@@ -1343,7 +1308,7 @@ as an Affine transform already computed, it will be used as an input for the Aff
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="AWResetButton">
+             <widget class="QPushButton" name="GAResetButton">
               <property name="toolTip">
                <string>Reset Software Path</string>
               </property>
@@ -1471,6 +1436,77 @@ It will be read at the beginning of the program.</string>
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="GridTab">
+       <attribute name="title">
+        <string>Grid Processing</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_15">
+        <item>
+         <widget class="QCheckBox" name="GridProcesscheckBox">
+          <property name="text">
+           <string>Enable Grid Processing</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_22">
+          <property name="text">
+           <string>Please give the command to use to run a command on server : </string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_23">
+          <property name="font">
+           <font>
+            <family>Courier 10 Pitch</family>
+            <pointsize>11</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>&quot;bsub mkdir NewFolder&quot; -&gt; Write &quot;bsub&quot;</string>
+          </property>
+          <property name="textInteractionFlags">
+           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="GridProcessCmdLineEdit">
+          <property name="font">
+           <font>
+            <family>Courier 10 Pitch</family>
+            <pointsize>11</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_24">
+          <property name="text">
+           <string>Before running DTI Atlas Builder on the grid, please be sure to have all tools listed in the &quot;Software Configuration&quot; tab installed on the grid with their
+paths configured.</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
     <item>
@@ -1540,7 +1576,7 @@ It will be read at the beginning of the program.</string>
          <string>QC with MriWatcher</string>
         </property>
         <property name="text">
-         <string>AW Deformable QC</string>
+         <string>Diffeomorphic QC</string>
         </property>
        </widget>
       </item>
@@ -1572,6 +1608,30 @@ It will be read at the beginning of the program.</string>
       </item>
      </layout>
     </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_11">
+      <item>
+       <widget class="QLabel" name="ScriptRunningDisplayQLabel">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_17">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -1579,7 +1639,7 @@ It will be read at the beginning of the program.</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1045</width>
+     <width>1196</width>
      <height>25</height>
     </rect>
    </property>

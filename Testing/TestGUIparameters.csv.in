@@ -1,0 +1,4 @@
+id,Original DTI Image
+1,${TestDataFolder}/ImageTest1.nrrd
+2,${TestDataFolder}/ImageTest2.nrrd
+3,${TestDataFolder}/ImageTest3.nrrd

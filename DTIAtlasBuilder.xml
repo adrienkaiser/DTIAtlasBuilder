@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <executable>
 	<title>DTI Atlas Builder</title>
-	<description>A tool to create an atlas from several DTI images. For any suggestion or question, please contact akaiser@unc.edu</description>
+	<description>A tool to create an atlas from several DTI images. For any suggestion or question, please contact akaiser[at]unc.edu</description>
 	<contributor>Adrien Kaiser</contributor>
 	<category>Diffusion.Diffusion Tensor Images</category>
 	<version>1.0</version>
@@ -14,6 +14,7 @@
 			<longflag>parameter_file</longflag>
 			<description>Parameter file from this program</description>
 			<label>Parameter file</label>
+			<channel>input</channel>
 		</file>
 		<file fileExtensions="txt">
 			<name>ConfigFile</name>
@@ -21,6 +22,7 @@
 			<longflag>configuration_file</longflag>
 			<description>Software configuration file</description>
 			<label>Configuration File</label>
+			<channel>input</channel>
 		</file>
 		<file fileExtensions="csv">
 			<name>CSVFile</name>
@@ -28,6 +30,7 @@
 			<longflag>dataset_file</longflag>
 			<description>CSV file containing the dataset</description>
 			<label>Dataset File</label>
+			<channel>input</channel>
 		</file>
 	</parameters>
 	<parameters>
@@ -43,15 +46,8 @@
 		<boolean>
 			<name>Overwrite</name>
 			<longflag>overwrite</longflag>
-			<description>If you want to overwrite on compute</description>
+			<description>If you want to overwrite on previous compute</description>
 			<label>Overwrite</label>
-			<default>false</default>
-		</boolean>
-		<boolean>
-			<name>Quiet</name>
-			<longflag>quiet</longflag>
-			<description>If you do not want any command line display (some programs with no quiet option called by this tool may display informations anyway)</description>
-			<label>Quiet</label>
 			<default>false</default>
 		</boolean>
 	</parameters>

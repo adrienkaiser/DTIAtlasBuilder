@@ -42,11 +42,13 @@ class ScriptWriter
 		void setTensInterpol(std::string TensInterpol);
 		void setInterpolLogOption(std::string InterpolLogOption);
 		void setTensorTfm(std::string TensTfm);
-		void setAverageStatMethod(std::string Method);
 		void setSoftPath(std::vector < std::string > SoftPath);
 		void setDTIRegOptions(std::vector < std::string > DTIRegOptions);
-		void setQuiet(bool Quiet);
+		void setDTIRegExtraPath(std::string DTIRegExtraPath);
 		void setBFAffineTfmMode(std::string BFAffineTfmMode);
+		void setGridProcess(bool useGridProcess);
+		void setGridCommand(std::string GridCommand);
+		void setPythonPath(std::string PythonPath);
 
 	private:
 /* VALUES */
@@ -64,11 +66,13 @@ class ScriptWriter
 		std::string m_TensInterpol;
 		std::string m_InterpolLogOption;
 		std::string m_TensTfm;
-		std::string m_AverageStatMethod;
 		std::vector < std::string > m_SoftPath; // contains the path to the softwares: 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=AtlasWerks, 7=dtiaverage, 8=DTI-Reg, 9=unu
 		std::vector < std::string > m_DTIRegOptions;
-		bool m_Quiet;
+		std::string m_DTIRegExtraPath;
 		std::string m_BFAffineTfmMode;
+		bool m_useGridProcess;
+		std::string m_GridCommand;
+		std::string m_PythonPath;
 
 /* SCRIPTS */
 		std::string m_Script_Preprocess; //contains the whole Script for Pre processing
