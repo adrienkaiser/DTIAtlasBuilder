@@ -97,7 +97,6 @@ void ScriptWriter::Preprocess ()
 	if( m_useGridProcess )
 	{
 		Script = Script + "# Call script to run command on server\n";
-		Script = Script + "ScriptCommand = \"" + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script\"\n";
 		Script = Script + "FilesFolder = \"" + m_OutputPath + "/DTIAtlas/GridProcessingFiles\"\n";
 		Script = Script + "if not os.path.isdir(FilesFolder):\n";
 			Script = Script + "\tos.mkdir(FilesFolder)\n";
@@ -126,13 +125,13 @@ void ScriptWriter::Preprocess ()
 
 		GridApostrophe = " + \"\\'\"";
 		std::string File = "FilesFolder + \"/Case\" + str(case+1)";
-		GridProcessCmd = "\"" + m_GridCommand + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + " + File + " + \" \"" + GridApostrophe + " + ";
+		GridProcessCmd = "\"" + m_GridCommand + " " + m_PythonPath + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + " + File + " + \" \"" + GridApostrophe + " + ";
 		GridProcessFileExistCmd = "\tf = open( " + File + ", 'w')\n\tf.close()\n"; // if the image already exists, create the "semaphore" file
 		GridProcessFileExistCmd1 = "\t\tf = open( " + File + ", 'w')\n\t\tf.close()\n"; // if the image already exists, create the "semaphore" file
 		GridProcessFileExistCmd2 = "\t\t\tf = open( " + File + ", 'w')\n\t\t\tf.close()\n"; // if the image already exists, create the "semaphore" file
 
 		std::string FileNoCase = "FilesFolder + \"/file\""; //  for the commands executed only once = not once per case
-		GridProcessCmdNoCase = "\"" + m_GridCommand + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + " + FileNoCase + " + \" \"" + GridApostrophe + " + ";
+		GridProcessCmdNoCase = "\"" + m_GridCommand + " " + m_PythonPath + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + " + FileNoCase + " + \" \"" + GridApostrophe + " + ";
 		GridProcessFileExistCmdNoCase = "\tf = open( " + FileNoCase + ", 'w')\n\tf.close()\n";
 		GridProcessFileExistCmdNoCase1 = "\t\tf = open( " + FileNoCase + ", 'w')\n\t\tf.close()\n";
 		GridProcessFileExistCmdNoCase2 = "\t\t\tf = open( " + FileNoCase + ", 'w')\n\t\t\tf.close()\n";
@@ -483,7 +482,6 @@ void ScriptWriter::AtlasBuilding()
 	if( m_useGridProcess )
 	{
 		Script = Script + "# Call script to run command on server\n";
-		Script = Script + "ScriptCommand = \"" + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script\"\n";
 		Script = Script + "FilesFolder = \"" + m_OutputPath + "/DTIAtlas/GridProcessingFiles\"\n\n";
 
 		//Test Function
@@ -507,13 +505,13 @@ void ScriptWriter::AtlasBuilding()
 
 		GridApostrophe = " + \"\\'\"";
 		std::string File = "FilesFolder + \"/Case\" + str(case+1)";
-		GridProcessCmd = "\"" + m_GridCommand + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + " + File + " + \" \"" + GridApostrophe + " + ";
+		GridProcessCmd = "\"" + m_GridCommand + " " + m_PythonPath + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + " + File + " + \" \"" + GridApostrophe + " + ";
 		GridProcessFileExistCmd = "\tf = open( " + File + ", 'w')\n\tf.close()\n"; // if the image already exists, create the "semaphore" file
 		GridProcessFileExistCmd1 = "\t\tf = open( " + File + ", 'w')\n\t\tf.close()\n"; // if the image already exists, create the "semaphore" file
 		GridProcessFileExistCmd2 = "\t\t\tf = open( " + File + ", 'w')\n\t\t\tf.close()\n"; // if the image already exists, create the "semaphore" file
 
 		std::string FileNoCase = "FilesFolder + \"/file\""; //  for the commands executed only once = not once per case
-		GridProcessCmdNoCase = "\"" + m_GridCommand + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + " + FileNoCase + " + \" \"" + GridApostrophe + " + ";
+		GridProcessCmdNoCase = "\"" + m_GridCommand + " " + m_PythonPath + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + " + FileNoCase + " + \" \"" + GridApostrophe + " + ";
 		GridProcessFileExistCmdNoCase = "\tf = open( " + FileNoCase + ", 'w')\n\tf.close()\n";
 		GridProcessFileExistCmdNoCase1 = "\t\tf = open( " + FileNoCase + ", 'w')\n\t\tf.close()\n";
 		GridProcessFileExistCmdNoCase2 = "\t\t\tf = open( " + FileNoCase + ", 'w')\n\t\t\tf.close()\n";
