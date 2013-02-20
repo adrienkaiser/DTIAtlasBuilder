@@ -51,6 +51,11 @@ set(COMMON_BUILD_OPTIONS_FOR_EXTERNALPACKAGES
 option( DTIAtlasBuilder_BUILD_SLICER_EXTENSION "Build DTIAtlasBuilder as a Slicer extension" OFF )
 if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
 
+  if(APPLE OR WIN32)
+    message(WARNING "2013-02-20: The development team is aware that there are build issues specific to MacOSX / Windows and is working on it.")
+    return()
+  endif()
+
   if(NOT Slicer_SOURCE_DIR)
     set(EXTENSION_NAME DTIAtlasBuilder)
     set(EXTENSION_HOMEPAGE "http://www.nitrc.org/projects/dtiatlasbuilder")
@@ -179,11 +184,14 @@ if(COMPILE_PACKAGE)
     endforeach()
 
     if(APPLE) # unu is not recompiled with Slicer on MacOS
-      set( COMPILE_EXTERNAL_teem ON CACHE BOOL "Compile external teem" FORCE)
+#      set( COMPILE_EXTERNAL_teem ON CACHE BOOL "Compile external teem" FORCE)
     endif(APPLE)
 
-    if(WIN32) # AtlasWerks does not compile on windows yet, so do not try to compile it
+    if(WIN32 OR APPLE) # DTIAB not working on Windows/Mac so only commpile DTI-Reg and ResampleDTI (cli modules) # AtlasWerks does not compile on windows yet, so do not try to compile it
       set( COMPILE_EXTERNAL_AtlasWerks OFF CACHE BOOL "Compile external AtlasWerks" FORCE)
+      set( COMPILE_EXTERNAL_dtiprocessTK OFF CACHE BOOL "Compile external dtiprocessTK" FORCE)
+      set( COMPILE_EXTERNAL_ANTS OFF CACHE BOOL "Compile external ANTS" FORCE)
+      set( COMPILE_EXTERNAL_NIRALUtilities OFF CACHE BOOL "Compile external NIRALUtilities" FORCE)
     endif(WIN32)
 
   endif()

@@ -167,7 +167,7 @@ InstallToolMacro( NIRALUtilities OFF)
 
 #======================================================================================
 # Testing for DTIAtlasBuilder
-if(BUILD_TESTING)
+if(BUILD_TESTING AND NO WIN32 AND NO APPLE) # DTIAtlasBuilder fails on Windows and MacOS
   set(TestingSRCdirectory ${CMAKE_CURRENT_SOURCE_DIR}/Testing)
   set(TestingBINdirectory ${CMAKE_CURRENT_BINARY_DIR}/Testing)
   set(TestDataFolder ${CMAKE_CURRENT_SOURCE_DIR}/Data/Testing)
