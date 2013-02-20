@@ -187,7 +187,7 @@ if(COMPILE_PACKAGE)
       set( COMPILE_EXTERNAL_dtiprocessTK OFF CACHE BOOL "Compile external dtiprocessTK" FORCE)
       set( COMPILE_EXTERNAL_ANTS OFF CACHE BOOL "Compile external ANTS" FORCE)
       set( COMPILE_EXTERNAL_NIRALUtilities OFF CACHE BOOL "Compile external NIRALUtilities" FORCE)
-    endif(WIN32)
+    endif()
 
   endif()
 
