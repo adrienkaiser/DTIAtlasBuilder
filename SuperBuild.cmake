@@ -51,11 +51,6 @@ set(COMMON_BUILD_OPTIONS_FOR_EXTERNALPACKAGES
 option( DTIAtlasBuilder_BUILD_SLICER_EXTENSION "Build DTIAtlasBuilder as a Slicer extension" OFF )
 if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
 
-  if(APPLE OR WIN32)
-    message(WARNING "2013-02-20: The development team is aware that there are build issues specific to MacOSX / Windows and is working on it.")
-    return()
-  endif()
-
   if(NOT Slicer_SOURCE_DIR)
     set(EXTENSION_NAME DTIAtlasBuilder)
     set(EXTENSION_HOMEPAGE "http://www.nitrc.org/projects/dtiatlasbuilder")
