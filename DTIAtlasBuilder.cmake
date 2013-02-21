@@ -33,10 +33,20 @@ else(DTIAtlasBuilder_BUILD_SLICER_EXTENSION)
   set(SlicerExtCXXVar "false")
 endif(DTIAtlasBuilder_BUILD_SLICER_EXTENSION)
 
+# Add the compilation date in xml file for it to appear in --help
+if(WIN32)
+  execute_process(COMMAND "cmd" " /C date /T" OUTPUT_VARIABLE TODAY)
+  string(REGEX REPLACE "....(..)/(..)/(....).*" "\\1/\\2/\\3" TODAY ${TODAY}) # to remove the end of line and the name of day at the beginning
+else() # Unix
+  execute_process(COMMAND "date" "+%m/%d/%Y" OUTPUT_VARIABLE TODAY)
+  string(REGEX REPLACE "(..)/(..)/(....).*" "\\1/\\2/\\3" TODAY ${TODAY}) # to remove the end of line
+endif()
+configure_file(DTIAtlasBuilder.xml.in ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder.xml)
+
 QT4_WRAP_CPP(QtProject_HEADERS_MOC GUI.h)
 QT4_WRAP_UI(UI_FILES GUIwindow.ui)
 set(DTIABsources DTIAtlasBuilder.cxx GUI.h GUI.cxx ScriptWriter.h ScriptWriter.cxx ${QtProject_HEADERS_MOC} ${UI_FILES})
-GENERATECLP(DTIABsources DTIAtlasBuilder.xml) # include the GCLP file to the project
+GENERATECLP(DTIABsources ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder.xml) # include the GCLP file to the project
 add_executable(DTIAtlasBuilder ${DTIABsources})  # add the files contained by "DTIABsources" to the project
 set_target_properties(DTIAtlasBuilder PROPERTIES COMPILE_FLAGS "-DDTIAtlasBuilder_BUILD_SLICER_EXTENSION=${SlicerExtCXXVar}") # Add preprocessor definitions
 target_link_libraries(DTIAtlasBuilder ${QT_LIBRARIES} ${ITK_LIBRARIES})
