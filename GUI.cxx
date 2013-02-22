@@ -261,7 +261,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	m_FromConstructor=1; // do not test GA path if 'Default' called from constructor -> test at the end of constructor
 
 /* SET the soft config */
-// set the path to the executable directory for FindProgram
+	// set the path to the executable directory for FindProgram
 	std::string DTIABExecutablePath= itksys::SystemTools::GetRealPath( itksys::SystemTools::GetFilenamePath(commandRan).c_str() ); // get the place where the running executable is
 	if(DTIABExecutablePath=="") DTIABExecutablePath= itksys::SystemTools::GetCurrentWorkingDirectory(); // If called by itself ($ DTIAtlasBuilder) = either in the PATH or in the current directory : will be found either way by find_program
 	m_FindProgramDTIABExecDirVec.push_back(DTIABExecutablePath); // FindProgram will search in the executable directory too
@@ -282,19 +282,19 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	// Because ANTS is in m_DTIABSlicerExtensionExternalBinDir when Slicer Ext
 	if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION) DTIRegExtraPathlineEdit->setText( QString( m_DTIABSlicerExtensionExternalBinDir.c_str() )); // DTIAtlasBuilder_BUILD_SLICER_EXTENSION is defined as constant variable when configuring
 
-// look for the programs with the itk function
+	// look for the programs with the itk function
 	ConfigDefault();
 
-// Look for the config file in the executable directory
+	// Look for the config file in the executable directory
 	std::string SoftConfigPath= DTIABExecutablePath + "/DTIAtlasBuilderSoftConfig.txt";
 	if( itksys::SystemTools::GetPermissions(SoftConfigPath.c_str(),ITKmode_F_OK) ) if( LoadConfig(QString( SoftConfigPath.c_str() )) == -1 ) m_ErrorDetectedInConstructor=true; // if file exists
 
-// Look for the config file in the current directory
+	// Look for the config file in the current directory
 	std::string CurrentPath = itksys::SystemTools::GetRealPath( itksys::SystemTools::GetCurrentWorkingDirectory().c_str() ); //GetRealPath() to remove symlinks
 	SoftConfigPath = CurrentPath + "/DTIAtlasBuilderSoftConfig.txt";
 	if( itksys::SystemTools::GetPermissions( SoftConfigPath.c_str() , ITKmode_F_OK) ) if( LoadConfig(QString( SoftConfigPath.c_str() )) == -1 ) m_ErrorDetectedInConstructor=true; // if file exists
 
-// Look for the config file in the env variable
+	// Look for the config file in the env variable
 	const char * value = itksys::SystemTools::GetEnv("DTIAtlasBuilderSoftPath"); // C function = const char * getenv(const char *)
 	if (value!=NULL) 
 	{
@@ -303,14 +303,14 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	}
 	else std::cout<<"| No environment variable found"<<std::endl;
 
-/* Look for the parameter file in the current directory */
+/* Look for the parameter file in the current directory */ // Load only if no param file given and if CSV file is given, only load the given CSV file.
 	std::string ParamPath = CurrentPath + "/DTIAtlasBuilderParameters.txt";
-	if( itksys::SystemTools::GetPermissions( ParamPath.c_str() , ITKmode_F_OK) ) if( LoadParameters(QString( ParamPath.c_str() )) == -1 ) m_ErrorDetectedInConstructor=true;
+	if( ParamFile.empty() && itksys::SystemTools::GetPermissions( ParamPath.c_str() , ITKmode_F_OK) ) if( LoadParameters(QString( ParamPath.c_str() ), !CSVFile.empty()) == -1 ) m_ErrorDetectedInConstructor=true; 
 
 /* Load Parameters from Command Line => cmd line arguments a taking into account at last and change the parameters at last because they have priority */
 	if( !ParamFile.empty() )
 	{
-		if( LoadParameters(QString(ParamFile.c_str())) == -1 ) m_ErrorDetectedInConstructor=true;
+		if( LoadParameters(QString(ParamFile.c_str()), !CSVFile.empty()) == -1 ) m_ErrorDetectedInConstructor=true;
 	}
 	else if(m_noGUI) // no parameters and nogui => not possible
 	{
@@ -323,7 +323,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 
 	m_FromConstructor=0;
 
-	//NOW that all the files have been loaded => test if all the paths are here
+/* NOW that all the files have been loaded => test if all the paths are here */
 	bool GAFound=true;
 	bool DTIRegFound=true;
 	std::string notFound;
@@ -820,7 +820,16 @@ void GUI::ReadCSVSlot() /*SLOT*/
 }
 
 int GUI::ReadCSV(QString CSVfile)
-{	
+{
+	int ret=QMessageBox::Yes; // <=> replace current dataset by new
+	if( CaseListWidget->count()!=0 )
+	{
+		ret = QMessageBox::question(this,"Case list not empty","There are already some cases listed.\nDo you want to replace them by the new dataset ?\nIf No, the new dataset will be added to the existing cases.",QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes);
+
+		if (ret == QMessageBox::Yes) CaseListWidget->clear();
+		else if (ret == QMessageBox::Cancel) return 0;
+	}
+
 	if(!CSVfile.isEmpty())
 	{
 
@@ -845,7 +854,9 @@ int GUI::ReadCSV(QString CSVfile)
 				}
 				CheckCasesIndex();
 	
-				SelectCasesLabel->setText( QString("Current CSV file : ") + CSVfile );
+				if (ret == QMessageBox::Yes) SelectCasesLabel->setText( QString("Current CSV file : ") + CSVfile );
+				else  SelectCasesLabel->setText( QString("") );
+
 				m_ParamSaved=0;
 				std::cout<<"DONE"<<std::endl; // command line display
 			} 
@@ -1057,11 +1068,11 @@ void GUI::LoadParametersSlot() /*SLOT*/
 
 	if(!ParamBrowse.isEmpty())
 	{
-		LoadParameters(ParamBrowse);
+		LoadParameters(ParamBrowse,false);
 	}
 }
 
-int GUI::LoadParameters(QString paramFile)
+int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // DiscardParametersCSV used only in constructor: if CSV file is given, only load the given CSV file.
 {
 	if( itksys::SystemTools::GetPermissions(paramFile.toStdString().c_str(), ITKmode_F_OK) ) // Test if the csv file exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
 	{
@@ -1610,21 +1621,24 @@ int GUI::LoadParameters(QString paramFile)
 		std::cout<<"DONE"<<std::endl; // command line display
 
 /* Opening CSV File */
-		line = stream.readLine();
-		list = line.split("=");
-		if(!list.at(0).contains(QString("CSV Dataset File")))
+		if( ! DiscardParametersCSV )
 		{
-			if(!m_noGUI) 
+			line = stream.readLine();
+			list = line.split("=");
+			if(!list.at(0).contains(QString("CSV Dataset File")))
 			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
+				if(!m_noGUI) 
+				{
+					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+					std::cout<<"FAILED"<<std::endl; // command line display
+				}
+				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+				return -1;
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-			return -1;
-		}
-		QString CSVpath = list.at(1);
-		CaseListWidget->clear();
-		ReadCSV(CSVpath);
+			QString CSVpath = list.at(1);
+			// CaseListWidget->clear();
+			ReadCSV(CSVpath);
+		} // if( ! DiscardParametersCSV )
 
 		m_ParamSaved=1;
 	} 

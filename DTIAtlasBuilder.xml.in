@@ -4,7 +4,7 @@
 	<description>A tool to create an atlas from several DTI images. For any suggestion or question, please contact akaiser[at]unc.edu</description>
 	<contributor>Adrien Kaiser</contributor>
 	<category>Diffusion.Diffusion Tensor Images</category>
-	<version>1.0</version>
+	<version>1.0 | Compiled ${TODAY}</version>
 	<parameters>
 		<label>Inputs</label>
 		<description>Inputs of the program</description>
@@ -28,7 +28,7 @@
 			<name>CSVFile</name>
 			<flag>d</flag>
 			<longflag>dataset_file</longflag>
-			<description>CSV file containing the dataset. Warning: If a parameter file is given (-p), the associated dataset file will also be loaded, so it is not needed to give the dataset file again, otherwise it will be loaded twice.</description>
+			<description>CSV file containing the dataset. Warning: If both a parameter file and a dataset file are given, only the given dataset file will be loaded, and the dataset file given in the parameter file will be ignored.</description>
 			<label>Dataset File</label>
 			<channel>input</channel>
 		</file>

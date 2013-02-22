@@ -46,7 +46,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 /*DATASET*/	int ReadCSV(QString CSVfile); // returns -1 if fails, otherwise 0
 		void SaveCSVResults(int Crop, int nbLoops);
 
-/*PARAMETERS*/	int LoadParameters(QString paramFile); // returns -1 if fails, otherwise 0
+/*PARAMETERS*/	int LoadParameters(QString paramFile, bool DiscardParametersCSV); // returns -1 if fails, otherwise 0
 		void SaveParameters(QString ParamBrowseName,QString CSVFileName);
 
 /*XML FILE*/	void GenerateXMLForAW();
