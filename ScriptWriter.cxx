@@ -179,7 +179,7 @@ if( m_useGridProcess )	Script = Script + "\t\tGridProcessCaseCommandsArray=[] # 
 				Script = Script + "\t\t\tCropSize=[\"" + CropSize_str[0] + "\",\"" + CropSize_str[1] + "\",\"" + CropSize_str[2] + "\"]\n\n";
 
 				Script = Script + "\t\t\tcroppedDTI= OutputPath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
-				Script = Script + "\t\t\tCropCommand= " + m_SoftPath[2] + " \" + allcases[case] + \" -o \" + croppedDTI + \" -size \" + CropSize[0] + \",\" + CropSize[1] + \",\" + CropSize[2] + \" -v\"\n";
+				Script = Script + "\t\t\tCropCommand= \"" + m_SoftPath[2] + " \" + allcases[case] + \" -o \" + croppedDTI + \" -size \" + CropSize[0] + \",\" + CropSize[1] + \",\" + CropSize[2] + \" -v\"\n";
 				Script = Script + "\t\t\tprint(\"[Case \" + str(case+1) + \"] [Cropping DTI Image] => $ \" + CropCommand)\n";
 				Script = Script + "\t\t\tnbStepsDone += 1\n";
 		
