@@ -102,7 +102,7 @@ void ScriptWriter::Preprocess ()
 						Script = Script + "\t\t\t\tif not os.path.isfile( FilesFolder + \"/Case\" + str(case+1) ) : filesOK = 0\n";
 						Script = Script + "\t\t\t\telse : NbfilesOK = NbfilesOK + 1\n";
 						Script = Script + "\t\t\t\tcase += 1\n";
-					Script = Script + "\t\t\tprint(\"\\r| [\" + str(NbfilesOK) + \"\\t/ \" + str(NbCases) + \" ] Files processed\"), # the comma prevents the print from jumping line\n";
+					Script = Script + "\t\t\tprint(\"\\r| [\" + str(NbfilesOK) + \"\\t/ \" + str(NbCases-NoCase1) + \" ] Files processed\"), # the comma prevents the print from jumping line\n";
 				Script = Script + "\t\telif not os.path.isfile( FilesFolder + \"/file\" ) : filesOK = 0\n";
 			Script = Script + "\tprint(\"\\n=> All files processed\")\n";
 			Script = Script + "\tshutil.rmtree(FilesFolder) # clear directory and recreate it\n";
@@ -588,7 +588,7 @@ if( m_useGridProcess )
 		if(m_TensTfm.compare("Preservation of the Principal Direction (PPD)")==0)	Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -T PPD\"\n";
 		if(m_TensTfm.compare("Finite Strain (FS)")==0)	Script = Script + "\tFinalReSampCommand = FinalReSampCommand + \" -T FS\"\n";
 
-		Script = Script + "\tprint(\"[Case \" + str(case+1) + \"] [Applying deformation fields to original DTIs] => $ \" + FinalReSampCommand)\n";
+		Script = Script + "\tprint(\"\\n[Case \" + str(case+1) + \"] [Applying deformation fields to original DTIs] => $ \" + FinalReSampCommand)\n";
 		Script = Script + "\tnbStepsDone += 1\n";
 if(m_Overwrite==1) Script = Script + "\tif 1 :\n";
 else		Script = Script + "\tif not os.path.isfile(FinalDTI) :\n";
@@ -602,13 +602,11 @@ else		Script = Script + "\tif not os.path.isfile(FinalDTI) :\n";
 		{
 			Script = Script + "\t\tif os.system(FinalReSampCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] ResampleDTIlogEuclidean: Applying deformation fields to original DTIs\')\n";
 
-			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + GeneDiffeomorphicCaseFACommand)\n";
+			Script = Script + "\t\tprint(\"[Case \" + str(case+1) + \"] => $ \" + GeneDiffeomorphicCaseFACommand)\n";
 			Script = Script + "\t\tif os.system(GeneDiffeomorphicCaseFACommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] dtiprocess: Computing Diffeomorphic FA\')\n";
 
-			Script = Script + "\t\tprint(\"||Case \" + str(case+1) + \" => $ \" + CaseDbleToFloatCommand + \"\\n\")\n";
+			Script = Script + "\t\tprint(\"[Case \" + str(case+1) + \"] => $ \" + CaseDbleToFloatCommand + \"\\n\")\n";
 			Script = Script + "\t\tif os.system(CaseDbleToFloatCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] unu: Converting the final DTI images from double to float DTI\')\n";
-
-		Script = Script + "\telse : print(\"=> The file \\'\" + FinalDTI + \"\\' already exists so the command will not be executed\")\n"; // not used if overwrite because "if 1 :"
 		}
 		else // run up to 50 commands in the same script
 		{
@@ -628,10 +626,9 @@ else		Script = Script + "\tif not os.path.isfile(FinalDTI) :\n";
 					Script = Script + "\t\t\t\tErrorList.append(\'[] Applying deformation fields to original DTIs\')\n";
 		}
 
-		Script = Script + "\tcase += 1\n\n";
+		Script = Script + "\telse : print(\"=> The file \\'\" + FinalDTI + \"\\' already exists so the command will not be executed\")\n"; // not used if overwrite because "if 1 :"
 
-Script = Script + "print(\"NbGridCommandsRan=\" + str(NbGridCommandsRan))\n";
-Script = Script + "print(\"GridProcessCmd=\" + GridProcessCmd)\n";
+		Script = Script + "\tcase += 1\n\n";
 
 if( m_useGridProcess ) Script = Script + "if NbGridCommandsRan!=0 : TestGridProcess( FilesFolder, NbGridCommandsRan ) # stays in the function until all process is done : 0 cmds makes the function look for \'file\'\n\n";
 
@@ -645,7 +642,7 @@ if( m_useGridProcess ) Script = Script + "if NbGridCommandsRan!=0 : TestGridProc
 		Script = Script + "\tAverageCommand = AverageCommand + DTIforAVG\n";
 		Script = Script + "\tcase += 1\n";
 	Script = Script + "AverageCommand = AverageCommand + \"--tensor_output \" + DTIAverage\n";
-	Script = Script + "print(\"[Computing the Diffeomorphic DTI average] => $ \" + AverageCommand)\n";
+	Script = Script + "print(\"\\n[Computing the Diffeomorphic DTI average] => $ \" + AverageCommand)\n";
 	Script = Script + "nbStepsDone += 1\n";
 	if(m_Overwrite==1)Script = Script + "if 1 : \n";
 	else Script = Script + "if not os.path.isfile(DTIAverage) : \n";
@@ -814,7 +811,7 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, len(allc
 		Script = Script + "\tAverageCommand2 = AverageCommand2 + DTIforAVG2\n";
 		Script = Script + "\tcase += 1\n";
 	Script = Script + "AverageCommand2 = AverageCommand2 + \"--tensor_output \" + DTIAverage2\n";
-	Script = Script + "print(\"[Recomputing the final DTI average] => $ \" + AverageCommand2)\n";
+	Script = Script + "print(\"\\n[Recomputing the final DTI average] => $ \" + AverageCommand2)\n";
 	Script = Script + "nbStepsDone += 1\n";
 	if(m_Overwrite==1)Script = Script + "if 1 : \n";
 	else Script = Script + "if not os.path.isfile(DTIAverage2) : \n";

@@ -778,7 +778,7 @@ void GUI::closeEvent(QCloseEvent* event)
 {
 	if(m_ScriptRunning)
 	{
-		int ret = QMessageBox::question(this,"Quit","The script is still running.\nDo you want to exit anyway ?",QMessageBox::No | QMessageBox::Yes);
+		int ret = QMessageBox::question(this,"Quit","The script is still running. If you exit now, the script will abort.\nDo you want to exit anyway ?",QMessageBox::No | QMessageBox::Yes);
 		if (ret == QMessageBox::No) 
 		{
 			event->ignore();
@@ -3250,7 +3250,7 @@ int GUI::LaunchScriptRunner()
 {
 	ComputepushButton->setEnabled(false);
 	m_ScriptRunning=true;
-	ScriptRunningDisplayQLabel->setText("");
+	ScriptRunningDisplayQLabel->setText("Script Running");
 //	progressBar->setValue(0);
 
 /* Running the Script: */ // python path found before writing script : contains already a space after the command
@@ -3270,7 +3270,7 @@ int GUI::LaunchScriptRunner()
 	else
 	{
 		m_ScriptQProcess->start( program.c_str() ); // start will just start the program in another process
-		m_ScriptRunningQTimer->start(1000); // To update display in cmd line (display dots)
+		m_ScriptRunningQTimer->start(1000); // To update display in cmd line (display dots moving forward)
 	}
 
 	return 0;
@@ -3308,7 +3308,7 @@ if(ExitCode==0) kill(getppid(),SIGUSR1); // signal to the father than execution 
 
 void GUI::UpdateScriptRunningGUIDisplay() /*SLOT*/
 {
-	if(ScriptRunningDisplayQLabel->text().size()>=5) ScriptRunningDisplayQLabel->setText(""); // display only 5 dots
+	if(ScriptRunningDisplayQLabel->text().size()>=19) ScriptRunningDisplayQLabel->setText("Script Running"); // display only 5 dots at a time ("Script Running" = 14)
 
 	QString ScriptRunningDisplay = ScriptRunningDisplayQLabel->text() + ".";
 	ScriptRunningDisplayQLabel->setText(ScriptRunningDisplay);
