@@ -20,7 +20,7 @@ void ScriptWriter::WriteScript()
 {
 	std::cout<<"|"<<std::endl; // command line display
 	std::cout<<"| Number of Cases: "<<m_CasesPath.size()<<std::endl; // command line display
-	std::cout<<"| Output Directory : "<<m_OutputPath<<"/DTIAtlas/1_Affine_Registration"<<std::endl; // command line display
+	std::cout<<"| Output Directory : "<<m_OutputPath<<"/DTIAtlas"<<std::endl; // command line display
 	if( m_useGridProcess ) std::cout<<"| Using grid processing"<<std::endl; // command line display
 	if(m_RegType==1) std::cout<<"| Using Case 1 as reference in the first Registration Loop"<<std::endl; // command line display
 	else std::cout<<"| Using Template as reference for the Registration: "<<m_TemplatePath<<std::endl; // command line display
@@ -90,19 +90,20 @@ void ScriptWriter::Preprocess ()
 		//Test Function
 		Script = Script + "\n# Function that tests if all cases have been processed on the grid\n";
 		Script = Script + "def TestGridProcess ( FilesFolder, NbCases , NoCase1): # if NbCases == 0, then just search the file \'file\' (unique command)\n";
-			Script = Script + "\tprint(\"\\n| Waiting for all cases (\" + str(NbCases-NoCase1) + \") to be processed on grid...\") # NoCase1 is 0 or 1\n";
+			Script = Script + "\tif NbCases>0 : print(\"\\n| Waiting for all cases (\" + str(NbCases-NoCase1) + \") to be processed on grid...\") # NoCase1 is 0 or 1\n";
 			Script = Script + "\tfilesOK = 0\n";
+			Script = Script + "\tOldNbFilesOK = 0\n";
 			Script = Script + "\twhile not filesOK :\n";
 				Script = Script + "\t\tfilesOK = 1\n";
-				Script = Script + "\t\tif NbCases>0 : \n";
+				Script = Script + "\t\tif NbCases>0 :\n";
 					Script = Script + "\t\t\tNbfilesOK = 0\n";
-					Script = Script + "\t\t\tif NoCase1 == 1 : case = 1\n";
-					Script = Script + "\t\t\telse : case = 0\n";
+					Script = Script + "\t\t\tcase = NoCase1 # NoCase1 is 0 or 1 (bool)\n";
 					Script = Script + "\t\t\twhile case < NbCases:\n";
 						Script = Script + "\t\t\t\tif not os.path.isfile( FilesFolder + \"/Case\" + str(case+1) ) : filesOK = 0\n";
 						Script = Script + "\t\t\t\telse : NbfilesOK = NbfilesOK + 1\n";
 						Script = Script + "\t\t\t\tcase += 1\n";
-					Script = Script + "\t\t\tprint(\"\\r| [\" + str(NbfilesOK) + \"\\t/ \" + str(NbCases-NoCase1) + \" ] Files processed\"), # the comma prevents the print from jumping line\n";
+					Script = Script + "\t\t\tif NbfilesOK != OldNbFilesOK : print(\"| [\" + str(NbfilesOK) + \"\\t/ \" + str(NbCases-NoCase1) + \" ] cases processed\")\n";
+					Script = Script + "\t\t\tOldNbFilesOK=NbfilesOK\n";
 				Script = Script + "\t\telif not os.path.isfile( FilesFolder + \"/file\" ) : filesOK = 0\n";
 			Script = Script + "\tprint(\"\\n=> All files processed\")\n";
 			Script = Script + "\tshutil.rmtree(FilesFolder) # clear directory and recreate it\n";
@@ -115,6 +116,22 @@ void ScriptWriter::Preprocess ()
 		Script = Script + "\tos.mkdir(OutputPath)\n";
 	 	Script = Script + "\tprint(\"\\n=> Creation of the affine directory = \" + OutputPath)\n";
 
+/* Defining cropping options */
+	if(m_NeedToBeCropped==1)
+	{
+		std::string CropSize_str [3];
+		std::ostringstream out1;
+		out1 << m_CropSize[0];
+		CropSize_str[0] = out1.str();
+		std::ostringstream out2;
+		out2 << m_CropSize[1];
+		CropSize_str[1] = out2.str();
+		std::ostringstream out3;
+		out3 << m_CropSize[2];
+		CropSize_str[2] = out3.str();
+		Script = Script + "CropSize=[\"" + CropSize_str[0] + "\",\"" + CropSize_str[1] + "\",\"" + CropSize_str[2] + "\"]\n\n";
+	}
+
 /* Rescaling template */
 	if(m_RegType==0) // with template
 	{
@@ -124,26 +141,73 @@ void ScriptWriter::Preprocess ()
 
 if( m_useGridProcess ) Script = Script + "RescaleTempCommand= \"" + m_GridCommand + " " + m_PythonPath + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + FilesFolder + \"/file \\'\" + RescaleTempCommand  + \"\\'\"\n";
 
-	Script = Script + "print(\"[Rescaling FA template] => $ \" + RescaleTempCommand)\n";
+	Script = Script + "print(\"\\n[Rescaling FA template] => $ \" + RescaleTempCommand)\n";
 
 if(m_Overwrite==1)	Script = Script + "if 1 :\n";
 else			Script = Script + "if not os.path.isfile(RescaleTemp) :\n";
 				Script = Script + "\tif os.system(RescaleTempCommand)!=0 : ErrorList.append(\'ImageMath: Rescaling FA template\')\n";
+				Script = Script + "\tTestGridProcess( FilesFolder, 0, 0) # stays in the function until all process is done : 0 makes the function look only for \'file\'\n";
 			Script = Script + "else :\n"; // not used if overwrite because "if 1 :"
 				Script = Script + "\tprint(\"=> The file \\'\" + RescaleTemp + \"\\' already exists so the command will not be executed\")\n";
-			if( m_useGridProcess ) // adding create file command
-			{
-				Script = Script + "\tf = open( FilesFolder + \"/file\" , 'w')\n";
-				Script = Script + "\tf.close()\n";
-			}
 
-if( m_useGridProcess )
-{
-	Script = Script + "TestGridProcess( FilesFolder, 0, 0) # stays in the function until all process is done : 0 makes the function look only for \'file\'\n\n";
-}
-	Script = Script + "AtlasFAref= RescaleTemp\n";
+	Script = Script + "AtlasFAref= RescaleTemp\n\n";
 
 	} // if(m_RegType==0)
+
+/* if no given template, create the template by computing FA of case 1 (+ cropping if needed) */
+	else
+	{
+	Script = Script + "print(\"\")\n";
+	Script = Script + "# Creating template by processing Case 1 DTI\n";
+if( m_useGridProcess )
+{
+	Script = Script + "CropDTICase1Template=0\n";
+	Script = Script + "GeneFACase1Template=0\n";
+}
+		// Cropping case 1 DTI image
+		if(m_NeedToBeCropped==1)
+		{
+			Script = Script + "\n# Cropping case 1 DTI\n";
+			Script = Script + "croppedDTI= OutputPath + \"/Case1_croppedDTI.nrrd\"\n";
+			Script = Script + "CropCommand= \"" + m_SoftPath[2] + " \" + allcases[0] + \" -o \" + croppedDTI + \" -size \" + CropSize[0] + \",\" + CropSize[1] + \",\" + CropSize[2] + \" -v\"\n";
+			Script = Script + "print(\"[Case 1] [Cropping DTI Image] => $ \" + CropCommand)\n";
+
+if(m_Overwrite==1)	Script = Script + "if 1 :\n";
+else			Script = Script + "if not os.path.isfile(croppedDTI) :\n";
+if( ! m_useGridProcess )	Script = Script + "\tif os.system(CropCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] CropDTI: Cropping DTI image\')\n";
+else				Script = Script + "\tCropDTICase1Template=1\n";
+			Script = Script + "else : print(\"=> The file \\'\" + croppedDTI + \"\\' already exists so the command will not be executed\")\n"; // not used if overwrite because "if 1 :"
+		} //if(m_NeedToBeCropped==1)
+
+		// Generating case 1 FA 
+		Script = Script + "\n# Generating case 1 FA\n";
+if(m_NeedToBeCropped==1)Script = Script + "DTI= OutputPath + \"/Case1_croppedDTI.nrrd\"\n";
+else			Script = Script + "DTI= allcases[0]\n";
+			Script = Script + "FA= OutputPath + \"/Case1_FA.nrrd\"\n";
+			Script = Script + "GeneFACommand= \"" + m_SoftPath[3] + " --dti_image \" + DTI + \" -f \" + FA\n";
+			Script = Script + "print(\"[Case 1] [Generating FA] => $ \" + GeneFACommand)\n";
+
+if(m_Overwrite==1)	Script = Script + "if 1 :\n";
+else			Script = Script + "if not os.path.isfile(FA) :\n";
+if( ! m_useGridProcess )	Script = Script + "\tif os.system(GeneFACommand)!=0 : ErrorList.append(\'[Case 1] dtiprocess: Generating FA of DTI image\')\n";
+else				Script = Script + "\tGeneFACase1Template=1\n";
+			Script = Script + "else : print(\"=> The file \\'\" + FA + \"\\' already exists so the command will not be executed\")\n\n"; // not used if overwrite because "if 1 :"
+
+		// Execute commands here if grid processing (to process them together)
+		if( m_useGridProcess )
+		{
+		Script = Script + "# Run Case1 template commands on grid\n";
+		Script = Script + "if CropDTICase1Template or GeneFACase1Template :\n";
+			Script = Script + "\tGridCase1TemplateCommand= \"" + m_GridCommand + " " + m_PythonPath + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + FilesFolder + \"/file\"\n";
+			Script = Script + "\tif CropDTICase1Template : GridCase1TemplateCommand = GridCase1TemplateCommand + \" \'\" + CropCommand + \"\'\"\n";
+			Script = Script + "\tif GeneFACase1Template  : GridCase1TemplateCommand = GridCase1TemplateCommand + \" \'\" + GeneFACommand + \"\'\"\n";
+			Script = Script + "\tprint(\"[Case 1] => Submitting : \" + GridCase1TemplateCommand)\n";
+			Script = Script + "\tif os.system(GridCase1TemplateCommand)!=0 : ErrorList.append(\'[Case 1] Grid processing script\') # Run script and collect error if so\n";
+			Script = Script + "\tTestGridProcess( FilesFolder, 0, 0) # stays in the function until all process is done : 0 makes the function look only for \'file\'\n\n";
+		} // if( m_useGridProcess )
+	} //else of if(m_RegType==0)
+
+	Script = Script + "print(\"\")\n";
 
 /* Affine Registration and Normalization Loop */
 	Script = Script + "\n# Affine Registration and Normalization Loop\n";
@@ -151,12 +215,12 @@ if( m_useGridProcess )
 	Script = Script + "while n <= " + m_nbLoops_str + " :\n";
 
 		Script = Script + "\tif not os.path.isdir(OutputPath + \"/Loop\" + str(n)):\n";
-			Script = Script + "\t\tprint(\"\\n => Creation of the Output directory for Loop \" + str(n) + \" = \" + OutputPath + \"/Loop\" + str(n))\n";
+			Script = Script + "\t\tprint(\"\\n => Creation of the Output directory for Loop \" + str(n) + \" = \" + OutputPath + \"/Loop\" + str(n) + \"\\n\")\n";
 			Script = Script + "\t\tos.mkdir(OutputPath + \"/Loop\" + str(n))\n\n";
 
-//	if(m_RegType==1) Script = Script + "\tcase = (n==0) # (n==0) -> bool: =1(true) =0(false) : the first case is the reference for the first loop so it will not be normalized or registered\n";
 		Script = Script + "\t# Cases Loop\n";
-		Script = Script + "\tcase = 0\n";
+if(m_RegType==1)Script = Script + "\tcase = (n==0) # (n==0) -> bool: =1(true) =0(false) : the first case is the reference for the first loop so it will not be normalized or registered (it is cropped and FAed before the loop)\n";
+else		Script = Script + "\tcase = 0\n";
 		Script = Script + "\twhile case < len(allcases):\n";
 if( m_useGridProcess )	Script = Script + "\t\tGridProcessCaseCommandsArray=[] # Empty the cmds array\n";
 
@@ -165,19 +229,6 @@ if( m_useGridProcess )	Script = Script + "\t\tGridProcessCaseCommandsArray=[] # 
 	{
 	Script = Script + "\n# Cropping DTI image\n";
 			Script = Script + "\t\tif n==0: # Cropping is only part of the first loop\n";
-
-				std::string CropSize_str [3];
-				std::ostringstream out1;
-				out1 << m_CropSize[0];
-				CropSize_str[0] = out1.str();
-				std::ostringstream out2;
-				out2 << m_CropSize[1];
-				CropSize_str[1] = out2.str();
-				std::ostringstream out3;
-				out3 << m_CropSize[2];
-				CropSize_str[2] = out3.str();
-				Script = Script + "\t\t\tCropSize=[\"" + CropSize_str[0] + "\",\"" + CropSize_str[1] + "\",\"" + CropSize_str[2] + "\"]\n\n";
-
 				Script = Script + "\t\t\tcroppedDTI= OutputPath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
 				Script = Script + "\t\t\tCropCommand= \"" + m_SoftPath[2] + " \" + allcases[case] + \" -o \" + croppedDTI + \" -size \" + CropSize[0] + \",\" + CropSize[1] + \",\" + CropSize[2] + \" -v\"\n";
 				Script = Script + "\t\t\tprint(\"[Case \" + str(case+1) + \"] [Cropping DTI Image] => $ \" + CropCommand)\n";
@@ -208,81 +259,73 @@ else					Script = Script + "\t\t\t\tGridProcessCaseCommandsArray.append(GeneFACo
 
 /* Normalization */
 	Script = Script + "\n# Normalization\n";
-if(m_RegType==1)	Script = Script + "\t\tif n!=0 or case!=0 :# the first case is the reference for the first loop so it will not be normalized or registered\n";
-else 			Script = Script + "\t\tif 1 :\n";
-				Script = Script + "\t\t\tFA= OutputPath + \"/Case\" + str(case+1) + \"_FA.nrrd\"\n";
-				Script = Script + "\t\t\tNormFA= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_NormFA.nrrd\"\n";
-				Script = Script + "\t\t\tNormFACommand= \"" + m_SoftPath[0] + " \" + FA + \" -outfile \" + NormFA + \" -matchHistogram \" + AtlasFAref\n";
-				Script = Script + "\t\t\tprint(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [Case \" + str(case+1) + \"] [Normalization] => $ \" + NormFACommand)\n";
-				Script = Script + "\t\t\tnbStepsDone += 1\n";
+			Script = Script + "\t\tFA= OutputPath + \"/Case\" + str(case+1) + \"_FA.nrrd\"\n";
+			Script = Script + "\t\tNormFA= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_NormFA.nrrd\"\n";
+			Script = Script + "\t\tNormFACommand= \"" + m_SoftPath[0] + " \" + FA + \" -outfile \" + NormFA + \" -matchHistogram \" + AtlasFAref\n";
+			Script = Script + "\t\tprint(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [Case \" + str(case+1) + \"] [Normalization] => $ \" + NormFACommand)\n";
+			Script = Script + "\t\tnbStepsDone += 1\n";
 
-if(m_Overwrite==1)		Script = Script + "\t\t\tif 1 :\n";
-else				Script = Script + "\t\t\tif not os.path.isfile(NormFA) :\n";
-if( ! m_useGridProcess )		Script = Script + "\t\t\t\tif os.system(NormFACommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] ImageMath: Normalizing FA image\')\n";
-else					Script = Script + "\t\t\t\tGridProcessCaseCommandsArray.append(NormFACommand) # Executed eventually\n";
-				Script = Script + "\t\t\telse : print(\"=> The file \\'\" + NormFA + \"\\' already exists so the command will not be executed\")\n"; // not used if overwrite because "if 1 :"
+if(m_Overwrite==1)	Script = Script + "\t\tif 1 :\n";
+else			Script = Script + "\t\tif not os.path.isfile(NormFA) :\n";
+if( ! m_useGridProcess )	Script = Script + "\t\t\tif os.system(NormFACommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] ImageMath: Normalizing FA image\')\n";
+else				Script = Script + "\t\t\tGridProcessCaseCommandsArray.append(NormFACommand) # Executed eventually\n";
+			Script = Script + "\t\telse : print(\"=> The file \\'\" + NormFA + \"\\' already exists so the command will not be executed\")\n"; // not used if overwrite because "if 1 :"
 
 /* Affine registration with BrainsFit */
 	Script = Script + "\n# Affine registration with BrainsFit\n";
-if(m_RegType==1)	Script = Script + "\t\tif n!=0 or case!=0 :# the first case is the reference for the first loop so it will not be normalized or registered\n";
-else 			Script = Script + "\t\tif 1 :\n";
-				Script = Script + "\t\t\tNormFA= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_NormFA.nrrd\"\n";
-				Script = Script + "\t\t\tLinearTranstfm= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans.txt\"\n";
-				Script = Script + "\t\t\tLinearTrans= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_FA.nrrd\"\n";
-				Script = Script + "\t\t\tAffineCommand= \"" + m_SoftPath[4] + " --fixedVolume \" + AtlasFAref + \" --movingVolume \" + NormFA + \" --useAffine --outputVolume \" + LinearTrans + \" --outputTransform \" + LinearTranstfm\n";
+			Script = Script + "\t\tNormFA= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_NormFA.nrrd\"\n";
+			Script = Script + "\t\tLinearTranstfm= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans.txt\"\n";
+			Script = Script + "\t\tLinearTrans= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_FA.nrrd\"\n";
+			Script = Script + "\t\tAffineCommand= \"" + m_SoftPath[4] + " --fixedVolume \" + AtlasFAref + \" --movingVolume \" + NormFA + \" --useAffine --outputVolume \" + LinearTrans + \" --outputTransform \" + LinearTranstfm\n";
 
-				Script = Script + "\t\t\tInitLinearTransTxt= OutputPath + \"/Case\" + str(case+1) + \"_InitLinearTrans.txt\"\n";
-				Script = Script + "\t\t\tInitLinearTransMat= OutputPath + \"/Case\" + str(case+1) + \"_InitLinearTrans.mat\"\n";
-				Script = Script + "\t\t\tif n==0 and os.path.isfile(InitLinearTransMat) and os.path.isfile(InitLinearTransTxt):\n";
-					Script = Script + "\t\t\t\tprint(\"[WARNING] Both \\'Case\" + str(case+1) + \"_InitLinearTrans.mat\\' and \\'Case\" + str(case+1) + \"_InitLinearTrans.txt\\' have been found. The .mat file will be used.\")\n";
-					Script = Script + "\t\t\t\tAffineCommand= AffineCommand + \" --initialTransform \" + InitLinearTransMat\n";
-				Script = Script + "\t\t\telif n==0 and os.path.isfile(InitLinearTransMat) : AffineCommand= AffineCommand + \" --initialTransform \" + InitLinearTransMat\n";
-				Script = Script + "\t\t\telif n==0 and os.path.isfile(InitLinearTransTxt) : AffineCommand= AffineCommand + \" --initialTransform \" + InitLinearTransTxt\n";
-				Script = Script + "\t\t\telse : AffineCommand= AffineCommand + \" --initializeTransformMode " + m_BFAffineTfmMode + "\"\n";
+			Script = Script + "\t\tInitLinearTransTxt= OutputPath + \"/Case\" + str(case+1) + \"_InitLinearTrans.txt\"\n";
+			Script = Script + "\t\tInitLinearTransMat= OutputPath + \"/Case\" + str(case+1) + \"_InitLinearTrans.mat\"\n";
+			Script = Script + "\t\tif n==0 and os.path.isfile(InitLinearTransMat) and os.path.isfile(InitLinearTransTxt):\n";
+				Script = Script + "\t\t\tprint(\"[WARNING] Both \\'Case\" + str(case+1) + \"_InitLinearTrans.mat\\' and \\'Case\" + str(case+1) + \"_InitLinearTrans.txt\\' have been found. The .mat file will be used.\")\n";
+				Script = Script + "\t\t\tAffineCommand= AffineCommand + \" --initialTransform \" + InitLinearTransMat\n";
+			Script = Script + "\t\telif n==0 and os.path.isfile(InitLinearTransMat) : AffineCommand= AffineCommand + \" --initialTransform \" + InitLinearTransMat\n";
+			Script = Script + "\t\telif n==0 and os.path.isfile(InitLinearTransTxt) : AffineCommand= AffineCommand + \" --initialTransform \" + InitLinearTransTxt\n";
+			Script = Script + "\t\telse : AffineCommand= AffineCommand + \" --initializeTransformMode " + m_BFAffineTfmMode + "\"\n";
 
-				Script = Script + "\t\t\tprint(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [Case \" + str(case+1) + \"] [Affine registration with BrainsFit] => $ \" + AffineCommand)\n";
-				Script = Script + "\t\t\tnbStepsDone += 1\n";
+			Script = Script + "\t\tprint(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [Case \" + str(case+1) + \"] [Affine registration with BrainsFit] => $ \" + AffineCommand)\n";
+			Script = Script + "\t\tnbStepsDone += 1\n";
 
-if(m_Overwrite==1)		Script = Script + "\t\t\tif 1 :\n";
-else				Script = Script + "\t\t\tif not os.path.isfile(LinearTranstfm) or not os.path.isfile(LinearTrans) :\n";
-if( ! m_useGridProcess )		Script = Script + "\t\t\t\tif os.system(AffineCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] BRAINSFit: Affine Registration of FA image\')\n";
-else					Script = Script + "\t\t\t\tGridProcessCaseCommandsArray.append(AffineCommand) # Executed eventually\n";
-				Script = Script + "\t\t\telse : print(\"=> The files \\'\" + LinearTranstfm + \"\\' and \\'\" + LinearTrans + \"\\' already exist so the command will not be executed\")\n"; // not used if overwrite because "if 1 :"
+if(m_Overwrite==1)	Script = Script + "\t\tif 1 :\n";
+else			Script = Script + "\t\tif not os.path.isfile(LinearTranstfm) or not os.path.isfile(LinearTrans) :\n";
+if( ! m_useGridProcess )	Script = Script + "\t\t\tif os.system(AffineCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] BRAINSFit: Affine Registration of FA image\')\n";
+else				Script = Script + "\t\t\tGridProcessCaseCommandsArray.append(AffineCommand) # Executed eventually\n";
+			Script = Script + "\t\telse : print(\"=> The files \\'\" + LinearTranstfm + \"\\' and \\'\" + LinearTrans + \"\\' already exist so the command will not be executed\")\n"; // not used if overwrite because "if 1 :"
 
 /* Implementing the affine registration */
 	Script = Script + "\n# Implementing the affine registration\n";
-if(m_RegType==1)	Script = Script + "\t\tif n!=0 or case!=0 :# the first case is the reference for the first loop so it will not be normalized or registered\n";
-else 			Script = Script + "\t\tif 1 :\n";
-				Script = Script + "\t\t\tLinearTranstfm= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans.txt\"\n";
-				Script = Script + "\t\t\tLinearTransDTI= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_DTI.nrrd\"\n";
-if(m_NeedToBeCropped==1) 	Script = Script + "\t\t\toriginalDTI= OutputPath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
-else 				Script = Script + "\t\t\toriginalDTI= allcases[case]\n";
-				Script = Script + "\t\t\tImplementCommand= \"" + m_SoftPath[1] + " \" + originalDTI + \" \" + LinearTransDTI + \" -f \" + LinearTranstfm + \" -R \" + AtlasFAref\n";
-				Script = Script + "\t\t\tprint(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [Case \" + str(case+1) + \"] [Implementing the Affine registration] => $ \" + ImplementCommand)\n";
-				Script = Script + "\t\t\tnbStepsDone += 1\n";
+			Script = Script + "\t\tLinearTranstfm= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans.txt\"\n";
+			Script = Script + "\t\tLinearTransDTI= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_DTI.nrrd\"\n";
+if(m_NeedToBeCropped==1)Script = Script + "\t\toriginalDTI= OutputPath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
+else 			Script = Script + "\t\toriginalDTI= allcases[case]\n";
+			Script = Script + "\t\tImplementCommand= \"" + m_SoftPath[1] + " \" + originalDTI + \" \" + LinearTransDTI + \" -f \" + LinearTranstfm + \" -R \" + AtlasFAref\n";
+			Script = Script + "\t\tprint(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [Case \" + str(case+1) + \"] [Implementing the Affine registration] => $ \" + ImplementCommand)\n";
+			Script = Script + "\t\tnbStepsDone += 1\n";
 
-if(m_Overwrite==1)		Script = Script + "\t\t\tif 1 :\n";
-else				Script = Script + "\t\t\tif not os.path.isfile(LinearTransDTI) :\n";
-if( ! m_useGridProcess )		Script = Script + "\t\t\t\tif os.system(ImplementCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] ResampleDTIlogEuclidean: Implementing the Affine Registration on FA image\')\n";
-else					Script = Script + "\t\t\t\tGridProcessCaseCommandsArray.append(ImplementCommand) # Executed eventually\n";
-				Script = Script + "\t\t\telse : print(\"=> The file \\'\" + LinearTransDTI + \"\\' already exists so the command will not be executed\")\n"; // not used if overwrite because "if 1 :"
+if(m_Overwrite==1)	Script = Script + "\t\tif 1 :\n";
+else			Script = Script + "\t\tif not os.path.isfile(LinearTransDTI) :\n";
+if( ! m_useGridProcess )	Script = Script + "\t\t\tif os.system(ImplementCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] ResampleDTIlogEuclidean: Implementing the Affine Registration on FA image\')\n";
+else				Script = Script + "\t\t\tGridProcessCaseCommandsArray.append(ImplementCommand) # Executed eventually\n";
+			Script = Script + "\t\telse : print(\"=> The file \\'\" + LinearTransDTI + \"\\' already exists so the command will not be executed\")\n"; // not used if overwrite because "if 1 :"
 
 /* Generating FA of registered images */
 	Script = Script + "\n# Generating FA of registered images\n";
-if(m_RegType==1)	Script = Script + "\t\tif n!=0 or case!=0 :# the first case is the reference for the first loop so it will not be normalized or registered\n";
-else 			Script = Script + "\t\tif 1 :\n";
-				Script = Script + "\t\t\tLinearTransDTI= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_DTI.nrrd\"\n";
-				Script = Script + "\t\t\tif n == " + m_nbLoops_str + " : LoopFA= OutputPath + \"/Loop" + m_nbLoops_str + "/Case\" + str(case+1) + \"_Loop" + m_nbLoops_str + "_FinalFA.nrrd\" # the last FA will be the Final output\n";
-				Script = Script + "\t\t\telse : LoopFA= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_FA.nrrd\"\n";
-				Script = Script + "\t\t\tGeneLoopFACommand= \"" + m_SoftPath[3] + " --dti_image \" + LinearTransDTI + \" -f \" + LoopFA\n";
-				Script = Script + "\t\t\tprint(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [Case \" + str(case+1) + \"] [Generating FA of registered images] => $ \" + GeneLoopFACommand)\n";
-				Script = Script + "\t\t\tnbStepsDone += 1\n";
+			Script = Script + "\t\tLinearTransDTI= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_DTI.nrrd\"\n";
+			Script = Script + "\t\tif n == " + m_nbLoops_str + " : LoopFA= OutputPath + \"/Loop" + m_nbLoops_str + "/Case\" + str(case+1) + \"_Loop" + m_nbLoops_str + "_FinalFA.nrrd\" # the last FA will be the Final output\n";
+			Script = Script + "\t\telse : LoopFA= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_FA.nrrd\"\n";
+			Script = Script + "\t\tGeneLoopFACommand= \"" + m_SoftPath[3] + " --dti_image \" + LinearTransDTI + \" -f \" + LoopFA\n";
+			Script = Script + "\t\tprint(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [Case \" + str(case+1) + \"] [Generating FA of registered images] => $ \" + GeneLoopFACommand)\n";
+			Script = Script + "\t\tnbStepsDone += 1\n";
 
-if(m_Overwrite==1)		Script = Script + "\t\t\tif 1 :\n";
-else				Script = Script + "\t\t\tif not os.path.isfile(LoopFA) :\n";
-if( ! m_useGridProcess )		Script = Script + "\t\t\t\tif os.system(GeneLoopFACommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] dtiprocess: Generating FA of affine registered images\')\n";
-else					Script = Script + "\t\t\t\tGridProcessCaseCommandsArray.append(GeneLoopFACommand) # Executed eventually\n";
-				Script = Script + "\t\t\telse : print(\"=> The file \\'\" + LoopFA + \"\\' already exists so the command will not be executed\")\n"; // not used if overwrite because "if 1 :"
+if(m_Overwrite==1)	Script = Script + "\t\tif 1 :\n";
+else			Script = Script + "\t\tif not os.path.isfile(LoopFA) :\n";
+if( ! m_useGridProcess )	Script = Script + "\t\t\tif os.system(GeneLoopFACommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] dtiprocess: Generating FA of affine registered images\')\n";
+else				Script = Script + "\t\t\tGridProcessCaseCommandsArray.append(GeneLoopFACommand) # Executed eventually\n";
+			Script = Script + "\t\telse : print(\"=> The file \\'\" + LoopFA + \"\\' already exists so the command will not be executed\")\n"; // not used if overwrite because "if 1 :"
 
 /* Run grid process command for case X, containing all operations */
 if( m_useGridProcess )
@@ -297,6 +340,7 @@ if( m_useGridProcess )
 					Script = Script + "\t\t\t\tGridAffineCommand = GridAffineCommand + \" \'\" + GridProcessCaseCommandsArray[GridCmd] + \"\'\"\n";
 					Script = Script + "\t\t\t\tGridCmd += 1\n";
 
+				Script = Script + "\t\t\tprint(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [Case \" + str(case+1) + \"] => Submitting : \" + GridAffineCommand)\n";
 				Script = Script + "\t\t\tif os.system(GridAffineCommand)!=0 : # Run script and collect error if so\n";
 					Script = Script + "\t\t\t\tErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] Grid processing script\')\n";
 
@@ -306,7 +350,8 @@ if( m_useGridProcess )
 				Script = Script + "\t\t\tf.close()\n";
 } // if( m_useGridProcess )
 
-			Script = Script + "\n\t\tcase += 1 # indenting cases loop\n\n";
+			Script = Script + "\n\t\tprint(\"\")\n";
+			Script = Script + "\t\tcase += 1 # indenting cases loop\n\n";
 
 if( m_useGridProcess )	Script = Script + "\tTestGridProcess( FilesFolder, len(allcases), " + NoCase1 + "*(n==0)) # stays in the function until all process is done\n\n";
 
@@ -338,20 +383,13 @@ if( m_useGridProcess )	Script = Script + "\t\tAverageCommand= \"" + m_GridComman
 if(m_Overwrite==1)	Script = Script + "\t\tif 1 :\n";
 else			Script = Script + "\t\tif not os.path.isfile(FAAverage) :\n";
 				Script = Script + "\t\t\tif os.system(AverageCommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'] dtiaverage: Computing FA Average of registered images\')\n";
+				Script = Script + "\t\t\tTestGridProcess( FilesFolder, 0, 0) # stays in the function until all process is done : 0 makes the function look for \'file\'\n";
 			Script = Script + "\t\telse :\n"; // not used if overwrite because "if 1 :"
 				Script = Script + "\t\t\tprint(\"=> The file \\'\" + FAAverage + \"\\' already exists so the command will not be executed\")\n";
-			if( m_useGridProcess ) // adding create file command
-			{
-				Script = Script + "\t\t\tf = open( FilesFolder + \"/file\" , 'w')\n";
-				Script = Script + "\t\t\tf.close()\n";
-			}
-
-
-if( m_useGridProcess )	Script = Script + "\t\tTestGridProcess( FilesFolder, 0, 0) # stays in the function until all process is done : 0 makes the function look for \'file\'\n\n";
 
 			Script = Script + "\t\tAtlasFAref = FAAverage # the average becomes the reference\n\n";
 
-
+		Script = Script + "\tprint(\"\")\n";
 		Script = Script + "\tn += 1 # indenting main loop\n\n";
 
 	Script = Script + "print(\"\\n============ End of Pre processing =============\")\n\n";
@@ -427,8 +465,9 @@ void ScriptWriter::AtlasBuilding()
 		//Test Function
 		Script = Script + "# Function that tests if all cases have been processed on the grid\n";
 		Script = Script + "def TestGridProcess ( FilesFolder, NbCases ): # if NbCases == 0, then just search the file \'file\' (unique command)\n";
-			Script = Script + "\tprint(\"\\n| Waiting for all cases (\" + str(NbCases) + \") to be processed on grid...\") # NoCase1 is 0 or 1\n";
+			Script = Script + "\tif NbCases>0 : print(\"\\n| Waiting for all cases (\" + str(NbCases) + \") to be processed on grid...\") # NoCase1 is 0 or 1\n";
 			Script = Script + "\tfilesOK = 0\n";
+			Script = Script + "\tOldNbFilesOK = 0\n";
 			Script = Script + "\twhile not filesOK :\n";
 				Script = Script + "\t\tfilesOK = 1\n";
 				Script = Script + "\t\tif NbCases>0 : \n";
@@ -438,7 +477,8 @@ void ScriptWriter::AtlasBuilding()
 						Script = Script + "\t\t\t\tif not os.path.isfile( FilesFolder + \"/Case\" + str(case+1) ) : filesOK = 0\n";
 						Script = Script + "\t\t\t\telse : NbfilesOK = NbfilesOK + 1\n";
 						Script = Script + "\t\t\t\tcase += 1\n";
-					Script = Script + "\t\t\tprint(\"\\r| [\" + str(NbfilesOK) + \"\\t/ \" + str(NbCases) + \" ] Files processed\"), # the comma prevents the print from jumping line\n";
+					Script = Script + "\t\t\tif NbfilesOK != OldNbFilesOK : print(\"| [\" + str(NbfilesOK) + \"\\t/ \" + str(NbCases) + \" ] cases processed\")\n";
+					Script = Script + "\t\t\tOldNbFilesOK=NbfilesOK\n";
 				Script = Script + "\t\telif not os.path.isfile( FilesFolder + \"/file\" ) : filesOK = 0\n";
 			Script = Script + "\tprint(\"\\n=> All files processed\")\n";
 			Script = Script + "\tshutil.rmtree(FilesFolder) # clear directory and recreate it\n";
