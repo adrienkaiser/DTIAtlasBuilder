@@ -14,4 +14,5 @@ Tensor transformation=Preservation of the Principal Direction (PPD)
 DTIReg Extra Path=
 DTIRegMethod=BRAINS=Diffeomorphic;Use computed affine transform;5;300,50,30,20,15
 GridProcessing=
+NbThreads=1
 CSV Dataset File=${CMAKE_CURRENT_BINARY_DIR}/TestGUIparameters.csv
