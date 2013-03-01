@@ -277,7 +277,6 @@ else				Script = Script + "\t\t\tGridProcessCaseCommandsArray.append(NormFAComma
 			Script = Script + "\t\tLinearTranstfm= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans.txt\"\n";
 			Script = Script + "\t\tLinearTrans= OutputPath + \"/Loop\" + str(n) + \"/Case\" + str(case+1) + \"_Loop\" + str(n) + \"_LinearTrans_FA.nrrd\"\n";
 			Script = Script + "\t\tAffineCommand= \"" + m_SoftPath[4] + " --fixedVolume \" + AtlasFAref + \" --movingVolume \" + NormFA + \" --useAffine --outputVolume \" + LinearTrans + \" --outputTransform \" + LinearTranstfm\n";
-
 			Script = Script + "\t\tInitLinearTransTxt= OutputPath + \"/Case\" + str(case+1) + \"_InitLinearTrans.txt\"\n";
 			Script = Script + "\t\tInitLinearTransMat= OutputPath + \"/Case\" + str(case+1) + \"_InitLinearTrans.mat\"\n";
 			Script = Script + "\t\tif n==0 and os.path.isfile(InitLinearTransMat) and os.path.isfile(InitLinearTransTxt):\n";
@@ -1020,6 +1019,11 @@ void ScriptWriter::MainScript()
 
 	Script = Script + "ErrorList=[] #empty list\n\n";
 
+	if( ! m_useGridProcess ) // if grid process, var defined in the grid script
+	{
+	Script = Script + "os.putenv(\"ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS\",\"" + m_NbThreadsString + "\") # to set the nb of cores to use : propagated to the other scripts via os.system()\n\n";
+	}
+
 	Script = Script + "time1=time.time()\n\n";
 
 /* Call the other scripts */
@@ -1277,5 +1281,13 @@ void ScriptWriter::setGridCommand(std::string GridCommand)
 void ScriptWriter::setPythonPath(std::string PythonPath)
 {
 	m_PythonPath = PythonPath;
+}
+
+void ScriptWriter::setNbThreads(int NbThreads) // if( NbThreadsSpinBox->value() != 0 ) // 0 <=> automatic = no limit option given
+{
+	std::ostringstream outNThreads;
+	outNThreads << NbThreads;
+	m_NbThreadsString = outNThreads.str();
+/*Multi threading option used to set env var at the beginning of the main script */
 }
 

@@ -18,10 +18,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
-#include <cstdlib> // for getenv() and exit()
-#include <signal.h> // for kill()
-//#include <sys/wait.h> // for waitpid(): see function "void GUI::LaunchScriptRunner()" at the end
-#include <csignal> // for signal()
 
 /*itk classes*/
 #include "itkImage.h"
@@ -153,6 +149,8 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	QObject::connect(DefaultButton, SIGNAL(clicked()), this, SLOT(ConfigDefault()));
 	QObject::connect(GAPath, SIGNAL(editingFinished()), this, SLOT(testGA())); // test the version of GreedyAtlas automatically when the text is changed manually ( not by a setText() )
 	QObject::connect(DTIRegPath, SIGNAL(editingFinished()), this, SLOT(testDTIReg())); // test the version of DTI-Reg automatically when the text is changed manually ( not by a setText() )
+
+	QObject::connect(GridProcesscheckBox, SIGNAL(stateChanged(int)), this, SLOT(GridProcesscheckBoxHasChanged(int)));
 
 	QObject::connect(AffineQCButton, SIGNAL(clicked()), this, SLOT(DisplayAffineQC()));
 	QObject::connect(DeformQCButton, SIGNAL(clicked()), this, SLOT(DisplayDeformQC()));
@@ -1034,6 +1032,8 @@ void GUI::SaveParameters(QString ParamBrowseName,QString CSVFileName)
 		if( GridProcesscheckBox->isChecked() ) stream << GridProcessCmdLineEdit->text() <<endl;
 		else stream << endl;
 
+		stream << "NbThreads=" << NbThreadsSpinBox->value() << endl;
+
 		stream << "CSV Dataset File=" << CSVFileName << endl;
 
 		std::cout<<"DONE"<<std::endl; // command line display
@@ -1618,6 +1618,23 @@ int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // Discard
 			GridProcessCmdLineEdit->setText( "" );
 		}
 
+/* Nb Threads*/
+		line = stream.readLine();
+		list = line.split("=");
+		if(!list.at(0).contains(QString("NbThreads")))
+		{
+			if(!m_noGUI) 
+			{
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				std::cout<<"FAILED"<<std::endl; // command line display
+			}
+			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			return -1;
+		}
+		NbThreadsSpinBox->setValue( list.at(1).toInt() );
+
+
+
 		std::cout<<"DONE"<<std::endl; // command line display
 
 /* Opening CSV File */
@@ -1654,7 +1671,7 @@ int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // Discard
  //              XML FILE               //
 /////////////////////////////////////////
 
-void GUI::GenerateXMLForAW()
+void GUI::GenerateXMLForAW() /* NOT USED */
 {	
 	if( ! itksys::SystemTools::GetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration_AW").c_str(), ITKmode_F_OK) )// Test if the non linear folder does not exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
 	{
@@ -1994,7 +2011,14 @@ void GUI::GenerateXMLForGA() // Greedy Atlas
 			}
 
 			stream <<"\t<!--number of threads to use, 0=one per processor (only for CPU computation)-->"<< endl;
-			stream <<"\t<nThreads val=\"4\" />"<< endl;
+			if( GridProcesscheckBox->isChecked() ) stream <<"\t<nThreads val=\"1\" />"<< endl; // to prevent GreedyAtlas from using too many cores on the cluster
+			else
+			{
+			std::ostringstream outNThreads;
+			outNThreads << NbThreadsSpinBox->value();
+			stream <<"\t<nThreads val=\""<< outNThreads.str().c_str() <<"\" />"<< endl;
+			}
+
 			stream <<"\t<OutputPrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration/\" />"<< endl;
 			stream <<"\t<OutputSuffix val=\"mhd\" />"<< endl;
 		stream <<"</ParameterFile>"<< endl;
@@ -2626,6 +2650,13 @@ void GUI::WidgetHasChangedParamNoSaved() /*SLOT*/ //called when any widget is ch
 	m_ParamSaved=0;
 }
 
+void GUI::GridProcesscheckBoxHasChanged(int state) /*SLOT*/ // called when Gid Processing is checked
+{
+/* State=0 if false, State=2 if true */
+	if(state==2) NbThreadsSpinBox->setEnabled(false);
+	else  NbThreadsSpinBox->setEnabled(true);
+}
+
   /////////////////////////////////////////
  //           CHECK IMAGE OK            //
 /////////////////////////////////////////
@@ -3137,6 +3168,9 @@ int GUI::LaunchScriptWriter()
 	m_scriptwriter->setGridProcess( GridProcesscheckBox->isChecked() ); // isChecked() returns true or false
 	m_scriptwriter->setGridCommand( GridProcessCmdLineEdit->text().toStdString() );
 
+	if( GridProcesscheckBox->isChecked() ) m_scriptwriter->setNbThreads(1); // Not used in script, but fct needs to be called to initialize var
+	else m_scriptwriter->setNbThreads( NbThreadsSpinBox->value() );
+
 /* Launch writing */
 	m_scriptwriter->WriteScript(); // Master Function : get pid to send a signal to Qt process to move progress bar
 
@@ -3214,6 +3248,8 @@ int GUI::LaunchScriptWriter()
 			stream << "# arguments: [file to create] [commands to execute]" << endl;
 			stream << "# example : RunCommandOnServer.script file.txt \"ls\" \"du -sh\" \"nautilus .\"" << endl << endl;
 
+			stream << "os.putenv(\"ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS\",\"1\") # to prevent programs from using too many cores on the cluster" << endl << endl;
+
 			stream << "i=2 # sys.argv[0] is the name of the executable and sys.argv[1] is the name of the file to create" << endl;
 			stream << "while i < len(sys.argv):" << endl;
 				stream << "\tCommand = sys.argv[i]" << endl;
@@ -3258,7 +3294,7 @@ int GUI::LaunchScriptRunner()
 	program = m_PythonPath + " " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Main.script"; // 
 	std::cout<<"| $ " << program << std::endl;
 
-	std::cout<<"| Script Running..."; // command line display
+	std::cout<<"| Script Running..."<< std::endl; // command line display
 
 	std::string LogFilePath = m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder.log";
 	m_ScriptQProcess->setStandardOutputFile(LogFilePath.c_str(), QIODevice::Append); // Truncate = overwrite // Append= write after what's written

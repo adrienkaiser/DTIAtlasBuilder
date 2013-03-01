@@ -18,8 +18,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
-#include <cstdlib> // for getenv()
-#include <signal.h> // for the signal types
 
 /*itk classes*/
 #include "itkImage.h"
@@ -105,6 +103,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		void ANTSRegTypeChanged(int);
 
 /*WIDGETCHANGE*/void WidgetHasChangedParamNoSaved();
+		void GridProcesscheckBoxHasChanged(int);
 
 /*MAIN FUNCT*/	int Compute();
 		void ScriptQProcessDone(int);
