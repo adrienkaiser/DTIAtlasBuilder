@@ -935,10 +935,10 @@ void GUI::SaveCSVResults(int Crop, int nbLoops) // Crop = 0 if no cropping , 1 i
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Loop") << nbLoops << QString("/Case") << i+1 << QString("_Loop ") << nbLoops << QString("_LinearTrans_DTI.nrrd"); // Affine registered DTI
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Loop") << nbLoops << QString("/Case") << i+1 << QString("_Loop ") << nbLoops << QString("_FinalFA.nrrd"); // Affine Registered FA
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/Case") << i+1 << QString("_NonLinearTrans_FA.mhd"); // Diffeomorphic Deformed FA
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/Case") << i+1 << QString("_DeformationField.mhd"); // Diffeomorphic Deformation field to Affine space
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/Case") << i+1 << QString("_InverseDeformationField.mhd"); // Diffeomorphic Inverse Deformation field to Affine space
+			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/Case") << i+1 << QString("_HField.mhd"); // Diffeomorphic Deformation H field to Affine space
+			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/Case") << i+1 << QString("_InverseHField.mhd"); // Diffeomorphic Inverse Deformation H field to Affine space
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/3_Diffeomorphic_Atlas/Case") << i+1 << QString("_DiffeomorphicDTI.nrrd"); // Diffeomorphic DTI
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/4_Final_Resampling/Second_Resampling/Case") << i+1 << QString("_GlobalDeformationField.nrrd"); // Diffeomorphic Deformation field to Original space
+			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/4_Final_Resampling/Second_Resampling/Case") << i+1 << QString("_GlobalDisplacementField.nrrd"); // Diffeomorphic Deformation Displacement field to Original space
 			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/4_Final_Resampling/Second_Resampling/Case") << i+1 << QString("_FinalDeformedDTI.nrrd"); // DTI-Reg Final DTI
 			stream << endl;
 		}

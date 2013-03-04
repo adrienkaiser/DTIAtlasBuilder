@@ -560,8 +560,8 @@ if( m_useGridProcess ) Script = Script + "\tTestGridProcess( FilesFolder, 0) # s
 			Script = Script + "\t\toriginalHField=DeformPath + \"/Case\" + str(case+1) + \"_Loop" + m_nbLoops_str + "_FinalFADefFieldImToMean.mhd\"\n";
 			Script = Script + "\t\toriginalInvHField=DeformPath + \"/Case\" + str(case+1) + \"_Loop" + m_nbLoops_str + "_FinalFADefFieldMeanToIm.mhd\"\n";
 			Script = Script + "\t\tNewImage= DeformPath + \"/Case\" + str(case+1) + \"_NonLinearTrans_FA.mhd\"\n";
-			Script = Script + "\t\tNewHField=DeformPath + \"/Case\" + str(case+1) + \"_DeformationField.mhd\"\n";
-			Script = Script + "\t\tNewInvHField=DeformPath + \"/Case\" + str(case+1) + \"_InverseDeformationField.mhd\"\n";
+			Script = Script + "\t\tNewHField=DeformPath + \"/Case\" + str(case+1) + \"_HField.mhd\"\n";
+			Script = Script + "\t\tNewInvHField=DeformPath + \"/Case\" + str(case+1) + \"_InverseHField.mhd\"\n";
 			Script = Script + "\t\tprint(\"[Case \" + str(case+1) + \"] => Renaming \\'\" + originalImage + \"\\' to \\'\" + NewImage + \"\\'\")\n";
 			Script = Script + "\t\tos.rename(originalImage,NewImage)\n";
 			Script = Script + "\t\tprint(\"[Case \" + str(case+1) + \"] => Renaming \\'\" + originalHField + \"\\' to \\'\" + NewHField + \"\\'\")\n";
@@ -595,7 +595,7 @@ if( m_useGridProcess )
 			std::string nbLoops1_str = out.str();
 		Script = Script + "\tRef = AffinePath + \"/Loop" + nbLoops1_str + "/Loop" + nbLoops1_str + "_FAAverage.nrrd\"\n"; // an average image has been generated in the loops of affine reg for reference
 		}
-		Script = Script + "\tHField= DeformPath + \"/Case\" + str(case+1) + \"_DeformationField.mhd\"\n";
+		Script = Script + "\tHField= DeformPath + \"/Case\" + str(case+1) + \"_HField.mhd\"\n";
 		Script = Script + "\tFinalReSampCommand=\"" + m_SoftPath[1] + " -R \" + Ref + \" -H \" + HField + \" -f \" + alltfms[case] + \" \" + originalDTI + \" \" + FinalDTI\n";
 
 		/* options */
@@ -754,7 +754,7 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # st
 	Script = Script + "while case < len(allcases):\n";
 		if(m_NeedToBeCropped==1) Script = Script + "\torigDTI= AffinePath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
 		else Script = Script + "\torigDTI= allcases[case]\n";
-		Script = Script + "\tGlobalDefField = FinalResampPath + \"/First_Resampling/Case\" + str(case+1) + \"_GlobalDeformationField.nrrd\"\n";
+		Script = Script + "\tGlobalDefField = FinalResampPath + \"/First_Resampling/Case\" + str(case+1) + \"_GlobalDisplacementField.nrrd\"\n";
 		Script = Script + "\tFinalDef = FinalResampPath + \"/First_Resampling/Case\" + str(case+1) + \"_DeformedDTI.nrrd\"\n";
 		Script = Script + "\tGlobalDefFieldCommand=\"" + m_SoftPath[7] + " --fixedVolume \" + DTIAverage + \" --movingVolume \" + origDTI + \" --outputDeformationFieldVolume \" + GlobalDefField + \" --outputVolume \" + FinalDef\n";
 
@@ -892,7 +892,7 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # st
 	Script = Script + "while case < len(allcases):\n";
 		if(m_NeedToBeCropped==1) Script = Script + "\torigDTI2= AffinePath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
 		else Script = Script + "\torigDTI2= allcases[case]\n";
-		Script = Script + "\tGlobalDefField2 = FinalResampPath + \"/Second_Resampling/Case\" + str(case+1) + \"_GlobalDeformationField.nrrd\"\n";
+		Script = Script + "\tGlobalDefField2 = FinalResampPath + \"/Second_Resampling/Case\" + str(case+1) + \"_GlobalDisplacementField.nrrd\"\n";
 		Script = Script + "\tFinalDef2 = FinalResampPath + \"/Second_Resampling/Case\" + str(case+1) + \"_FinalDeformedDTI.nrrd\"\n";
 		Script = Script + "\tGlobalDefFieldCommand2=\"" + m_SoftPath[7] + " --fixedVolume \" + DTIAverage2 + \" --movingVolume \" + origDTI2 + \" --outputDeformationFieldVolume \" + GlobalDefField2 + \" --outputVolume \" + FinalDef2\n";
 
