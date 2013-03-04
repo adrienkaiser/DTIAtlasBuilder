@@ -467,6 +467,14 @@ set( Tools
 AddToolMacro( BRAINS ) # AddToolMacro( proj ) + uses SourceCodeArgs CMAKE_ExtraARGS Tools
 
 # ===== ANTS/WarpMultiTransform =====================================================
+if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION ) # Boost compiled as extension in Slicer
+  set(Boost_DIR ${CMAKE_CURRENT_BINARY_DIR}/../boost-build) # ${CMAKE_CURRENT_BINARY_DIR} is [ExtsBuildDir]/DTIAtlasBuilder-build
+  set(ANTS_SUPERBUILD OFF)
+else()
+  set(Boost_DIR "")
+  set(ANTS_SUPERBUILD ON) # because needs boost
+endif()
+
 set( SourceCodeArgs
   # SVN_REPOSITORY "http://advants.svn.sourceforge.net/svnroot/advants/trunk"
   # SVN_REVISION -r 1685 # 12/13/2012
@@ -476,7 +484,8 @@ set( SourceCodeArgs
 set( CMAKE_ExtraARGS
   -DBUILD_TESTING:BOOL=OFF
   -DBUILD_SHARED_LIBS:BOOL=OFF
-  #  -DANTS_SUPERBUILD:BOOL=OFF # because needs boost
+  -DANTS_SUPERBUILD:BOOL=ON#${ANTS_SUPERBUILD}
+#  -DBoost_DIR:PATH=${Boost_DIR}
   -DSuperBuild_ANTS_USE_GIT_PROTOCOL:BOOL=${USE_GIT_PROTOCOL}
   -DUSE_SYSTEM_ITK:BOOL=ON
   -DITK_DIR:PATH=${ITK_DIR}
@@ -518,7 +527,7 @@ set( SourceCodeArgs
   SVN_REPOSITORY "http://www.nitrc.org/svn/dtireg/trunk"
   SVN_USERNAME slicerbot
   SVN_PASSWORD slicer
-  SVN_REVISION -r 35 # 01/11/2013
+  SVN_REVISION -r 38 # 03/04/2013
   )
 set( CMAKE_ExtraARGS
   -DANTSTOOL:PATH=${ANTSPath}
