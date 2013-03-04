@@ -2945,15 +2945,23 @@ if(ExitCode==0) kill(getppid(),SIGUSR1); // signal to the father than execution 
 */
 }
 
-void GUI::UpdateScriptRunningGUIDisplay() /*SLOT*/
+void GUI::UpdateScriptRunningGUIDisplay() /*SLOT*/ // called by QTimer every second
 {
-  if(ScriptRunningDisplayQLabel->text().size()>=19) ScriptRunningDisplayQLabel->setText("Script Running"); // display only 5 dots at a time ("Script Running" = 14)
+  if(ScriptRunningDisplayQLabel->text().size()>=19)
+  {
+    std::ostringstream ossPID;
+    ossPID << m_ScriptQProcess->pid();
+    std::string PID_str = ossPID.str();
+
+    std::string text = "To stop the workflow, kill: " + PID_str + " | Script Running";
+    ScriptRunningDisplayQLabel->setText( QString( text.c_str() ) ); // display only 5 dots at a time ("Script Running" = 14)
+  }
 
   QString ScriptRunningDisplay = ScriptRunningDisplayQLabel->text() + ".";
   ScriptRunningDisplayQLabel->setText(ScriptRunningDisplay);
 }
 
-void GUI::ScriptQProcessDone(int ExitCode) /*SLOT*/
+void GUI::ScriptQProcessDone(int ExitCode) /*SLOT*/ // called
 {
   if(!m_noGUI) // no timer if no GUI
   {
@@ -2979,8 +2987,10 @@ void GUI::RunningCompleted()
   m_ScriptRunning=false;
   ScriptRunningDisplayQLabel->setText("Running Completed ");
 
-  if(!m_noGUI) QMessageBox::information(this, "Running Completed", "Running Completed !");
-  std::cout<<"| Running Completed !"<<std::endl; // command line display
+  std::string RunningCompletedText = "Running Completed !\nFinal Atlas is in \"" + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/FinalAtlasDTI.nrrd\"\nFinal Displacement Fields for each case are in \"" + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/Second_Resampling/CaseX_GlobalDisplacementField.nrrd\"";
+
+  if(!m_noGUI) QMessageBox::information(this, "Running Completed", QString(RunningCompletedText.c_str()));
+  std::cout<< RunningCompletedText <<std::endl; // command line display
 }
 
 void GUI::RunningFailed()

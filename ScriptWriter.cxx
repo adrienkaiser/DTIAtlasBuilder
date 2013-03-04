@@ -102,7 +102,7 @@ void ScriptWriter::Preprocess ()
             Script = Script + "        if not os.path.isfile( FilesFolder + \"/Case\" + str(case+1) ) : filesOK = 0\n";
             Script = Script + "        else : NbfilesOK = NbfilesOK + 1\n";
             Script = Script + "        case += 1\n";
-          Script = Script + "      if NbfilesOK != OldNbFilesOK : print(\"| [\" + str(NbfilesOK) + \"\  / \" + str(NbCases-NoCase1) + \" ] cases processed\")\n";
+          Script = Script + "      if NbfilesOK != OldNbFilesOK : print(\"| [\" + str(NbfilesOK) + \"\\t / \" + str(NbCases-NoCase1) + \" ] cases processed\")\n";
           Script = Script + "      OldNbFilesOK=NbfilesOK\n";
         Script = Script + "    elif not os.path.isfile( FilesFolder + \"/file\" ) : filesOK = 0\n";
       Script = Script + "  print(\"\\n=> All files processed\")\n";
@@ -146,7 +146,7 @@ if( m_useGridProcess ) Script = Script + "RescaleTempCommand= \"" + m_GridComman
 if(m_Overwrite==1)  Script = Script + "if 1 :\n";
 else      Script = Script + "if not os.path.isfile(RescaleTemp) :\n";
         Script = Script + "  if os.system(RescaleTempCommand)!=0 : ErrorList.append(\'ImageMath: Rescaling FA template\')\n";
-        Script = Script + "  TestGridProcess( FilesFolder, 0, 0) # stays in the function until all process is done : 0 makes the function look only for \'file\'\n";
+if( m_useGridProcess ) Script = Script + "  TestGridProcess( FilesFolder, 0, 0) # stays in the function until all process is done : 0 makes the function look only for \'file\'\n";
       Script = Script + "else :\n"; // not used if overwrite because "if 1 :"
         Script = Script + "  print(\"=> The file \\'\" + RescaleTemp + \"\\' already exists so the command will not be executed\")\n";
 
@@ -382,7 +382,7 @@ if( m_useGridProcess )  Script = Script + "    AverageCommand= \"" + m_GridComma
 if(m_Overwrite==1)  Script = Script + "    if 1 :\n";
 else      Script = Script + "    if not os.path.isfile(FAAverage) :\n";
         Script = Script + "      if os.system(AverageCommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'] dtiaverage: Computing FA Average of registered images\')\n";
-        Script = Script + "      TestGridProcess( FilesFolder, 0, 0) # stays in the function until all process is done : 0 makes the function look for \'file\'\n";
+if( m_useGridProcess ) Script = Script + "      TestGridProcess( FilesFolder, 0, 0) # stays in the function until all process is done : 0 makes the function look for \'file\'\n";
       Script = Script + "    else :\n"; // not used if overwrite because "if 1 :"
         Script = Script + "      print(\"=> The file \\'\" + FAAverage + \"\\' already exists so the command will not be executed\")\n";
 
@@ -476,7 +476,7 @@ void ScriptWriter::AtlasBuilding()
             Script = Script + "        if not os.path.isfile( FilesFolder + \"/Case\" + str(case+1) ) : filesOK = 0\n";
             Script = Script + "        else : NbfilesOK = NbfilesOK + 1\n";
             Script = Script + "        case += 1\n";
-          Script = Script + "      if NbfilesOK != OldNbFilesOK : print(\"| [\" + str(NbfilesOK) + \"\  / \" + str(NbCases) + \" ] cases processed\")\n";
+          Script = Script + "      if NbfilesOK != OldNbFilesOK : print(\"| [\" + str(NbfilesOK) + \"\\t / \" + str(NbCases) + \" ] cases processed\")\n";
           Script = Script + "      OldNbFilesOK=NbfilesOK\n";
         Script = Script + "    elif not os.path.isfile( FilesFolder + \"/file\" ) : filesOK = 0\n";
       Script = Script + "  print(\"\\n=> All files processed\")\n";
