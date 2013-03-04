@@ -45,12 +45,21 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		void SaveCSVResults(int Crop, int nbLoops);
 
 /*PARAMETERS*/	int LoadParameters(QString paramFile, bool DiscardParametersCSV); // returns -1 if fails, otherwise 0
+		bool LoadParametersReturnTrueIfCorrupted(QString ReadParameter, const char* Parameter );
+		bool LoadParametersLoadScaleLevelReturnTrueIfCorrupted(	QStringList nbrs, 
+									QCheckBox* SLcheckBox, // & so we can change the value
+									QSpinBox* SLspinBox,
+									QSpinBox* nbIterSpinBox,
+									QDoubleSpinBox*& alphaDoubleSpinBox,
+									QDoubleSpinBox*& betaDoubleSpinBox,
+									QDoubleSpinBox*& gammaDoubleSpinBox,
+									QDoubleSpinBox*& maxPerturbationDoubleSpinBox );
 		void SaveParameters(QString ParamBrowseName,QString CSVFileName);
 
-/*XML FILE*/	void GenerateXMLForAW();
-		void GenerateXMLForGA();
+/*XML FILE*/	void GenerateXMLForGA();
 
 /*SOFT CONFIG*/	int LoadConfig(QString ConfigFile); // returns -1 if fails, otherwise 0
+		bool LoadConfigReturnTrueIfCorrupted(QString ReadProgram, const char* Program);
 
 /*CHECK IMAGE*/	int checkImage(std::string Image); // returns 1 if not an image, 2 if not a dti, otherwise 0
 
@@ -135,7 +144,6 @@ class GUI : public QMainWindow, public Ui::MainWindow
 		QString m_lastCasePath;
 
 /*PARAMETERS*/	int m_ParamSaved; // 0 if the last parameters have not been saved, 1 if the last have been saved
-		QString m_ParamFileHeader; // to check if the file to read is really a parameter file
 
 /*SOFT CONFIG*/	int m_FromConstructor; // do not test GA path if 'Default' called from constructor
 

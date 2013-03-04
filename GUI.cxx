@@ -99,7 +99,6 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	m_scriptwriter = new ScriptWriter; // delete in "void GUI::ExitProgram()"
 
 /* Variables */
-	m_ParamFileHeader = QString("DTIAtlasBuilderParameterFileVersion");
 	m_CSVseparator = QString(",");
 	m_ParamSaved=1;
 	m_lastCasePath="";
@@ -253,6 +252,8 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 	QObject::connect(m_SimParamDble, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
 	QObject::connect(m_GSigmaDble, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
 	QObject::connect(m_SmoothOffCheck, SIGNAL(stateChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+	QObject::connect(NbThreadsSpinBox, SIGNAL(valueChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+	QObject::connect(GridProcesscheckBox, SIGNAL(stateChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
 
 	} //if(!m_noGUI)
 
@@ -985,7 +986,7 @@ void GUI::SaveParameters(QString ParamBrowseName,QString CSVFileName)
 
 		QTextStream stream( &file );
 
-		stream << m_ParamFileHeader << "=1" << endl;
+		stream << "DTIAtlasBuilderParameterFileVersion" << "=2" << endl;
 		stream << "Output Folder=" << OutputFolderLineEdit->text() << endl;
 		stream << "Atlas Template=" << TemplateLineEdit->text() << endl;
 		if(SafetyMargincheckBox->isChecked()) stream << "SafetyMargin=true" << endl;
@@ -1072,10 +1073,73 @@ void GUI::LoadParametersSlot() /*SLOT*/
 	}
 }
 
+bool GUI::LoadParametersReturnTrueIfCorrupted(QString ReadParameter, const char* Parameter )
+{
+	if( ! ReadParameter.contains( QString(Parameter) ) )
+	{
+		if(!m_noGUI) 
+		{
+			QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted.\nIt may have been modified manually.\nPlease save it again.");
+			std::cout<<"FAILED"<<std::endl; // command line display
+		}
+		else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
+		return true;
+	}
+
+	return false;
+}
+
+bool GUI::LoadParametersLoadScaleLevelReturnTrueIfCorrupted(	QStringList nbrs, 
+								QCheckBox* SLcheckBox, // & = reference : so we can change the value
+								QSpinBox* SLspinBox,
+								QSpinBox* nbIterSpinBox,
+								QDoubleSpinBox*& alphaDoubleSpinBox,
+								QDoubleSpinBox*& betaDoubleSpinBox,
+								QDoubleSpinBox*& gammaDoubleSpinBox,
+								QDoubleSpinBox*& maxPerturbationDoubleSpinBox )
+{
+	if( nbrs.size()!=7 )
+	{
+		if(!m_noGUI) 
+		{
+			QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted.\nIt may have been modified manually.\nPlease save it again.");
+			std::cout<<"FAILED"<<std::endl; // command line display
+		}
+		else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
+		return true;
+	}
+	if(nbrs.at(0).toInt()==1) // if scale level true
+	{
+		if( (nbrs.at(1).toInt()==0) || (nbrs.at(2).toInt()==0) || (nbrs.at(3).toDouble()==0) || (nbrs.at(4).toDouble()==0) || (nbrs.at(5).toDouble()==0) || (nbrs.at(6).toDouble()==0))
+		{
+			if(!m_noGUI) 
+			{
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
+				std::cout<<"FAILED"<<std::endl; // command line display
+			}
+			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
+			return true;
+		}
+		SLcheckBox->setChecked(true);
+		SLspinBox->setValue(nbrs.at(1).toInt());
+		nbIterSpinBox->setValue(nbrs.at(2).toInt());
+		alphaDoubleSpinBox->setValue(nbrs.at(3).toDouble());
+		betaDoubleSpinBox->setValue(nbrs.at(4).toDouble());
+		gammaDoubleSpinBox->setValue(nbrs.at(5).toDouble());
+		maxPerturbationDoubleSpinBox->setValue(nbrs.at(6).toDouble());
+	}
+	else SLcheckBox->setChecked(false);
+
+	return false;
+}
+
 int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // DiscardParametersCSV used only in constructor: if CSV file is given, only load the given CSV file.
 {
-	if( itksys::SystemTools::GetPermissions(paramFile.toStdString().c_str(), ITKmode_F_OK) ) // Test if the csv file exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
+	if( ! itksys::SystemTools::GetPermissions(paramFile.toStdString().c_str(), ITKmode_F_OK) ) // Test if the csv file exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
 	{
+		std::cout<<"| The given parameter file does not exist"<<std::endl; // command line display
+		return -1;
+	}
 
 	QFile file(paramFile);
 
@@ -1085,84 +1149,64 @@ int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // Discard
 
 		QString line = stream.readLine();
 		QStringList list = line.split("=");
-		if( ! list.at(0).contains(m_ParamFileHeader) )
+		if( ! list.at(0).contains("DTIAtlasBuilderParameterFileVersion") )
 		{
 			if(!m_noGUI) QMessageBox::critical(this, "No parameter file", "This file is not a parameter file\nfor this program");
 			else std::cout<<"| This file is not a parameter file for this program"<<std::endl;
 			return -1;
 		}
+		int ParamFileVersion = list.at(1).toInt();
+
+		// Declare array containing parameters names
+/*		std::vector< const char* > ParametersVector;
+
+		switch(ParamFileVersion)
+		{
+			case 1:{const char* ParametersArray[] ={"Output Folder",
+								"Atlas Template",
+								"SafetyMargin",
+								"Loops for the registration"};
+				ParametersVector.insert(ParametersVector.end(), ParametersArray, ParametersArray+4);
+				break; }
+
+			case 2:{const char* ParametersArray[] ={"Output Folder",
+								"Atlas Template",
+								"SafetyMargin",
+								"Loops for the registration"};
+				ParametersVector.insert(ParametersVector.end(), ParametersArray, ParametersArray+4);
+				break; }
+		}
+*/
+// for(int i =0; i< ParametersVector.size() ; i++) std::cout<<ParametersVector[i]<<std::endl;
+
 
 		std::cout<<"| Loading Parameters file \'"<< paramFile.toStdString() <<"\'..."; // command line display
 
 /* Other Parameters */
 		line = stream.readLine();
 		list = line.split("=");
-		if(!list.at(0).contains(QString("Output Folder")))
-		{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-			return -1;
-		}
+		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Output Folder") ) return -1;
 		OutputFolderLineEdit->setText(list.at(1));
 
 		line = stream.readLine();
 		list = line.split("=");
-		if(!list.at(0).contains(QString("Atlas Template")))
-		{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-			return -1;
-		}
+		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Atlas Template") ) return -1;
 		TemplateLineEdit->setText(list.at(1));
 
 		line = stream.readLine();
 		list = line.split("=");
-		if(!list.at(0).contains(QString("SafetyMargin")))
-		{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-			return -1;
-		}
+		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"SafetyMargin") ) return -1;
 		if( list.at(1) == QString("true") ) SafetyMargincheckBox->setChecked(true);
 
 		line = stream.readLine();
 		list = line.split("=");
-		if(!list.at(0).contains(QString("Loops for the registration")))
-		{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-			return -1;
-		}
+		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Loops for the registration") ) return -1;
 		NbLoopsSpinBox->setValue( list.at(1).toInt() );
 
 		line = stream.readLine();
 		list = line.split("=");
-		if(!list.at(0).contains(QString("BRAINSFit Affine Tfm Mode")))
-		{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-			return -1;
-		}
+		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"BRAINSFit Affine Tfm Mode") ) return -1;
+
 		if( list.at(1).contains(QString("Off")) ) BFAffineTfmModecomboBox->setCurrentIndex(0);
 		else if( list.at(1).contains(QString("useMomentsAlign")) ) BFAffineTfmModecomboBox->setCurrentIndex(1);
 		else if( list.at(1).contains(QString("useCenterOfHeadAlign")) ) BFAffineTfmModecomboBox->setCurrentIndex(2);
@@ -1170,173 +1214,34 @@ int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // Discard
 
 		line = stream.readLine();
 		list = line.split("=");
-		if(!list.at(0).contains(QString("Overwrite")))
-		{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-			return -1;
-		}
+		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Overwrite") ) return -1;
 		if( list.at(1) == QString("true") ) OverwritecheckBox->setChecked(true);
 
 /* Scale Levels */
 		line = stream.readLine();
 		list = line.split("=");
-		if(!list.at(0).contains(QString("Scale Level")))
-		{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-			return -1;
-		}
-		else
-		{
-			QStringList nbrs= list.at(1).split(",");
-			if( nbrs.size()!=7 )
-			{
-				if(!m_noGUI) 
-				{
-					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
-				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-				return -1;
-			}
-			if(nbrs.at(0).toInt()==1)
-			{
-				if( (nbrs.at(1).toInt()==0) || (nbrs.at(2).toInt()==0) || (nbrs.at(3).toDouble()==0) || (nbrs.at(4).toDouble()==0) || (nbrs.at(5).toDouble()==0) || (nbrs.at(6).toDouble()==0))
-				{
-					if(!m_noGUI) 
-					{
-						QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-						std::cout<<"FAILED"<<std::endl; // command line display
-					}
-					else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-					return -1;
-				}
-				SL4checkBox->setChecked(true);
-				SL4spinBox->setValue(nbrs.at(1).toInt());
-				nbIter4SpinBox->setValue(nbrs.at(2).toInt());
-				alpha4DoubleSpinBox->setValue(nbrs.at(3).toDouble());
-				beta4DoubleSpinBox->setValue(nbrs.at(4).toDouble());
-				gamma4DoubleSpinBox->setValue(nbrs.at(5).toDouble());
-				maxPerturbation4DoubleSpinBox->setValue(nbrs.at(6).toDouble());
-			}
-		}
+		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Scale Level") ) return -1;
+
+		if( LoadParametersLoadScaleLevelReturnTrueIfCorrupted(list.at(1).split(",") , SL4checkBox , SL4spinBox , nbIter4SpinBox , alpha4DoubleSpinBox , beta4DoubleSpinBox , gamma4DoubleSpinBox , maxPerturbation4DoubleSpinBox) ) return -1; // (list of parameters, variables to fill..)
 
 		line = stream.readLine();
 		list = line.split("=");
-		if(!list.at(0).contains(QString("Scale Level")))
-		{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-			return -1;
-		}
-		else
-		{
-			QStringList nbrs= list.at(1).split(",");
-			if( nbrs.size()!=7 )
-			{
-				if(!m_noGUI) 
-				{
-					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
-				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-				return -1;
-			}
-			if(nbrs.at(0).toInt()==1)
-			{
-				if( (nbrs.at(1).toInt()==0) || (nbrs.at(2).toInt()==0) || (nbrs.at(3).toDouble()==0) || (nbrs.at(4).toDouble()==0) || (nbrs.at(5).toDouble()==0) || (nbrs.at(6).toDouble()==0))
-				{
-					if(!m_noGUI) 
-					{
-						QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-						std::cout<<"FAILED"<<std::endl; // command line display
-					}
-					else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-					return -1;
-				}
-				SL2checkBox->setChecked(true);
-				SL2spinBox->setValue(nbrs.at(1).toInt());
-				nbIter2SpinBox->setValue(nbrs.at(2).toInt());
-				alpha2DoubleSpinBox->setValue(nbrs.at(3).toDouble());
-				beta2DoubleSpinBox->setValue(nbrs.at(4).toDouble());
-				gamma2DoubleSpinBox->setValue(nbrs.at(5).toDouble());
-				maxPerturbation2DoubleSpinBox->setValue(nbrs.at(6).toDouble());
-			}
-		}
+		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Scale Level") ) return -1;
+
+		if( LoadParametersLoadScaleLevelReturnTrueIfCorrupted(list.at(1).split(",") , SL2checkBox , SL2spinBox , nbIter2SpinBox , alpha2DoubleSpinBox , beta2DoubleSpinBox , gamma2DoubleSpinBox , maxPerturbation2DoubleSpinBox) ) return -1; // (list of parameters, variables to fill..)
 
 		line = stream.readLine();
 		list = line.split("=");
-		if(!list.at(0).contains(QString("Scale Level")))
-		{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-			return -1;
-		}
-		else
-		{
-			QStringList nbrs= list.at(1).split(",");
-			if( nbrs.size()!=7 )
-			{
-				if(!m_noGUI) 
-				{
-					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
-				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-				return -1;
-			}
-			if(nbrs.at(0).toInt()==1)
-			{
-				if( (nbrs.at(1).toInt()==0) || (nbrs.at(2).toInt()==0) || (nbrs.at(3).toDouble()==0) || (nbrs.at(4).toDouble()==0) || (nbrs.at(5).toDouble()==0) || (nbrs.at(6).toDouble()==0))
-				{
-					if(!m_noGUI) 
-					{
-						QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-						std::cout<<"FAILED"<<std::endl; // command line display
-					}
-					else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-					return -1;
-				}
-				SL1checkBox->setChecked(true);
-				SL1spinBox->setValue(nbrs.at(1).toInt());
-				nbIter1SpinBox->setValue(nbrs.at(2).toInt());
-				alpha1DoubleSpinBox->setValue(nbrs.at(3).toDouble());
-				beta1DoubleSpinBox->setValue(nbrs.at(4).toDouble());
-				gamma1DoubleSpinBox->setValue(nbrs.at(5).toDouble());
-				maxPerturbation1DoubleSpinBox->setValue(nbrs.at(6).toDouble());
-			}
-		}
+		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Scale Level") ) return -1;
+
+		if( LoadParametersLoadScaleLevelReturnTrueIfCorrupted(list.at(1).split(",") , SL1checkBox , SL1spinBox , nbIter1SpinBox , alpha1DoubleSpinBox , beta1DoubleSpinBox , gamma1DoubleSpinBox , maxPerturbation1DoubleSpinBox) ) return -1; // (list of parameters, variables to fill..)
+
 
 /* Final Atlas Building parameters */
 		line = stream.readLine();
 		list = line.split("=");
-		if(!list.at(0).contains(QString("Resampling Interpolation Algorithm")))
-		{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-			return -1;
-		}
+		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Resampling Interpolation Algorithm") ) return -1;
+
 		if( list.at(1).contains(QString("Linear")) ) InterpolTypeComboBox->setCurrentIndex(0);
 		else if( list.at(1).contains(QString("Nearest Neighborhoor")) ) InterpolTypeComboBox->setCurrentIndex(1);
 		else if( list.at(1).contains(QString("Windowed Sinc")) ) 
@@ -1351,10 +1256,10 @@ int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // Discard
 			{
 				if(!m_noGUI) 
 				{
-					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
 					std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
 				return -1;
 			}
 		}
@@ -1366,10 +1271,10 @@ int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // Discard
 			{
 			if(!m_noGUI) 
 			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
 				std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
 				return -1;
 			}
 		}
@@ -1377,25 +1282,17 @@ int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // Discard
 		{
 			if(!m_noGUI) 
 			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
 				std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
 			return -1;
 		}
 
 		line = stream.readLine();
 		list = line.split("=");
-		if(!list.at(0).contains(QString("Tensor interpolation")))
-		{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-			return -1;
-		}
+		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Tensor interpolation") ) return -1;
+
 		if( list.at(1).contains(QString("Non Log Euclidean")) )
 		{ 
 			TensInterpolComboBox->setCurrentIndex(1);
@@ -1407,10 +1304,10 @@ int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // Discard
 			{
 				if(!m_noGUI) 
 				{
-					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
 					std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
 				return -1;
 			}
 		}
@@ -1419,65 +1316,40 @@ int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // Discard
 		{
 			if(!m_noGUI) 
 			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
 				std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
 			return -1;
 		}
 
 		line = stream.readLine();
 		list = line.split("=");
-		if(!list.at(0).contains(QString("Tensor transformation")))
-		{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-			return -1;
-		}
+		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Tensor transformation") ) return -1;
+
 		if( list.at(1).contains(QString("Preservation of the Principal Direction (PPD)")) ) TensTfmComboBox->setCurrentIndex(0);
 		else if( list.at(1).contains(QString("Finite Strain (FS)")) ) TensTfmComboBox->setCurrentIndex(1);
 		else
 		{
 			if(!m_noGUI) 
 			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
 				std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
 			return -1;
 		}
 
 /* Final Resampling parameters */
 		line = stream.readLine();
 		list = line.split("=");
-		if(!list.at(0).contains(QString("DTIReg Extra Path")))
-		{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-			return -1;
-		}
+		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"DTIReg Extra Path") ) return -1;
 		DTIRegExtraPathlineEdit->setText(list.at(1));
 
 		line = stream.readLine();
 		list = line.split("=");
-		if(!list.at(0).contains(QString("DTIRegMethod")))
-		{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-			return -1;
-		}
+		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"DTIRegMethod") ) return -1;
+
 		if( list.at(1).contains(QString("BRAINS")) )
 		{
 			RegMethodcomboBox->setCurrentIndex(0);
@@ -1486,10 +1358,10 @@ int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // Discard
 			{
 				if(!m_noGUI) 
 				{
-					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
 					std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
 				return -1;
 			}
 
@@ -1503,10 +1375,10 @@ int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // Discard
 			{
 				if(!m_noGUI) 
 				{
-					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
 					std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
 				return -1;
 			}
 
@@ -1519,10 +1391,10 @@ int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // Discard
 			{
 				if(!m_noGUI) 
 				{
-					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
 					std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
 				return -1;
 			}
 
@@ -1537,10 +1409,10 @@ int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // Discard
 			{
 				if(!m_noGUI) 
 				{
-					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
 					std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
 				return -1;
 			}
 
@@ -1555,10 +1427,10 @@ int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // Discard
 			{
 				if(!m_noGUI) 
 				{
-					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
 					std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
 				return -1;
 			}
 
@@ -1572,10 +1444,10 @@ int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // Discard
 			{
 				if(!m_noGUI) 
 				{
-					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
 					std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
 				return -1;
 			}
 
@@ -1587,26 +1459,18 @@ int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // Discard
 		{
 			if(!m_noGUI) 
 			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
 				std::cout<<"FAILED"<<std::endl; // command line display
 			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
 			return -1;
 		}
 
 /* Grid Processing */
 		line = stream.readLine();
 		list = line.split("=");
-		if(!list.at(0).contains(QString("GridProcessing")))
-		{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-			return -1;
-		}
+		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"GridProcessing") ) return -1;
+
 		if( !list.at(1).isEmpty() )
 		{
 			GridProcesscheckBox->setChecked(true);
@@ -1619,20 +1483,13 @@ int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // Discard
 		}
 
 /* Nb Threads*/
-		line = stream.readLine();
-		list = line.split("=");
-		if(!list.at(0).contains(QString("NbThreads")))
+		if( ParamFileVersion >= 2 )
 		{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
-			return -1;
+			line = stream.readLine();
+			list = line.split("=");
+			if( LoadParametersReturnTrueIfCorrupted(list.at(0),"NbThreads") ) return -1;
+			NbThreadsSpinBox->setValue( list.at(1).toInt() );
 		}
-		NbThreadsSpinBox->setValue( list.at(1).toInt() );
-
 
 
 		std::cout<<"DONE"<<std::endl; // command line display
@@ -1646,10 +1503,10 @@ int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // Discard
 			{
 				if(!m_noGUI) 
 				{
-					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted");
+					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
 					std::cout<<"FAILED"<<std::endl; // command line display
 				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted"<<std::endl;
+				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
 				return -1;
 			}
 			QString CSVpath = list.at(1);
@@ -1661,9 +1518,6 @@ int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // Discard
 	} 
 	else if ( !paramFile.isEmpty() ) qDebug( "Could not open file");
 
-	}
-	else std::cout<<"| The given parameter file does not exist"<<std::endl; // command line display
-
 	return 0;
 }
 
@@ -1671,185 +1525,7 @@ int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // Discard
  //              XML FILE               //
 /////////////////////////////////////////
 
-void GUI::GenerateXMLForAW() /* NOT USED */
-{	
-	if( ! itksys::SystemTools::GetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration_AW").c_str(), ITKmode_F_OK) )// Test if the non linear folder does not exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
-	{
-		std::cout<<"| Creating Non Linear Registration directory..."<<std::endl; // command line display
-		QProcess * mkdirMainProcess = new QProcess;
-		std::string program = "mkdir " + m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration_AW"; //// Creates the directory
-		std::cout<<"| $ " << program << std::endl;
-		mkdirMainProcess->execute( program.c_str() );
-	}
-
-	QString	xmlFileName = m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/AtlasWerksParameters.xml");
-	QFile file(xmlFileName);
-	if ( file.open( IO_WriteOnly | IO_Translate ) )
-	{
-		std::cout<<"| Saving XML file for AtlasWerks..."<<std::endl; // command line display
-		QTextStream stream( &file );
-
-		stream <<"<!--top-level node-->"<< endl;
-		stream <<"<ParameterFile>"<< endl;
-			stream <<"\t<ScaleImageWeights val=\"true\"/>"<< endl;
-			stream <<"\t<WeightedImageSet>"<< endl;
-				stream <<"\t\t<InputImageFormatString>"<< endl;
-					stream <<"\t\t\t<FormatString val=\"\" />"<< endl;
-					stream <<"\t\t\t<Base val=\"0\" />"<< endl;
-					std::ostringstream out;
-					out << m_CasesPath.size();
-					std::string nbcases_str = out.str();
-					stream <<"\t\t\t<NumFiles val=\"" << nbcases_str.c_str() << "\" />"<< endl;
-					stream <<"\t\t\t<Weight val=\"1\" />"<< endl;
-				stream <<"\t\t</InputImageFormatString>"<< endl;
-			std::ostringstream out1;
-			out1 << NbLoopsSpinBox->value();
-			std::string nbLoops_str = out1.str();
-			for (unsigned int i=0;i<m_CasesPath.size();i++)
-			{
-				std::ostringstream outi;
-				outi << i+1;
-				std::string i_str = outi.str();
-				stream <<"\t\t<WeightedImage>"<< endl;
-					stream <<"\t\t\t<Filename val=\"" << m_OutputPath << "/DTIAtlas/1_Affine_Registration/Loop" << nbLoops_str.c_str() << "/Case" << i_str.c_str() << "_Loop" << nbLoops_str.c_str() << "_FinalFA.nrrd\" />"<< endl;
-					stream <<"\t\t\t<ItkTransform val=\"1\" />"<< endl;
-				stream <<"\t\t</WeightedImage>"<< endl;
-			}
-			stream <<"\t</WeightedImageSet>"<< endl;
-
-/* Scale Levels */
-/* Aditya :--scaleLevel=4 --numberOfIterations=150 --alpha=1 --beta=1 --gamma=0.0001 --maxPerturbation=0.001 --scaleLevel=2 --numberOfIterations=120 --alpha=1 --beta=1 --gamma=0.001 --maxPerturbation=0.01 --scaleLevel=1 --numberOfIterations=100 --alpha=0.1 --beta=0.1 --gamma=0.01 --maxPerturbation=0.1 */
-/* Default Parameters for AtlasWerks:
-Scale                 : 1
-alpha                 : 0.01
-beta                  : 0.01
-gamma                 : 0.001
-Max. Pert.            : 0.5
-Num. Iterations       : 50
-*/
-
-			if(SL4checkBox->isChecked())
-			{
-			stream <<"\t<GreedyAtlasScaleLevel>"<< endl;
-				stream <<"\t\t<ScaleLevel>"<< endl;
-					stream <<"\t\t\t<!--factor by which to downsample images-->"<< endl;
-					std::ostringstream outSL46;
-					outSL46 << SL4spinBox->value();
-					std::string SL46_str = outSL46.str();
-					stream <<"\t\t\t<DownsampleFactor val=\"" << SL46_str.c_str() << "\" />"<< endl;
-				stream <<"\t\t</ScaleLevel>"<< endl;
-				stream <<"\t\t<!--Scale factor on the maximum velocity in a given deformation for computing delta-->"<< endl;
-				std::ostringstream outSL4;
-				outSL4 << maxPerturbation4DoubleSpinBox->value();
-				std::string SL4_str = outSL4.str();
-				stream <<"\t\t<MaxPert val=\"" << SL4_str.c_str() << "\" />"<< endl;
-				std::ostringstream outSL42;
-				outSL42 << nbIter4SpinBox->value();
-				std::string SL42_str = outSL42.str();
-				stream <<"\t\t<NIterations val=\"" << SL42_str.c_str() << "\" />"<< endl;
-				stream <<"\t\t<DiffOper>"<< endl;
-					std::ostringstream outSL43;
-					outSL43 << alpha4DoubleSpinBox->value();
-					std::string SL43_str = outSL43.str();
-					stream <<"\t\t\t<Alpha val=\"" << SL43_str.c_str() << "\" />"<< endl;
-					std::ostringstream outSL44;
-					outSL44 << beta4DoubleSpinBox->value();
-					std::string SL44_str = outSL44.str();
-					stream <<"\t\t\t<Beta val=\"" << SL44_str.c_str() << "\" />"<< endl;
-					std::ostringstream outSL45;
-					outSL45 << gamma4DoubleSpinBox->value();
-					std::string SL45_str = outSL45.str();
-					stream <<"\t\t\t<Gamma val=\"" << SL45_str.c_str() << "\" />"<< endl;
-				stream <<"\t\t</DiffOper>"<< endl;
-			stream <<"\t</GreedyAtlasScaleLevel>"<< endl;
-			}
-
-			if(SL2checkBox->isChecked())
-			{
-			stream <<"\t<GreedyAtlasScaleLevel>"<< endl;
-				stream <<"\t\t<ScaleLevel>"<< endl;
-					stream <<"\t\t\t<!--factor by which to downsample images-->"<< endl;
-					std::ostringstream outSL26;
-					outSL26 << SL2spinBox->value();
-					std::string SL26_str = outSL26.str();
-					stream <<"\t\t\t<DownsampleFactor val=\"" << SL26_str.c_str() << "\" />"<< endl;
-				stream <<"\t\t</ScaleLevel>"<< endl;
-				stream <<"\t\t<!--Scale factor on the maximum velocity in a given deformation for computing delta-->"<< endl;
-				std::ostringstream outSL2;
-				outSL2 << maxPerturbation2DoubleSpinBox->value();
-				std::string SL2_str = outSL2.str();
-				stream <<"\t\t<MaxPert val=\"" << SL2_str.c_str() << "\" />"<< endl;
-				std::ostringstream outSL22;
-				outSL22 << nbIter2SpinBox->value();
-				std::string SL22_str = outSL22.str();
-				stream <<"\t\t<NIterations val=\"" << SL22_str.c_str() << "\" />"<< endl;
-				stream <<"\t\t<DiffOper>"<< endl;
-					std::ostringstream outSL23;
-					outSL23 << alpha2DoubleSpinBox->value();
-					std::string SL23_str = outSL23.str();
-					stream <<"\t\t\t<Alpha val=\"" << SL23_str.c_str() << "\" />"<< endl;
-					std::ostringstream outSL24;
-					outSL24 << beta2DoubleSpinBox->value();
-					std::string SL24_str = outSL24.str();
-					stream <<"\t\t\t<Beta val=\"" << SL24_str.c_str() << "\" />"<< endl;
-					std::ostringstream outSL25;
-					outSL25 << gamma2DoubleSpinBox->value();
-					std::string SL25_str = outSL25.str();
-					stream <<"\t\t\t<Gamma val=\"" << SL25_str.c_str() << "\" />"<< endl;
-				stream <<"\t\t</DiffOper>"<< endl;
-			stream <<"\t</GreedyAtlasScaleLevel>"<< endl;
-			}
-
-			if(SL1checkBox->isChecked())
-			{
-			stream <<"\t<GreedyAtlasScaleLevel>"<< endl;
-				stream <<"\t\t<ScaleLevel>"<< endl;
-					stream <<"\t\t\t<!--factor by which to downsample images-->"<< endl;
-					std::ostringstream outSL16;
-					outSL16 << SL1spinBox->value();
-					std::string SL16_str = outSL16.str();
-					stream <<"\t\t\t<DownsampleFactor val=\"" << SL16_str.c_str() << "\" />"<< endl;
-				stream <<"\t\t</ScaleLevel>"<< endl;
-				stream <<"\t\t<!--Scale factor on the maximum velocity in a given deformation for computing delta-->"<< endl;
-				std::ostringstream outSL1;
-				outSL1 << maxPerturbation1DoubleSpinBox->value();
-				std::string SL1_str = outSL1.str();
-				stream <<"\t\t<MaxPert val=\"" << SL1_str.c_str() << "\" />"<< endl;
-				std::ostringstream outSL12;
-				outSL12 << nbIter1SpinBox->value();
-				std::string SL12_str = outSL12.str();
-				stream <<"\t\t<NIterations val=\"" << SL12_str.c_str() << "\" />"<< endl;
-				stream <<"\t\t<DiffOper>"<< endl;
-					std::ostringstream outSL13;
-					outSL13 << alpha1DoubleSpinBox->value();
-					std::string SL13_str = outSL13.str();
-					stream <<"\t\t\t<Alpha val=\"" << SL13_str.c_str() << "\" />"<< endl;
-					std::ostringstream outSL14;
-					outSL14 << beta1DoubleSpinBox->value();
-					std::string SL14_str = outSL14.str();
-					stream <<"\t\t\t<Beta val=\"" << SL14_str.c_str() << "\" />"<< endl;
-					std::ostringstream outSL15;
-					outSL15 << gamma1DoubleSpinBox->value();
-					std::string SL15_str = outSL15.str();
-					stream <<"\t\t\t<Gamma val=\"" << SL15_str.c_str() << "\" />"<< endl;
-				stream <<"\t\t</DiffOper>"<< endl;
-			stream <<"\t</GreedyAtlasScaleLevel>"<< endl;
-			}
-
-			stream <<"\t<!--number of threads to use, 0=one per processor (only for CPU computation)-->"<< endl;
-			stream <<"\t<nThreads val=\"4\" />"<< endl;
-			stream <<"\t<OutputImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration/AverageImage\" />"<< endl;
-			stream <<"\t<OutputDeformedImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration/DeformedImage_\" />"<< endl;
-			stream <<"\t<OutputHFieldImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration/DeformationField_\" />"<< endl;
-			stream <<"\t<OutputInvHFieldImageNamePrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration/InverseDeformationField_\" />"<< endl;
-			stream <<"\t<OutputFileType val=\"mhd\" />"<< endl;
-
-		stream <<"</ParameterFile>"<< endl;
-	}
-	else qDebug( "Could not create xml file");
-}
-
-void GUI::GenerateXMLForGA() // Greedy Atlas
+void GUI::GenerateXMLForGA()
 {	
 	if( ! itksys::SystemTools::GetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration").c_str(), ITKmode_F_OK) ) // Test if the main folder does not exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
 	{
@@ -2040,6 +1716,23 @@ void GUI::LoadConfigSlot() /*SLOT*/
 	}
 }
 
+
+bool GUI::LoadConfigReturnTrueIfCorrupted(QString ReadProgram, const char* Program )
+{
+	if( ! ReadProgram.contains( QString(Program) ) )
+	{
+		if(!m_noGUI) 
+		{
+			QMessageBox::critical(this, "Corrupt File", "This config file is corrupted.\nIt may have been modified manually.\nPlease save it again.");
+			std::cout<<"FAILED"<<std::endl; // command line display
+		}
+		else std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
+		return true;
+	}
+
+	return false;
+}
+
 int GUI::LoadConfig(QString configFile) // returns -1 if fails, otherwise 0
 {
 	if( itksys::SystemTools::GetPermissions(configFile.toStdString().c_str(), ITKmode_F_OK) ) // Test if the config file exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
@@ -2056,92 +1749,38 @@ int GUI::LoadConfig(QString configFile) // returns -1 if fails, otherwise 0
 
 			QString line = stream.readLine();
 			QStringList list = line.split("=");
-			if(!list.at(0).contains(QString("ImageMath")))
-			{
-				if(!m_noGUI) 
-				{
-					QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
-				}
-				else std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
-				return -1;
-			}
+			if( LoadConfigReturnTrueIfCorrupted(list.at(0),"ImageMath") ) return -1;
 			if(!list.at(1).isEmpty()) ImagemathPath->setText(list.at(1));
 			else if(ImagemathPath->text().isEmpty()) notFound = notFound + "> ImageMath\n";	
 
 			line = stream.readLine();
 			list = line.split("=");
-			if(!list.at(0).contains(QString("ResampleDTIlogEuclidean")))
-			{
-				if(!m_noGUI) 
-				{
-					QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
-				}
-				else std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
-				return -1;
-			}
+			if( LoadConfigReturnTrueIfCorrupted(list.at(0),"ResampleDTIlogEuclidean") ) return -1;
 			if(!list.at(1).isEmpty()) ResampPath->setText(list.at(1));
 			else if(ResampPath->text().isEmpty()) notFound = notFound + "> ResampleDTIlogEuclidean\n";
 
 			line = stream.readLine();
 			list = line.split("=");
-			if(!list.at(0).contains(QString("CropDTI")))
-			{
-				if(!m_noGUI) 
-				{
-					QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
-				}
-				else std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
-				return -1;
-			}
+			if( LoadConfigReturnTrueIfCorrupted(list.at(0),"CropDTI") ) return -1;
 			if(!list.at(1).isEmpty()) CropDTIPath->setText(list.at(1));
 			else if(CropDTIPath->text().isEmpty()) notFound = notFound + "> CropDTI\n";
 
 			line = stream.readLine();
 			list = line.split("=");
-			if(!list.at(0).contains(QString("dtiprocess")))
-			{
-				if(!m_noGUI) 
-				{
-					QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
-				}
-				else std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
-				return -1;
-			}
+			if( LoadConfigReturnTrueIfCorrupted(list.at(0),"dtiprocess") ) return -1;
 			if(!list.at(1).isEmpty()) dtiprocPath->setText(list.at(1));
 			else if(dtiprocPath->text().isEmpty()) notFound = notFound + "> dtiprocess\n";
 
 			line = stream.readLine();
 			list = line.split("=");
-			if(!list.at(0).contains(QString("BRAINSFit")))
-			{
-				if(!m_noGUI) 
-				{
-					QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
-				}
-				else std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
-				return -1;
-			}
+			if( LoadConfigReturnTrueIfCorrupted(list.at(0),"BRAINSFit") ) return -1;
 			if(!list.at(1).isEmpty()) BRAINSFitPath->setText(list.at(1));
 			else if(BRAINSFitPath->text().isEmpty()) notFound = notFound + "> BRAINSFit\n";
 
 
 			line = stream.readLine();
 			list = line.split("=");
-			if(!list.at(0).contains(QString("GreedyAtlas")))
-			{
-				if(!m_noGUI) 
-				{
-					QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
-				}
-				else std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
-				return -1;
-			}
+			if( LoadConfigReturnTrueIfCorrupted(list.at(0),"GreedyAtlas") ) return -1;
 			bool GAToTest=false;
 			if( !list.at(1).isEmpty() )
 			{
@@ -2152,31 +1791,13 @@ int GUI::LoadConfig(QString configFile) // returns -1 if fails, otherwise 0
 
 			line = stream.readLine();
 			list = line.split("=");
-			if(!list.at(0).contains(QString("dtiaverage")))
-			{
-				if(!m_noGUI) 
-				{
-					QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
-				}
-				else std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
-				return -1;
-			}
+			if( LoadConfigReturnTrueIfCorrupted(list.at(0),"dtiaverage") ) return -1;
 			if(!list.at(1).isEmpty()) dtiavgPath->setText(list.at(1));
 			else if(dtiavgPath->text().isEmpty()) notFound = notFound + "> dtiaverage\n";
 
 			line = stream.readLine();
 			list = line.split("=");
-			if(!list.at(0).contains(QString("DTI-Reg")))
-			{
-				if(!m_noGUI) 
-				{
-					QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
-				}
-				else std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
-				return -1;
-			}
+			if( LoadConfigReturnTrueIfCorrupted(list.at(0),"DTI-Reg") ) return -1;
 			bool DTIRegToTest=false;
 			if( !list.at(1).isEmpty() )
 			{
@@ -2187,31 +1808,13 @@ int GUI::LoadConfig(QString configFile) // returns -1 if fails, otherwise 0
 
 			line = stream.readLine();
 			list = line.split("=");
-			if(!list.at(0).contains(QString("unu")))
-			{
-				if(!m_noGUI) 
-				{
-					QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
-				}
-				else std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
-				return -1;
-			}
+			if( LoadConfigReturnTrueIfCorrupted(list.at(0),"unu") ) return -1;
 			if(!list.at(1).isEmpty()) unuPath->setText(list.at(1));
 			else if(unuPath->text().isEmpty()) notFound = notFound + "> unu\n";
 
 			line = stream.readLine();
 			list = line.split("=");
-			if(!list.at(0).contains(QString("MriWatcher")))
-			{
-				if(!m_noGUI) 
-				{
-					QMessageBox::critical(this, "Corrupt File", "This config file is corrupted");
-					std::cout<<"FAILED"<<std::endl; // command line display
-				}
-				else std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted"<<std::endl;
-				return -1;
-			}
+			if( LoadConfigReturnTrueIfCorrupted(list.at(0),"MriWatcher") ) return -1;
 			if(!list.at(1).isEmpty()) MriWatcherPath->setText(list.at(1));
 			else if(MriWatcherPath->text().isEmpty()) notFound = notFound + "> MriWatcher (Program will work, but QC will not be available)\n";
 

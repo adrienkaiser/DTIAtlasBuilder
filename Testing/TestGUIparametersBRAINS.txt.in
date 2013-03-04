@@ -1,4 +1,4 @@
-DTIAtlasBuilderParameterFileVersion=1
+DTIAtlasBuilderParameterFileVersion=2
 Output Folder=${CMAKE_CURRENT_BINARY_DIR}
 Atlas Template=
 SafetyMargin=true
