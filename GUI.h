@@ -30,149 +30,176 @@
 
 class GUI : public QMainWindow, public Ui::MainWindow 
 {
-	Q_OBJECT
+  Q_OBJECT
 
-	public:
-		
-/*CONSTRUCTOR*/	GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, bool overwrite, bool noGUI, std::string commandRan); //constructor
+  public:
+    
+/*CONSTRUCTOR*/
+    GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, bool overwrite, bool noGUI, std::string commandRan); //constructor
 
-/*INIT*/	void InitOptions();
+/*INIT*/
+    void InitOptions();
 
-/*CASES*/	void CheckCasesIndex();
+/*CASES*/
+    void CheckCasesIndex();
 
-/* QC */	void DisableQC(); // <=> disable QC buttons
-/*DATASET*/	int ReadCSV(QString CSVfile); // returns -1 if fails, otherwise 0
-		void SaveCSVResults(int Crop, int nbLoops);
+/* QC */
+    void DisableQC(); // <=> disable QC buttons
 
-/*PARAMETERS*/	int LoadParameters(QString paramFile, bool DiscardParametersCSV); // returns -1 if fails, otherwise 0
-		bool LoadParametersReturnTrueIfCorrupted(QString ReadParameter, const char* Parameter );
-		bool LoadParametersLoadScaleLevelReturnTrueIfCorrupted(	QStringList nbrs, 
-									QCheckBox* SLcheckBox, // & so we can change the value
-									QSpinBox* SLspinBox,
-									QSpinBox* nbIterSpinBox,
-									QDoubleSpinBox*& alphaDoubleSpinBox,
-									QDoubleSpinBox*& betaDoubleSpinBox,
-									QDoubleSpinBox*& gammaDoubleSpinBox,
-									QDoubleSpinBox*& maxPerturbationDoubleSpinBox );
-		void SaveParameters(QString ParamBrowseName,QString CSVFileName);
+/*DATASET*/
+    int ReadCSV(QString CSVfile); // returns -1 if fails, otherwise 0
+    void SaveCSVResults(int Crop, int nbLoops);
 
-/*XML FILE*/	void GenerateXMLForGA();
+/*PARAMETERS*/
+    int LoadParameters(QString paramFile, bool DiscardParametersCSV); // returns -1 if fails, otherwise 0
+    bool LoadParametersReturnTrueIfCorrupted(QString ReadParameter, const char* Parameter );
+    bool LoadParametersLoadScaleLevelReturnTrueIfCorrupted(  QStringList nbrs, 
+                  QCheckBox* SLcheckBox, // & so we can change the value
+                  QSpinBox* SLspinBox,
+                  QSpinBox* nbIterSpinBox,
+                  QDoubleSpinBox*& alphaDoubleSpinBox,
+                  QDoubleSpinBox*& betaDoubleSpinBox,
+                  QDoubleSpinBox*& gammaDoubleSpinBox,
+                  QDoubleSpinBox*& maxPerturbationDoubleSpinBox );
+    void SaveParameters(QString ParamBrowseName,QString CSVFileName);
 
-/*SOFT CONFIG*/	int LoadConfig(QString ConfigFile); // returns -1 if fails, otherwise 0
-		bool LoadConfigReturnTrueIfCorrupted(QString ReadProgram, const char* Program);
+/*XML FILE*/
+    void GenerateXMLForGA();
 
-/*CHECK IMAGE*/	int checkImage(std::string Image); // returns 1 if not an image, 2 if not a dti, otherwise 0
+/*SOFT CONFIG*/
+    int LoadConfig(QString ConfigFile); // returns -1 if fails, otherwise 0
+    bool LoadConfigReturnTrueIfCorrupted(QString ReadProgram, const char* Program);
 
-/*MAIN FUNCT*/	int LaunchScriptWriter(); // returns -1 if failed, otherwise 0
-		int LaunchScriptRunner();
+/*CHECK IMAGE*/
+    int checkImage(std::string Image); // returns 1 if not an image, 2 if not a dti, otherwise 0
 
-		void RunningCompleted();
-		void RunningFailed();
+/*MAIN FUNCT*/
+    int LaunchScriptWriter(); // returns -1 if failed, otherwise 0
+    int LaunchScriptRunner();
 
-/*PROGRESSBAR*/	void ProgressBar(int Progress);
+    void RunningCompleted();
+    void RunningFailed();
 
-	public slots:
+/*PROGRESSBAR*/
+    void ProgressBar(int Progress);
 
-/*CASES*/	void OpenAddCaseBrowseWindow();
-		void RemoveSelectedCases();
+  public slots:
 
-/*OUTPUT*/	void OpenOutputBrowseWindow();
+/*CASES*/
+    void OpenAddCaseBrowseWindow();
+    void RemoveSelectedCases();
 
-/*DTIREG*/	void OpenDTIRegExtraPathBrowseWindow();
+/*OUTPUT*/
+    void OpenOutputBrowseWindow();
 
-/*TEMPLATE*/	void OpenTemplateBrowseWindow();
+/*DTIREG*/
+    void OpenDTIRegExtraPathBrowseWindow();
 
-/*QC*/		void DisplayAffineQC();
-		void DisplayDeformQC();
-		void DisplayResampQC();
-		
-/*EXIT*/	void ExitProgram();
+/*TEMPLATE*/
+    void OpenTemplateBrowseWindow();
 
-/*DATASET*/	void ReadCSVSlot();
-		void SaveCSVDatasetBrowse();
+/*QC*/
+    void DisplayAffineQC();
+    void DisplayDeformQC();
+    void DisplayResampQC();
+    
+/*EXIT*/
+    void ExitProgram();
 
-/*PARAMETERS*/	void LoadParametersSlot();
-		void SaveParametersSlot();
+/*DATASET*/
+    void ReadCSVSlot();
+    void SaveCSVDatasetBrowse();
 
-/*SOFT CONFIG*/	void LoadConfigSlot();
-		void SaveConfig();
-		void ConfigDefault();
-		void BrowseSoft(int); //in the soft dialog window
-		void ResetSoft(int);
-		int testGA(); // returns 0 if version ok, -1 if bad version
-		int testDTIReg(); // returns 0 if version ok, -1 if bad version
+/*PARAMETERS*/
+    void LoadParametersSlot();
+    void SaveParametersSlot();
 
-/*READ ME*/	void ReadMe();
+/*SOFT CONFIG*/
+    void LoadConfigSlot();
+    void SaveConfig();
+    void ConfigDefault();
+    void BrowseSoft(int); //in the soft dialog window
+    void ResetSoft(int);
+    int testGA(); // returns 0 if version ok, -1 if bad version
+    int testDTIReg(); // returns 0 if version ok, -1 if bad version
 
-/*RESAMP PARAM*/void InterpolTypeComboBoxChanged(int);
-		void TensorInterpolComboBoxChanged(int);
+/*READ ME*/
+    void ReadMe();
 
-/*DTI-REG*/	void RegMethodComboBoxChanged(int);
-		void SimMetChanged(int);
-		void ANTSRegTypeChanged(int);
+/*RESAMP PARAM*/
+    void InterpolTypeComboBoxChanged(int);
+    void TensorInterpolComboBoxChanged(int);
 
-/*WIDGETCHANGE*/void WidgetHasChangedParamNoSaved();
-		void GridProcesscheckBoxHasChanged(int);
+/*DTI-REG*/
+    void RegMethodComboBoxChanged(int);
+    void SimMetChanged(int);
+    void ANTSRegTypeChanged(int);
 
-/*MAIN FUNCT*/	int Compute();
-		void ScriptQProcessDone(int);
-		void UpdateScriptRunningGUIDisplay();
+/*WIDGETCHANGE*/
+    void WidgetHasChangedParamNoSaved();
+    void GridProcesscheckBoxHasChanged(int);
+
+/*MAIN FUNCT*/
+    int Compute();
+    void ScriptQProcessDone(int);
+    void UpdateScriptRunningGUIDisplay();
 
 
-	signals: // none
+  signals: // none
 
-	protected :
+  protected :
 
-/*EXIT*/	void closeEvent(QCloseEvent* event);
+/*EXIT*/
+    void closeEvent(QCloseEvent* event);
 
-	private:
+  private:
 
-		bool m_noGUI;
-		bool m_ErrorDetectedInConstructor; // useful in --nogui mode to exit the program without trying the compute function
-		bool m_ScriptRunning;
-		std::vector< std::string > m_FindProgramDTIABExecDirVec;
-		std::string m_DTIABSlicerExtensionExternalBinDir;
-		std::string m_PythonPath;
+    bool m_noGUI;
+    bool m_ErrorDetectedInConstructor; // useful in --nogui mode to exit the program without trying the compute function
+    bool m_ScriptRunning;
+    std::vector< std::string > m_FindProgramDTIABExecDirVec;
+    std::string m_DTIABSlicerExtensionExternalBinDir;
+    std::string m_PythonPath;
 
-/*CASES*/	std::vector < QLineEdit* > m_CasesQ; // index begin at 0
-		std::vector < std::string > m_CasesPath; // index begin at 0
+/*CASES*/  std::vector < QLineEdit* > m_CasesQ; // index begin at 0
+    std::vector < std::string > m_CasesPath; // index begin at 0
 
-/*DATASET*/	QString m_CSVseparator;
-		QString m_CSVPath;
-		QString m_OutputPath;
-		QString m_TemplatePath;
-		QString m_lastCasePath;
+/*DATASET*/  QString m_CSVseparator;
+    QString m_CSVPath;
+    QString m_OutputPath;
+    QString m_TemplatePath;
+    QString m_lastCasePath;
 
-/*PARAMETERS*/	int m_ParamSaved; // 0 if the last parameters have not been saved, 1 if the last have been saved
+/*PARAMETERS*/  int m_ParamSaved; // 0 if the last parameters have not been saved, 1 if the last have been saved
 
-/*SOFT CONFIG*/	int m_FromConstructor; // do not test GA path if 'Default' called from constructor
+/*SOFT CONFIG*/  int m_FromConstructor; // do not test GA path if 'Default' called from constructor
 
 /*RESAMP PARAM*/QComboBox *m_windowComboBox;
-		QComboBox *m_BSplineComboBox;
-		QStackedWidget *m_optionStackLayout;
-		QComboBox *m_nologComboBox;
-		QStackedWidget *m_logOptionStackLayout;
+    QComboBox *m_BSplineComboBox;
+    QStackedWidget *m_optionStackLayout;
+    QComboBox *m_nologComboBox;
+    QStackedWidget *m_logOptionStackLayout;
 
-/*DTI-REG*/	QStackedWidget *m_DTIRegOptionStackLayout;
-		/*BRAINS*/
-		QComboBox *m_BRegTypeComboBox;
-		QComboBox *m_TfmModeComboBox;
-		QSpinBox *m_NbPyrLevSpin;
-		QLineEdit *m_PyrLevItLine;
-		/*ANTS*/
-		QComboBox *m_ARegTypeComboBox;
-		QLineEdit *m_TfmStepLine;
-		QLineEdit *m_IterLine;
-		QComboBox *m_SimMetComboBox;
-		QDoubleSpinBox *m_SimParamDble;
-		QLabel *m_SimParamLabel;
-		QDoubleSpinBox *m_GSigmaDble;
-		QCheckBox *m_SmoothOffCheck;
+/*DTI-REG*/  QStackedWidget *m_DTIRegOptionStackLayout;
+    /*BRAINS*/
+    QComboBox *m_BRegTypeComboBox;
+    QComboBox *m_TfmModeComboBox;
+    QSpinBox *m_NbPyrLevSpin;
+    QLineEdit *m_PyrLevItLine;
+    /*ANTS*/
+    QComboBox *m_ARegTypeComboBox;
+    QLineEdit *m_TfmStepLine;
+    QLineEdit *m_IterLine;
+    QComboBox *m_SimMetComboBox;
+    QDoubleSpinBox *m_SimParamDble;
+    QLabel *m_SimParamLabel;
+    QDoubleSpinBox *m_GSigmaDble;
+    QCheckBox *m_SmoothOffCheck;
 
-/*MAIN FUNCT*/	ScriptWriter* m_scriptwriter; ////contains the writing pipeline
-		int m_NeedToBeCropped;
-		QProcess * m_ScriptQProcess;
-		QTimer * m_ScriptRunningQTimer;
+/*MAIN FUNCT*/  ScriptWriter* m_scriptwriter; ////contains the writing pipeline
+    int m_NeedToBeCropped;
+    QProcess * m_ScriptQProcess;
+    QTimer * m_ScriptRunningQTimer;
 
 };
 #endif

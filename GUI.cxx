@@ -37,14 +37,14 @@ mode_t ITKmode_R_OK = 4;
 mode_t ITKmode_X_OK = 1;
 
 /* Process variables in itksys/Process.h
-itksysProcess_State_Starting  	= 0
-itksysProcess_State_Error  	= 1
-itksysProcess_State_Exception  	= 2
-itksysProcess_State_Executing  	= 3
-itksysProcess_State_Exited  	= 4
-itksysProcess_State_Expired  	= 5
-itksysProcess_State_Killed  	= 6
-itksysProcess_State_Disowned  	= 7
+itksysProcess_State_Starting    = 0
+itksysProcess_State_Error    = 1
+itksysProcess_State_Exception    = 2
+itksysProcess_State_Executing    = 3
+itksysProcess_State_Exited    = 4
+itksysProcess_State_Expired    = 5
+itksysProcess_State_Killed    = 6
+itksysProcess_State_Disowned    = 7
 */
 
 /*
@@ -81,283 +81,283 @@ itksysProcess_Delete(TestProcess);
   /////////////////////////////////////////
  //            CONSTRUCTOR              //
 /////////////////////////////////////////
-	
+  
 GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, bool overwrite, bool noGUI, std::string commandRan) : QMainWindow()
 {
-/*	std::cout<<"Command Line ran command: "<<commandRan<<std::endl;
-	std::cout<<"Command Line parameter file : "<<ParamFile<<std::endl;
-	std::cout<<"Command Line configuration file : "<<ConfigFile<<std::endl;
-	std::cout<<"Command Line dataset file : "<<CSVFile<<std::endl;
+/*  std::cout<<"Command Line ran command: "<<commandRan<<std::endl;
+  std::cout<<"Command Line parameter file : "<<ParamFile<<std::endl;
+  std::cout<<"Command Line configuration file : "<<ConfigFile<<std::endl;
+  std::cout<<"Command Line dataset file : "<<CSVFile<<std::endl;
 */
-	setupUi(this);
+  setupUi(this);
 
-	m_ErrorDetectedInConstructor=false;
+  m_ErrorDetectedInConstructor=false;
 
-//	ExecStatusLabel->setText("                       "); // fill with spaces
+//  ExecStatusLabel->setText("                       "); // fill with spaces
 
 /* Script writing object */
-	m_scriptwriter = new ScriptWriter; // delete in "void GUI::ExitProgram()"
+  m_scriptwriter = new ScriptWriter; // delete in "void GUI::ExitProgram()"
 
 /* Variables */
-	m_CSVseparator = QString(",");
-	m_ParamSaved=1;
-	m_lastCasePath="";
-	m_noGUI=noGUI;
-	if( overwrite ) OverwritecheckBox->setChecked(true);
-	m_ScriptRunning=false;
-	m_ScriptQProcess = new QProcess;
-	QObject::connect(m_ScriptQProcess, SIGNAL(finished(int)), this, SLOT(ScriptQProcessDone(int)));
-	m_ScriptRunningQTimer = new QTimer(this);
-	QObject::connect(m_ScriptRunningQTimer, SIGNAL(timeout()), this, SLOT(UpdateScriptRunningGUIDisplay()));
+  m_CSVseparator = QString(",");
+  m_ParamSaved=1;
+  m_lastCasePath="";
+  m_noGUI=noGUI;
+  if( overwrite ) OverwritecheckBox->setChecked(true);
+  m_ScriptRunning=false;
+  m_ScriptQProcess = new QProcess;
+  QObject::connect(m_ScriptQProcess, SIGNAL(finished(int)), this, SLOT(ScriptQProcessDone(int)));
+  m_ScriptRunningQTimer = new QTimer(this);
+  QObject::connect(m_ScriptRunningQTimer, SIGNAL(timeout()), this, SLOT(UpdateScriptRunningGUIDisplay()));
 
 /* Error message if windows or mac */
-	if(Platform == "mac" || Platform == "win")
-	{
-		if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION) QMessageBox::critical(this, "DTIAtlasBuilder not working", "This program is currently not working as it should on this platform.\nPlease do not hit the compute button, or the process will fail.\nYou can find other useful tools in Slicer:\n> DTI-Reg\n>Resample DTI Volume - log euclidean");
-		else QMessageBox::critical(this, "DTIAtlasBuilder not working", "This program is currently not working as it should on this platform.\nPlease do not hit the compute button, or the process will fail.\nIf the package was compiled or downloaded, you will find other useful tools in the specified install directory.");
-	}
+  if(Platform == "mac" || Platform == "win")
+  {
+    if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION) QMessageBox::critical(this, "DTIAtlasBuilder not working", "This program is currently not working as it should on this platform.\nPlease do not hit the compute button, or the process will fail.\nYou can find other useful tools in Slicer:\n> DTI-Reg\n>Resample DTI Volume - log euclidean");
+    else QMessageBox::critical(this, "DTIAtlasBuilder not working", "This program is currently not working as it should on this platform.\nPlease do not hit the compute button, or the process will fail.\nIf the package was compiled or downloaded, you will find other useful tools in the specified install directory.");
+  }
 
 /* Initialize the options */
-	InitOptions();
+  InitOptions();
 
-	if(!m_noGUI)
-	{
+  if(!m_noGUI)
+  {
 /* Objects connections */
-	QObject::connect(ComputepushButton, SIGNAL(clicked()), this, SLOT(Compute()));
-	QObject::connect(BrowseCSVPushButton, SIGNAL(clicked()), this, SLOT(ReadCSVSlot()));
-	QObject::connect(SaveCSVPushButton, SIGNAL(clicked()), this, SLOT(SaveCSVDatasetBrowse()));
-	QObject::connect(BrowseOutputPushButton, SIGNAL(clicked()), this, SLOT(OpenOutputBrowseWindow()));
-	QObject::connect(BrowseDTIRegExtraPathPushButton, SIGNAL(clicked()), this, SLOT(OpenDTIRegExtraPathBrowseWindow()));
-	QObject::connect(TemplateBrowsePushButton, SIGNAL(clicked()), this, SLOT(OpenTemplateBrowseWindow()));
-	QObject::connect(AddPushButton, SIGNAL(clicked()), this, SLOT(OpenAddCaseBrowseWindow()));
-	QObject::connect(RemovePushButton, SIGNAL(clicked()), this, SLOT(RemoveSelectedCases()));
-	RemovePushButton->setEnabled(false);
-	ComputepushButton->setEnabled(false);
+  QObject::connect(ComputepushButton, SIGNAL(clicked()), this, SLOT(Compute()));
+  QObject::connect(BrowseCSVPushButton, SIGNAL(clicked()), this, SLOT(ReadCSVSlot()));
+  QObject::connect(SaveCSVPushButton, SIGNAL(clicked()), this, SLOT(SaveCSVDatasetBrowse()));
+  QObject::connect(BrowseOutputPushButton, SIGNAL(clicked()), this, SLOT(OpenOutputBrowseWindow()));
+  QObject::connect(BrowseDTIRegExtraPathPushButton, SIGNAL(clicked()), this, SLOT(OpenDTIRegExtraPathBrowseWindow()));
+  QObject::connect(TemplateBrowsePushButton, SIGNAL(clicked()), this, SLOT(OpenTemplateBrowseWindow()));
+  QObject::connect(AddPushButton, SIGNAL(clicked()), this, SLOT(OpenAddCaseBrowseWindow()));
+  QObject::connect(RemovePushButton, SIGNAL(clicked()), this, SLOT(RemoveSelectedCases()));
+  RemovePushButton->setEnabled(false);
+  ComputepushButton->setEnabled(false);
 
-	QObject::connect(actionLoad_parameters, SIGNAL(triggered()), this, SLOT(LoadParametersSlot()));
-	QObject::connect(actionSave_parameters, SIGNAL(triggered()), this, SLOT(SaveParametersSlot()));
-	QObject::connect(actionExit, SIGNAL(triggered()), this, SLOT(ExitProgram()));
-	QObject::connect(actionLoad_Software_Configuration, SIGNAL(triggered()), this, SLOT(LoadConfigSlot()));
-	QObject::connect(actionSave_Software_Configuration, SIGNAL(triggered()), this, SLOT(SaveConfig()));
-	QObject::connect(actionRead_Me, SIGNAL(triggered()), this, SLOT(ReadMe()));
+  QObject::connect(actionLoad_parameters, SIGNAL(triggered()), this, SLOT(LoadParametersSlot()));
+  QObject::connect(actionSave_parameters, SIGNAL(triggered()), this, SLOT(SaveParametersSlot()));
+  QObject::connect(actionExit, SIGNAL(triggered()), this, SLOT(ExitProgram()));
+  QObject::connect(actionLoad_Software_Configuration, SIGNAL(triggered()), this, SLOT(LoadConfigSlot()));
+  QObject::connect(actionSave_Software_Configuration, SIGNAL(triggered()), this, SLOT(SaveConfig()));
+  QObject::connect(actionRead_Me, SIGNAL(triggered()), this, SLOT(ReadMe()));
 
-	QObject::connect(InterpolTypeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(InterpolTypeComboBoxChanged(int)));
-	QObject::connect(TensInterpolComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(TensorInterpolComboBoxChanged(int)));
-	QObject::connect(RegMethodcomboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(RegMethodComboBoxChanged(int)));
+  QObject::connect(InterpolTypeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(InterpolTypeComboBoxChanged(int)));
+  QObject::connect(TensInterpolComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(TensorInterpolComboBoxChanged(int)));
+  QObject::connect(RegMethodcomboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(RegMethodComboBoxChanged(int)));
 
-	QObject::connect(DefaultButton, SIGNAL(clicked()), this, SLOT(ConfigDefault()));
-	QObject::connect(GAPath, SIGNAL(editingFinished()), this, SLOT(testGA())); // test the version of GreedyAtlas automatically when the text is changed manually ( not by a setText() )
-	QObject::connect(DTIRegPath, SIGNAL(editingFinished()), this, SLOT(testDTIReg())); // test the version of DTI-Reg automatically when the text is changed manually ( not by a setText() )
+  QObject::connect(DefaultButton, SIGNAL(clicked()), this, SLOT(ConfigDefault()));
+  QObject::connect(GAPath, SIGNAL(editingFinished()), this, SLOT(testGA())); // test the version of GreedyAtlas automatically when the text is changed manually ( not by a setText() )
+  QObject::connect(DTIRegPath, SIGNAL(editingFinished()), this, SLOT(testDTIReg())); // test the version of DTI-Reg automatically when the text is changed manually ( not by a setText() )
 
-	QObject::connect(GridProcesscheckBox, SIGNAL(stateChanged(int)), this, SLOT(GridProcesscheckBoxHasChanged(int)));
+  QObject::connect(GridProcesscheckBox, SIGNAL(stateChanged(int)), this, SLOT(GridProcesscheckBoxHasChanged(int)));
 
-	QObject::connect(AffineQCButton, SIGNAL(clicked()), this, SLOT(DisplayAffineQC()));
-	QObject::connect(DeformQCButton, SIGNAL(clicked()), this, SLOT(DisplayDeformQC()));
-	QObject::connect(ResampQCButton, SIGNAL(clicked()), this, SLOT(DisplayResampQC()));
+  QObject::connect(AffineQCButton, SIGNAL(clicked()), this, SLOT(DisplayAffineQC()));
+  QObject::connect(DeformQCButton, SIGNAL(clicked()), this, SLOT(DisplayDeformQC()));
+  QObject::connect(ResampQCButton, SIGNAL(clicked()), this, SLOT(DisplayResampQC()));
 
 /* Browse software path Buttons */
-	QSignalMapper *SoftButtonMapper = new QSignalMapper();
-	QObject::connect(SoftButtonMapper, SIGNAL(mapped(int)), this, SLOT( BrowseSoft(int) ));
+  QSignalMapper *SoftButtonMapper = new QSignalMapper();
+  QObject::connect(SoftButtonMapper, SIGNAL(mapped(int)), this, SLOT( BrowseSoft(int) ));
 
-	QObject::connect(ImagemathButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
-	SoftButtonMapper->setMapping(ImagemathButton,1);
-	QObject::connect(ResampButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
-	SoftButtonMapper->setMapping(ResampButton,2);
-	QObject::connect(CropDTIButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
-	SoftButtonMapper->setMapping(CropDTIButton,3);
-	QObject::connect(dtiprocButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
-	SoftButtonMapper->setMapping(dtiprocButton,4);
-	QObject::connect(BRAINSFitButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
-	SoftButtonMapper->setMapping(BRAINSFitButton,5);
-	QObject::connect(GAButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
-	SoftButtonMapper->setMapping(GAButton,6);
-	QObject::connect(dtiavgButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
-	SoftButtonMapper->setMapping(dtiavgButton,7);
-	QObject::connect(DTIRegButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
-	SoftButtonMapper->setMapping(DTIRegButton,8);
-	QObject::connect(unuButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
-	SoftButtonMapper->setMapping(unuButton,9);
-	QObject::connect(MriWatcherButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
-	SoftButtonMapper->setMapping(MriWatcherButton,10);
+  QObject::connect(ImagemathButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
+  SoftButtonMapper->setMapping(ImagemathButton,1);
+  QObject::connect(ResampButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
+  SoftButtonMapper->setMapping(ResampButton,2);
+  QObject::connect(CropDTIButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
+  SoftButtonMapper->setMapping(CropDTIButton,3);
+  QObject::connect(dtiprocButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
+  SoftButtonMapper->setMapping(dtiprocButton,4);
+  QObject::connect(BRAINSFitButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
+  SoftButtonMapper->setMapping(BRAINSFitButton,5);
+  QObject::connect(GAButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
+  SoftButtonMapper->setMapping(GAButton,6);
+  QObject::connect(dtiavgButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
+  SoftButtonMapper->setMapping(dtiavgButton,7);
+  QObject::connect(DTIRegButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
+  SoftButtonMapper->setMapping(DTIRegButton,8);
+  QObject::connect(unuButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
+  SoftButtonMapper->setMapping(unuButton,9);
+  QObject::connect(MriWatcherButton, SIGNAL(clicked()), SoftButtonMapper, SLOT(map()));
+  SoftButtonMapper->setMapping(MriWatcherButton,10);
 
 /* Reset software path Buttons */
-	QSignalMapper *ResetSoftButtonMapper = new QSignalMapper();
-	QObject::connect(ResetSoftButtonMapper, SIGNAL(mapped(int)), this, SLOT( ResetSoft(int) ));
+  QSignalMapper *ResetSoftButtonMapper = new QSignalMapper();
+  QObject::connect(ResetSoftButtonMapper, SIGNAL(mapped(int)), this, SLOT( ResetSoft(int) ));
 
-	QObject::connect(ImagemathResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
-	ResetSoftButtonMapper->setMapping(ImagemathResetButton,1);
-	QObject::connect(ResampResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
-	ResetSoftButtonMapper->setMapping(ResampResetButton,2);
-	QObject::connect(CropDTIResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
-	ResetSoftButtonMapper->setMapping(CropDTIResetButton,3);
-	QObject::connect(dtiprocResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
-	ResetSoftButtonMapper->setMapping(dtiprocResetButton,4);
-	QObject::connect(BRAINSFitResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
-	ResetSoftButtonMapper->setMapping(BRAINSFitResetButton,5);
-	QObject::connect(GAResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
-	ResetSoftButtonMapper->setMapping(GAResetButton,6);
-	QObject::connect(dtiavgResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
-	ResetSoftButtonMapper->setMapping(dtiavgResetButton,7);
-	QObject::connect(DTIRegResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
-	ResetSoftButtonMapper->setMapping(DTIRegResetButton,8);
-	QObject::connect(unuResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
-	ResetSoftButtonMapper->setMapping(unuResetButton,9);
-	QObject::connect(MriWatcherResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
-	ResetSoftButtonMapper->setMapping(MriWatcherResetButton,10);
+  QObject::connect(ImagemathResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
+  ResetSoftButtonMapper->setMapping(ImagemathResetButton,1);
+  QObject::connect(ResampResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
+  ResetSoftButtonMapper->setMapping(ResampResetButton,2);
+  QObject::connect(CropDTIResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
+  ResetSoftButtonMapper->setMapping(CropDTIResetButton,3);
+  QObject::connect(dtiprocResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
+  ResetSoftButtonMapper->setMapping(dtiprocResetButton,4);
+  QObject::connect(BRAINSFitResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
+  ResetSoftButtonMapper->setMapping(BRAINSFitResetButton,5);
+  QObject::connect(GAResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
+  ResetSoftButtonMapper->setMapping(GAResetButton,6);
+  QObject::connect(dtiavgResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
+  ResetSoftButtonMapper->setMapping(dtiavgResetButton,7);
+  QObject::connect(DTIRegResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
+  ResetSoftButtonMapper->setMapping(DTIRegResetButton,8);
+  QObject::connect(unuResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
+  ResetSoftButtonMapper->setMapping(unuResetButton,9);
+  QObject::connect(MriWatcherResetButton, SIGNAL(clicked()), ResetSoftButtonMapper, SLOT(map()));
+  ResetSoftButtonMapper->setMapping(MriWatcherResetButton,10);
 
 /* When any value changes, the value of m_ParamSaved is set to 0 */
-	QObject::connect(TemplateLineEdit, SIGNAL(textChanged(QString)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(OutputFolderLineEdit, SIGNAL(textChanged(QString)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(SafetyMargincheckBox, SIGNAL(stateChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(BFAffineTfmModecomboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(OverwritecheckBox, SIGNAL(stateChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(SL4checkBox, SIGNAL(stateChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(SL2checkBox, SIGNAL(stateChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(SL1checkBox, SIGNAL(stateChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(NbLoopsSpinBox, SIGNAL(valueChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(SL4spinBox, SIGNAL(valueChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(nbIter4SpinBox, SIGNAL(valueChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(alpha4DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(beta4DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(gamma4DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(maxPerturbation4DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(SL2spinBox, SIGNAL(valueChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(nbIter2SpinBox, SIGNAL(valueChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(alpha2DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(beta2DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(gamma2DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(maxPerturbation2DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(SL1spinBox, SIGNAL(valueChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(nbIter1SpinBox, SIGNAL(valueChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(alpha1DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(beta1DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(gamma1DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(maxPerturbation1DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(TensTfmComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(InterpolTypeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(TensInterpolComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(DTIRegExtraPathlineEdit, SIGNAL(textChanged(QString)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(RegMethodcomboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(m_windowComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(m_BSplineComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(m_nologComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(m_BRegTypeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(m_TfmModeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(m_NbPyrLevSpin, SIGNAL(valueChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(m_PyrLevItLine, SIGNAL(textChanged(QString)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(m_ARegTypeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(m_TfmStepLine, SIGNAL(textChanged(QString)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(m_IterLine, SIGNAL(textChanged(QString)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(m_SimMetComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(m_SimParamDble, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(m_GSigmaDble, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(m_SmoothOffCheck, SIGNAL(stateChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(NbThreadsSpinBox, SIGNAL(valueChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-	QObject::connect(GridProcesscheckBox, SIGNAL(stateChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(TemplateLineEdit, SIGNAL(textChanged(QString)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(OutputFolderLineEdit, SIGNAL(textChanged(QString)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(SafetyMargincheckBox, SIGNAL(stateChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(BFAffineTfmModecomboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(OverwritecheckBox, SIGNAL(stateChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(SL4checkBox, SIGNAL(stateChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(SL2checkBox, SIGNAL(stateChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(SL1checkBox, SIGNAL(stateChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(NbLoopsSpinBox, SIGNAL(valueChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(SL4spinBox, SIGNAL(valueChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(nbIter4SpinBox, SIGNAL(valueChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(alpha4DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(beta4DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(gamma4DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(maxPerturbation4DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(SL2spinBox, SIGNAL(valueChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(nbIter2SpinBox, SIGNAL(valueChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(alpha2DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(beta2DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(gamma2DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(maxPerturbation2DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(SL1spinBox, SIGNAL(valueChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(nbIter1SpinBox, SIGNAL(valueChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(alpha1DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(beta1DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(gamma1DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(maxPerturbation1DoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(TensTfmComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(InterpolTypeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(TensInterpolComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(DTIRegExtraPathlineEdit, SIGNAL(textChanged(QString)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(RegMethodcomboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(m_windowComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(m_BSplineComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(m_nologComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(m_BRegTypeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(m_TfmModeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(m_NbPyrLevSpin, SIGNAL(valueChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(m_PyrLevItLine, SIGNAL(textChanged(QString)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(m_ARegTypeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(m_TfmStepLine, SIGNAL(textChanged(QString)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(m_IterLine, SIGNAL(textChanged(QString)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(m_SimMetComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(m_SimParamDble, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(m_GSigmaDble, SIGNAL(valueChanged(double)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(m_SmoothOffCheck, SIGNAL(stateChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(NbThreadsSpinBox, SIGNAL(valueChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
+  QObject::connect(GridProcesscheckBox, SIGNAL(stateChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
 
-	} //if(!m_noGUI)
+  } //if(!m_noGUI)
 
-	m_FromConstructor=1; // do not test GA path if 'Default' called from constructor -> test at the end of constructor
+  m_FromConstructor=1; // do not test GA path if 'Default' called from constructor -> test at the end of constructor
 
 /* SET the soft config */
-	// set the path to the executable directory for FindProgram
-	std::string DTIABExecutablePath= itksys::SystemTools::GetRealPath( itksys::SystemTools::GetFilenamePath(commandRan).c_str() ); // get the place where the running executable is
-	if(DTIABExecutablePath=="") DTIABExecutablePath= itksys::SystemTools::GetCurrentWorkingDirectory(); // If called by itself ($ DTIAtlasBuilder) = either in the PATH or in the current directory : will be found either way by find_program
-	m_FindProgramDTIABExecDirVec.push_back(DTIABExecutablePath); // FindProgram will search in the executable directory too
+  // set the path to the executable directory for FindProgram
+  std::string DTIABExecutablePath= itksys::SystemTools::GetRealPath( itksys::SystemTools::GetFilenamePath(commandRan).c_str() ); // get the place where the running executable is
+  if(DTIABExecutablePath=="") DTIABExecutablePath= itksys::SystemTools::GetCurrentWorkingDirectory(); // If called by itself ($ DTIAtlasBuilder) = either in the PATH or in the current directory : will be found either way by find_program
+  m_FindProgramDTIABExecDirVec.push_back(DTIABExecutablePath); // FindProgram will search in the executable directory too
 
-	// If DTIAB is built as an SlicerExtension, give the path to the folder containing external non cli tools
-	// If no SicerExtension, find_program will just search there and find nothing -> not an issue
-	if(Platform == "linux" || Platform == "win") m_DTIABSlicerExtensionExternalBinDir = DTIABExecutablePath + "/../../../ExternalBin"; // the executable will be in Ext/lib/Slicer4.2/cli_modules and the tools will be in Ext/ExternalBin
-	else if(Platform == "mac") m_DTIABSlicerExtensionExternalBinDir = DTIABExecutablePath + "/../ExternalBin";
-	m_FindProgramDTIABExecDirVec.push_back(m_DTIABSlicerExtensionExternalBinDir);
+  // If DTIAB is built as an SlicerExtension, give the path to the folder containing external non cli tools
+  // If no SicerExtension, find_program will just search there and find nothing -> not an issue
+  if(Platform == "linux" || Platform == "win") m_DTIABSlicerExtensionExternalBinDir = DTIABExecutablePath + "/../../../ExternalBin"; // the executable will be in Ext/lib/Slicer4.2/cli_modules and the tools will be in Ext/ExternalBin
+  else if(Platform == "mac") m_DTIABSlicerExtensionExternalBinDir = DTIABExecutablePath + "/../ExternalBin";
+  m_FindProgramDTIABExecDirVec.push_back(m_DTIABSlicerExtensionExternalBinDir);
 
-	// On Mac if Slicer Ext, paths to BRAINS (compiled within Slicer) are not set in the PATH env var, so add it to the search vector
-	if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION && Platform=="mac")
-	{
-		std::string SlicerExtMacBRAINSPath = m_DTIABSlicerExtensionExternalBinDir + "/../../../cli_modules";
-		m_FindProgramDTIABExecDirVec.push_back(SlicerExtMacBRAINSPath);
-	}
+  // On Mac if Slicer Ext, paths to BRAINS (compiled within Slicer) are not set in the PATH env var, so add it to the search vector
+  if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION && Platform=="mac")
+  {
+    std::string SlicerExtMacBRAINSPath = m_DTIABSlicerExtensionExternalBinDir + "/../../../cli_modules";
+    m_FindProgramDTIABExecDirVec.push_back(SlicerExtMacBRAINSPath);
+  }
 
-	// Because ANTS is in m_DTIABSlicerExtensionExternalBinDir when Slicer Ext
-	if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION) DTIRegExtraPathlineEdit->setText( QString( m_DTIABSlicerExtensionExternalBinDir.c_str() )); // DTIAtlasBuilder_BUILD_SLICER_EXTENSION is defined as constant variable when configuring
+  // Because ANTS is in m_DTIABSlicerExtensionExternalBinDir when Slicer Ext
+  if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION) DTIRegExtraPathlineEdit->setText( QString( m_DTIABSlicerExtensionExternalBinDir.c_str() )); // DTIAtlasBuilder_BUILD_SLICER_EXTENSION is defined as constant variable when configuring
 
-	// look for the programs with the itk function
-	ConfigDefault();
+  // look for the programs with the itk function
+  ConfigDefault();
 
-	// Look for the config file in the executable directory
-	std::string SoftConfigPath= DTIABExecutablePath + "/DTIAtlasBuilderSoftConfig.txt";
-	if( itksys::SystemTools::GetPermissions(SoftConfigPath.c_str(),ITKmode_F_OK) ) if( LoadConfig(QString( SoftConfigPath.c_str() )) == -1 ) m_ErrorDetectedInConstructor=true; // if file exists
+  // Look for the config file in the executable directory
+  std::string SoftConfigPath= DTIABExecutablePath + "/DTIAtlasBuilderSoftConfig.txt";
+  if( itksys::SystemTools::GetPermissions(SoftConfigPath.c_str(),ITKmode_F_OK) ) if( LoadConfig(QString( SoftConfigPath.c_str() )) == -1 ) m_ErrorDetectedInConstructor=true; // if file exists
 
-	// Look for the config file in the current directory
-	std::string CurrentPath = itksys::SystemTools::GetRealPath( itksys::SystemTools::GetCurrentWorkingDirectory().c_str() ); //GetRealPath() to remove symlinks
-	SoftConfigPath = CurrentPath + "/DTIAtlasBuilderSoftConfig.txt";
-	if( itksys::SystemTools::GetPermissions( SoftConfigPath.c_str() , ITKmode_F_OK) ) if( LoadConfig(QString( SoftConfigPath.c_str() )) == -1 ) m_ErrorDetectedInConstructor=true; // if file exists
+  // Look for the config file in the current directory
+  std::string CurrentPath = itksys::SystemTools::GetRealPath( itksys::SystemTools::GetCurrentWorkingDirectory().c_str() ); //GetRealPath() to remove symlinks
+  SoftConfigPath = CurrentPath + "/DTIAtlasBuilderSoftConfig.txt";
+  if( itksys::SystemTools::GetPermissions( SoftConfigPath.c_str() , ITKmode_F_OK) ) if( LoadConfig(QString( SoftConfigPath.c_str() )) == -1 ) m_ErrorDetectedInConstructor=true; // if file exists
 
-	// Look for the config file in the env variable
-	const char * value = itksys::SystemTools::GetEnv("DTIAtlasBuilderSoftPath"); // C function = const char * getenv(const char *)
-	if (value!=NULL) 
-	{
-		printf ("| Environment variable read. The config file is \'%s\'\n",value);
-		if( LoadConfig(QString(value)) == -1 ) m_ErrorDetectedInConstructor=true; // replace the paths by the paths given in the config file
-	}
-	else std::cout<<"| No environment variable found"<<std::endl;
+  // Look for the config file in the env variable
+  const char * value = itksys::SystemTools::GetEnv("DTIAtlasBuilderSoftPath"); // C function = const char * getenv(const char *)
+  if (value!=NULL) 
+  {
+    printf ("| Environment variable read. The config file is \'%s\'\n",value);
+    if( LoadConfig(QString(value)) == -1 ) m_ErrorDetectedInConstructor=true; // replace the paths by the paths given in the config file
+  }
+  else std::cout<<"| No environment variable found"<<std::endl;
 
 /* Look for the parameter file in the current directory */ // Load only if no param file given and if CSV file is given, only load the given CSV file.
-	std::string ParamPath = CurrentPath + "/DTIAtlasBuilderParameters.txt";
-	if( ParamFile.empty() && itksys::SystemTools::GetPermissions( ParamPath.c_str() , ITKmode_F_OK) ) if( LoadParameters(QString( ParamPath.c_str() ), !CSVFile.empty()) == -1 ) m_ErrorDetectedInConstructor=true; 
+  std::string ParamPath = CurrentPath + "/DTIAtlasBuilderParameters.txt";
+  if( ParamFile.empty() && itksys::SystemTools::GetPermissions( ParamPath.c_str() , ITKmode_F_OK) ) if( LoadParameters(QString( ParamPath.c_str() ), !CSVFile.empty()) == -1 ) m_ErrorDetectedInConstructor=true; 
 
 /* Load Parameters from Command Line => cmd line arguments a taking into account at last and change the parameters at last because they have priority */
-	if( !ParamFile.empty() )
-	{
-		if( LoadParameters(QString(ParamFile.c_str()), !CSVFile.empty()) == -1 ) m_ErrorDetectedInConstructor=true;
-	}
-	else if(m_noGUI) // no parameters and nogui => not possible
-	{
-		std::cout<<"| Please give a parameter file"<<std::endl; // command line display
-		m_ErrorDetectedInConstructor=true;
-	}
+  if( !ParamFile.empty() )
+  {
+    if( LoadParameters(QString(ParamFile.c_str()), !CSVFile.empty()) == -1 ) m_ErrorDetectedInConstructor=true;
+  }
+  else if(m_noGUI) // no parameters and nogui => not possible
+  {
+    std::cout<<"| Please give a parameter file"<<std::endl; // command line display
+    m_ErrorDetectedInConstructor=true;
+  }
 
-	if( !CSVFile.empty() ) if( ReadCSV( QString(CSVFile.c_str())) == -1 ) m_ErrorDetectedInConstructor=true;
-	if( !ConfigFile.empty() ) if( LoadConfig( QString(ConfigFile.c_str())) == -1 ) m_ErrorDetectedInConstructor=true;
+  if( !CSVFile.empty() ) if( ReadCSV( QString(CSVFile.c_str())) == -1 ) m_ErrorDetectedInConstructor=true;
+  if( !ConfigFile.empty() ) if( LoadConfig( QString(ConfigFile.c_str())) == -1 ) m_ErrorDetectedInConstructor=true;
 
-	m_FromConstructor=0;
+  m_FromConstructor=0;
 
 /* NOW that all the files have been loaded => test if all the paths are here */
-	bool GAFound=true;
-	bool DTIRegFound=true;
-	std::string notFound;
+  bool GAFound=true;
+  bool DTIRegFound=true;
+  std::string notFound;
 
-	if(ImagemathPath->text().isEmpty()) notFound = notFound + "> ImageMath\n";
-	if(ResampPath->text().isEmpty()) notFound = notFound + "> ResampleDTIlogEuclidean\n";
-	if(CropDTIPath->text().isEmpty()) notFound = notFound + "> CropDTI\n";
-	if(dtiprocPath->text().isEmpty()) notFound = notFound + "> dtiprocess\n";
-	if(BRAINSFitPath->text().isEmpty()) notFound = notFound + "> BRAINSFit\n";
-	if(GAPath->text().isEmpty())
-	{
-		notFound = notFound + "> GreedyAtlas\n";
-		GAFound=false; // so it will not test the version
-	}
-	if(dtiavgPath->text().isEmpty()) notFound = notFound + "> dtiaverage\n";
-	if(DTIRegPath->text().isEmpty())
-	{
-		notFound = notFound + "> DTI-Reg\n";
-		DTIRegFound=false; // so it will not test the version
-	}
-	if(unuPath->text().isEmpty()) notFound = notFound + "> unu\n";
-	if(MriWatcherPath->text().isEmpty()) notFound = notFound + "> MriWatcher (Program will work, but QC will not be available)\n";
+  if(ImagemathPath->text().isEmpty()) notFound = notFound + "> ImageMath\n";
+  if(ResampPath->text().isEmpty()) notFound = notFound + "> ResampleDTIlogEuclidean\n";
+  if(CropDTIPath->text().isEmpty()) notFound = notFound + "> CropDTI\n";
+  if(dtiprocPath->text().isEmpty()) notFound = notFound + "> dtiprocess\n";
+  if(BRAINSFitPath->text().isEmpty()) notFound = notFound + "> BRAINSFit\n";
+  if(GAPath->text().isEmpty())
+  {
+    notFound = notFound + "> GreedyAtlas\n";
+    GAFound=false; // so it will not test the version
+  }
+  if(dtiavgPath->text().isEmpty()) notFound = notFound + "> dtiaverage\n";
+  if(DTIRegPath->text().isEmpty())
+  {
+    notFound = notFound + "> DTI-Reg\n";
+    DTIRegFound=false; // so it will not test the version
+  }
+  if(unuPath->text().isEmpty()) notFound = notFound + "> unu\n";
+  if(MriWatcherPath->text().isEmpty()) notFound = notFound + "> MriWatcher (Program will work, but QC will not be available)\n";
 
-	if( !notFound.empty() )
-	{
-		if(!m_noGUI) 
-		{
-			std::string text = "The following programs have not been found.\nPlease enter the path manually or open a configuration file:\n" + notFound;
-			QMessageBox::warning(this, "Program missing", QString(text.c_str()) );
-		}
-		else std::cout<<"| The following programs have not been found. Please give a configuration file or modify it or enter the path manually in the GUI:\n"<< notFound <<std::endl;
-	}
+  if( !notFound.empty() )
+  {
+    if(!m_noGUI) 
+    {
+      std::string text = "The following programs have not been found.\nPlease enter the path manually or open a configuration file:\n" + notFound;
+      QMessageBox::warning(this, "Program missing", QString(text.c_str()) );
+    }
+    else std::cout<<"| The following programs have not been found. Please give a configuration file or modify it or enter the path manually in the GUI:\n"<< notFound <<std::endl;
+  }
 
-	if(GAFound) testGA(); // test the version of GreedyAtlas only if found
-	if(DTIRegFound) testDTIReg(); // test the version of DTI-Reg only if found
+  if(GAFound) testGA(); // test the version of GreedyAtlas only if found
+  if(DTIRegFound) testDTIReg(); // test the version of DTI-Reg only if found
 }
 
   /////////////////////////////////////////
@@ -367,186 +367,186 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
 void GUI::InitOptions()
 {
 /* Init options for Final AtlasBuilding param : Interpolation algo */
-	m_optionStackLayout = new QStackedWidget;
-	optionHLayout->addWidget(m_optionStackLayout);
+  m_optionStackLayout = new QStackedWidget;
+  optionHLayout->addWidget(m_optionStackLayout);
 
-	QWidget *emptyWidget= new QWidget;
-	m_optionStackLayout->addWidget(emptyWidget);
+  QWidget *emptyWidget= new QWidget;
+  m_optionStackLayout->addWidget(emptyWidget);
 
-	QLabel *windowLabel = new QLabel("Type:", this);
-	m_windowComboBox = new QComboBox(this);
-	m_windowComboBox->addItem("Hamming");
-	m_windowComboBox->addItem("Cosine");
-	m_windowComboBox->addItem("Welch");
-	m_windowComboBox->addItem("Lanczos");
-	m_windowComboBox->addItem("Blackman");
-	m_windowComboBox->setCurrentIndex(1);
-	QHBoxLayout *windowLayout= new QHBoxLayout;
-	windowLayout->addWidget(windowLabel);
-	windowLayout->addWidget(m_windowComboBox);
-	QWidget *windowWidget= new QWidget;
-	windowWidget->setLayout(windowLayout);
-	m_optionStackLayout->addWidget(windowWidget);
+  QLabel *windowLabel = new QLabel("Type:", this);
+  m_windowComboBox = new QComboBox(this);
+  m_windowComboBox->addItem("Hamming");
+  m_windowComboBox->addItem("Cosine");
+  m_windowComboBox->addItem("Welch");
+  m_windowComboBox->addItem("Lanczos");
+  m_windowComboBox->addItem("Blackman");
+  m_windowComboBox->setCurrentIndex(1);
+  QHBoxLayout *windowLayout= new QHBoxLayout;
+  windowLayout->addWidget(windowLabel);
+  windowLayout->addWidget(m_windowComboBox);
+  QWidget *windowWidget= new QWidget;
+  windowWidget->setLayout(windowLayout);
+  m_optionStackLayout->addWidget(windowWidget);
 
-	QLabel *BSplineLabel = new QLabel("Order:", this);
-	m_BSplineComboBox = new QComboBox(this);
-	m_BSplineComboBox->addItem("0");
-	m_BSplineComboBox->addItem("1");
-	m_BSplineComboBox->addItem("2");
-	m_BSplineComboBox->addItem("3");
-	m_BSplineComboBox->addItem("4");
-	m_BSplineComboBox->addItem("5");
-	m_BSplineComboBox->setCurrentIndex(3);
-	QHBoxLayout *BSplineLayout= new QHBoxLayout;
-	BSplineLayout->addWidget(BSplineLabel);
-	BSplineLayout->addWidget(m_BSplineComboBox);
-	QWidget *BSplineWidget= new QWidget;
-	BSplineWidget->setLayout(BSplineLayout);
-	m_optionStackLayout->addWidget(BSplineWidget);
+  QLabel *BSplineLabel = new QLabel("Order:", this);
+  m_BSplineComboBox = new QComboBox(this);
+  m_BSplineComboBox->addItem("0");
+  m_BSplineComboBox->addItem("1");
+  m_BSplineComboBox->addItem("2");
+  m_BSplineComboBox->addItem("3");
+  m_BSplineComboBox->addItem("4");
+  m_BSplineComboBox->addItem("5");
+  m_BSplineComboBox->setCurrentIndex(3);
+  QHBoxLayout *BSplineLayout= new QHBoxLayout;
+  BSplineLayout->addWidget(BSplineLabel);
+  BSplineLayout->addWidget(m_BSplineComboBox);
+  QWidget *BSplineWidget= new QWidget;
+  BSplineWidget->setLayout(BSplineLayout);
+  m_optionStackLayout->addWidget(BSplineWidget);
 
-	m_optionStackLayout->setCurrentIndex(0);
+  m_optionStackLayout->setCurrentIndex(0);
 
 /* Init options for Final AtlasBuilding param : Tensor Interpolation */
-	m_logOptionStackLayout = new QStackedWidget;
-	logOptionHLayout->addWidget(m_logOptionStackLayout);
+  m_logOptionStackLayout = new QStackedWidget;
+  logOptionHLayout->addWidget(m_logOptionStackLayout);
 
-	QWidget *logEmptyWidget= new QWidget;
-	m_logOptionStackLayout->addWidget(logEmptyWidget);
+  QWidget *logEmptyWidget= new QWidget;
+  m_logOptionStackLayout->addWidget(logEmptyWidget);
 
-	QLabel *nologLabel = new QLabel("Correction:", this);
-	m_nologComboBox = new QComboBox(this);
-	m_nologComboBox->addItem("Zero");
-	m_nologComboBox->addItem("None");
-	m_nologComboBox->addItem("Absolute Value");
-	m_nologComboBox->addItem("Nearest");
-	m_nologComboBox->setCurrentIndex(1);
-	QHBoxLayout *nologLayout= new QHBoxLayout;
-	nologLayout->addWidget(nologLabel);
-	nologLayout->addWidget(m_nologComboBox);
-	QWidget *nologWidget= new QWidget;
-	nologWidget->setLayout(nologLayout);
-	m_logOptionStackLayout->addWidget(nologWidget);
+  QLabel *nologLabel = new QLabel("Correction:", this);
+  m_nologComboBox = new QComboBox(this);
+  m_nologComboBox->addItem("Zero");
+  m_nologComboBox->addItem("None");
+  m_nologComboBox->addItem("Absolute Value");
+  m_nologComboBox->addItem("Nearest");
+  m_nologComboBox->setCurrentIndex(1);
+  QHBoxLayout *nologLayout= new QHBoxLayout;
+  nologLayout->addWidget(nologLabel);
+  nologLayout->addWidget(m_nologComboBox);
+  QWidget *nologWidget= new QWidget;
+  nologWidget->setLayout(nologLayout);
+  m_logOptionStackLayout->addWidget(nologWidget);
 
-	m_logOptionStackLayout->setCurrentIndex(0);
+  m_logOptionStackLayout->setCurrentIndex(0);
 
 /* Init options for DTI-Reg: Reg Method */
-	m_DTIRegOptionStackLayout = new QStackedWidget;
-	DTIRegOptionsVLayout->addWidget(m_DTIRegOptionStackLayout);
+  m_DTIRegOptionStackLayout = new QStackedWidget;
+  DTIRegOptionsVLayout->addWidget(m_DTIRegOptionStackLayout);
 
-	/*BRAINS*/
-	QHBoxLayout *BRAINSHLayout = new QHBoxLayout;
-	QVBoxLayout *BRAINSLabelVLayout = new QVBoxLayout;
-	BRAINSHLayout->addLayout(BRAINSLabelVLayout);
-	QVBoxLayout *BRAINSWidgetVLayout = new QVBoxLayout;
-	BRAINSHLayout->addLayout(BRAINSWidgetVLayout);
+  /*BRAINS*/
+  QHBoxLayout *BRAINSHLayout = new QHBoxLayout;
+  QVBoxLayout *BRAINSLabelVLayout = new QVBoxLayout;
+  BRAINSHLayout->addLayout(BRAINSLabelVLayout);
+  QVBoxLayout *BRAINSWidgetVLayout = new QVBoxLayout;
+  BRAINSHLayout->addLayout(BRAINSWidgetVLayout);
 
-	QLabel *BRegTypeLabel = new QLabel("Registration Type:", this);
-	BRAINSLabelVLayout->addWidget(BRegTypeLabel);
-	m_BRegTypeComboBox = new QComboBox(this);
-	m_BRegTypeComboBox->addItem("None");
-	m_BRegTypeComboBox->addItem("Rigid");
-	m_BRegTypeComboBox->addItem("BSpline");
-	m_BRegTypeComboBox->addItem("Diffeomorphic");
-	m_BRegTypeComboBox->addItem("Demons");
-	m_BRegTypeComboBox->addItem("FastSymmetricForces");
-	m_BRegTypeComboBox->setCurrentIndex(3);
-	BRAINSWidgetVLayout->addWidget(m_BRegTypeComboBox);
+  QLabel *BRegTypeLabel = new QLabel("Registration Type:", this);
+  BRAINSLabelVLayout->addWidget(BRegTypeLabel);
+  m_BRegTypeComboBox = new QComboBox(this);
+  m_BRegTypeComboBox->addItem("None");
+  m_BRegTypeComboBox->addItem("Rigid");
+  m_BRegTypeComboBox->addItem("BSpline");
+  m_BRegTypeComboBox->addItem("Diffeomorphic");
+  m_BRegTypeComboBox->addItem("Demons");
+  m_BRegTypeComboBox->addItem("FastSymmetricForces");
+  m_BRegTypeComboBox->setCurrentIndex(3);
+  BRAINSWidgetVLayout->addWidget(m_BRegTypeComboBox);
 
-	QLabel *TfmModeLabel = new QLabel("Transform Mode:", this);
-	BRAINSLabelVLayout->addWidget(TfmModeLabel);
-	m_TfmModeComboBox = new QComboBox(this);
-	m_TfmModeComboBox->addItem("Off");
-	m_TfmModeComboBox->addItem("useMomentsAlign");
-	m_TfmModeComboBox->addItem("useCenterOfHeadAlign");
-	m_TfmModeComboBox->addItem("useGeometryAlign");
-	m_TfmModeComboBox->addItem("Use computed affine transform");
-	m_TfmModeComboBox->setCurrentIndex(4);
-	BRAINSWidgetVLayout->addWidget(m_TfmModeComboBox);
+  QLabel *TfmModeLabel = new QLabel("Transform Mode:", this);
+  BRAINSLabelVLayout->addWidget(TfmModeLabel);
+  m_TfmModeComboBox = new QComboBox(this);
+  m_TfmModeComboBox->addItem("Off");
+  m_TfmModeComboBox->addItem("useMomentsAlign");
+  m_TfmModeComboBox->addItem("useCenterOfHeadAlign");
+  m_TfmModeComboBox->addItem("useGeometryAlign");
+  m_TfmModeComboBox->addItem("Use computed affine transform");
+  m_TfmModeComboBox->setCurrentIndex(4);
+  BRAINSWidgetVLayout->addWidget(m_TfmModeComboBox);
 
-	QLabel *NbPyrLevLabel = new QLabel("Number Of Pyramid Levels:", this);
-	BRAINSLabelVLayout->addWidget(NbPyrLevLabel);
-	m_NbPyrLevSpin = new QSpinBox(this);
-	m_NbPyrLevSpin->setValue(5);
-	BRAINSWidgetVLayout->addWidget(m_NbPyrLevSpin);
+  QLabel *NbPyrLevLabel = new QLabel("Number Of Pyramid Levels:", this);
+  BRAINSLabelVLayout->addWidget(NbPyrLevLabel);
+  m_NbPyrLevSpin = new QSpinBox(this);
+  m_NbPyrLevSpin->setValue(5);
+  BRAINSWidgetVLayout->addWidget(m_NbPyrLevSpin);
 
-	QLabel *PyrLevItLabel = new QLabel("Number Of Iterations for the Pyramid Levels:", this);
-	BRAINSLabelVLayout->addWidget(PyrLevItLabel);
-	m_PyrLevItLine = new QLineEdit(this);
-	m_PyrLevItLine->setText("300,50,30,20,15");
-	BRAINSWidgetVLayout->addWidget(m_PyrLevItLine);
+  QLabel *PyrLevItLabel = new QLabel("Number Of Iterations for the Pyramid Levels:", this);
+  BRAINSLabelVLayout->addWidget(PyrLevItLabel);
+  m_PyrLevItLine = new QLineEdit(this);
+  m_PyrLevItLine->setText("300,50,30,20,15");
+  BRAINSWidgetVLayout->addWidget(m_PyrLevItLine);
 
-	QWidget *BRAINSWidget = new QWidget;
-	BRAINSWidget->setLayout(BRAINSHLayout);
-	m_DTIRegOptionStackLayout->addWidget(BRAINSWidget);
+  QWidget *BRAINSWidget = new QWidget;
+  BRAINSWidget->setLayout(BRAINSHLayout);
+  m_DTIRegOptionStackLayout->addWidget(BRAINSWidget);
 
-	/*ANTS*/
-	QHBoxLayout *ANTSHLayout = new QHBoxLayout;
-	QVBoxLayout *ANTSLabelVLayout = new QVBoxLayout;
-	ANTSHLayout->addLayout(ANTSLabelVLayout);
-	QVBoxLayout *ANTSWidgetVLayout = new QVBoxLayout;
-	ANTSHLayout->addLayout(ANTSWidgetVLayout);
+  /*ANTS*/
+  QHBoxLayout *ANTSHLayout = new QHBoxLayout;
+  QVBoxLayout *ANTSLabelVLayout = new QVBoxLayout;
+  ANTSHLayout->addLayout(ANTSLabelVLayout);
+  QVBoxLayout *ANTSWidgetVLayout = new QVBoxLayout;
+  ANTSHLayout->addLayout(ANTSWidgetVLayout);
 
-	QLabel *ARegTypeLabel = new QLabel("Registration Type:", this);
-	ANTSLabelVLayout->addWidget(ARegTypeLabel);
-	m_ARegTypeComboBox = new QComboBox(this);
-	m_ARegTypeComboBox->addItem("None");
-	m_ARegTypeComboBox->addItem("Rigid");
-	m_ARegTypeComboBox->addItem("Elast");
-	m_ARegTypeComboBox->addItem("Exp");
-	m_ARegTypeComboBox->addItem("GreedyExp");
-	m_ARegTypeComboBox->addItem("GreedyDiffeo (SyN)");
-	m_ARegTypeComboBox->addItem("SpatioTempDiffeo (SyN)");
-	m_ARegTypeComboBox->setCurrentIndex(5);
-	QObject::connect(m_ARegTypeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(ANTSRegTypeChanged( int )));
-	ANTSWidgetVLayout->addWidget(m_ARegTypeComboBox);
+  QLabel *ARegTypeLabel = new QLabel("Registration Type:", this);
+  ANTSLabelVLayout->addWidget(ARegTypeLabel);
+  m_ARegTypeComboBox = new QComboBox(this);
+  m_ARegTypeComboBox->addItem("None");
+  m_ARegTypeComboBox->addItem("Rigid");
+  m_ARegTypeComboBox->addItem("Elast");
+  m_ARegTypeComboBox->addItem("Exp");
+  m_ARegTypeComboBox->addItem("GreedyExp");
+  m_ARegTypeComboBox->addItem("GreedyDiffeo (SyN)");
+  m_ARegTypeComboBox->addItem("SpatioTempDiffeo (SyN)");
+  m_ARegTypeComboBox->setCurrentIndex(5);
+  QObject::connect(m_ARegTypeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(ANTSRegTypeChanged( int )));
+  ANTSWidgetVLayout->addWidget(m_ARegTypeComboBox);
 
-	QLabel *TfmStepLabel = new QLabel("Transformation Step:", this);
-	ANTSLabelVLayout->addWidget(TfmStepLabel);
-	m_TfmStepLine = new QLineEdit(this);
-	m_TfmStepLine->setText("0.25");
-	ANTSWidgetVLayout->addWidget(m_TfmStepLine);
+  QLabel *TfmStepLabel = new QLabel("Transformation Step:", this);
+  ANTSLabelVLayout->addWidget(TfmStepLabel);
+  m_TfmStepLine = new QLineEdit(this);
+  m_TfmStepLine->setText("0.25");
+  ANTSWidgetVLayout->addWidget(m_TfmStepLine);
 
-	QLabel *IterLabel = new QLabel("Iterations:", this);
-	ANTSLabelVLayout->addWidget(IterLabel);
-	m_IterLine = new QLineEdit(this);
-	m_IterLine->setText("100x50x25");
-	ANTSWidgetVLayout->addWidget(m_IterLine);
+  QLabel *IterLabel = new QLabel("Iterations:", this);
+  ANTSLabelVLayout->addWidget(IterLabel);
+  m_IterLine = new QLineEdit(this);
+  m_IterLine->setText("100x50x25");
+  ANTSWidgetVLayout->addWidget(m_IterLine);
 
-	QLabel *SimMetLabel = new QLabel("Similarity Metric:", this);
-	ANTSLabelVLayout->addWidget(SimMetLabel);
-	m_SimMetComboBox = new QComboBox(this);
-	m_SimMetComboBox->addItem("Cross-Correlation (CC)");
-	m_SimMetComboBox->addItem("Mutual Information (MI)");
-	m_SimMetComboBox->addItem("Mean Square Difference (MSQ)");
-	m_SimMetComboBox->setCurrentIndex(0);
-	QObject::connect(m_SimMetComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(SimMetChanged( int )));
-	ANTSWidgetVLayout->addWidget(m_SimMetComboBox);
+  QLabel *SimMetLabel = new QLabel("Similarity Metric:", this);
+  ANTSLabelVLayout->addWidget(SimMetLabel);
+  m_SimMetComboBox = new QComboBox(this);
+  m_SimMetComboBox->addItem("Cross-Correlation (CC)");
+  m_SimMetComboBox->addItem("Mutual Information (MI)");
+  m_SimMetComboBox->addItem("Mean Square Difference (MSQ)");
+  m_SimMetComboBox->setCurrentIndex(0);
+  QObject::connect(m_SimMetComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(SimMetChanged( int )));
+  ANTSWidgetVLayout->addWidget(m_SimMetComboBox);
 
-	m_SimParamLabel = new QLabel("Region Radius:", this);
-	ANTSLabelVLayout->addWidget(m_SimParamLabel);
-	m_SimParamDble = new QDoubleSpinBox(this);
-	m_SimParamDble->setValue(2);
-	ANTSWidgetVLayout->addWidget(m_SimParamDble);
+  m_SimParamLabel = new QLabel("Region Radius:", this);
+  ANTSLabelVLayout->addWidget(m_SimParamLabel);
+  m_SimParamDble = new QDoubleSpinBox(this);
+  m_SimParamDble->setValue(2);
+  ANTSWidgetVLayout->addWidget(m_SimParamDble);
 
-	QLabel *GSigmaLabel = new QLabel("Gaussian Sigma:", this);
-	ANTSLabelVLayout->addWidget(GSigmaLabel);
-	m_GSigmaDble = new QDoubleSpinBox(this);
-	m_GSigmaDble->setValue(3);
-	ANTSWidgetVLayout->addWidget(m_GSigmaDble);
+  QLabel *GSigmaLabel = new QLabel("Gaussian Sigma:", this);
+  ANTSLabelVLayout->addWidget(GSigmaLabel);
+  m_GSigmaDble = new QDoubleSpinBox(this);
+  m_GSigmaDble->setValue(3);
+  ANTSWidgetVLayout->addWidget(m_GSigmaDble);
 
-	m_SmoothOffCheck = new QCheckBox("Gaussian Smoothing Off", this);
-	m_SmoothOffCheck->setChecked(false);
-	m_SmoothOffCheck->setLayoutDirection(Qt::RightToLeft);
-	ANTSLabelVLayout->addWidget(m_SmoothOffCheck);
-	QLabel *emptyL = new QLabel("", this);
-	ANTSWidgetVLayout->addWidget(emptyL);
+  m_SmoothOffCheck = new QCheckBox("Gaussian Smoothing Off", this);
+  m_SmoothOffCheck->setChecked(false);
+  m_SmoothOffCheck->setLayoutDirection(Qt::RightToLeft);
+  ANTSLabelVLayout->addWidget(m_SmoothOffCheck);
+  QLabel *emptyL = new QLabel("", this);
+  ANTSWidgetVLayout->addWidget(emptyL);
 
-	QWidget *ANTSWidget = new QWidget;
-	ANTSWidget->setLayout(ANTSHLayout);
-	m_DTIRegOptionStackLayout->addWidget(ANTSWidget);
+  QWidget *ANTSWidget = new QWidget;
+  ANTSWidget->setLayout(ANTSHLayout);
+  m_DTIRegOptionStackLayout->addWidget(ANTSWidget);
 
 
-	m_DTIRegOptionStackLayout->setCurrentIndex(0); //BRAINS is the default
+  m_DTIRegOptionStackLayout->setCurrentIndex(0); //BRAINS is the default
 }
 
   /////////////////////////////////////////
@@ -555,64 +555,64 @@ void GUI::InitOptions()
 
 void GUI::OpenAddCaseBrowseWindow() /*SLOT*/
 {
-	QStringList CaseListBrowse=QFileDialog::getOpenFileNames(this, "Open Cases", m_lastCasePath, "NERD Images (*.nrrd *.nhdr *.*)");
-	CaseListWidget->addItems(CaseListBrowse);
-	if(!CaseListBrowse.isEmpty())
-	{
-		if ( CaseListWidget->count()>0 )
-		{
-			RemovePushButton->setEnabled(true);
-			ComputepushButton->setEnabled(true);
-		}
-		m_ParamSaved=0;
-		SelectCasesLabel->setText( QString("") );
-		m_lastCasePath = CaseListBrowse.last();
+  QStringList CaseListBrowse=QFileDialog::getOpenFileNames(this, "Open Cases", m_lastCasePath, "NERD Images (*.nrrd *.nhdr *.*)");
+  CaseListWidget->addItems(CaseListBrowse);
+  if(!CaseListBrowse.isEmpty())
+  {
+    if ( CaseListWidget->count()>0 )
+    {
+      RemovePushButton->setEnabled(true);
+      ComputepushButton->setEnabled(true);
+    }
+    m_ParamSaved=0;
+    SelectCasesLabel->setText( QString("") );
+    m_lastCasePath = CaseListBrowse.last();
 
-		CheckCasesIndex();
-	}
+    CheckCasesIndex();
+  }
 }
 
 void GUI::RemoveSelectedCases() /*SLOT*/
 {
-	int NbOfSelectedItems = (CaseListWidget->selectedItems()).size();
-	int NB=NbOfSelectedItems;
-	int ItemRow;
-	while(NbOfSelectedItems>0)
-	{
-		ItemRow = CaseListWidget->row( CaseListWidget->selectedItems().at(0) );
-		CaseListWidget->takeItem(ItemRow);
-		delete CaseListWidget->selectedItems().at(0);
-		NbOfSelectedItems--;
-	}
-	if( NB>0 ) // only if some items were removed
-	{
-		if ( CaseListWidget->count()==0 )		
-		{
-			RemovePushButton->setEnabled(false);
-			ComputepushButton->setEnabled(false);
-		}
-		m_ParamSaved=0;
-		SelectCasesLabel->setText( QString("") );
+  int NbOfSelectedItems = (CaseListWidget->selectedItems()).size();
+  int NB=NbOfSelectedItems;
+  int ItemRow;
+  while(NbOfSelectedItems>0)
+  {
+    ItemRow = CaseListWidget->row( CaseListWidget->selectedItems().at(0) );
+    CaseListWidget->takeItem(ItemRow);
+    delete CaseListWidget->selectedItems().at(0);
+    NbOfSelectedItems--;
+  }
+  if( NB>0 ) // only if some items were removed
+  {
+    if ( CaseListWidget->count()==0 )    
+    {
+      RemovePushButton->setEnabled(false);
+      ComputepushButton->setEnabled(false);
+    }
+    m_ParamSaved=0;
+    SelectCasesLabel->setText( QString("") );
 
-		CheckCasesIndex();
-	}
+    CheckCasesIndex();
+  }
 }
 
 void GUI::CheckCasesIndex() /* Change ids at the begining of the lines */
 {
-	std::string text;
+  std::string text;
 
-	for(int i=0; i < CaseListWidget->count() ;i++)
-	{
-		std::ostringstream outi;
-		outi << i+1;
-		std::string i_str = outi.str();
+  for(int i=0; i < CaseListWidget->count() ;i++)
+  {
+    std::ostringstream outi;
+    outi << i+1;
+    std::string i_str = outi.str();
 
-		if( CaseListWidget->item(i)->text().contains(": ") ) text = i_str + ": " + CaseListWidget->item(i)->text().toStdString().substr( CaseListWidget->item(i)->text().split(":").at(0).size()+2 ); // from pos to the end
-		else text = i_str + ": " + CaseListWidget->item(i)->text().toStdString();
+    if( CaseListWidget->item(i)->text().contains(": ") ) text = i_str + ": " + CaseListWidget->item(i)->text().toStdString().substr( CaseListWidget->item(i)->text().split(":").at(0).size()+2 ); // from pos to the end
+    else text = i_str + ": " + CaseListWidget->item(i)->text().toStdString();
 
-		CaseListWidget->item(i)->setText( QString( text.c_str() ) );
-	}
+    CaseListWidget->item(i)->setText( QString( text.c_str() ) );
+  }
 }
 
   /////////////////////////////////////////
@@ -621,12 +621,12 @@ void GUI::CheckCasesIndex() /* Change ids at the begining of the lines */
 
 void GUI::OpenOutputBrowseWindow() /*SLOT*/
 {
-	QString OutputBrowse=QFileDialog::getExistingDirectory(this);
-	if(!OutputBrowse.isEmpty())
-	{
-		OutputFolderLineEdit->setText(OutputBrowse);
-	}
-	
+  QString OutputBrowse=QFileDialog::getExistingDirectory(this);
+  if(!OutputBrowse.isEmpty())
+  {
+    OutputFolderLineEdit->setText(OutputBrowse);
+  }
+  
 }
 
   /////////////////////////////////////////
@@ -635,12 +635,12 @@ void GUI::OpenOutputBrowseWindow() /*SLOT*/
 
 void GUI::OpenDTIRegExtraPathBrowseWindow() /*SLOT*/
 {
-	QString DTIRegExtraPathBrowse=QFileDialog::getExistingDirectory(this);
-	if(!DTIRegExtraPathBrowse.isEmpty())
-	{
-		DTIRegExtraPathlineEdit->setText(DTIRegExtraPathBrowse);
-	}
-	
+  QString DTIRegExtraPathBrowse=QFileDialog::getExistingDirectory(this);
+  if(!DTIRegExtraPathBrowse.isEmpty())
+  {
+    DTIRegExtraPathlineEdit->setText(DTIRegExtraPathBrowse);
+  }
+  
 }
 
   /////////////////////////////////////////
@@ -649,11 +649,11 @@ void GUI::OpenDTIRegExtraPathBrowseWindow() /*SLOT*/
 
 void GUI::OpenTemplateBrowseWindow() /*SLOT*/
 {
-	QString TemplateBrowse=QFileDialog::getOpenFileName(this, "Open Atlas Template", QString(), "NERD Image (*.nrrd *.nhdr *.*)");
-	if(!TemplateBrowse.isEmpty())
-	{
-		TemplateLineEdit->setText(TemplateBrowse);
-	}
+  QString TemplateBrowse=QFileDialog::getOpenFileName(this, "Open Atlas Template", QString(), "NERD Image (*.nrrd *.nhdr *.*)");
+  if(!TemplateBrowse.isEmpty())
+  {
+    TemplateLineEdit->setText(TemplateBrowse);
+  }
 }
 
   /////////////////////////////////////////
@@ -662,104 +662,104 @@ void GUI::OpenTemplateBrowseWindow() /*SLOT*/
 
 void GUI::DisplayAffineQC() /*SLOT*/
 {
-	std::ostringstream out;
-	out << NbLoopsSpinBox->value();
-	std::string nbLoops_str = out.str();
+  std::ostringstream out;
+  out << NbLoopsSpinBox->value();
+  std::string nbLoops_str = out.str();
 
-	std::string program = MriWatcherPath->text().toStdString() + " --viewAll";
-	std::string path;
-	for(int i=1; i <= CaseListWidget->count() ;i++) 
-	{
-		std::ostringstream outi;
-		outi << i;
-		std::string outi_str = outi.str();
-		path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/1_Affine_Registration/Loop" + nbLoops_str + "/Case" + outi_str + "_Loop" + nbLoops_str + "_FinalFA.nrrd";
-		if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
-	}
-	std::ostringstream out1;
-	out1 << NbLoopsSpinBox->value()-1;
-	std::string nbLoops1_str = out1.str();
-	path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/1_Affine_Registration/Loop" + nbLoops1_str + "/Loop" + nbLoops1_str + "_FAAverage.nrrd";
-	if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
+  std::string program = MriWatcherPath->text().toStdString() + " --viewAll";
+  std::string path;
+  for(int i=1; i <= CaseListWidget->count() ;i++) 
+  {
+    std::ostringstream outi;
+    outi << i;
+    std::string outi_str = outi.str();
+    path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/1_Affine_Registration/Loop" + nbLoops_str + "/Case" + outi_str + "_Loop" + nbLoops_str + "_FinalFA.nrrd";
+    if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
+  }
+  std::ostringstream out1;
+  out1 << NbLoopsSpinBox->value()-1;
+  std::string nbLoops1_str = out1.str();
+  path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/1_Affine_Registration/Loop" + nbLoops1_str + "/Loop" + nbLoops1_str + "_FAAverage.nrrd";
+  if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
 
-	// Display cmd line
-	std::cout<<"| $ "<<program.c_str()<<std::endl;
+  // Display cmd line
+  std::cout<<"| $ "<<program.c_str()<<std::endl;
 
-	QProcess* QCQProcess = new QProcess;
-	QCQProcess->start(program.c_str());
+  QProcess* QCQProcess = new QProcess;
+  QCQProcess->start(program.c_str());
 
-/*	int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
+/*  int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
 
-	if(pid==0) // we are in the son
-	{
-		int status = system( program.c_str() );
-		_exit(status); // son ends
-	}*/
+  if(pid==0) // we are in the son
+  {
+    int status = system( program.c_str() );
+    _exit(status); // son ends
+  }*/
 }
 
 void GUI::DisplayDeformQC() /*SLOT*/
 {
-	std::string program = MriWatcherPath->text().toStdString() + " --viewAll";
-	std::string path;
-	for(int i=1; i <= CaseListWidget->count() ;i++) 
-	{
-		std::ostringstream outi;
-		outi << i;
-		std::string outi_str = outi.str();
-		path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/3_Diffeomorphic_Atlas/Case" + outi_str + "_DiffeomorphicFA.nrrd";
-		if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
-	}
-	path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/3_Diffeomorphic_Atlas/DiffeomorphicAtlasFA.nrrd";
-	if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
+  std::string program = MriWatcherPath->text().toStdString() + " --viewAll";
+  std::string path;
+  for(int i=1; i <= CaseListWidget->count() ;i++) 
+  {
+    std::ostringstream outi;
+    outi << i;
+    std::string outi_str = outi.str();
+    path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/3_Diffeomorphic_Atlas/Case" + outi_str + "_DiffeomorphicFA.nrrd";
+    if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
+  }
+  path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/3_Diffeomorphic_Atlas/DiffeomorphicAtlasFA.nrrd";
+  if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
 
-	std::cout<<"| $ " << program << std::endl;
+  std::cout<<"| $ " << program << std::endl;
 
-	QProcess* QCQProcess = new QProcess;
-	QCQProcess->start(program.c_str());
+  QProcess* QCQProcess = new QProcess;
+  QCQProcess->start(program.c_str());
 
-/*	int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
+/*  int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
 
-	if(pid==0) // we are in the son
-	{
-		int status = system( program.c_str() );
-		_exit(status); // son ends
-	}*/
+  if(pid==0) // we are in the son
+  {
+    int status = system( program.c_str() );
+    _exit(status); // son ends
+  }*/
 }
 
 void GUI::DisplayResampQC() /*SLOT*/
 {
-	std::string program = MriWatcherPath->text().toStdString() + " --viewAll";
-	std::string path;
-	for(int i=1; i <= CaseListWidget->count() ;i++) 
-	{
-		std::ostringstream outi;
-		outi << i;
-		std::string outi_str = outi.str();
-		path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/4_Final_Resampling/Second_Resampling/Case" + outi_str + "_FinalDeformedFA.nrrd";
-		if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
-	}
-	path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/4_Final_Resampling/FinalAtlasFA.nrrd";
-	if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
+  std::string program = MriWatcherPath->text().toStdString() + " --viewAll";
+  std::string path;
+  for(int i=1; i <= CaseListWidget->count() ;i++) 
+  {
+    std::ostringstream outi;
+    outi << i;
+    std::string outi_str = outi.str();
+    path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/4_Final_Resampling/Second_Resampling/Case" + outi_str + "_FinalDeformedFA.nrrd";
+    if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
+  }
+  path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/4_Final_Resampling/FinalAtlasFA.nrrd";
+  if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
 
-	std::cout<<"| $ " << program << std::endl;
+  std::cout<<"| $ " << program << std::endl;
 
-	QProcess* QCQProcess = new QProcess;
-	QCQProcess->start(program.c_str());
+  QProcess* QCQProcess = new QProcess;
+  QCQProcess->start(program.c_str());
 
-/*	int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
+/*  int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
 
-	if(pid==0) // we are in the son
-	{
-		int status = system( program.c_str() );
-		_exit(status); // son ends
-	}*/
+  if(pid==0) // we are in the son
+  {
+    int status = system( program.c_str() );
+    _exit(status); // son ends
+  }*/
 }
 
 void GUI::DisableQC() // disable QC buttons
 {
-	AffineQCButton->setEnabled(false);
-	DeformQCButton->setEnabled(false);
-	ResampQCButton->setEnabled(false);
+  AffineQCButton->setEnabled(false);
+  DeformQCButton->setEnabled(false);
+  ResampQCButton->setEnabled(false);
 }
 
   /////////////////////////////////////////
@@ -768,40 +768,40 @@ void GUI::DisableQC() // disable QC buttons
 
 void GUI::ExitProgram() /*SLOT*/
 {
-	std::cout<<"| End of the program"<<std::endl; // command line display
-	delete m_scriptwriter;
-	qApp->quit(); //end of Application: close the main window
+  std::cout<<"| End of the program"<<std::endl; // command line display
+  delete m_scriptwriter;
+  qApp->quit(); //end of Application: close the main window
 }
 
 void GUI::closeEvent(QCloseEvent* event)
 {
-	if(m_ScriptRunning)
-	{
-		int ret = QMessageBox::question(this,"Quit","The script is still running. If you exit now, the script will abort.\nDo you want to exit anyway ?",QMessageBox::No | QMessageBox::Yes);
-		if (ret == QMessageBox::No) 
-		{
-			event->ignore();
-			return;
-		}
-	}
+  if(m_ScriptRunning)
+  {
+    int ret = QMessageBox::question(this,"Quit","The script is still running. If you exit now, the script will abort.\nDo you want to exit anyway ?",QMessageBox::No | QMessageBox::Yes);
+    if (ret == QMessageBox::No) 
+    {
+      event->ignore();
+      return;
+    }
+  }
 
-	else
-	{
-		while(m_ParamSaved==0)
-		{
-			int ret = QMessageBox::question(this,"Quit","Last parameters have not been saved.\nDo you want to save the last parameters ?",QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes);
-			if (ret == QMessageBox::Yes) SaveParametersSlot();
-			else if (ret == QMessageBox::No) break;
-			else if (ret == QMessageBox::Cancel) 
-			{
-				event->ignore();
-				return;
-			}
-		}
-	}
+  else
+  {
+    while(m_ParamSaved==0)
+    {
+      int ret = QMessageBox::question(this,"Quit","Last parameters have not been saved.\nDo you want to save the last parameters ?",QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes);
+      if (ret == QMessageBox::Yes) SaveParametersSlot();
+      else if (ret == QMessageBox::No) break;
+      else if (ret == QMessageBox::Cancel) 
+      {
+        event->ignore();
+        return;
+      }
+    }
+  }
 
-	delete m_scriptwriter;
-	event->accept();
+  delete m_scriptwriter;
+  event->accept();
 }
 
   /////////////////////////////////////////
@@ -809,145 +809,145 @@ void GUI::closeEvent(QCloseEvent* event)
 /////////////////////////////////////////
 
 void GUI::ReadCSVSlot() /*SLOT*/
-{	
-	QString CSVBrowse=QFileDialog::getOpenFileName(this, "Open CSV File", QString(), ".csv Files (*.csv)");
+{  
+  QString CSVBrowse=QFileDialog::getOpenFileName(this, "Open CSV File", QString(), ".csv Files (*.csv)");
 
-	if(!CSVBrowse.isEmpty())
-	{
-		ReadCSV(CSVBrowse);
-	}
+  if(!CSVBrowse.isEmpty())
+  {
+    ReadCSV(CSVBrowse);
+  }
 }
 
 int GUI::ReadCSV(QString CSVfile)
 {
-	int ret=QMessageBox::Yes; // <=> replace current dataset by new
-	if( CaseListWidget->count()!=0 )
-	{
-		ret = QMessageBox::question(this,"Case list not empty","There are already some cases listed.\nDo you want to replace them by the new dataset ?\nIf No, the new dataset will be added to the existing cases.",QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes);
+  int ret=QMessageBox::Yes; // <=> replace current dataset by new
+  if( CaseListWidget->count()!=0 )
+  {
+    ret = QMessageBox::question(this,"Case list not empty","There are already some cases listed.\nDo you want to replace them by the new dataset ?\nIf No, the new dataset will be added to the existing cases.",QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes);
 
-		if (ret == QMessageBox::Yes) CaseListWidget->clear();
-		else if (ret == QMessageBox::Cancel) return 0;
-	}
+    if (ret == QMessageBox::Yes) CaseListWidget->clear();
+    else if (ret == QMessageBox::Cancel) return 0;
+  }
 
-	if(!CSVfile.isEmpty())
-	{
+  if(!CSVfile.isEmpty())
+  {
 
-		if( itksys::SystemTools::GetPermissions(CSVfile.toStdString().c_str(), ITKmode_F_OK) ) // Test if the csv file exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
-		{
+    if( itksys::SystemTools::GetPermissions(CSVfile.toStdString().c_str(), ITKmode_F_OK) ) // Test if the csv file exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
+    {
 
-			QFile file(CSVfile);
+      QFile file(CSVfile);
 
-			if (file.open(QFile::ReadOnly))
-			{
-				std::cout<<"| Loading csv file \'"<< CSVfile.toStdString() <<"\'..."; // command line display
+      if (file.open(QFile::ReadOnly))
+      {
+        std::cout<<"| Loading csv file \'"<< CSVfile.toStdString() <<"\'..."; // command line display
 
-				QTextStream stream(&file);
-				while(!stream.atEnd()) //read all the lines
-				{
-					QString line = stream.readLine();
-					if(line != "")
-					{
-						QStringList list = line.split(m_CSVseparator);
-						if( list.at(0) != "id" && list.at(0) != "")  CaseListWidget->addItem( list.at(1) ); //display in the Widget so that some can be removed
-					}
-				}
-				CheckCasesIndex();
-	
-				if (ret == QMessageBox::Yes) SelectCasesLabel->setText( QString("Current CSV file : ") + CSVfile );
-				else  SelectCasesLabel->setText( QString("") );
+        QTextStream stream(&file);
+        while(!stream.atEnd()) //read all the lines
+        {
+          QString line = stream.readLine();
+          if(line != "")
+          {
+            QStringList list = line.split(m_CSVseparator);
+            if( list.at(0) != "id" && list.at(0) != "")  CaseListWidget->addItem( list.at(1) ); //display in the Widget so that some can be removed
+          }
+        }
+        CheckCasesIndex();
+  
+        if (ret == QMessageBox::Yes) SelectCasesLabel->setText( QString("Current CSV file : ") + CSVfile );
+        else  SelectCasesLabel->setText( QString("") );
 
-				m_ParamSaved=0;
-				std::cout<<"DONE"<<std::endl; // command line display
-			} 
-			else
-			{
-				SelectCasesLabel->setText( QString("Could not open CSV File"));
-				qDebug( "Could not open csv file");
-				return -1;
-			}
+        m_ParamSaved=0;
+        std::cout<<"DONE"<<std::endl; // command line display
+      } 
+      else
+      {
+        SelectCasesLabel->setText( QString("Could not open CSV File"));
+        qDebug( "Could not open csv file");
+        return -1;
+      }
 
-			if ( CaseListWidget->count()>0 )
-			{
-				RemovePushButton->setEnabled(true);
-				ComputepushButton->setEnabled(true);
-			}
-		}
-		else std::cout<<"| The given CSV file does not exist"<<std::endl; // command line display
-	}
+      if ( CaseListWidget->count()>0 )
+      {
+        RemovePushButton->setEnabled(true);
+        ComputepushButton->setEnabled(true);
+      }
+    }
+    else std::cout<<"| The given CSV file does not exist"<<std::endl; // command line display
+  }
 
-	return 0;
+  return 0;
 }
 
 void GUI::SaveCSVDatasetBrowse() /*SLOT*/
-{	
-	if(CaseListWidget->count()==0)
-	{
-		QMessageBox::critical(this, "No Dataset", "No Dataset");
-		return;
-	}
+{  
+  if(CaseListWidget->count()==0)
+  {
+    QMessageBox::critical(this, "No Dataset", "No Dataset");
+    return;
+  }
 
-	QString CSVBrowseName = QFileDialog::getSaveFileName(this, tr("Save Dataset"),"./DTIAtlasBuilderDataSet.csv",tr("CSV File (*.csv)"));
+  QString CSVBrowseName = QFileDialog::getSaveFileName(this, tr("Save Dataset"),"./DTIAtlasBuilderDataSet.csv",tr("CSV File (*.csv)"));
 
-	if(!CSVBrowseName.isEmpty())
-	{
+  if(!CSVBrowseName.isEmpty())
+  {
 
-	QFile file(CSVBrowseName);
+  QFile file(CSVBrowseName);
 
-	if ( file.open( IO_WriteOnly | IO_Translate ) )
-	{
-		std::cout<<"| Generating Dataset csv file..."; // command line display
+  if ( file.open( IO_WriteOnly | IO_Translate ) )
+  {
+    std::cout<<"| Generating Dataset csv file..."; // command line display
 
-		QTextStream stream( &file );
-		stream << QString("id") << m_CSVseparator << QString("Original DTI Image") << endl;
-		for(int i=0; i < CaseListWidget->count() ;i++) stream << i+1 << m_CSVseparator << CaseListWidget->item(i)->text().remove(0, CaseListWidget->item(i)->text().split(":").at(0).size()+2 ) << endl;
-		std::cout<<"DONE"<<std::endl; // command line display
-	
-		SelectCasesLabel->setText( QString("Current CSV file : ") + CSVBrowseName );
-		QMessageBox::information(this, "Saving succesful", "Dataset has been succesfully saved at" + CSVBrowseName);		
-	}
-	else qDebug( "Could not create file");
+    QTextStream stream( &file );
+    stream << QString("id") << m_CSVseparator << QString("Original DTI Image") << endl;
+    for(int i=0; i < CaseListWidget->count() ;i++) stream << i+1 << m_CSVseparator << CaseListWidget->item(i)->text().remove(0, CaseListWidget->item(i)->text().split(":").at(0).size()+2 ) << endl;
+    std::cout<<"DONE"<<std::endl; // command line display
+  
+    SelectCasesLabel->setText( QString("Current CSV file : ") + CSVBrowseName );
+    QMessageBox::information(this, "Saving succesful", "Dataset has been succesfully saved at" + CSVBrowseName);    
+  }
+  else qDebug( "Could not create file");
 
-	}
+  }
 }
 
 void GUI::SaveCSVResults(int Crop, int nbLoops) // Crop = 0 if no cropping , 1 if cropping needed
-{	
+{  
 
-	QString csvPath;
-	csvPath = m_OutputPath + QString("/DTIAtlas/DTIAtlasBuilderResults.csv");
-	QFile file(csvPath);
+  QString csvPath;
+  csvPath = m_OutputPath + QString("/DTIAtlas/DTIAtlasBuilderResults.csv");
+  QFile file(csvPath);
 
-	if ( file.open( IO_WriteOnly | IO_Translate ) )
-	{
-		std::cout<<"| Generating Results csv file..."; // command line display
+  if ( file.open( IO_WriteOnly | IO_Translate ) )
+  {
+    std::cout<<"| Generating Results csv file..."; // command line display
 
-		QTextStream stream( &file );
+    QTextStream stream( &file );
 
-		stream << QString("id") << m_CSVseparator << QString("Original DTI Image");
-		if(Crop==1) stream << m_CSVseparator << QString("Cropped DTI");
-		stream << m_CSVseparator << QString("FA from original") << m_CSVseparator << QString("Affine transform") << m_CSVseparator << QString("Affine registered DTI") << m_CSVseparator << QString("Affine Registered FA") << m_CSVseparator << QString("Diffeomorphic Deformed FA") << m_CSVseparator << QString("Diffeomorphic Deformation field to Affine space") << m_CSVseparator << QString("Diffeomorphic Inverse Deformation field to Affine space") << m_CSVseparator << QString("Diffeomorphic DTI") << m_CSVseparator << QString("Diffeomorphic Deformation field to Original space") << m_CSVseparator << QString("DTI-Reg Final DTI") << endl;
+    stream << QString("id") << m_CSVseparator << QString("Original DTI Image");
+    if(Crop==1) stream << m_CSVseparator << QString("Cropped DTI");
+    stream << m_CSVseparator << QString("FA from original") << m_CSVseparator << QString("Affine transform") << m_CSVseparator << QString("Affine registered DTI") << m_CSVseparator << QString("Affine Registered FA") << m_CSVseparator << QString("Diffeomorphic Deformed FA") << m_CSVseparator << QString("Diffeomorphic Deformation field to Affine space") << m_CSVseparator << QString("Diffeomorphic Inverse Deformation field to Affine space") << m_CSVseparator << QString("Diffeomorphic DTI") << m_CSVseparator << QString("Diffeomorphic Deformation field to Original space") << m_CSVseparator << QString("DTI-Reg Final DTI") << endl;
 
-		for(int i=0; i < CaseListWidget->count() ;i++) // for all cases
-		{
-			stream << i+1 << m_CSVseparator << CaseListWidget->item(i)->text().remove(0, CaseListWidget->item(i)->text().split(":").at(0).size()+2 ); // Original DTI Image
-			if(Crop==1) stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Case") << i+1 << QString("_croppedDTI.nrrd"); // Cropped DTI
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Case") << i+1 << QString("_FA.nrrd"); // FA from original
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Loop") << nbLoops << QString("/Case") << i+1 << QString("_Loop ") << nbLoops << QString("_LinearTrans.txt"); // Affine transform
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Loop") << nbLoops << QString("/Case") << i+1 << QString("_Loop ") << nbLoops << QString("_LinearTrans_DTI.nrrd"); // Affine registered DTI
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Loop") << nbLoops << QString("/Case") << i+1 << QString("_Loop ") << nbLoops << QString("_FinalFA.nrrd"); // Affine Registered FA
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/Case") << i+1 << QString("_NonLinearTrans_FA.mhd"); // Diffeomorphic Deformed FA
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/Case") << i+1 << QString("_HField.mhd"); // Diffeomorphic Deformation H field to Affine space
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/Case") << i+1 << QString("_InverseHField.mhd"); // Diffeomorphic Inverse Deformation H field to Affine space
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/3_Diffeomorphic_Atlas/Case") << i+1 << QString("_DiffeomorphicDTI.nrrd"); // Diffeomorphic DTI
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/4_Final_Resampling/Second_Resampling/Case") << i+1 << QString("_GlobalDisplacementField.nrrd"); // Diffeomorphic Deformation Displacement field to Original space
-			stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/4_Final_Resampling/Second_Resampling/Case") << i+1 << QString("_FinalDeformedDTI.nrrd"); // DTI-Reg Final DTI
-			stream << endl;
-		}
+    for(int i=0; i < CaseListWidget->count() ;i++) // for all cases
+    {
+      stream << i+1 << m_CSVseparator << CaseListWidget->item(i)->text().remove(0, CaseListWidget->item(i)->text().split(":").at(0).size()+2 ); // Original DTI Image
+      if(Crop==1) stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Case") << i+1 << QString("_croppedDTI.nrrd"); // Cropped DTI
+      stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Case") << i+1 << QString("_FA.nrrd"); // FA from original
+      stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Loop") << nbLoops << QString("/Case") << i+1 << QString("_Loop ") << nbLoops << QString("_LinearTrans.txt"); // Affine transform
+      stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Loop") << nbLoops << QString("/Case") << i+1 << QString("_Loop ") << nbLoops << QString("_LinearTrans_DTI.nrrd"); // Affine registered DTI
+      stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/1_Affine_Registration/Loop") << nbLoops << QString("/Case") << i+1 << QString("_Loop ") << nbLoops << QString("_FinalFA.nrrd"); // Affine Registered FA
+      stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/Case") << i+1 << QString("_NonLinearTrans_FA.mhd"); // Diffeomorphic Deformed FA
+      stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/Case") << i+1 << QString("_HField.mhd"); // Diffeomorphic Deformation H field to Affine space
+      stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/Case") << i+1 << QString("_InverseHField.mhd"); // Diffeomorphic Inverse Deformation H field to Affine space
+      stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/3_Diffeomorphic_Atlas/Case") << i+1 << QString("_DiffeomorphicDTI.nrrd"); // Diffeomorphic DTI
+      stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/4_Final_Resampling/Second_Resampling/Case") << i+1 << QString("_GlobalDisplacementField.nrrd"); // Diffeomorphic Deformation Displacement field to Original space
+      stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/4_Final_Resampling/Second_Resampling/Case") << i+1 << QString("_FinalDeformedDTI.nrrd"); // DTI-Reg Final DTI
+      stream << endl;
+    }
 
-		std::cout<<"DONE"<<std::endl; // command line display
-		
-	}
-	else qDebug( "Could not create file");
+    std::cout<<"DONE"<<std::endl; // command line display
+    
+  }
+  else qDebug( "Could not create file");
 }
 
   /////////////////////////////////////////
@@ -956,569 +956,569 @@ void GUI::SaveCSVResults(int Crop, int nbLoops) // Crop = 0 if no cropping , 1 i
 
 void GUI::SaveParametersSlot() /*SLOT*/
 {
-	if(CaseListWidget->count()==0)
-	{
-		QMessageBox::critical(this, "No Dataset", "No Dataset");
-		return;
-	}
+  if(CaseListWidget->count()==0)
+  {
+    QMessageBox::critical(this, "No Dataset", "No Dataset");
+    return;
+  }
 
-	QString ParamBrowseName=QFileDialog::getSaveFileName(this, tr("Save Parameter File"),"./DTIAtlasBuilderParameters.txt",tr("Text File (*.txt)"));
+  QString ParamBrowseName=QFileDialog::getSaveFileName(this, tr("Save Parameter File"),"./DTIAtlasBuilderParameters.txt",tr("Text File (*.txt)"));
 
-	if(!ParamBrowseName.isEmpty())
-	{
-		QString CSVFileName = ParamBrowseName.split(".").at(0) + QString(".csv"); // [Name].txt => [Name].csv
-		SaveParameters(ParamBrowseName,CSVFileName);
+  if(!ParamBrowseName.isEmpty())
+  {
+    QString CSVFileName = ParamBrowseName.split(".").at(0) + QString(".csv"); // [Name].txt => [Name].csv
+    SaveParameters(ParamBrowseName,CSVFileName);
 
-		QMessageBox::information(this, "Saving succesful", "Parameters have been succesfully saved at" + ParamBrowseName);
-		m_ParamSaved=1;
-	}
+    QMessageBox::information(this, "Saving succesful", "Parameters have been succesfully saved at" + ParamBrowseName);
+    m_ParamSaved=1;
+  }
 }
 
 void GUI::SaveParameters(QString ParamBrowseName,QString CSVFileName)
 {
-	if(!ParamBrowseName.isEmpty())
-	{
+  if(!ParamBrowseName.isEmpty())
+  {
 
-	QFile file(ParamBrowseName);
-	if ( file.open( IO_WriteOnly | IO_Translate ) )
-	{
-		std::cout<<"| Saving Parameters file..."; // command line display
+  QFile file(ParamBrowseName);
+  if ( file.open( IO_WriteOnly | IO_Translate ) )
+  {
+    std::cout<<"| Saving Parameters file..."; // command line display
 
-		QTextStream stream( &file );
+    QTextStream stream( &file );
 
-		stream << "DTIAtlasBuilderParameterFileVersion" << "=2" << endl;
-		stream << "Output Folder=" << OutputFolderLineEdit->text() << endl;
-		stream << "Atlas Template=" << TemplateLineEdit->text() << endl;
-		if(SafetyMargincheckBox->isChecked()) stream << "SafetyMargin=true" << endl;
-		else  stream << "SafetyMargin=false" << endl;
-		stream << "Loops for the registration=" << NbLoopsSpinBox->value() << endl;
-		stream << "BRAINSFit Affine Tfm Mode=" << BFAffineTfmModecomboBox->currentText() << endl;
-		if(OverwritecheckBox->isChecked()) stream << "Overwrite=true" << endl;
-		else  stream << "Overwrite=false" << endl;
+    stream << "DTIAtlasBuilderParameterFileVersion" << "=2" << endl;
+    stream << "Output Folder=" << OutputFolderLineEdit->text() << endl;
+    stream << "Atlas Template=" << TemplateLineEdit->text() << endl;
+    if(SafetyMargincheckBox->isChecked()) stream << "SafetyMargin=true" << endl;
+    else  stream << "SafetyMargin=false" << endl;
+    stream << "Loops for the registration=" << NbLoopsSpinBox->value() << endl;
+    stream << "BRAINSFit Affine Tfm Mode=" << BFAffineTfmModecomboBox->currentText() << endl;
+    if(OverwritecheckBox->isChecked()) stream << "Overwrite=true" << endl;
+    else  stream << "Overwrite=false" << endl;
 
-		int SL4,SL2,SL1;
-		if(SL4checkBox->isChecked()) SL4=1;
-		else SL4=0;
-		stream << "Scale Level =" << SL4 << ","  << SL4spinBox->value() << ","  << nbIter4SpinBox->value() << "," << alpha4DoubleSpinBox->value() << "," << beta4DoubleSpinBox->value() << "," << gamma4DoubleSpinBox->value() << "," << maxPerturbation4DoubleSpinBox->value() << endl;
-		if(SL2checkBox->isChecked()) SL2=1;
-		else SL2=0;
-		stream << "Scale Level =" << SL2 << ","  << SL2spinBox->value() << "," << nbIter2SpinBox->value() << "," << alpha2DoubleSpinBox->value() << "," << beta2DoubleSpinBox->value() << "," << gamma2DoubleSpinBox->value() << "," << maxPerturbation2DoubleSpinBox->value() << endl;
-		if(SL1checkBox->isChecked()) SL1=1;
-		else SL1=0;
-		stream << "Scale Level =" << SL1 << ","  << SL1spinBox->value() << "," << nbIter1SpinBox->value() << "," << alpha1DoubleSpinBox->value() << "," << beta1DoubleSpinBox->value() << "," << gamma1DoubleSpinBox->value() << "," << maxPerturbation1DoubleSpinBox->value() << endl;
+    int SL4,SL2,SL1;
+    if(SL4checkBox->isChecked()) SL4=1;
+    else SL4=0;
+    stream << "Scale Level =" << SL4 << ","  << SL4spinBox->value() << ","  << nbIter4SpinBox->value() << "," << alpha4DoubleSpinBox->value() << "," << beta4DoubleSpinBox->value() << "," << gamma4DoubleSpinBox->value() << "," << maxPerturbation4DoubleSpinBox->value() << endl;
+    if(SL2checkBox->isChecked()) SL2=1;
+    else SL2=0;
+    stream << "Scale Level =" << SL2 << ","  << SL2spinBox->value() << "," << nbIter2SpinBox->value() << "," << alpha2DoubleSpinBox->value() << "," << beta2DoubleSpinBox->value() << "," << gamma2DoubleSpinBox->value() << "," << maxPerturbation2DoubleSpinBox->value() << endl;
+    if(SL1checkBox->isChecked()) SL1=1;
+    else SL1=0;
+    stream << "Scale Level =" << SL1 << ","  << SL1spinBox->value() << "," << nbIter1SpinBox->value() << "," << alpha1DoubleSpinBox->value() << "," << beta1DoubleSpinBox->value() << "," << gamma1DoubleSpinBox->value() << "," << maxPerturbation1DoubleSpinBox->value() << endl;
 
-		stream << "Resampling Interpolation Algorithm=" << InterpolTypeComboBox->currentText() ;
-		if( InterpolTypeComboBox->currentText()==QString("Windowed Sinc") ) stream << "=" << m_windowComboBox->currentText() << endl;
-		else if( InterpolTypeComboBox->currentText()==QString("BSpline") ) stream << "=" << m_BSplineComboBox->currentText() << endl;
-		else stream << endl;
+    stream << "Resampling Interpolation Algorithm=" << InterpolTypeComboBox->currentText() ;
+    if( InterpolTypeComboBox->currentText()==QString("Windowed Sinc") ) stream << "=" << m_windowComboBox->currentText() << endl;
+    else if( InterpolTypeComboBox->currentText()==QString("BSpline") ) stream << "=" << m_BSplineComboBox->currentText() << endl;
+    else stream << endl;
 
-		stream << "Tensor interpolation=" << TensInterpolComboBox->currentText() ;
-		if( TensInterpolComboBox->currentText()==QString("Non Log Euclidean") ) stream << "=" << m_nologComboBox->currentText() << endl;
-		else stream << endl;
+    stream << "Tensor interpolation=" << TensInterpolComboBox->currentText() ;
+    if( TensInterpolComboBox->currentText()==QString("Non Log Euclidean") ) stream << "=" << m_nologComboBox->currentText() << endl;
+    else stream << endl;
 
-		stream << "Tensor transformation=" << TensTfmComboBox->currentText()<< endl;
+    stream << "Tensor transformation=" << TensTfmComboBox->currentText()<< endl;
 
-		stream << "DTIReg Extra Path=" << DTIRegExtraPathlineEdit->text()<< endl;
+    stream << "DTIReg Extra Path=" << DTIRegExtraPathlineEdit->text()<< endl;
 
-		stream << "DTIRegMethod=" << RegMethodcomboBox->currentText() ;
-		if( RegMethodcomboBox->currentText()==QString("ANTS") ) 
-		{
-			stream << "=" << m_ARegTypeComboBox->currentText() << ";" << m_TfmStepLine->text() << ";" << m_IterLine->text() << ";" << m_SimMetComboBox->currentText() << ";" << m_SimParamDble->value() << ";" << m_GSigmaDble->value() ;
-			if(m_SmoothOffCheck->isChecked()) stream << ";1" << endl;
-			else stream << ";0" << endl;
-		}
-		else stream << "=" << m_BRegTypeComboBox->currentText() << ";" << m_TfmModeComboBox->currentText() << ";" << m_NbPyrLevSpin->value() << ";" << m_PyrLevItLine->text() << endl;
+    stream << "DTIRegMethod=" << RegMethodcomboBox->currentText() ;
+    if( RegMethodcomboBox->currentText()==QString("ANTS") ) 
+    {
+      stream << "=" << m_ARegTypeComboBox->currentText() << ";" << m_TfmStepLine->text() << ";" << m_IterLine->text() << ";" << m_SimMetComboBox->currentText() << ";" << m_SimParamDble->value() << ";" << m_GSigmaDble->value() ;
+      if(m_SmoothOffCheck->isChecked()) stream << ";1" << endl;
+      else stream << ";0" << endl;
+    }
+    else stream << "=" << m_BRegTypeComboBox->currentText() << ";" << m_TfmModeComboBox->currentText() << ";" << m_NbPyrLevSpin->value() << ";" << m_PyrLevItLine->text() << endl;
 
-		stream << "GridProcessing=";
-		if( GridProcesscheckBox->isChecked() ) stream << GridProcessCmdLineEdit->text() <<endl;
-		else stream << endl;
+    stream << "GridProcessing=";
+    if( GridProcesscheckBox->isChecked() ) stream << GridProcessCmdLineEdit->text() <<endl;
+    else stream << endl;
 
-		stream << "NbThreads=" << NbThreadsSpinBox->value() << endl;
+    stream << "NbThreads=" << NbThreadsSpinBox->value() << endl;
 
-		stream << "CSV Dataset File=" << CSVFileName << endl;
+    stream << "CSV Dataset File=" << CSVFileName << endl;
 
-		std::cout<<"DONE"<<std::endl; // command line display
+    std::cout<<"DONE"<<std::endl; // command line display
 
-		QFile filecsv(CSVFileName);
-		if ( filecsv.open( IO_WriteOnly | IO_Translate ) )
-		{
-			std::cout<<"| Generating Dataset csv file..."; // command line display
+    QFile filecsv(CSVFileName);
+    if ( filecsv.open( IO_WriteOnly | IO_Translate ) )
+    {
+      std::cout<<"| Generating Dataset csv file..."; // command line display
 
-			QTextStream streamcsv( &filecsv );
-			streamcsv << QString("id") << m_CSVseparator << QString("Original DTI Image") << endl;
-			for(int i=0; i < CaseListWidget->count() ;i++) streamcsv << i+1 << m_CSVseparator << CaseListWidget->item(i)->text().remove(0, CaseListWidget->item(i)->text().split(":").at(0).size()+2 ) << endl;
-			std::cout<<"DONE"<<std::endl; // command line display
-		
-			SelectCasesLabel->setText( QString("Current CSV file : ") + CSVFileName );
-		}
-		else 
-		{
-			std::cout<<"FAILED"<<std::endl; // command line display
-			qDebug( "Could not create csv file");
-		}
+      QTextStream streamcsv( &filecsv );
+      streamcsv << QString("id") << m_CSVseparator << QString("Original DTI Image") << endl;
+      for(int i=0; i < CaseListWidget->count() ;i++) streamcsv << i+1 << m_CSVseparator << CaseListWidget->item(i)->text().remove(0, CaseListWidget->item(i)->text().split(":").at(0).size()+2 ) << endl;
+      std::cout<<"DONE"<<std::endl; // command line display
+    
+      SelectCasesLabel->setText( QString("Current CSV file : ") + CSVFileName );
+    }
+    else 
+    {
+      std::cout<<"FAILED"<<std::endl; // command line display
+      qDebug( "Could not create csv file");
+    }
 
-	}
-	else qDebug( "Could not create parameter file");
+  }
+  else qDebug( "Could not create parameter file");
 
-	}
+  }
 }
 
 void GUI::LoadParametersSlot() /*SLOT*/
 {
-	QString ParamBrowse=QFileDialog::getOpenFileName(this, "Open Parameter File", QString(), ".txt Files (*.txt)");
+  QString ParamBrowse=QFileDialog::getOpenFileName(this, "Open Parameter File", QString(), ".txt Files (*.txt)");
 
-	if(!ParamBrowse.isEmpty())
-	{
-		LoadParameters(ParamBrowse,false);
-	}
+  if(!ParamBrowse.isEmpty())
+  {
+    LoadParameters(ParamBrowse,false);
+  }
 }
 
 bool GUI::LoadParametersReturnTrueIfCorrupted(QString ReadParameter, const char* Parameter )
 {
-	if( ! ReadParameter.contains( QString(Parameter) ) )
-	{
-		if(!m_noGUI) 
-		{
-			QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted.\nIt may have been modified manually.\nPlease save it again.");
-			std::cout<<"FAILED"<<std::endl; // command line display
-		}
-		else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
-		return true;
-	}
+  if( ! ReadParameter.contains( QString(Parameter) ) )
+  {
+    if(!m_noGUI) 
+    {
+      QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted.\nIt may have been modified manually.\nPlease save it again.");
+      std::cout<<"FAILED"<<std::endl; // command line display
+    }
+    else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
+    return true;
+  }
 
-	return false;
+  return false;
 }
 
-bool GUI::LoadParametersLoadScaleLevelReturnTrueIfCorrupted(	QStringList nbrs, 
-								QCheckBox* SLcheckBox, // & = reference : so we can change the value
-								QSpinBox* SLspinBox,
-								QSpinBox* nbIterSpinBox,
-								QDoubleSpinBox*& alphaDoubleSpinBox,
-								QDoubleSpinBox*& betaDoubleSpinBox,
-								QDoubleSpinBox*& gammaDoubleSpinBox,
-								QDoubleSpinBox*& maxPerturbationDoubleSpinBox )
+bool GUI::LoadParametersLoadScaleLevelReturnTrueIfCorrupted(  QStringList nbrs, 
+                                                              QCheckBox* SLcheckBox, // & = reference : so we can change the value
+                                                              QSpinBox* SLspinBox,
+                                                              QSpinBox* nbIterSpinBox,
+                                                              QDoubleSpinBox*& alphaDoubleSpinBox,
+                                                              QDoubleSpinBox*& betaDoubleSpinBox,
+                                                              QDoubleSpinBox*& gammaDoubleSpinBox,
+                                                              QDoubleSpinBox*& maxPerturbationDoubleSpinBox )
 {
-	if( nbrs.size()!=7 )
-	{
-		if(!m_noGUI) 
-		{
-			QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted.\nIt may have been modified manually.\nPlease save it again.");
-			std::cout<<"FAILED"<<std::endl; // command line display
-		}
-		else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
-		return true;
-	}
-	if(nbrs.at(0).toInt()==1) // if scale level true
-	{
-		if( (nbrs.at(1).toInt()==0) || (nbrs.at(2).toInt()==0) || (nbrs.at(3).toDouble()==0) || (nbrs.at(4).toDouble()==0) || (nbrs.at(5).toDouble()==0) || (nbrs.at(6).toDouble()==0))
-		{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
-			return true;
-		}
-		SLcheckBox->setChecked(true);
-		SLspinBox->setValue(nbrs.at(1).toInt());
-		nbIterSpinBox->setValue(nbrs.at(2).toInt());
-		alphaDoubleSpinBox->setValue(nbrs.at(3).toDouble());
-		betaDoubleSpinBox->setValue(nbrs.at(4).toDouble());
-		gammaDoubleSpinBox->setValue(nbrs.at(5).toDouble());
-		maxPerturbationDoubleSpinBox->setValue(nbrs.at(6).toDouble());
-	}
-	else SLcheckBox->setChecked(false);
+  if( nbrs.size()!=7 )
+  {
+    if(!m_noGUI) 
+    {
+      QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted.\nIt may have been modified manually.\nPlease save it again.");
+      std::cout<<"FAILED"<<std::endl; // command line display
+    }
+    else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
+    return true;
+  }
+  if(nbrs.at(0).toInt()==1) // if scale level true
+  {
+    if( (nbrs.at(1).toInt()==0) || (nbrs.at(2).toInt()==0) || (nbrs.at(3).toDouble()==0) || (nbrs.at(4).toDouble()==0) || (nbrs.at(5).toDouble()==0) || (nbrs.at(6).toDouble()==0))
+    {
+      if(!m_noGUI) 
+      {
+        QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
+        std::cout<<"FAILED"<<std::endl; // command line display
+      }
+      else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
+      return true;
+    }
+    SLcheckBox->setChecked(true);
+    SLspinBox->setValue(nbrs.at(1).toInt());
+    nbIterSpinBox->setValue(nbrs.at(2).toInt());
+    alphaDoubleSpinBox->setValue(nbrs.at(3).toDouble());
+    betaDoubleSpinBox->setValue(nbrs.at(4).toDouble());
+    gammaDoubleSpinBox->setValue(nbrs.at(5).toDouble());
+    maxPerturbationDoubleSpinBox->setValue(nbrs.at(6).toDouble());
+  }
+  else SLcheckBox->setChecked(false);
 
-	return false;
+  return false;
 }
 
 int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // DiscardParametersCSV used only in constructor: if CSV file is given, only load the given CSV file.
 {
-	if( ! itksys::SystemTools::GetPermissions(paramFile.toStdString().c_str(), ITKmode_F_OK) ) // Test if the csv file exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
-	{
-		std::cout<<"| The given parameter file does not exist"<<std::endl; // command line display
-		return -1;
-	}
+  if( ! itksys::SystemTools::GetPermissions(paramFile.toStdString().c_str(), ITKmode_F_OK) ) // Test if the csv file exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
+  {
+    std::cout<<"| The given parameter file does not exist"<<std::endl; // command line display
+    return -1;
+  }
 
-	QFile file(paramFile);
+  QFile file(paramFile);
 
-	if (file.open(QFile::ReadOnly))
-	{
-		QTextStream stream(&file);
+  if (file.open(QFile::ReadOnly))
+  {
+    QTextStream stream(&file);
 
-		QString line = stream.readLine();
-		QStringList list = line.split("=");
-		if( ! list.at(0).contains("DTIAtlasBuilderParameterFileVersion") )
-		{
-			if(!m_noGUI) QMessageBox::critical(this, "No parameter file", "This file is not a parameter file\nfor this program");
-			else std::cout<<"| This file is not a parameter file for this program"<<std::endl;
-			return -1;
-		}
-		int ParamFileVersion = list.at(1).toInt();
+    QString line = stream.readLine();
+    QStringList list = line.split("=");
+    if( ! list.at(0).contains("DTIAtlasBuilderParameterFileVersion") )
+    {
+      if(!m_noGUI) QMessageBox::critical(this, "No parameter file", "This file is not a parameter file\nfor this program");
+      else std::cout<<"| This file is not a parameter file for this program"<<std::endl;
+      return -1;
+    }
+    int ParamFileVersion = list.at(1).toInt();
 
-		// Declare array containing parameters names
-/*		std::vector< const char* > ParametersVector;
+    // Declare array containing parameters names
+/*    std::vector< const char* > ParametersVector;
 
-		switch(ParamFileVersion)
-		{
-			case 1:{const char* ParametersArray[] ={"Output Folder",
-								"Atlas Template",
-								"SafetyMargin",
-								"Loops for the registration"};
-				ParametersVector.insert(ParametersVector.end(), ParametersArray, ParametersArray+4);
-				break; }
+    switch(ParamFileVersion)
+    {
+      case 1:{const char* ParametersArray[] ={"Output Folder",
+                "Atlas Template",
+                "SafetyMargin",
+                "Loops for the registration"};
+        ParametersVector.insert(ParametersVector.end(), ParametersArray, ParametersArray+4);
+        break; }
 
-			case 2:{const char* ParametersArray[] ={"Output Folder",
-								"Atlas Template",
-								"SafetyMargin",
-								"Loops for the registration"};
-				ParametersVector.insert(ParametersVector.end(), ParametersArray, ParametersArray+4);
-				break; }
-		}
+      case 2:{const char* ParametersArray[] ={"Output Folder",
+                "Atlas Template",
+                "SafetyMargin",
+                "Loops for the registration"};
+        ParametersVector.insert(ParametersVector.end(), ParametersArray, ParametersArray+4);
+        break; }
+    }
 */
 // for(int i =0; i< ParametersVector.size() ; i++) std::cout<<ParametersVector[i]<<std::endl;
 
 
-		std::cout<<"| Loading Parameters file \'"<< paramFile.toStdString() <<"\'..."; // command line display
+    std::cout<<"| Loading Parameters file \'"<< paramFile.toStdString() <<"\'..."; // command line display
 
 /* Other Parameters */
-		line = stream.readLine();
-		list = line.split("=");
-		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Output Folder") ) return -1;
-		OutputFolderLineEdit->setText(list.at(1));
+    line = stream.readLine();
+    list = line.split("=");
+    if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Output Folder") ) return -1;
+    OutputFolderLineEdit->setText(list.at(1));
 
-		line = stream.readLine();
-		list = line.split("=");
-		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Atlas Template") ) return -1;
-		TemplateLineEdit->setText(list.at(1));
+    line = stream.readLine();
+    list = line.split("=");
+    if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Atlas Template") ) return -1;
+    TemplateLineEdit->setText(list.at(1));
 
-		line = stream.readLine();
-		list = line.split("=");
-		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"SafetyMargin") ) return -1;
-		if( list.at(1) == QString("true") ) SafetyMargincheckBox->setChecked(true);
+    line = stream.readLine();
+    list = line.split("=");
+    if( LoadParametersReturnTrueIfCorrupted(list.at(0),"SafetyMargin") ) return -1;
+    if( list.at(1) == QString("true") ) SafetyMargincheckBox->setChecked(true);
 
-		line = stream.readLine();
-		list = line.split("=");
-		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Loops for the registration") ) return -1;
-		NbLoopsSpinBox->setValue( list.at(1).toInt() );
+    line = stream.readLine();
+    list = line.split("=");
+    if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Loops for the registration") ) return -1;
+    NbLoopsSpinBox->setValue( list.at(1).toInt() );
 
-		line = stream.readLine();
-		list = line.split("=");
-		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"BRAINSFit Affine Tfm Mode") ) return -1;
+    line = stream.readLine();
+    list = line.split("=");
+    if( LoadParametersReturnTrueIfCorrupted(list.at(0),"BRAINSFit Affine Tfm Mode") ) return -1;
 
-		if( list.at(1).contains(QString("Off")) ) BFAffineTfmModecomboBox->setCurrentIndex(0);
-		else if( list.at(1).contains(QString("useMomentsAlign")) ) BFAffineTfmModecomboBox->setCurrentIndex(1);
-		else if( list.at(1).contains(QString("useCenterOfHeadAlign")) ) BFAffineTfmModecomboBox->setCurrentIndex(2);
-		else if( list.at(1).contains(QString("useGeometryAlign")) ) BFAffineTfmModecomboBox->setCurrentIndex(3);
+    if( list.at(1).contains(QString("Off")) ) BFAffineTfmModecomboBox->setCurrentIndex(0);
+    else if( list.at(1).contains(QString("useMomentsAlign")) ) BFAffineTfmModecomboBox->setCurrentIndex(1);
+    else if( list.at(1).contains(QString("useCenterOfHeadAlign")) ) BFAffineTfmModecomboBox->setCurrentIndex(2);
+    else if( list.at(1).contains(QString("useGeometryAlign")) ) BFAffineTfmModecomboBox->setCurrentIndex(3);
 
-		line = stream.readLine();
-		list = line.split("=");
-		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Overwrite") ) return -1;
-		if( list.at(1) == QString("true") ) OverwritecheckBox->setChecked(true);
+    line = stream.readLine();
+    list = line.split("=");
+    if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Overwrite") ) return -1;
+    if( list.at(1) == QString("true") ) OverwritecheckBox->setChecked(true);
 
 /* Scale Levels */
-		line = stream.readLine();
-		list = line.split("=");
-		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Scale Level") ) return -1;
+    line = stream.readLine();
+    list = line.split("=");
+    if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Scale Level") ) return -1;
 
-		if( LoadParametersLoadScaleLevelReturnTrueIfCorrupted(list.at(1).split(",") , SL4checkBox , SL4spinBox , nbIter4SpinBox , alpha4DoubleSpinBox , beta4DoubleSpinBox , gamma4DoubleSpinBox , maxPerturbation4DoubleSpinBox) ) return -1; // (list of parameters, variables to fill..)
+    if( LoadParametersLoadScaleLevelReturnTrueIfCorrupted(list.at(1).split(",") , SL4checkBox , SL4spinBox , nbIter4SpinBox , alpha4DoubleSpinBox , beta4DoubleSpinBox , gamma4DoubleSpinBox , maxPerturbation4DoubleSpinBox) ) return -1; // (list of parameters, variables to fill..)
 
-		line = stream.readLine();
-		list = line.split("=");
-		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Scale Level") ) return -1;
+    line = stream.readLine();
+    list = line.split("=");
+    if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Scale Level") ) return -1;
 
-		if( LoadParametersLoadScaleLevelReturnTrueIfCorrupted(list.at(1).split(",") , SL2checkBox , SL2spinBox , nbIter2SpinBox , alpha2DoubleSpinBox , beta2DoubleSpinBox , gamma2DoubleSpinBox , maxPerturbation2DoubleSpinBox) ) return -1; // (list of parameters, variables to fill..)
+    if( LoadParametersLoadScaleLevelReturnTrueIfCorrupted(list.at(1).split(",") , SL2checkBox , SL2spinBox , nbIter2SpinBox , alpha2DoubleSpinBox , beta2DoubleSpinBox , gamma2DoubleSpinBox , maxPerturbation2DoubleSpinBox) ) return -1; // (list of parameters, variables to fill..)
 
-		line = stream.readLine();
-		list = line.split("=");
-		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Scale Level") ) return -1;
+    line = stream.readLine();
+    list = line.split("=");
+    if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Scale Level") ) return -1;
 
-		if( LoadParametersLoadScaleLevelReturnTrueIfCorrupted(list.at(1).split(",") , SL1checkBox , SL1spinBox , nbIter1SpinBox , alpha1DoubleSpinBox , beta1DoubleSpinBox , gamma1DoubleSpinBox , maxPerturbation1DoubleSpinBox) ) return -1; // (list of parameters, variables to fill..)
+    if( LoadParametersLoadScaleLevelReturnTrueIfCorrupted(list.at(1).split(",") , SL1checkBox , SL1spinBox , nbIter1SpinBox , alpha1DoubleSpinBox , beta1DoubleSpinBox , gamma1DoubleSpinBox , maxPerturbation1DoubleSpinBox) ) return -1; // (list of parameters, variables to fill..)
 
 
 /* Final Atlas Building parameters */
-		line = stream.readLine();
-		list = line.split("=");
-		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Resampling Interpolation Algorithm") ) return -1;
+    line = stream.readLine();
+    list = line.split("=");
+    if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Resampling Interpolation Algorithm") ) return -1;
 
-		if( list.at(1).contains(QString("Linear")) ) InterpolTypeComboBox->setCurrentIndex(0);
-		else if( list.at(1).contains(QString("Nearest Neighborhoor")) ) InterpolTypeComboBox->setCurrentIndex(1);
-		else if( list.at(1).contains(QString("Windowed Sinc")) ) 
-		{ 
-			InterpolTypeComboBox->setCurrentIndex(2);
-			if( list.at(2).contains(QString("Hamming")) ) m_windowComboBox->setCurrentIndex(0);
-			else if( list.at(2).contains(QString("Cosine")) ) m_windowComboBox->setCurrentIndex(1);
-			else if( list.at(2).contains(QString("Welch")) ) m_windowComboBox->setCurrentIndex(2);
-			else if( list.at(2).contains(QString("Lanczos")) ) m_windowComboBox->setCurrentIndex(3);
-			else if( list.at(2).contains(QString("Blackman")) ) m_windowComboBox->setCurrentIndex(4);
-			else
-			{
-				if(!m_noGUI) 
-				{
-					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
-					std::cout<<"FAILED"<<std::endl; // command line display
-				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
-				return -1;
-			}
-		}
-		else if( list.at(1).contains(QString("BSpline")) ) 
-		{ 
-			InterpolTypeComboBox->setCurrentIndex(3);
-			if( list.at(2).toInt()>=0 && list.at(2).toInt()<=5 ) m_BSplineComboBox->setCurrentIndex( list.at(2).toInt()-1 );
-			else
-			{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
-				return -1;
-			}
-		}
-		else
-		{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
-			return -1;
-		}
+    if( list.at(1).contains(QString("Linear")) ) InterpolTypeComboBox->setCurrentIndex(0);
+    else if( list.at(1).contains(QString("Nearest Neighborhoor")) ) InterpolTypeComboBox->setCurrentIndex(1);
+    else if( list.at(1).contains(QString("Windowed Sinc")) ) 
+    { 
+      InterpolTypeComboBox->setCurrentIndex(2);
+      if( list.at(2).contains(QString("Hamming")) ) m_windowComboBox->setCurrentIndex(0);
+      else if( list.at(2).contains(QString("Cosine")) ) m_windowComboBox->setCurrentIndex(1);
+      else if( list.at(2).contains(QString("Welch")) ) m_windowComboBox->setCurrentIndex(2);
+      else if( list.at(2).contains(QString("Lanczos")) ) m_windowComboBox->setCurrentIndex(3);
+      else if( list.at(2).contains(QString("Blackman")) ) m_windowComboBox->setCurrentIndex(4);
+      else
+      {
+        if(!m_noGUI) 
+        {
+          QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
+          std::cout<<"FAILED"<<std::endl; // command line display
+        }
+        else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
+        return -1;
+      }
+    }
+    else if( list.at(1).contains(QString("BSpline")) ) 
+    { 
+      InterpolTypeComboBox->setCurrentIndex(3);
+      if( list.at(2).toInt()>=0 && list.at(2).toInt()<=5 ) m_BSplineComboBox->setCurrentIndex( list.at(2).toInt()-1 );
+      else
+      {
+      if(!m_noGUI) 
+      {
+        QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
+        std::cout<<"FAILED"<<std::endl; // command line display
+      }
+      else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
+        return -1;
+      }
+    }
+    else
+    {
+      if(!m_noGUI) 
+      {
+        QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
+        std::cout<<"FAILED"<<std::endl; // command line display
+      }
+      else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
+      return -1;
+    }
 
-		line = stream.readLine();
-		list = line.split("=");
-		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Tensor interpolation") ) return -1;
+    line = stream.readLine();
+    list = line.split("=");
+    if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Tensor interpolation") ) return -1;
 
-		if( list.at(1).contains(QString("Non Log Euclidean")) )
-		{ 
-			TensInterpolComboBox->setCurrentIndex(1);
-			if( list.at(2).contains(QString("Zero")) ) m_nologComboBox->setCurrentIndex(0);
-			else if( list.at(2).contains(QString("None")) ) m_nologComboBox->setCurrentIndex(1);
-			else if( list.at(2).contains(QString("Absolute Value")) ) m_nologComboBox->setCurrentIndex(2);
-			else if( list.at(2).contains(QString("Nearest")) ) m_nologComboBox->setCurrentIndex(3);
-			else
-			{
-				if(!m_noGUI) 
-				{
-					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
-					std::cout<<"FAILED"<<std::endl; // command line display
-				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
-				return -1;
-			}
-		}
-		else if( list.at(1).contains(QString("Log Euclidean")) ) TensInterpolComboBox->setCurrentIndex(0);
-		else
-		{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
-			return -1;
-		}
+    if( list.at(1).contains(QString("Non Log Euclidean")) )
+    { 
+      TensInterpolComboBox->setCurrentIndex(1);
+      if( list.at(2).contains(QString("Zero")) ) m_nologComboBox->setCurrentIndex(0);
+      else if( list.at(2).contains(QString("None")) ) m_nologComboBox->setCurrentIndex(1);
+      else if( list.at(2).contains(QString("Absolute Value")) ) m_nologComboBox->setCurrentIndex(2);
+      else if( list.at(2).contains(QString("Nearest")) ) m_nologComboBox->setCurrentIndex(3);
+      else
+      {
+        if(!m_noGUI) 
+        {
+          QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
+          std::cout<<"FAILED"<<std::endl; // command line display
+        }
+        else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
+        return -1;
+      }
+    }
+    else if( list.at(1).contains(QString("Log Euclidean")) ) TensInterpolComboBox->setCurrentIndex(0);
+    else
+    {
+      if(!m_noGUI) 
+      {
+        QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
+        std::cout<<"FAILED"<<std::endl; // command line display
+      }
+      else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
+      return -1;
+    }
 
-		line = stream.readLine();
-		list = line.split("=");
-		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Tensor transformation") ) return -1;
+    line = stream.readLine();
+    list = line.split("=");
+    if( LoadParametersReturnTrueIfCorrupted(list.at(0),"Tensor transformation") ) return -1;
 
-		if( list.at(1).contains(QString("Preservation of the Principal Direction (PPD)")) ) TensTfmComboBox->setCurrentIndex(0);
-		else if( list.at(1).contains(QString("Finite Strain (FS)")) ) TensTfmComboBox->setCurrentIndex(1);
-		else
-		{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
-			return -1;
-		}
+    if( list.at(1).contains(QString("Preservation of the Principal Direction (PPD)")) ) TensTfmComboBox->setCurrentIndex(0);
+    else if( list.at(1).contains(QString("Finite Strain (FS)")) ) TensTfmComboBox->setCurrentIndex(1);
+    else
+    {
+      if(!m_noGUI) 
+      {
+        QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
+        std::cout<<"FAILED"<<std::endl; // command line display
+      }
+      else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
+      return -1;
+    }
 
 /* Final Resampling parameters */
-		line = stream.readLine();
-		list = line.split("=");
-		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"DTIReg Extra Path") ) return -1;
-		DTIRegExtraPathlineEdit->setText(list.at(1));
+    line = stream.readLine();
+    list = line.split("=");
+    if( LoadParametersReturnTrueIfCorrupted(list.at(0),"DTIReg Extra Path") ) return -1;
+    DTIRegExtraPathlineEdit->setText(list.at(1));
 
-		line = stream.readLine();
-		list = line.split("=");
-		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"DTIRegMethod") ) return -1;
+    line = stream.readLine();
+    list = line.split("=");
+    if( LoadParametersReturnTrueIfCorrupted(list.at(0),"DTIRegMethod") ) return -1;
 
-		if( list.at(1).contains(QString("BRAINS")) )
-		{
-			RegMethodcomboBox->setCurrentIndex(0);
-			QStringList param= list.at(2).split(";");
-			if( param.size()!=4 )
-			{
-				if(!m_noGUI) 
-				{
-					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
-					std::cout<<"FAILED"<<std::endl; // command line display
-				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
-				return -1;
-			}
+    if( list.at(1).contains(QString("BRAINS")) )
+    {
+      RegMethodcomboBox->setCurrentIndex(0);
+      QStringList param= list.at(2).split(";");
+      if( param.size()!=4 )
+      {
+        if(!m_noGUI) 
+        {
+          QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
+          std::cout<<"FAILED"<<std::endl; // command line display
+        }
+        else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
+        return -1;
+      }
 
-			if( param.at(0).contains(QString("None")) ) m_BRegTypeComboBox->setCurrentIndex(0);
-			else if( param.at(0).contains(QString("Rigid")) ) m_BRegTypeComboBox->setCurrentIndex(1);
-			else if( param.at(0).contains(QString("BSpline")) ) m_BRegTypeComboBox->setCurrentIndex(2);
-			else if( param.at(0).contains(QString("Diffeomorphic")) ) m_BRegTypeComboBox->setCurrentIndex(3);
-			else if( param.at(0).contains(QString("Demons")) ) m_BRegTypeComboBox->setCurrentIndex(4);
-			else if( param.at(0).contains(QString("FastSymmetricForces")) ) m_BRegTypeComboBox->setCurrentIndex(5);
-			else
-			{
-				if(!m_noGUI) 
-				{
-					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
-					std::cout<<"FAILED"<<std::endl; // command line display
-				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
-				return -1;
-			}
+      if( param.at(0).contains(QString("None")) ) m_BRegTypeComboBox->setCurrentIndex(0);
+      else if( param.at(0).contains(QString("Rigid")) ) m_BRegTypeComboBox->setCurrentIndex(1);
+      else if( param.at(0).contains(QString("BSpline")) ) m_BRegTypeComboBox->setCurrentIndex(2);
+      else if( param.at(0).contains(QString("Diffeomorphic")) ) m_BRegTypeComboBox->setCurrentIndex(3);
+      else if( param.at(0).contains(QString("Demons")) ) m_BRegTypeComboBox->setCurrentIndex(4);
+      else if( param.at(0).contains(QString("FastSymmetricForces")) ) m_BRegTypeComboBox->setCurrentIndex(5);
+      else
+      {
+        if(!m_noGUI) 
+        {
+          QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
+          std::cout<<"FAILED"<<std::endl; // command line display
+        }
+        else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
+        return -1;
+      }
 
-			if( param.at(1).contains(QString("Off")) ) m_TfmModeComboBox->setCurrentIndex(0);
-			else if( param.at(1).contains(QString("useMomentsAlign")) ) m_TfmModeComboBox->setCurrentIndex(1);
-			else if( param.at(1).contains(QString("useCenterOfHeadAlign")) ) m_TfmModeComboBox->setCurrentIndex(2);
-			else if( param.at(1).contains(QString("useGeometryAlign")) ) m_TfmModeComboBox->setCurrentIndex(3);
-			else if( param.at(1).contains(QString("Use computed affine transform")) ) m_TfmModeComboBox->setCurrentIndex(4);
-			else
-			{
-				if(!m_noGUI) 
-				{
-					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
-					std::cout<<"FAILED"<<std::endl; // command line display
-				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
-				return -1;
-			}
+      if( param.at(1).contains(QString("Off")) ) m_TfmModeComboBox->setCurrentIndex(0);
+      else if( param.at(1).contains(QString("useMomentsAlign")) ) m_TfmModeComboBox->setCurrentIndex(1);
+      else if( param.at(1).contains(QString("useCenterOfHeadAlign")) ) m_TfmModeComboBox->setCurrentIndex(2);
+      else if( param.at(1).contains(QString("useGeometryAlign")) ) m_TfmModeComboBox->setCurrentIndex(3);
+      else if( param.at(1).contains(QString("Use computed affine transform")) ) m_TfmModeComboBox->setCurrentIndex(4);
+      else
+      {
+        if(!m_noGUI) 
+        {
+          QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
+          std::cout<<"FAILED"<<std::endl; // command line display
+        }
+        else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
+        return -1;
+      }
 
-			m_NbPyrLevSpin->setValue( param.at(2).toInt() );
-			m_PyrLevItLine->setText( param.at(3) );
-		}
-		else if( list.at(1).contains(QString("ANTS")) )
-		{
-			RegMethodcomboBox->setCurrentIndex(1);
-			QStringList param= list.at(2).split(";");
-			if( param.size()!=7 )
-			{
-				if(!m_noGUI) 
-				{
-					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
-					std::cout<<"FAILED"<<std::endl; // command line display
-				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
-				return -1;
-			}
+      m_NbPyrLevSpin->setValue( param.at(2).toInt() );
+      m_PyrLevItLine->setText( param.at(3) );
+    }
+    else if( list.at(1).contains(QString("ANTS")) )
+    {
+      RegMethodcomboBox->setCurrentIndex(1);
+      QStringList param= list.at(2).split(";");
+      if( param.size()!=7 )
+      {
+        if(!m_noGUI) 
+        {
+          QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
+          std::cout<<"FAILED"<<std::endl; // command line display
+        }
+        else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
+        return -1;
+      }
 
-			if( param.at(0).contains(QString("None")) ) m_ARegTypeComboBox->setCurrentIndex(0);
-			else if( param.at(0).contains(QString("Rigid")) ) m_ARegTypeComboBox->setCurrentIndex(1);
-			else if( param.at(0).contains(QString("Elast")) ) m_ARegTypeComboBox->setCurrentIndex(2);
-			else if( param.at(0).contains(QString("Exp")) ) m_ARegTypeComboBox->setCurrentIndex(3);
-			else if( param.at(0).contains(QString("GreedyExp")) ) m_ARegTypeComboBox->setCurrentIndex(4);
-			else if( param.at(0).contains(QString("GreedyDiffeo (SyN)")) ) m_ARegTypeComboBox->setCurrentIndex(5);
-			else if( param.at(0).contains(QString("SpatioTempDiffeo (SyN)")) ) m_ARegTypeComboBox->setCurrentIndex(6);
-			else
-			{
-				if(!m_noGUI) 
-				{
-					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
-					std::cout<<"FAILED"<<std::endl; // command line display
-				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
-				return -1;
-			}
+      if( param.at(0).contains(QString("None")) ) m_ARegTypeComboBox->setCurrentIndex(0);
+      else if( param.at(0).contains(QString("Rigid")) ) m_ARegTypeComboBox->setCurrentIndex(1);
+      else if( param.at(0).contains(QString("Elast")) ) m_ARegTypeComboBox->setCurrentIndex(2);
+      else if( param.at(0).contains(QString("Exp")) ) m_ARegTypeComboBox->setCurrentIndex(3);
+      else if( param.at(0).contains(QString("GreedyExp")) ) m_ARegTypeComboBox->setCurrentIndex(4);
+      else if( param.at(0).contains(QString("GreedyDiffeo (SyN)")) ) m_ARegTypeComboBox->setCurrentIndex(5);
+      else if( param.at(0).contains(QString("SpatioTempDiffeo (SyN)")) ) m_ARegTypeComboBox->setCurrentIndex(6);
+      else
+      {
+        if(!m_noGUI) 
+        {
+          QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
+          std::cout<<"FAILED"<<std::endl; // command line display
+        }
+        else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
+        return -1;
+      }
 
-			m_TfmStepLine->setText( param.at(1) );
-			m_IterLine->setText( param.at(2) );
+      m_TfmStepLine->setText( param.at(1) );
+      m_IterLine->setText( param.at(2) );
 
-			if( param.at(3).contains(QString("Cross-Correlation (CC)")) ) m_SimMetComboBox->setCurrentIndex(0);
-			else if( param.at(3).contains(QString("Mutual Information (MI)")) ) m_SimMetComboBox->setCurrentIndex(1);
-			else if( param.at(3).contains(QString("Mean Square Difference (MSQ)")) ) m_SimMetComboBox->setCurrentIndex(2);
-			else
-			{
-				if(!m_noGUI) 
-				{
-					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
-					std::cout<<"FAILED"<<std::endl; // command line display
-				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
-				return -1;
-			}
+      if( param.at(3).contains(QString("Cross-Correlation (CC)")) ) m_SimMetComboBox->setCurrentIndex(0);
+      else if( param.at(3).contains(QString("Mutual Information (MI)")) ) m_SimMetComboBox->setCurrentIndex(1);
+      else if( param.at(3).contains(QString("Mean Square Difference (MSQ)")) ) m_SimMetComboBox->setCurrentIndex(2);
+      else
+      {
+        if(!m_noGUI) 
+        {
+          QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
+          std::cout<<"FAILED"<<std::endl; // command line display
+        }
+        else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
+        return -1;
+      }
 
-			m_SimParamDble->setValue( param.at(4).toDouble() );
-			m_GSigmaDble->setValue( param.at(5).toDouble() );
-			if ( param.at(6).toInt()==1 ) m_SmoothOffCheck->setChecked(true);
-		}
-		else
-		{
-			if(!m_noGUI) 
-			{
-				QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
-				std::cout<<"FAILED"<<std::endl; // command line display
-			}
-			else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
-			return -1;
-		}
+      m_SimParamDble->setValue( param.at(4).toDouble() );
+      m_GSigmaDble->setValue( param.at(5).toDouble() );
+      if ( param.at(6).toInt()==1 ) m_SmoothOffCheck->setChecked(true);
+    }
+    else
+    {
+      if(!m_noGUI) 
+      {
+        QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
+        std::cout<<"FAILED"<<std::endl; // command line display
+      }
+      else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
+      return -1;
+    }
 
 /* Grid Processing */
-		line = stream.readLine();
-		list = line.split("=");
-		if( LoadParametersReturnTrueIfCorrupted(list.at(0),"GridProcessing") ) return -1;
+    line = stream.readLine();
+    list = line.split("=");
+    if( LoadParametersReturnTrueIfCorrupted(list.at(0),"GridProcessing") ) return -1;
 
-		if( !list.at(1).isEmpty() )
-		{
-			GridProcesscheckBox->setChecked(true);
-			GridProcessCmdLineEdit->setText( list.at(1) );
-		}
-		else
-		{
-			GridProcesscheckBox->setChecked(false);
-			GridProcessCmdLineEdit->setText( "" );
-		}
+    if( !list.at(1).isEmpty() )
+    {
+      GridProcesscheckBox->setChecked(true);
+      GridProcessCmdLineEdit->setText( list.at(1) );
+    }
+    else
+    {
+      GridProcesscheckBox->setChecked(false);
+      GridProcessCmdLineEdit->setText( "" );
+    }
 
 /* Nb Threads*/
-		if( ParamFileVersion >= 2 )
-		{
-			line = stream.readLine();
-			list = line.split("=");
-			if( LoadParametersReturnTrueIfCorrupted(list.at(0),"NbThreads") ) return -1;
-			NbThreadsSpinBox->setValue( list.at(1).toInt() );
-		}
+    if( ParamFileVersion >= 2 )
+    {
+      line = stream.readLine();
+      list = line.split("=");
+      if( LoadParametersReturnTrueIfCorrupted(list.at(0),"NbThreads") ) return -1;
+      NbThreadsSpinBox->setValue( list.at(1).toInt() );
+    }
 
 
-		std::cout<<"DONE"<<std::endl; // command line display
+    std::cout<<"DONE"<<std::endl; // command line display
 
 /* Opening CSV File */
-		if( ! DiscardParametersCSV )
-		{
-			line = stream.readLine();
-			list = line.split("=");
-			if(!list.at(0).contains(QString("CSV Dataset File")))
-			{
-				if(!m_noGUI) 
-				{
-					QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
-					std::cout<<"FAILED"<<std::endl; // command line display
-				}
-				else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
-				return -1;
-			}
-			QString CSVpath = list.at(1);
-			// CaseListWidget->clear();
-			ReadCSV(CSVpath);
-		} // if( ! DiscardParametersCSV )
+    if( ! DiscardParametersCSV )
+    {
+      line = stream.readLine();
+      list = line.split("=");
+      if(!list.at(0).contains(QString("CSV Dataset File")))
+      {
+        if(!m_noGUI) 
+        {
+          QMessageBox::critical(this, "Corrupt File", "This parameter file is corrupted\nIt may have been modified manually.\nPlease save it again.");
+          std::cout<<"FAILED"<<std::endl; // command line display
+        }
+        else std::cout<<"FAILED"<<std::endl<<"| This parameter file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
+        return -1;
+      }
+      QString CSVpath = list.at(1);
+      // CaseListWidget->clear();
+      ReadCSV(CSVpath);
+    } // if( ! DiscardParametersCSV )
 
-		m_ParamSaved=1;
-	} 
-	else if ( !paramFile.isEmpty() ) qDebug( "Could not open file");
+    m_ParamSaved=1;
+  } 
+  else if ( !paramFile.isEmpty() ) qDebug( "Could not open file");
 
-	return 0;
+  return 0;
 }
 
   /////////////////////////////////////////
@@ -1526,180 +1526,180 @@ int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // Discard
 /////////////////////////////////////////
 
 void GUI::GenerateXMLForGA()
-{	
-	if( ! itksys::SystemTools::GetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration").c_str(), ITKmode_F_OK) ) // Test if the main folder does not exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
-	{
-		std::cout<<"| Creating Non Linear Registration directory..."<<std::endl; // command line display
-		QProcess * mkdirMainProcess = new QProcess;
-		std::string program = "mkdir " + m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration"; //// Creates the directory
-		std::cout<<"| $ " << program << std::endl;
-		mkdirMainProcess->execute( program.c_str() );
-	}
+{  
+  if( ! itksys::SystemTools::GetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration").c_str(), ITKmode_F_OK) ) // Test if the main folder does not exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
+  {
+    std::cout<<"| Creating Non Linear Registration directory..."<<std::endl; // command line display
+    QProcess * mkdirMainProcess = new QProcess;
+    std::string program = "mkdir " + m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration"; //// Creates the directory
+    std::cout<<"| $ " << program << std::endl;
+    mkdirMainProcess->execute( program.c_str() );
+  }
 
-	QString	xmlFileName = m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/GreedyAtlasParameters.xml");
-	QFile file(xmlFileName);
-	if ( file.open( IO_WriteOnly | IO_Translate ) )
-	{
-		std::cout<<"| Saving XML file for GreedyAtlas..."<<std::endl; // command line display
-		QTextStream stream( &file );
+  QString  xmlFileName = m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/GreedyAtlasParameters.xml");
+  QFile file(xmlFileName);
+  if ( file.open( IO_WriteOnly | IO_Translate ) )
+  {
+    std::cout<<"| Saving XML file for GreedyAtlas..."<<std::endl; // command line display
+    QTextStream stream( &file );
 
-		stream <<"<!--top-level node-->"<< endl;
-		stream <<"<ParameterFile>"<< endl;
-			stream <<"\t<WeightedImageSet>"<< endl;
-				stream <<"\t\t<ScaleImageWeights val=\"true\"/>"<< endl;
-				stream <<"\t\t<InputImageFormatString>"<< endl;
-					stream <<"\t\t\t<FormatString val=\"\" />"<< endl;
-					stream <<"\t\t\t<Base val=\"0\" />"<< endl;
-					std::ostringstream out;
-					out << m_CasesPath.size();
-					std::string nbcases_str = out.str();
-					stream <<"\t\t\t<NumFiles val=\"" << nbcases_str.c_str() << "\" />"<< endl;
-					stream <<"\t\t\t<Weight val=\"1\" />"<< endl;
-				stream <<"\t\t</InputImageFormatString>"<< endl;
-			std::ostringstream out1;
-			out1 << NbLoopsSpinBox->value();
-			std::string nbLoops_str = out1.str();
-			for (unsigned int i=0;i<m_CasesPath.size();i++)
-			{
-				std::ostringstream outi;
-				outi << i+1;
-				std::string i_str = outi.str();
-				stream <<"\t\t<WeightedImage>"<< endl;
-					stream <<"\t\t\t<Filename val=\"" << m_OutputPath << "/DTIAtlas/1_Affine_Registration/Loop" << nbLoops_str.c_str() << "/Case" << i_str.c_str() << "_Loop" << nbLoops_str.c_str() << "_FinalFA.nrrd\" />"<< endl;
-					stream <<"\t\t\t<ItkTransform val=\"1\" />"<< endl;
-				stream <<"\t\t</WeightedImage>"<< endl;
-			}
-			stream <<"\t</WeightedImageSet>"<< endl;
+    stream <<"<!--top-level node-->"<< endl;
+    stream <<"<ParameterFile>"<< endl;
+      stream <<"  <WeightedImageSet>"<< endl;
+        stream <<"    <ScaleImageWeights val=\"true\"/>"<< endl;
+        stream <<"    <InputImageFormatString>"<< endl;
+          stream <<"      <FormatString val=\"\" />"<< endl;
+          stream <<"      <Base val=\"0\" />"<< endl;
+          std::ostringstream out;
+          out << m_CasesPath.size();
+          std::string nbcases_str = out.str();
+          stream <<"      <NumFiles val=\"" << nbcases_str.c_str() << "\" />"<< endl;
+          stream <<"      <Weight val=\"1\" />"<< endl;
+        stream <<"    </InputImageFormatString>"<< endl;
+      std::ostringstream out1;
+      out1 << NbLoopsSpinBox->value();
+      std::string nbLoops_str = out1.str();
+      for (unsigned int i=0;i<m_CasesPath.size();i++)
+      {
+        std::ostringstream outi;
+        outi << i+1;
+        std::string i_str = outi.str();
+        stream <<"    <WeightedImage>"<< endl;
+          stream <<"      <Filename val=\"" << m_OutputPath << "/DTIAtlas/1_Affine_Registration/Loop" << nbLoops_str.c_str() << "/Case" << i_str.c_str() << "_Loop" << nbLoops_str.c_str() << "_FinalFA.nrrd\" />"<< endl;
+          stream <<"      <ItkTransform val=\"1\" />"<< endl;
+        stream <<"    </WeightedImage>"<< endl;
+      }
+      stream <<"  </WeightedImageSet>"<< endl;
 
 /* Scale Levels */
-			if(SL4checkBox->isChecked())
-			{
-			stream <<"\t<GreedyScaleLevel>"<< endl;
-				stream <<"\t\t<ScaleLevel>"<< endl;
-					stream <<"\t\t\t<!--factor by which to downsample images-->"<< endl;
-					std::ostringstream outSL46;
-					outSL46 << SL4spinBox->value();
-					std::string SL46_str = outSL46.str();
-					stream <<"\t\t\t<DownsampleFactor val=\"" << SL46_str.c_str() << "\" />"<< endl;
-				stream <<"\t\t</ScaleLevel>"<< endl;
-				stream <<"\t\t<!--Scale factor on the maximum velocity in a given deformation for computing delta-->"<< endl;
-				std::ostringstream outSL42;
-				outSL42 << nbIter4SpinBox->value();
-				std::string SL42_str = outSL42.str();
-				stream <<"\t\t<NIterations val=\"" << SL42_str.c_str() << "\" />"<< endl;
-				stream <<"\t\t<Iterator>"<< endl;
-					std::ostringstream outSL4;
-					outSL4 << maxPerturbation4DoubleSpinBox->value();
-					std::string SL4_str = outSL4.str();
-					stream <<"\t\t\t<MaxPert val=\"" << SL4_str.c_str() << "\" />"<< endl;
-					stream <<"\t\t\t<DiffOper>"<< endl;
-						std::ostringstream outSL43;
-						outSL43 << alpha4DoubleSpinBox->value();
-						std::string SL43_str = outSL43.str();
-						stream <<"\t\t\t\t<Alpha val=\"" << SL43_str.c_str() << "\" />"<< endl;
-						std::ostringstream outSL44;
-						outSL44 << beta4DoubleSpinBox->value();
-						std::string SL44_str = outSL44.str();
-						stream <<"\t\t\t\t<Beta val=\"" << SL44_str.c_str() << "\" />"<< endl;
-						std::ostringstream outSL45;
-						outSL45 << gamma4DoubleSpinBox->value();
-						std::string SL45_str = outSL45.str();
-						stream <<"\t\t\t\t<Gamma val=\"" << SL45_str.c_str() << "\" />"<< endl;
-					stream <<"\t\t\t</DiffOper>"<< endl;
-				stream <<"\t\t</Iterator>"<< endl;
-			stream <<"\t</GreedyScaleLevel>"<< endl;
-			}
+      if(SL4checkBox->isChecked())
+      {
+      stream <<"  <GreedyScaleLevel>"<< endl;
+        stream <<"    <ScaleLevel>"<< endl;
+          stream <<"      <!--factor by which to downsample images-->"<< endl;
+          std::ostringstream outSL46;
+          outSL46 << SL4spinBox->value();
+          std::string SL46_str = outSL46.str();
+          stream <<"      <DownsampleFactor val=\"" << SL46_str.c_str() << "\" />"<< endl;
+        stream <<"    </ScaleLevel>"<< endl;
+        stream <<"    <!--Scale factor on the maximum velocity in a given deformation for computing delta-->"<< endl;
+        std::ostringstream outSL42;
+        outSL42 << nbIter4SpinBox->value();
+        std::string SL42_str = outSL42.str();
+        stream <<"    <NIterations val=\"" << SL42_str.c_str() << "\" />"<< endl;
+        stream <<"    <Iterator>"<< endl;
+          std::ostringstream outSL4;
+          outSL4 << maxPerturbation4DoubleSpinBox->value();
+          std::string SL4_str = outSL4.str();
+          stream <<"      <MaxPert val=\"" << SL4_str.c_str() << "\" />"<< endl;
+          stream <<"      <DiffOper>"<< endl;
+            std::ostringstream outSL43;
+            outSL43 << alpha4DoubleSpinBox->value();
+            std::string SL43_str = outSL43.str();
+            stream <<"        <Alpha val=\"" << SL43_str.c_str() << "\" />"<< endl;
+            std::ostringstream outSL44;
+            outSL44 << beta4DoubleSpinBox->value();
+            std::string SL44_str = outSL44.str();
+            stream <<"        <Beta val=\"" << SL44_str.c_str() << "\" />"<< endl;
+            std::ostringstream outSL45;
+            outSL45 << gamma4DoubleSpinBox->value();
+            std::string SL45_str = outSL45.str();
+            stream <<"        <Gamma val=\"" << SL45_str.c_str() << "\" />"<< endl;
+          stream <<"      </DiffOper>"<< endl;
+        stream <<"    </Iterator>"<< endl;
+      stream <<"  </GreedyScaleLevel>"<< endl;
+      }
 
-			if(SL2checkBox->isChecked())
-			{
-			stream <<"\t<GreedyScaleLevel>"<< endl;
-				stream <<"\t\t<ScaleLevel>"<< endl;
-					stream <<"\t\t\t<!--factor by which to downsample images-->"<< endl;
-					std::ostringstream outSL26;
-					outSL26 << SL2spinBox->value();
-					std::string SL26_str = outSL26.str();
-					stream <<"\t\t\t<DownsampleFactor val=\"" << SL26_str.c_str() << "\" />"<< endl;
-				stream <<"\t\t</ScaleLevel>"<< endl;
-				stream <<"\t\t<!--Scale factor on the maximum velocity in a given deformation for computing delta-->"<< endl;
-				std::ostringstream outSL22;
-				outSL22 << nbIter2SpinBox->value();
-				std::string SL22_str = outSL22.str();
-				stream <<"\t\t<NIterations val=\"" << SL22_str.c_str() << "\" />"<< endl;
-				stream <<"\t\t<Iterator>"<< endl;
-					std::ostringstream outSL2;
-					outSL2 << maxPerturbation2DoubleSpinBox->value();
-					std::string SL2_str = outSL2.str();
-					stream <<"\t\t\t<MaxPert val=\"" << SL2_str.c_str() << "\" />"<< endl;
-					stream <<"\t\t\t<DiffOper>"<< endl;
-						std::ostringstream outSL23;
-						outSL23 << alpha2DoubleSpinBox->value();
-						std::string SL23_str = outSL23.str();
-						stream <<"\t\t\t\t<Alpha val=\"" << SL23_str.c_str() << "\" />"<< endl;
-						std::ostringstream outSL24;
-						outSL24 << beta2DoubleSpinBox->value();
-						std::string SL24_str = outSL24.str();
-						stream <<"\t\t\t\t<Beta val=\"" << SL24_str.c_str() << "\" />"<< endl;
-						std::ostringstream outSL25;
-						outSL25 << gamma2DoubleSpinBox->value();
-						std::string SL25_str = outSL25.str();
-						stream <<"\t\t\t\t<Gamma val=\"" << SL25_str.c_str() << "\" />"<< endl;
-					stream <<"\t\t\t</DiffOper>"<< endl;
-				stream <<"\t\t</Iterator>"<< endl;
-			stream <<"\t</GreedyScaleLevel>"<< endl;
-			}
+      if(SL2checkBox->isChecked())
+      {
+      stream <<"  <GreedyScaleLevel>"<< endl;
+        stream <<"    <ScaleLevel>"<< endl;
+          stream <<"      <!--factor by which to downsample images-->"<< endl;
+          std::ostringstream outSL26;
+          outSL26 << SL2spinBox->value();
+          std::string SL26_str = outSL26.str();
+          stream <<"      <DownsampleFactor val=\"" << SL26_str.c_str() << "\" />"<< endl;
+        stream <<"    </ScaleLevel>"<< endl;
+        stream <<"    <!--Scale factor on the maximum velocity in a given deformation for computing delta-->"<< endl;
+        std::ostringstream outSL22;
+        outSL22 << nbIter2SpinBox->value();
+        std::string SL22_str = outSL22.str();
+        stream <<"    <NIterations val=\"" << SL22_str.c_str() << "\" />"<< endl;
+        stream <<"    <Iterator>"<< endl;
+          std::ostringstream outSL2;
+          outSL2 << maxPerturbation2DoubleSpinBox->value();
+          std::string SL2_str = outSL2.str();
+          stream <<"      <MaxPert val=\"" << SL2_str.c_str() << "\" />"<< endl;
+          stream <<"      <DiffOper>"<< endl;
+            std::ostringstream outSL23;
+            outSL23 << alpha2DoubleSpinBox->value();
+            std::string SL23_str = outSL23.str();
+            stream <<"        <Alpha val=\"" << SL23_str.c_str() << "\" />"<< endl;
+            std::ostringstream outSL24;
+            outSL24 << beta2DoubleSpinBox->value();
+            std::string SL24_str = outSL24.str();
+            stream <<"        <Beta val=\"" << SL24_str.c_str() << "\" />"<< endl;
+            std::ostringstream outSL25;
+            outSL25 << gamma2DoubleSpinBox->value();
+            std::string SL25_str = outSL25.str();
+            stream <<"        <Gamma val=\"" << SL25_str.c_str() << "\" />"<< endl;
+          stream <<"      </DiffOper>"<< endl;
+        stream <<"    </Iterator>"<< endl;
+      stream <<"  </GreedyScaleLevel>"<< endl;
+      }
 
-			if(SL1checkBox->isChecked())
-			{
-			stream <<"\t<GreedyScaleLevel>"<< endl;
-				stream <<"\t\t<ScaleLevel>"<< endl;
-					stream <<"\t\t\t<!--factor by which to downsample images-->"<< endl;
-					std::ostringstream outSL16;
-					outSL16 << SL1spinBox->value();
-					std::string SL16_str = outSL16.str();
-					stream <<"\t\t\t<DownsampleFactor val=\"" << SL16_str.c_str() << "\" />"<< endl;
-				stream <<"\t\t</ScaleLevel>"<< endl;
-				stream <<"\t\t<!--Scale factor on the maximum velocity in a given deformation for computing delta-->"<< endl;
-				std::ostringstream outSL12;
-				outSL12 << nbIter1SpinBox->value();
-				std::string SL12_str = outSL12.str();
-					stream <<"\t\t<NIterations val=\"" << SL12_str.c_str() << "\" />"<< endl;
-					std::ostringstream outSL1;
-					outSL1 << maxPerturbation1DoubleSpinBox->value();
-					std::string SL1_str = outSL1.str();
-				stream <<"\t\t<Iterator>"<< endl;
-					stream <<"\t\t\t<MaxPert val=\"" << SL1_str.c_str() << "\" />"<< endl;
-					stream <<"\t\t\t<DiffOper>"<< endl;
-						std::ostringstream outSL13;
-						outSL13 << alpha1DoubleSpinBox->value();
-						std::string SL13_str = outSL13.str();
-						stream <<"\t\t\t\t<Alpha val=\"" << SL13_str.c_str() << "\" />"<< endl;
-						std::ostringstream outSL14;
-						outSL14 << beta1DoubleSpinBox->value();
-						std::string SL14_str = outSL14.str();
-						stream <<"\t\t\t\t<Beta val=\"" << SL14_str.c_str() << "\" />"<< endl;
-						std::ostringstream outSL15;
-						outSL15 << gamma1DoubleSpinBox->value();
-						std::string SL15_str = outSL15.str();
-						stream <<"\t\t\t\t<Gamma val=\"" << SL15_str.c_str() << "\" />"<< endl;
-					stream <<"\t\t\t</DiffOper>"<< endl;
-				stream <<"\t\t</Iterator>"<< endl;
-			stream <<"\t</GreedyScaleLevel>"<< endl;
-			}
+      if(SL1checkBox->isChecked())
+      {
+      stream <<"  <GreedyScaleLevel>"<< endl;
+        stream <<"    <ScaleLevel>"<< endl;
+          stream <<"      <!--factor by which to downsample images-->"<< endl;
+          std::ostringstream outSL16;
+          outSL16 << SL1spinBox->value();
+          std::string SL16_str = outSL16.str();
+          stream <<"      <DownsampleFactor val=\"" << SL16_str.c_str() << "\" />"<< endl;
+        stream <<"    </ScaleLevel>"<< endl;
+        stream <<"    <!--Scale factor on the maximum velocity in a given deformation for computing delta-->"<< endl;
+        std::ostringstream outSL12;
+        outSL12 << nbIter1SpinBox->value();
+        std::string SL12_str = outSL12.str();
+          stream <<"    <NIterations val=\"" << SL12_str.c_str() << "\" />"<< endl;
+          std::ostringstream outSL1;
+          outSL1 << maxPerturbation1DoubleSpinBox->value();
+          std::string SL1_str = outSL1.str();
+        stream <<"    <Iterator>"<< endl;
+          stream <<"      <MaxPert val=\"" << SL1_str.c_str() << "\" />"<< endl;
+          stream <<"      <DiffOper>"<< endl;
+            std::ostringstream outSL13;
+            outSL13 << alpha1DoubleSpinBox->value();
+            std::string SL13_str = outSL13.str();
+            stream <<"        <Alpha val=\"" << SL13_str.c_str() << "\" />"<< endl;
+            std::ostringstream outSL14;
+            outSL14 << beta1DoubleSpinBox->value();
+            std::string SL14_str = outSL14.str();
+            stream <<"        <Beta val=\"" << SL14_str.c_str() << "\" />"<< endl;
+            std::ostringstream outSL15;
+            outSL15 << gamma1DoubleSpinBox->value();
+            std::string SL15_str = outSL15.str();
+            stream <<"        <Gamma val=\"" << SL15_str.c_str() << "\" />"<< endl;
+          stream <<"      </DiffOper>"<< endl;
+        stream <<"    </Iterator>"<< endl;
+      stream <<"  </GreedyScaleLevel>"<< endl;
+      }
 
-			stream <<"\t<!--number of threads to use, 0=one per processor (only for CPU computation)-->"<< endl;
-			if( GridProcesscheckBox->isChecked() ) stream <<"\t<nThreads val=\"1\" />"<< endl; // to prevent GreedyAtlas from using too many cores on the cluster
-			else
-			{
-			std::ostringstream outNThreads;
-			outNThreads << NbThreadsSpinBox->value();
-			stream <<"\t<nThreads val=\""<< outNThreads.str().c_str() <<"\" />"<< endl;
-			}
+      stream <<"  <!--number of threads to use, 0=one per processor (only for CPU computation)-->"<< endl;
+      if( GridProcesscheckBox->isChecked() ) stream <<"  <nThreads val=\"1\" />"<< endl; // to prevent GreedyAtlas from using too many cores on the cluster
+      else
+      {
+      std::ostringstream outNThreads;
+      outNThreads << NbThreadsSpinBox->value();
+      stream <<"  <nThreads val=\""<< outNThreads.str().c_str() <<"\" />"<< endl;
+      }
 
-			stream <<"\t<OutputPrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration/\" />"<< endl;
-			stream <<"\t<OutputSuffix val=\"mhd\" />"<< endl;
-		stream <<"</ParameterFile>"<< endl;
-	}
-	else qDebug( "Could not create xml file");
+      stream <<"  <OutputPrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration/\" />"<< endl;
+      stream <<"  <OutputSuffix val=\"mhd\" />"<< endl;
+    stream <<"</ParameterFile>"<< endl;
+  }
+  else qDebug( "Could not create xml file");
 }
 
   /////////////////////////////////////////
@@ -1708,180 +1708,180 @@ void GUI::GenerateXMLForGA()
 
 void GUI::LoadConfigSlot() /*SLOT*/
 {
-	QString ConfigBrowse=QFileDialog::getOpenFileName(this, "Open Configuration File", QString(), ".txt Files (*.txt)");
+  QString ConfigBrowse=QFileDialog::getOpenFileName(this, "Open Configuration File", QString(), ".txt Files (*.txt)");
 
-	if(!ConfigBrowse.isEmpty())
-	{
-		LoadConfig(ConfigBrowse);
-	}
+  if(!ConfigBrowse.isEmpty())
+  {
+    LoadConfig(ConfigBrowse);
+  }
 }
 
 
 bool GUI::LoadConfigReturnTrueIfCorrupted(QString ReadProgram, const char* Program )
 {
-	if( ! ReadProgram.contains( QString(Program) ) )
-	{
-		if(!m_noGUI) 
-		{
-			QMessageBox::critical(this, "Corrupt File", "This config file is corrupted.\nIt may have been modified manually.\nPlease save it again.");
-			std::cout<<"FAILED"<<std::endl; // command line display
-		}
-		else std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
-		return true;
-	}
+  if( ! ReadProgram.contains( QString(Program) ) )
+  {
+    if(!m_noGUI) 
+    {
+      QMessageBox::critical(this, "Corrupt File", "This config file is corrupted.\nIt may have been modified manually.\nPlease save it again.");
+      std::cout<<"FAILED"<<std::endl; // command line display
+    }
+    else std::cout<<"FAILED"<<std::endl<<"| This config file is corrupted. It may have been modified manually. Please save it again."<<std::endl;
+    return true;
+  }
 
-	return false;
+  return false;
 }
 
 int GUI::LoadConfig(QString configFile) // returns -1 if fails, otherwise 0
 {
-	if( itksys::SystemTools::GetPermissions(configFile.toStdString().c_str(), ITKmode_F_OK) ) // Test if the config file exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
-	{
-		std::cout<<"| Loading Configuration file \'"<< configFile.toStdString() <<"\'..."; // command line display
+  if( itksys::SystemTools::GetPermissions(configFile.toStdString().c_str(), ITKmode_F_OK) ) // Test if the config file exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
+  {
+    std::cout<<"| Loading Configuration file \'"<< configFile.toStdString() <<"\'..."; // command line display
 
-		std::string notFound;
+    std::string notFound;
 
-		///get the values from file
-		QFile file(configFile);
-		if (file.open(QFile::ReadOnly))
-		{
-			QTextStream stream(&file);
+    ///get the values from file
+    QFile file(configFile);
+    if (file.open(QFile::ReadOnly))
+    {
+      QTextStream stream(&file);
 
-			QString line = stream.readLine();
-			QStringList list = line.split("=");
-			if( LoadConfigReturnTrueIfCorrupted(list.at(0),"ImageMath") ) return -1;
-			if(!list.at(1).isEmpty()) ImagemathPath->setText(list.at(1));
-			else if(ImagemathPath->text().isEmpty()) notFound = notFound + "> ImageMath\n";	
+      QString line = stream.readLine();
+      QStringList list = line.split("=");
+      if( LoadConfigReturnTrueIfCorrupted(list.at(0),"ImageMath") ) return -1;
+      if(!list.at(1).isEmpty()) ImagemathPath->setText(list.at(1));
+      else if(ImagemathPath->text().isEmpty()) notFound = notFound + "> ImageMath\n";  
 
-			line = stream.readLine();
-			list = line.split("=");
-			if( LoadConfigReturnTrueIfCorrupted(list.at(0),"ResampleDTIlogEuclidean") ) return -1;
-			if(!list.at(1).isEmpty()) ResampPath->setText(list.at(1));
-			else if(ResampPath->text().isEmpty()) notFound = notFound + "> ResampleDTIlogEuclidean\n";
+      line = stream.readLine();
+      list = line.split("=");
+      if( LoadConfigReturnTrueIfCorrupted(list.at(0),"ResampleDTIlogEuclidean") ) return -1;
+      if(!list.at(1).isEmpty()) ResampPath->setText(list.at(1));
+      else if(ResampPath->text().isEmpty()) notFound = notFound + "> ResampleDTIlogEuclidean\n";
 
-			line = stream.readLine();
-			list = line.split("=");
-			if( LoadConfigReturnTrueIfCorrupted(list.at(0),"CropDTI") ) return -1;
-			if(!list.at(1).isEmpty()) CropDTIPath->setText(list.at(1));
-			else if(CropDTIPath->text().isEmpty()) notFound = notFound + "> CropDTI\n";
+      line = stream.readLine();
+      list = line.split("=");
+      if( LoadConfigReturnTrueIfCorrupted(list.at(0),"CropDTI") ) return -1;
+      if(!list.at(1).isEmpty()) CropDTIPath->setText(list.at(1));
+      else if(CropDTIPath->text().isEmpty()) notFound = notFound + "> CropDTI\n";
 
-			line = stream.readLine();
-			list = line.split("=");
-			if( LoadConfigReturnTrueIfCorrupted(list.at(0),"dtiprocess") ) return -1;
-			if(!list.at(1).isEmpty()) dtiprocPath->setText(list.at(1));
-			else if(dtiprocPath->text().isEmpty()) notFound = notFound + "> dtiprocess\n";
+      line = stream.readLine();
+      list = line.split("=");
+      if( LoadConfigReturnTrueIfCorrupted(list.at(0),"dtiprocess") ) return -1;
+      if(!list.at(1).isEmpty()) dtiprocPath->setText(list.at(1));
+      else if(dtiprocPath->text().isEmpty()) notFound = notFound + "> dtiprocess\n";
 
-			line = stream.readLine();
-			list = line.split("=");
-			if( LoadConfigReturnTrueIfCorrupted(list.at(0),"BRAINSFit") ) return -1;
-			if(!list.at(1).isEmpty()) BRAINSFitPath->setText(list.at(1));
-			else if(BRAINSFitPath->text().isEmpty()) notFound = notFound + "> BRAINSFit\n";
+      line = stream.readLine();
+      list = line.split("=");
+      if( LoadConfigReturnTrueIfCorrupted(list.at(0),"BRAINSFit") ) return -1;
+      if(!list.at(1).isEmpty()) BRAINSFitPath->setText(list.at(1));
+      else if(BRAINSFitPath->text().isEmpty()) notFound = notFound + "> BRAINSFit\n";
 
 
-			line = stream.readLine();
-			list = line.split("=");
-			if( LoadConfigReturnTrueIfCorrupted(list.at(0),"GreedyAtlas") ) return -1;
-			bool GAToTest=false;
-			if( !list.at(1).isEmpty() )
-			{
-				GAToTest=true; // call testGA after the display of "DONE"
-				GAPath->setText(list.at(1));
-			}
-			else if(GAPath->text().isEmpty()) notFound = notFound + "> GreedyAtlas\n";
+      line = stream.readLine();
+      list = line.split("=");
+      if( LoadConfigReturnTrueIfCorrupted(list.at(0),"GreedyAtlas") ) return -1;
+      bool GAToTest=false;
+      if( !list.at(1).isEmpty() )
+      {
+        GAToTest=true; // call testGA after the display of "DONE"
+        GAPath->setText(list.at(1));
+      }
+      else if(GAPath->text().isEmpty()) notFound = notFound + "> GreedyAtlas\n";
 
-			line = stream.readLine();
-			list = line.split("=");
-			if( LoadConfigReturnTrueIfCorrupted(list.at(0),"dtiaverage") ) return -1;
-			if(!list.at(1).isEmpty()) dtiavgPath->setText(list.at(1));
-			else if(dtiavgPath->text().isEmpty()) notFound = notFound + "> dtiaverage\n";
+      line = stream.readLine();
+      list = line.split("=");
+      if( LoadConfigReturnTrueIfCorrupted(list.at(0),"dtiaverage") ) return -1;
+      if(!list.at(1).isEmpty()) dtiavgPath->setText(list.at(1));
+      else if(dtiavgPath->text().isEmpty()) notFound = notFound + "> dtiaverage\n";
 
-			line = stream.readLine();
-			list = line.split("=");
-			if( LoadConfigReturnTrueIfCorrupted(list.at(0),"DTI-Reg") ) return -1;
-			bool DTIRegToTest=false;
-			if( !list.at(1).isEmpty() )
-			{
-				DTIRegToTest=true; // call testDTIReg after the display of "DONE"
-				DTIRegPath->setText(list.at(1));
-			}
-			else if(DTIRegPath->text().isEmpty()) notFound = notFound + "> DTI-Reg\n";
+      line = stream.readLine();
+      list = line.split("=");
+      if( LoadConfigReturnTrueIfCorrupted(list.at(0),"DTI-Reg") ) return -1;
+      bool DTIRegToTest=false;
+      if( !list.at(1).isEmpty() )
+      {
+        DTIRegToTest=true; // call testDTIReg after the display of "DONE"
+        DTIRegPath->setText(list.at(1));
+      }
+      else if(DTIRegPath->text().isEmpty()) notFound = notFound + "> DTI-Reg\n";
 
-			line = stream.readLine();
-			list = line.split("=");
-			if( LoadConfigReturnTrueIfCorrupted(list.at(0),"unu") ) return -1;
-			if(!list.at(1).isEmpty()) unuPath->setText(list.at(1));
-			else if(unuPath->text().isEmpty()) notFound = notFound + "> unu\n";
+      line = stream.readLine();
+      list = line.split("=");
+      if( LoadConfigReturnTrueIfCorrupted(list.at(0),"unu") ) return -1;
+      if(!list.at(1).isEmpty()) unuPath->setText(list.at(1));
+      else if(unuPath->text().isEmpty()) notFound = notFound + "> unu\n";
 
-			line = stream.readLine();
-			list = line.split("=");
-			if( LoadConfigReturnTrueIfCorrupted(list.at(0),"MriWatcher") ) return -1;
-			if(!list.at(1).isEmpty()) MriWatcherPath->setText(list.at(1));
-			else if(MriWatcherPath->text().isEmpty()) notFound = notFound + "> MriWatcher (Program will work, but QC will not be available)\n";
+      line = stream.readLine();
+      list = line.split("=");
+      if( LoadConfigReturnTrueIfCorrupted(list.at(0),"MriWatcher") ) return -1;
+      if(!list.at(1).isEmpty()) MriWatcherPath->setText(list.at(1));
+      else if(MriWatcherPath->text().isEmpty()) notFound = notFound + "> MriWatcher (Program will work, but QC will not be available)\n";
 
-			std::cout<<"DONE"<<std::endl; // command line display
+      std::cout<<"DONE"<<std::endl; // command line display
 
-			if(m_FromConstructor!=1) // do not test when from constructor -> test at the end of it
-			{
-				if( !notFound.empty() )
-				{
-					if(!m_noGUI) 
-					{
-						std::string text = "The following programs are missing.\nPlease enter the path manually:\n" + notFound;
-						QMessageBox::warning(this, "Program missing", QString(text.c_str()) );
-					}
-					else
-					{
-						std::cout<<"| The following programs have not been found. Please give a configuration file or modify it or enter the path manually in the GUI:\n"<< notFound <<std::endl;
-						return -1;
-					}
-				}
+      if(m_FromConstructor!=1) // do not test when from constructor -> test at the end of it
+      {
+        if( !notFound.empty() )
+        {
+          if(!m_noGUI) 
+          {
+            std::string text = "The following programs are missing.\nPlease enter the path manually:\n" + notFound;
+            QMessageBox::warning(this, "Program missing", QString(text.c_str()) );
+          }
+          else
+          {
+            std::cout<<"| The following programs have not been found. Please give a configuration file or modify it or enter the path manually in the GUI:\n"<< notFound <<std::endl;
+            return -1;
+          }
+        }
 
-				if(GAToTest) testGA();  // do not test GA path if 'LoadConfig' called from constructor -> test at the end of constructor
-				if(DTIRegToTest) testDTIReg();  // do not test DTIReg path if 'LoadConfig' called from constructor -> test at the end of constructor
-			}
+        if(GAToTest) testGA();  // do not test GA path if 'LoadConfig' called from constructor -> test at the end of constructor
+        if(DTIRegToTest) testDTIReg();  // do not test DTIReg path if 'LoadConfig' called from constructor -> test at the end of constructor
+      }
 
-		} 
-		else qDebug( "Could not open file");
-	}
-	else std::cout<<"| The given configuration file does not exist"<<std::endl; // command line display
+    } 
+    else qDebug( "Could not open file");
+  }
+  else std::cout<<"| The given configuration file does not exist"<<std::endl; // command line display
 
-	return 0;
+  return 0;
 }
 
 void GUI::SaveConfig() /*SLOT*/
 {
-	QString ConfigBrowseName=QFileDialog::getSaveFileName(this, tr("Save Configuration File"),"./DTIAtlasBuilderSoftConfiguration.txt",tr("Text File (*.txt)"));
+  QString ConfigBrowseName=QFileDialog::getSaveFileName(this, tr("Save Configuration File"),"./DTIAtlasBuilderSoftConfiguration.txt",tr("Text File (*.txt)"));
 
-	if(!ConfigBrowseName.isEmpty())
-	{
+  if(!ConfigBrowseName.isEmpty())
+  {
 /* getting the values and generating the config file */
 
-		QFile file(ConfigBrowseName);
-		if ( file.open( IO_WriteOnly | IO_Translate ) )
-		{
-			std::cout<<"| Generating config file..."; // command line display
+    QFile file(ConfigBrowseName);
+    if ( file.open( IO_WriteOnly | IO_Translate ) )
+    {
+      std::cout<<"| Generating config file..."; // command line display
 
-			QTextStream stream( &file );
+      QTextStream stream( &file );
 
-			stream << "ImageMath=" << ImagemathPath->text() << endl;
-			stream << "ResampleDTIlogEuclidean=" << ResampPath->text() << endl;
-			stream << "CropDTI=" << CropDTIPath->text() << endl;
-			stream << "dtiprocess=" << dtiprocPath->text() << endl;
-			stream << "BRAINSFit=" << BRAINSFitPath->text() << endl;
-			stream << "GreedyAtlas=" << GAPath->text() << endl;
-			stream << "dtiaverage=" << dtiavgPath->text() << endl;
-			stream << "DTI-Reg=" << DTIRegPath->text() << endl;
-			stream << "unu=" << unuPath->text() << endl;
-			stream << "MriWatcher=" << unuPath->text() << endl;
+      stream << "ImageMath=" << ImagemathPath->text() << endl;
+      stream << "ResampleDTIlogEuclidean=" << ResampPath->text() << endl;
+      stream << "CropDTI=" << CropDTIPath->text() << endl;
+      stream << "dtiprocess=" << dtiprocPath->text() << endl;
+      stream << "BRAINSFit=" << BRAINSFitPath->text() << endl;
+      stream << "GreedyAtlas=" << GAPath->text() << endl;
+      stream << "dtiaverage=" << dtiavgPath->text() << endl;
+      stream << "DTI-Reg=" << DTIRegPath->text() << endl;
+      stream << "unu=" << unuPath->text() << endl;
+      stream << "MriWatcher=" << unuPath->text() << endl;
 
-			std::cout<<"DONE"<<std::endl; // command line display
-		}
-		else 
-		{
-			std::cout<<"FAILED"<<std::endl; // command line display
-			qDebug( "Could not create config file");
-		}
-	}
+      std::cout<<"DONE"<<std::endl; // command line display
+    }
+    else 
+    {
+      std::cout<<"FAILED"<<std::endl; // command line display
+      qDebug( "Could not create config file");
+    }
+  }
 }
 
 void GUI::ConfigDefault() /*SLOT*/
@@ -1897,252 +1897,252 @@ void GUI::ConfigDefault() /*SLOT*/
     bool no_system_path = false);
 */
 
-	std::cout<<"| Searching the softwares..."; // command line display
+  std::cout<<"| Searching the softwares..."; // command line display
 
-	std::string program;
-	std::string notFound;
+  std::string program;
+  std::string notFound;
 
-	program = itksys::SystemTools::FindProgram("ImageMath",m_FindProgramDTIABExecDirVec);
-	if(program.empty()) { if(ImagemathPath->text().isEmpty()) notFound = notFound + "> ImageMath\n"; }
-	else ImagemathPath->setText(QString(program.c_str()));
+  program = itksys::SystemTools::FindProgram("ImageMath",m_FindProgramDTIABExecDirVec);
+  if(program.empty()) { if(ImagemathPath->text().isEmpty()) notFound = notFound + "> ImageMath\n"; }
+  else ImagemathPath->setText(QString(program.c_str()));
 
-	program = itksys::SystemTools::FindProgram("ResampleDTIlogEuclidean",m_FindProgramDTIABExecDirVec);
-	if(program.empty()) { if(ResampPath->text().isEmpty()) notFound = notFound + "> ResampleDTIlogEuclidean\n"; }
-	else ResampPath->setText(QString(program.c_str()));
+  program = itksys::SystemTools::FindProgram("ResampleDTIlogEuclidean",m_FindProgramDTIABExecDirVec);
+  if(program.empty()) { if(ResampPath->text().isEmpty()) notFound = notFound + "> ResampleDTIlogEuclidean\n"; }
+  else ResampPath->setText(QString(program.c_str()));
 
-	program = itksys::SystemTools::FindProgram("CropDTI",m_FindProgramDTIABExecDirVec);
-	if(program.empty()) { if(CropDTIPath->text().isEmpty()) notFound = notFound + "> CropDTI\n"; }
-	else CropDTIPath->setText(QString(program.c_str()));
+  program = itksys::SystemTools::FindProgram("CropDTI",m_FindProgramDTIABExecDirVec);
+  if(program.empty()) { if(CropDTIPath->text().isEmpty()) notFound = notFound + "> CropDTI\n"; }
+  else CropDTIPath->setText(QString(program.c_str()));
 
-	program = itksys::SystemTools::FindProgram("dtiprocess",m_FindProgramDTIABExecDirVec);
-	if(program.empty()) { if(dtiprocPath->text().isEmpty()) notFound = notFound + "> dtiprocess\n"; }
-	else dtiprocPath->setText(QString(program.c_str()));
+  program = itksys::SystemTools::FindProgram("dtiprocess",m_FindProgramDTIABExecDirVec);
+  if(program.empty()) { if(dtiprocPath->text().isEmpty()) notFound = notFound + "> dtiprocess\n"; }
+  else dtiprocPath->setText(QString(program.c_str()));
 
-	program = itksys::SystemTools::FindProgram("BRAINSFit",m_FindProgramDTIABExecDirVec);
-	if(program.empty()) { if(BRAINSFitPath->text().isEmpty()) notFound = notFound + "> BRAINSFit\n"; }
-	else BRAINSFitPath->setText(QString(program.c_str()));
+  program = itksys::SystemTools::FindProgram("BRAINSFit",m_FindProgramDTIABExecDirVec);
+  if(program.empty()) { if(BRAINSFitPath->text().isEmpty()) notFound = notFound + "> BRAINSFit\n"; }
+  else BRAINSFitPath->setText(QString(program.c_str()));
 
-	bool GAToTest=false;
-	program = itksys::SystemTools::FindProgram("GreedyAtlas",m_FindProgramDTIABExecDirVec);
-	if(program.empty()) { if(GAPath->text().isEmpty()) notFound = notFound + "> GreedyAtlas\n"; }
-	else
-	{
-		GAToTest=true; // call testGA after the display of "DONE"
-		GAPath->setText(QString(program.c_str()));	
-	}
+  bool GAToTest=false;
+  program = itksys::SystemTools::FindProgram("GreedyAtlas",m_FindProgramDTIABExecDirVec);
+  if(program.empty()) { if(GAPath->text().isEmpty()) notFound = notFound + "> GreedyAtlas\n"; }
+  else
+  {
+    GAToTest=true; // call testGA after the display of "DONE"
+    GAPath->setText(QString(program.c_str()));  
+  }
 
-	program = itksys::SystemTools::FindProgram("dtiaverage",m_FindProgramDTIABExecDirVec);
-	if(program.empty()) { if(dtiavgPath->text().isEmpty()) notFound = notFound + "> dtiaverage\n"; }
-	else dtiavgPath->setText(QString(program.c_str()));
+  program = itksys::SystemTools::FindProgram("dtiaverage",m_FindProgramDTIABExecDirVec);
+  if(program.empty()) { if(dtiavgPath->text().isEmpty()) notFound = notFound + "> dtiaverage\n"; }
+  else dtiavgPath->setText(QString(program.c_str()));
 
-	bool DTIRegToTest=false;
-	program = itksys::SystemTools::FindProgram("DTI-Reg_1.1.2",m_FindProgramDTIABExecDirVec);
-	if(program.empty()) program = itksys::SystemTools::FindProgram("DTI-Reg",m_FindProgramDTIABExecDirVec); // if 1.1.2 not found, look for "DTI-Reg" alone
-	if(program.empty()) { if(DTIRegPath->text().isEmpty()) notFound = notFound + "> DTI-Reg\n"; }
-	else
-	{
-		DTIRegToTest=true; // call testDTIReg after the display of "DONE"
-		DTIRegPath->setText(QString(program.c_str()));	
-	}
+  bool DTIRegToTest=false;
+  program = itksys::SystemTools::FindProgram("DTI-Reg_1.1.2",m_FindProgramDTIABExecDirVec);
+  if(program.empty()) program = itksys::SystemTools::FindProgram("DTI-Reg",m_FindProgramDTIABExecDirVec); // if 1.1.2 not found, look for "DTI-Reg" alone
+  if(program.empty()) { if(DTIRegPath->text().isEmpty()) notFound = notFound + "> DTI-Reg\n"; }
+  else
+  {
+    DTIRegToTest=true; // call testDTIReg after the display of "DONE"
+    DTIRegPath->setText(QString(program.c_str()));  
+  }
 
-	program = itksys::SystemTools::FindProgram("unu",m_FindProgramDTIABExecDirVec);
-	if(program.empty()) { if(unuPath->text().isEmpty()) notFound = notFound + "> unu\n"; }
-	else unuPath->setText(QString(program.c_str()));
+  program = itksys::SystemTools::FindProgram("unu",m_FindProgramDTIABExecDirVec);
+  if(program.empty()) { if(unuPath->text().isEmpty()) notFound = notFound + "> unu\n"; }
+  else unuPath->setText(QString(program.c_str()));
 
-	program = itksys::SystemTools::FindProgram("MriWatcher",m_FindProgramDTIABExecDirVec);
-	if(program.empty()) { if(MriWatcherPath->text().isEmpty()) notFound = notFound + "> MriWatcher (Program will work, but QC will not be available)\n"; }
-	else MriWatcherPath->setText(QString(program.c_str()));
+  program = itksys::SystemTools::FindProgram("MriWatcher",m_FindProgramDTIABExecDirVec);
+  if(program.empty()) { if(MriWatcherPath->text().isEmpty()) notFound = notFound + "> MriWatcher (Program will work, but QC will not be available)\n"; }
+  else MriWatcherPath->setText(QString(program.c_str()));
 
-	std::cout<<"DONE"<<std::endl; // command line display
+  std::cout<<"DONE"<<std::endl; // command line display
 
-	if(m_FromConstructor!=1) // do not test when from constructor -> test at the end of it
-	{
-		if( !notFound.empty() )
-		{
-			if(!m_noGUI) 
-			{
-				std::string text = "The following programs have not been found.\nPlease enter the path manually or open a configuration file:\n" + notFound;
-				QMessageBox::warning(this, "Program missing", QString(text.c_str()) );
-			}
-			else std::cout<<"| The following programs have not been found. Please give a configuration file or modify it or enter the path manually in the GUI:\n"<< notFound <<std::endl;
-		}
+  if(m_FromConstructor!=1) // do not test when from constructor -> test at the end of it
+  {
+    if( !notFound.empty() )
+    {
+      if(!m_noGUI) 
+      {
+        std::string text = "The following programs have not been found.\nPlease enter the path manually or open a configuration file:\n" + notFound;
+        QMessageBox::warning(this, "Program missing", QString(text.c_str()) );
+      }
+      else std::cout<<"| The following programs have not been found. Please give a configuration file or modify it or enter the path manually in the GUI:\n"<< notFound <<std::endl;
+    }
 
-		if(GAToTest) testGA();  // do not test GA path if 'Default' called from constructor -> test at the end of constructor
-		if(DTIRegToTest) testDTIReg();  // do not test DTIReg path if 'Default' called from constructor -> test at the end of constructor
-	}
+    if(GAToTest) testGA();  // do not test GA path if 'Default' called from constructor -> test at the end of constructor
+    if(DTIRegToTest) testDTIReg();  // do not test DTIReg path if 'Default' called from constructor -> test at the end of constructor
+  }
 }
 
 void GUI::BrowseSoft(int soft)  /*SLOT*/ //softwares: 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=GreedyAtlas, 7=dtiaverage, 8=DTI-Reg, 9=unu, 10=MriWatcher
 {
-	QString SoftBrowse = QFileDialog::getOpenFileName(this, "Open Software", QString(), "Executable Files (*)");
+  QString SoftBrowse = QFileDialog::getOpenFileName(this, "Open Software", QString(), "Executable Files (*)");
 
-	if(!SoftBrowse.isEmpty())
-	{
-		switch (soft)
-		{
-		case 1: ImagemathPath->setText(SoftBrowse);
-			break;
-		case 2: ResampPath->setText(SoftBrowse);
-			break;
-		case 3: CropDTIPath->setText(SoftBrowse);
-			break;
-		case 4: dtiprocPath->setText(SoftBrowse);
-			break;
-		case 5: BRAINSFitPath->setText(SoftBrowse);
-			break;
-		case 6: {
-			GAPath->setText(SoftBrowse);
-			testGA();
-			}
-			break;
-		case 7: dtiavgPath->setText(SoftBrowse);
-			break;
-		case 8: {
-			DTIRegPath->setText(SoftBrowse);
-			testDTIReg();
-			}
-			break;
-		case 9: unuPath->setText(SoftBrowse);
-			break;
-		case 10: MriWatcherPath->setText(SoftBrowse);
-			break;
-		}
-	}
+  if(!SoftBrowse.isEmpty())
+  {
+    switch (soft)
+    {
+    case 1: ImagemathPath->setText(SoftBrowse);
+      break;
+    case 2: ResampPath->setText(SoftBrowse);
+      break;
+    case 3: CropDTIPath->setText(SoftBrowse);
+      break;
+    case 4: dtiprocPath->setText(SoftBrowse);
+      break;
+    case 5: BRAINSFitPath->setText(SoftBrowse);
+      break;
+    case 6: {
+      GAPath->setText(SoftBrowse);
+      testGA();
+      }
+      break;
+    case 7: dtiavgPath->setText(SoftBrowse);
+      break;
+    case 8: {
+      DTIRegPath->setText(SoftBrowse);
+      testDTIReg();
+      }
+      break;
+    case 9: unuPath->setText(SoftBrowse);
+      break;
+    case 10: MriWatcherPath->setText(SoftBrowse);
+      break;
+    }
+  }
 }
 
 void GUI::ResetSoft(int softindex) /*SLOT*/ //softwares: 1=ImageMath, 2=ResampleDTIlogEuclidean, 3=CropDTI, 4=dtiprocess, 5=BRAINSFit, 6=GreedyAtlas, 7=dtiaverage, 8=DTI-Reg, 9=unu, 10=MriWatcher
 {
-	std::string soft;
+  std::string soft;
 
-	switch (softindex)
-	{
-	case 1: soft="ImageMath";
-		break;
-	case 2: soft="ResampleDTIlogEuclidean";
-		break;
-	case 3: soft="CropDTI";
-		break;
-	case 4: soft="dtiprocess";
-		break;
-	case 5:	soft="BRAINSFit";
-		break;
-	case 6: soft="GreedyAtlas";
-		break;
-	case 7: soft="dtiaverage";
-		break;
-	case 8: soft="DTI-Reg_1.1.2";
-		break;
-	case 9: soft="unu";
-		break;
-	case 10: soft="MriWatcher";
-		break;
-	}
+  switch (softindex)
+  {
+  case 1: soft="ImageMath";
+    break;
+  case 2: soft="ResampleDTIlogEuclidean";
+    break;
+  case 3: soft="CropDTI";
+    break;
+  case 4: soft="dtiprocess";
+    break;
+  case 5:  soft="BRAINSFit";
+    break;
+  case 6: soft="GreedyAtlas";
+    break;
+  case 7: soft="dtiaverage";
+    break;
+  case 8: soft="DTI-Reg_1.1.2";
+    break;
+  case 9: soft="unu";
+    break;
+  case 10: soft="MriWatcher";
+    break;
+  }
 
-	std::cout<<"| Searching the software \'"<< soft <<"\'..."; // command line display
+  std::cout<<"| Searching the software \'"<< soft <<"\'..."; // command line display
 
-	std::string program = itksys::SystemTools::FindProgram(soft.c_str(),m_FindProgramDTIABExecDirVec);
+  std::string program = itksys::SystemTools::FindProgram(soft.c_str(),m_FindProgramDTIABExecDirVec);
 
-	if(program.empty() && soft=="DTI-Reg_1.1.2") program = itksys::SystemTools::FindProgram("DTI-Reg",m_FindProgramDTIABExecDirVec); // if 1.1.2 not found, look for "DTI-Reg"
+  if(program.empty() && soft=="DTI-Reg_1.1.2") program = itksys::SystemTools::FindProgram("DTI-Reg",m_FindProgramDTIABExecDirVec); // if 1.1.2 not found, look for "DTI-Reg"
 
 
-	bool GAToTest=false;
-	bool DTIRegToTest=false;
-	if(program.empty()) 
-	{
-		std::string text = "The program \'" + soft + "\' is missing.\nPlease enter the path manually.\n";
-		QMessageBox::warning(this, "Program missing", QString(text.c_str()) );
-	}
-	else 
-	{
-		if(softindex==1) ImagemathPath->setText(QString(program.c_str()));
-		else if(softindex==2) ResampPath->setText(QString(program.c_str()));
-		else if(softindex==3) CropDTIPath->setText(QString(program.c_str()));
-		else if(softindex==4) dtiprocPath->setText(QString(program.c_str()));
-		else if(softindex==5) BRAINSFitPath->setText(QString(program.c_str()));
-		else if(softindex==6)
-		{
-			GAPath->setText(QString(program.c_str()));
-			GAToTest=true; // call testGA after the display of "DONE"
-		}
-		else if(softindex==7) dtiavgPath->setText(QString(program.c_str()));
-		else if(softindex==8)
-		{
-			DTIRegPath->setText(QString(program.c_str()));
-			DTIRegToTest=true; // call testDTIReg after the display of "DONE"
-		}
-		else if(softindex==9) unuPath->setText(QString(program.c_str()));
-		else if(softindex==10) MriWatcherPath->setText(QString(program.c_str()));
-	}
+  bool GAToTest=false;
+  bool DTIRegToTest=false;
+  if(program.empty()) 
+  {
+    std::string text = "The program \'" + soft + "\' is missing.\nPlease enter the path manually.\n";
+    QMessageBox::warning(this, "Program missing", QString(text.c_str()) );
+  }
+  else 
+  {
+    if(softindex==1) ImagemathPath->setText(QString(program.c_str()));
+    else if(softindex==2) ResampPath->setText(QString(program.c_str()));
+    else if(softindex==3) CropDTIPath->setText(QString(program.c_str()));
+    else if(softindex==4) dtiprocPath->setText(QString(program.c_str()));
+    else if(softindex==5) BRAINSFitPath->setText(QString(program.c_str()));
+    else if(softindex==6)
+    {
+      GAPath->setText(QString(program.c_str()));
+      GAToTest=true; // call testGA after the display of "DONE"
+    }
+    else if(softindex==7) dtiavgPath->setText(QString(program.c_str()));
+    else if(softindex==8)
+    {
+      DTIRegPath->setText(QString(program.c_str()));
+      DTIRegToTest=true; // call testDTIReg after the display of "DONE"
+    }
+    else if(softindex==9) unuPath->setText(QString(program.c_str()));
+    else if(softindex==10) MriWatcherPath->setText(QString(program.c_str()));
+  }
 
-	std::cout<<"DONE"<<std::endl; // command line display
+  std::cout<<"DONE"<<std::endl; // command line display
 
-	if(m_FromConstructor!=1) // do not test paths if 'Default' called from constructor -> test at the end of constructor
-	{
-		if(GAToTest) testGA();
-		if(DTIRegToTest) testDTIReg();
-	}
+  if(m_FromConstructor!=1) // do not test paths if 'Default' called from constructor -> test at the end of constructor
+  {
+    if(GAToTest) testGA();
+    if(DTIRegToTest) testDTIReg();
+  }
 }
 
 int GUI::testGA() /*SLOT*/ // returns 0 if version ok, -1 if bad version
 {
-	QProcess * Process = new QProcess;
-	std::string program;
-	program = GAPath->text().toStdString() + " --version";
+  QProcess * Process = new QProcess;
+  std::string program;
+  program = GAPath->text().toStdString() + " --version";
 
-	std::cout<<"| Testing the version of GreedyAtlas...";
+  std::cout<<"| Testing the version of GreedyAtlas...";
 
-	Process->start( program.c_str() ); // try to find the version => returns nothing if not the right version
+  Process->start( program.c_str() ); // try to find the version => returns nothing if not the right version
 
-	Process->waitForReadyRead();
-	QByteArray BA =  Process->readAllStandardOutput(); // int BA.size() // std::string s = BA.data(); std::cout<<s<<std::endl;
+  Process->waitForReadyRead();
+  QByteArray BA =  Process->readAllStandardOutput(); // int BA.size() // std::string s = BA.data(); std::cout<<s<<std::endl;
 
-	std::cout<<"DONE"<<std::endl;
+  std::cout<<"DONE"<<std::endl;
 
-	if(BA.size()==0) // if nothing displayed in std output, '--version' does not exists so it is not the right version
-	{
-		if(!m_noGUI) 
-		{
-			std::string text = "The version of GreedyAtlas \'" + GAPath->text().toStdString() + "\' is not the right one.\nPlease give a version supporting a XML file (--paramFile).\n";
-			QMessageBox::warning(this, "Wrong version", QString(text.c_str()) );
-		}
-		else std::cout<<"| The version of GreedyAtlas \'" << GAPath->text().toStdString() << "\' is not the right one. Please give a version supporting a XML file (--paramFile)."<<std::endl;
+  if(BA.size()==0) // if nothing displayed in std output, '--version' does not exists so it is not the right version
+  {
+    if(!m_noGUI) 
+    {
+      std::string text = "The version of GreedyAtlas \'" + GAPath->text().toStdString() + "\' is not the right one.\nPlease give a version supporting a XML file (--paramFile).\n";
+      QMessageBox::warning(this, "Wrong version", QString(text.c_str()) );
+    }
+    else std::cout<<"| The version of GreedyAtlas \'" << GAPath->text().toStdString() << "\' is not the right one. Please give a version supporting a XML file (--paramFile)."<<std::endl;
 
-		return -1;
-	}
+    return -1;
+  }
 
-	return 0;
+  return 0;
 }
 
 int GUI::testDTIReg() /*SLOT*/ // returns 0 if version ok, -1 if bad version
 {
-	QProcess * Process = new QProcess;
-	std::string program;
-	program = DTIRegPath->text().toStdString() + " --version";
+  QProcess * Process = new QProcess;
+  std::string program;
+  program = DTIRegPath->text().toStdString() + " --version";
 
-	std::cout<<"| Testing the version of DTI-Reg...";
+  std::cout<<"| Testing the version of DTI-Reg...";
 
-	Process->start( program.c_str() ); // try to find the version => returns nothing if not the right version
+  Process->start( program.c_str() ); // try to find the version => returns nothing if not the right version
 
-	Process->waitForReadyRead();
-	QByteArray BA =  Process->readAllStandardOutput();
+  Process->waitForReadyRead();
+  QByteArray BA =  Process->readAllStandardOutput();
 
-	QString text = QString( BA.data() );
+  QString text = QString( BA.data() );
 
-	std::cout<<"DONE"<<std::endl;
+  std::cout<<"DONE"<<std::endl;
 
-	if( BA.size()==0 || text.contains("1.0") || ( text.contains("1.1") && !text.contains("1.1.") ) || text.contains("1.1.1") ) //old version -> NOK
-	{
-		if(!m_noGUI) 
-		{
-			std::string text = "The version of DTI-Reg \'" + DTIRegPath->text().toStdString() + "\' is not the right one.\nPlease give the version 1.1.2. or older\n";
-			QMessageBox::warning(this, "Wrong version", QString(text.c_str()) );
-		}
-		else std::cout<<"| The version of DTI-Reg \'" << DTIRegPath->text().toStdString() << "\' is not the right one. Please give the version 1.1.2. or older"<<std::endl;
+  if( BA.size()==0 || text.contains("1.0") || ( text.contains("1.1") && !text.contains("1.1.") ) || text.contains("1.1.1") ) //old version -> NOK
+  {
+    if(!m_noGUI) 
+    {
+      std::string text = "The version of DTI-Reg \'" + DTIRegPath->text().toStdString() + "\' is not the right one.\nPlease give the version 1.1.2. or older\n";
+      QMessageBox::warning(this, "Wrong version", QString(text.c_str()) );
+    }
+    else std::cout<<"| The version of DTI-Reg \'" << DTIRegPath->text().toStdString() << "\' is not the right one. Please give the version 1.1.2. or older"<<std::endl;
 
-		return -1;
-	}
+    return -1;
+  }
 
-	return 0;
+  return 0;
 }
 
   /////////////////////////////////////////
@@ -2151,22 +2151,22 @@ int GUI::testDTIReg() /*SLOT*/ // returns 0 if version ok, -1 if bad version
 
 void GUI::ReadMe()  /*SLOT*/ /////to UPDATE
 {
-/*	QProcess * Process = new QProcess;
-	std::string program = "gedit /home/akaiser/Desktop/Projects/DTIAtlasBuilderGUI_07-12/DTIABGUIFinal_07-18-12/src/README.md";
-	std::cout<<"| $ " << program << std::endl;
-	Process->execute( program.c_str() );
+/*  QProcess * Process = new QProcess;
+  std::string program = "gedit /home/akaiser/Desktop/Projects/DTIAtlasBuilderGUI_07-12/DTIABGUIFinal_07-18-12/src/README.md";
+  std::cout<<"| $ " << program << std::endl;
+  Process->execute( program.c_str() );
 */
-	QDialog *dlg = new QDialog(this);
-	dlg->setWindowTitle ("Read Me");
+  QDialog *dlg = new QDialog(this);
+  dlg->setWindowTitle ("Read Me");
 
-	std::string info = "DTIAtlasBuilder\n===============\n\nA tool to create an atlas from several DTI images\n\nThese Softwares need to be installed before executing the tool :\n- ImageMath\n- ResampleDTIlogEuclidean\n- CropDTI\n- dtiprocess\n- BRAINSFit\n- GreedyAtlas\n- dtiaverage\n- DTI-Reg\n- unu\n- MriWatcher\n\n For any question, suggestion or remark, please contact akaiser@unc.edu.";
-	QLabel *InfoLabel = new QLabel (info.c_str(), this);
-	QVBoxLayout *VLayout = new QVBoxLayout();
-	VLayout->addWidget(InfoLabel);
+  std::string info = "DTIAtlasBuilder\n===============\n\nA tool to create an atlas from several DTI images\n\nThese Softwares need to be installed before executing the tool :\n- ImageMath\n- ResampleDTIlogEuclidean\n- CropDTI\n- dtiprocess\n- BRAINSFit\n- GreedyAtlas\n- dtiaverage\n- DTI-Reg\n- unu\n- MriWatcher\n\n For any question, suggestion or remark, please contact akaiser@unc.edu.";
+  QLabel *InfoLabel = new QLabel (info.c_str(), this);
+  QVBoxLayout *VLayout = new QVBoxLayout();
+  VLayout->addWidget(InfoLabel);
 
-	dlg->setLayout(VLayout);
+  dlg->setLayout(VLayout);
 
-	dlg->setVisible(!dlg->isVisible()); // display the window
+  dlg->setVisible(!dlg->isVisible()); // display the window
 }
 
   /////////////////////////////////////////
@@ -2175,28 +2175,28 @@ void GUI::ReadMe()  /*SLOT*/ /////to UPDATE
 
 void GUI::InterpolTypeComboBoxChanged(int index)  /*SLOT*/ // index: 0=Linear, 1=Nearest Neighborhoor, 2=Windowed Sinc, 3=BSpline
 {
-	switch (index)
-	{
-	case 0:	m_optionStackLayout->setCurrentIndex(0);
-		break;
-	case 1:	m_optionStackLayout->setCurrentIndex(0);
-		break;
-	case 2:	m_optionStackLayout->setCurrentIndex(1);
-		break;
-	case 3:	m_optionStackLayout->setCurrentIndex(2);
-		break;
-	}
+  switch (index)
+  {
+  case 0:  m_optionStackLayout->setCurrentIndex(0);
+    break;
+  case 1:  m_optionStackLayout->setCurrentIndex(0);
+    break;
+  case 2:  m_optionStackLayout->setCurrentIndex(1);
+    break;
+  case 3:  m_optionStackLayout->setCurrentIndex(2);
+    break;
+  }
 }
 
 void GUI::TensorInterpolComboBoxChanged(int index) /*SLOT*/ // 0= log, 1= nolog
 {
-	switch (index)
-	{
-	case 0:	m_logOptionStackLayout->setCurrentIndex(0);
-		break;
-	case 1:	m_logOptionStackLayout->setCurrentIndex(1);
-		break;
-	}
+  switch (index)
+  {
+  case 0:  m_logOptionStackLayout->setCurrentIndex(0);
+    break;
+  case 1:  m_logOptionStackLayout->setCurrentIndex(1);
+    break;
+  }
 }
 
   /////////////////////////////////////////
@@ -2205,43 +2205,43 @@ void GUI::TensorInterpolComboBoxChanged(int index) /*SLOT*/ // 0= log, 1= nolog
 
 void GUI::RegMethodComboBoxChanged(int index) /*SLOT*/
 {
-	switch (index)
-	{
-	case 0:	m_DTIRegOptionStackLayout->setCurrentIndex(0);
-		break;
-	case 1:	m_DTIRegOptionStackLayout->setCurrentIndex(1);
-		break;
-	}
+  switch (index)
+  {
+  case 0:  m_DTIRegOptionStackLayout->setCurrentIndex(0);
+    break;
+  case 1:  m_DTIRegOptionStackLayout->setCurrentIndex(1);
+    break;
+  }
 }
 
 void GUI::SimMetChanged(int index) /*SLOT*/
 {
-	switch (index)
-	{
-	case 0:	{
-		m_SimParamDble->setValue(2); //CC
-		m_SimParamLabel->setText(QString("Region Radius:"));
-		}
-		break;
-	case 1:	{
-		m_SimParamDble->setValue(32); //MI
-		m_SimParamLabel->setText(QString("Number of bins:"));
-		}
-		break;
-	case 2: m_SimParamLabel->setText(QString("Similarity Parameter:")); //MSQ
-		break;
-	}
+  switch (index)
+  {
+  case 0:  {
+    m_SimParamDble->setValue(2); //CC
+    m_SimParamLabel->setText(QString("Region Radius:"));
+    }
+    break;
+  case 1:  {
+    m_SimParamDble->setValue(32); //MI
+    m_SimParamLabel->setText(QString("Number of bins:"));
+    }
+    break;
+  case 2: m_SimParamLabel->setText(QString("Similarity Parameter:")); //MSQ
+    break;
+  }
 }
 
 void GUI::ANTSRegTypeChanged(int index) /*SLOT*/
 {
-	switch (index)
-	{
-	case 2:	m_TfmStepLine->setText("0.25"); //GreedyDiffeo
-		break;
-	case 3:	m_TfmStepLine->setText("0.25,5,0.01"); //SpatioTempDiffeo
-		break;
-	}
+  switch (index)
+  {
+  case 2:  m_TfmStepLine->setText("0.25"); //GreedyDiffeo
+    break;
+  case 3:  m_TfmStepLine->setText("0.25,5,0.01"); //SpatioTempDiffeo
+    break;
+  }
 }
 
   /////////////////////////////////////////
@@ -2250,14 +2250,14 @@ void GUI::ANTSRegTypeChanged(int index) /*SLOT*/
 
 void GUI::WidgetHasChangedParamNoSaved() /*SLOT*/ //called when any widget is changed
 {
-	m_ParamSaved=0;
+  m_ParamSaved=0;
 }
 
 void GUI::GridProcesscheckBoxHasChanged(int state) /*SLOT*/ // called when Gid Processing is checked
 {
 /* State=0 if false, State=2 if true */
-	if(state==2) NbThreadsSpinBox->setEnabled(false);
-	else  NbThreadsSpinBox->setEnabled(true);
+  if(state==2) NbThreadsSpinBox->setEnabled(false);
+  else  NbThreadsSpinBox->setEnabled(true);
 }
 
   /////////////////////////////////////////
@@ -2266,24 +2266,24 @@ void GUI::GridProcesscheckBoxHasChanged(int state) /*SLOT*/ // called when Gid P
 
 int GUI::checkImage(std::string Image) // returns 1 if not an image, 2 if not a dti, otherwise 0
 {
-	typedef itk::Image < double , 4 > ImageType; //itk type for image
-	typedef itk::ImageFileReader <ImageType> ReaderType; //itk reader class to open an image
-	ReaderType::Pointer reader=ReaderType::New();
-	ImageType::RegionType region;
+  typedef itk::Image < double , 4 > ImageType; //itk type for image
+  typedef itk::ImageFileReader <ImageType> ReaderType; //itk reader class to open an image
+  ReaderType::Pointer reader=ReaderType::New();
+  ImageType::RegionType region;
 
-	reader->SetFileName( Image );
+  reader->SetFileName( Image );
 
-	try{
-		reader->UpdateOutputInformation();
-	}
-	catch(itk::ExceptionObject & err)
-	{
-		return 1; // file is not an image
-	}
+  try{
+    reader->UpdateOutputInformation();
+  }
+  catch(itk::ExceptionObject & err)
+  {
+    return 1; // file is not an image
+  }
 
-	itk::ImageIOBase::IOPixelType pixel  = reader->GetImageIO()->GetPixelType() ;
-	if( pixel == itk::ImageIOBase::SYMMETRICSECONDRANKTENSOR || pixel == itk::ImageIOBase::DIFFUSIONTENSOR3D || pixel == itk::ImageIOBase::VECTOR ) return 0; // test if DTI
-	return 2;
+  itk::ImageIOBase::IOPixelType pixel  = reader->GetImageIO()->GetPixelType() ;
+  if( pixel == itk::ImageIOBase::SYMMETRICSECONDRANKTENSOR || pixel == itk::ImageIOBase::DIFFUSIONTENSOR3D || pixel == itk::ImageIOBase::VECTOR ) return 0; // test if DTI
+  return 2;
 }
 
   /////////////////////////////////////////
@@ -2292,648 +2292,648 @@ int GUI::checkImage(std::string Image) // returns 1 if not an image, 2 if not a 
 
 int GUI::Compute() /*SLOT*/
 {
-	if( m_ErrorDetectedInConstructor && m_noGUI )
-	{
-		ExitProgram();
-		return -1;
-	}
-	else
-	{
+  if( m_ErrorDetectedInConstructor && m_noGUI )
+  {
+    ExitProgram();
+    return -1;
+  }
+  else
+  {
 
-		if(CaseListWidget->count()==0)
-		{
-			if(!m_noGUI) QMessageBox::critical(this, "No Cases", "Please give at least one case");
-			else std::cout<<"| No Cases: Please give at least one case"<<std::endl;
-		}
-		else // OK Case
-		{
-	
-			if(OutputFolderLineEdit->text().isEmpty())
-			{
-				if(!m_noGUI) QMessageBox::critical(this, "No Output Folder", "Please give an output folder");
-				else std::cout<<"| No Output Folder: Please give an output folder"<<std::endl;
-			}
-			else // OK Output
-			{
-				int WritingOutStatus = LaunchScriptWriter();
+    if(CaseListWidget->count()==0)
+    {
+      if(!m_noGUI) QMessageBox::critical(this, "No Cases", "Please give at least one case");
+      else std::cout<<"| No Cases: Please give at least one case"<<std::endl;
+    }
+    else // OK Case
+    {
+  
+      if(OutputFolderLineEdit->text().isEmpty())
+      {
+        if(!m_noGUI) QMessageBox::critical(this, "No Output Folder", "Please give an output folder");
+        else std::cout<<"| No Output Folder: Please give an output folder"<<std::endl;
+      }
+      else // OK Output
+      {
+        int WritingOutStatus = LaunchScriptWriter();
 
-				std::cout<<"| Clearing previous cases in vectors..."<<std::endl; // command line display
-				m_CasesPath.clear();
-				m_scriptwriter->clearCasesPath();
+        std::cout<<"| Clearing previous cases in vectors..."<<std::endl; // command line display
+        m_CasesPath.clear();
+        m_scriptwriter->clearCasesPath();
 
-				if(WritingOutStatus==-1) 
-				{
-					if(m_noGUI) ExitProgram(); // no possibility to change options because no GUI so QUIT
-					return -1;
-				}
+        if(WritingOutStatus==-1) 
+        {
+          if(m_noGUI) ExitProgram(); // no possibility to change options because no GUI so QUIT
+          return -1;
+        }
 
-				return LaunchScriptRunner(); // else
+        return LaunchScriptRunner(); // else
 
-			} // else of if(OutputFolderLineEdit->text().isEmpty())
+      } // else of if(OutputFolderLineEdit->text().isEmpty())
 
-		} // else of if[Case]
+    } // else of if[Case]
 
-		if(m_noGUI) ExitProgram(); // Only 1 compute in nogui mode
-		return -1;
+    if(m_noGUI) ExitProgram(); // Only 1 compute in nogui mode
+    return -1;
 
-	} // else of if( m_ErrorDetectedInConstructor && m_noGUI )
+  } // else of if( m_ErrorDetectedInConstructor && m_noGUI )
 
 }
 
 int GUI::LaunchScriptWriter()
 {
 /* Variables for the QProcesses */
-	int ExitCode=0;
-	std::string program;
+  int ExitCode=0;
+  std::string program;
 
 /* Checking and Setting the values */
 
 /* Cases */
-	for(int i=0; i < CaseListWidget->count() ;i++) 
-	{
-		std::string CurrentCase = CaseListWidget->item(i)->text().toStdString().substr( CaseListWidget->item(i)->text().split(":").at(0).size()+2 );
-		if( ! itksys::SystemTools::GetPermissions(CurrentCase.c_str(), ITKmode_F_OK) ) // Test if the case files exist => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
-		{
-			if(!m_noGUI)
-			{
-				std::string text = "This file does not exist :\n" + CurrentCase;
-				QMessageBox::critical(this, "Case does not exist", QString(text.c_str()) );
-			}
-			else std::cout<<"| This file does not exist : " << CurrentCase <<std::endl;
-			return -1;
-		}
-		int checkIm = checkImage(CurrentCase); // returns 1 if not an image, 2 if not a dti, otherwise 0
-		if( checkIm == 1 ) // returns 1 if not an image, 2 if not a dti, otherwise 0
-		{
-			if(!m_noGUI)
-			{
-				std::string text = "This file is not an image :\n" + CurrentCase;
-				QMessageBox::critical(this, "No image", QString(text.c_str()) );
-			}
-			else std::cout<<"| This file is not an image : " << CurrentCase <<std::endl;
-			return -1;
-		}
-		if( checkIm == 2 ) // returns 1 if not an image, 2 if not a dti, otherwise 0
-		{
-			if(!m_noGUI)
-			{
-				std::string text = "This image is not a DTI :\n" + CurrentCase;
-				QMessageBox::critical(this, "No DTI", QString(text.c_str()) );
-			}
-			else std::cout<<"| This image is not a DTI : " << CurrentCase <<std::endl;
-			return -1;
-		}
-		m_CasesPath.push_back( CurrentCase );
-	}
-	m_scriptwriter->setCasesPath(m_CasesPath); // m_CasesPath is a vector
+  for(int i=0; i < CaseListWidget->count() ;i++) 
+  {
+    std::string CurrentCase = CaseListWidget->item(i)->text().toStdString().substr( CaseListWidget->item(i)->text().split(":").at(0).size()+2 );
+    if( ! itksys::SystemTools::GetPermissions(CurrentCase.c_str(), ITKmode_F_OK) ) // Test if the case files exist => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
+    {
+      if(!m_noGUI)
+      {
+        std::string text = "This file does not exist :\n" + CurrentCase;
+        QMessageBox::critical(this, "Case does not exist", QString(text.c_str()) );
+      }
+      else std::cout<<"| This file does not exist : " << CurrentCase <<std::endl;
+      return -1;
+    }
+    int checkIm = checkImage(CurrentCase); // returns 1 if not an image, 2 if not a dti, otherwise 0
+    if( checkIm == 1 ) // returns 1 if not an image, 2 if not a dti, otherwise 0
+    {
+      if(!m_noGUI)
+      {
+        std::string text = "This file is not an image :\n" + CurrentCase;
+        QMessageBox::critical(this, "No image", QString(text.c_str()) );
+      }
+      else std::cout<<"| This file is not an image : " << CurrentCase <<std::endl;
+      return -1;
+    }
+    if( checkIm == 2 ) // returns 1 if not an image, 2 if not a dti, otherwise 0
+    {
+      if(!m_noGUI)
+      {
+        std::string text = "This image is not a DTI :\n" + CurrentCase;
+        QMessageBox::critical(this, "No DTI", QString(text.c_str()) );
+      }
+      else std::cout<<"| This image is not a DTI : " << CurrentCase <<std::endl;
+      return -1;
+    }
+    m_CasesPath.push_back( CurrentCase );
+  }
+  m_scriptwriter->setCasesPath(m_CasesPath); // m_CasesPath is a vector
 
 /* Output */
-	m_OutputPath=OutputFolderLineEdit->text();
-	if( ! itksys::SystemTools::GetPermissions(m_OutputPath.toStdString().c_str(), ITKmode_F_OK) ) // Test if the folder exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
-	{
-		if(!m_noGUI) QMessageBox::critical(this, "No Output Folder", "The output folder does not exist");
-		else std::cout<<"| The output folder does not exist"<<std::endl;
-		return -1;
-	}
-	if( ! itksys::SystemTools::GetPermissions(m_OutputPath.toStdString().c_str(), ITKmode_W_OK) ) // Test if the program can write in the output folder => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
-	{
-		if(!m_noGUI) QMessageBox::critical(this, "Output Folder Unwritable", "Please give an output folder authorized in reading");
-		else std::cout<<"| Please give an output folder authorized in reading"<<std::endl;
-		return -1;
-	}
-	m_scriptwriter->setOutputPath(m_OutputPath.toStdString());
+  m_OutputPath=OutputFolderLineEdit->text();
+  if( ! itksys::SystemTools::GetPermissions(m_OutputPath.toStdString().c_str(), ITKmode_F_OK) ) // Test if the folder exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
+  {
+    if(!m_noGUI) QMessageBox::critical(this, "No Output Folder", "The output folder does not exist");
+    else std::cout<<"| The output folder does not exist"<<std::endl;
+    return -1;
+  }
+  if( ! itksys::SystemTools::GetPermissions(m_OutputPath.toStdString().c_str(), ITKmode_W_OK) ) // Test if the program can write in the output folder => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
+  {
+    if(!m_noGUI) QMessageBox::critical(this, "Output Folder Unwritable", "Please give an output folder authorized in reading");
+    else std::cout<<"| Please give an output folder authorized in reading"<<std::endl;
+    return -1;
+  }
+  m_scriptwriter->setOutputPath(m_OutputPath.toStdString());
 
-	if( ! itksys::SystemTools::GetPermissions((m_OutputPath.toStdString() + "/DTIAtlas").c_str(), ITKmode_F_OK) ) // Test if the main folder does not exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
-	{
-		std::cout<<"| Creating Main directory..."<<std::endl; // command line display
-		QProcess * mkdirMainProcess = new QProcess;
-		program = "mkdir " + m_OutputPath.toStdString() + "/DTIAtlas"; //  Creates the directory
-		std::cout<<"| $ " << program << std::endl;
-		ExitCode = mkdirMainProcess->execute( program.c_str() );
-	}
+  if( ! itksys::SystemTools::GetPermissions((m_OutputPath.toStdString() + "/DTIAtlas").c_str(), ITKmode_F_OK) ) // Test if the main folder does not exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
+  {
+    std::cout<<"| Creating Main directory..."<<std::endl; // command line display
+    QProcess * mkdirMainProcess = new QProcess;
+    program = "mkdir " + m_OutputPath.toStdString() + "/DTIAtlas"; //  Creates the directory
+    std::cout<<"| $ " << program << std::endl;
+    ExitCode = mkdirMainProcess->execute( program.c_str() );
+  }
 
-	if( ! itksys::SystemTools::GetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script").c_str(), ITKmode_F_OK) ) // Test if the script folder does not exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
-	{
-		std::cout<<"| Creating Script directory..."<<std::endl; // command line display
-		QProcess * mkdirScriptProcess = new QProcess;
-		program = "mkdir " + m_OutputPath.toStdString() + "/DTIAtlas/Script";
-		std::cout<<"| $ " << program << std::endl;
-		ExitCode = mkdirScriptProcess->execute( program.c_str() );
-	}
+  if( ! itksys::SystemTools::GetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script").c_str(), ITKmode_F_OK) ) // Test if the script folder does not exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
+  {
+    std::cout<<"| Creating Script directory..."<<std::endl; // command line display
+    QProcess * mkdirScriptProcess = new QProcess;
+    program = "mkdir " + m_OutputPath.toStdString() + "/DTIAtlas/Script";
+    std::cout<<"| $ " << program << std::endl;
+    ExitCode = mkdirScriptProcess->execute( program.c_str() );
+  }
 
 /* Template */
-	if (!TemplateLineEdit->text().isEmpty()) 
-	{
-		if( ! itksys::SystemTools::GetPermissions(TemplateLineEdit->text().toStdString().c_str(), ITKmode_F_OK) ) // Test if the case files exist => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
-		{
-			if(!m_noGUI)
-			{
-				std::string text = "This template file does not exist :\n" + TemplateLineEdit->text().toStdString();
-				QMessageBox::critical(this, "Template does not exist", QString(text.c_str()) );
-			}
-			else std::cout<<"| This template file does not exist : " << TemplateLineEdit->text().toStdString() <<std::endl;
-			return -1;
-		}
-		int checkImTemp = checkImage(TemplateLineEdit->text().toStdString()); // returns 1 if not an image, 2 if not a dti, otherwise 0
-		if( checkImTemp == 1 ) // returns 1 if not an image, 2 if not a dti, otherwise 0
-		{
-			if(!m_noGUI)
-			{
-				std::string text = "This template file is not an image :\n" + TemplateLineEdit->text().toStdString();
-				QMessageBox::critical(this, "No image", QString(text.c_str()) );
-			}
-			else std::cout<<"| This template file is not an image : " << TemplateLineEdit->text().toStdString() <<std::endl;
-			return -1;
-		}
-		if( checkImTemp == 0 ) // returns 1 if not an image, 2 if not a dti, otherwise 0 //the template has to be a FA image !!
-		{
-			if(!m_noGUI)
-			{
-				std::string text = "This template image is not a FA :\n" + TemplateLineEdit->text().toStdString();
-				QMessageBox::critical(this, "No FA", QString(text.c_str()) );
-			}
-			else std::cout<<"| This template image is not a FA : " << TemplateLineEdit->text().toStdString() <<std::endl;
-			return -1;
-		}
-		m_scriptwriter->setRegType(0);
-		m_scriptwriter->setTemplatePath(TemplateLineEdit->text().toStdString());
-	}
+  if (!TemplateLineEdit->text().isEmpty()) 
+  {
+    if( ! itksys::SystemTools::GetPermissions(TemplateLineEdit->text().toStdString().c_str(), ITKmode_F_OK) ) // Test if the case files exist => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
+    {
+      if(!m_noGUI)
+      {
+        std::string text = "This template file does not exist :\n" + TemplateLineEdit->text().toStdString();
+        QMessageBox::critical(this, "Template does not exist", QString(text.c_str()) );
+      }
+      else std::cout<<"| This template file does not exist : " << TemplateLineEdit->text().toStdString() <<std::endl;
+      return -1;
+    }
+    int checkImTemp = checkImage(TemplateLineEdit->text().toStdString()); // returns 1 if not an image, 2 if not a dti, otherwise 0
+    if( checkImTemp == 1 ) // returns 1 if not an image, 2 if not a dti, otherwise 0
+    {
+      if(!m_noGUI)
+      {
+        std::string text = "This template file is not an image :\n" + TemplateLineEdit->text().toStdString();
+        QMessageBox::critical(this, "No image", QString(text.c_str()) );
+      }
+      else std::cout<<"| This template file is not an image : " << TemplateLineEdit->text().toStdString() <<std::endl;
+      return -1;
+    }
+    if( checkImTemp == 0 ) // returns 1 if not an image, 2 if not a dti, otherwise 0 //the template has to be a FA image !!
+    {
+      if(!m_noGUI)
+      {
+        std::string text = "This template image is not a FA :\n" + TemplateLineEdit->text().toStdString();
+        QMessageBox::critical(this, "No FA", QString(text.c_str()) );
+      }
+      else std::cout<<"| This template image is not a FA : " << TemplateLineEdit->text().toStdString() <<std::endl;
+      return -1;
+    }
+    m_scriptwriter->setRegType(0);
+    m_scriptwriter->setTemplatePath(TemplateLineEdit->text().toStdString());
+  }
 
-	else m_scriptwriter->setRegType(1); // default
-	
+  else m_scriptwriter->setRegType(1); // default
+  
 /* Resamp options */
-	m_scriptwriter->setInterpolType(InterpolTypeComboBox->currentText().toStdString());
-	if( InterpolTypeComboBox->currentText()==QString("Windowed Sinc") ) m_scriptwriter->setInterpolOption(m_windowComboBox->currentText().toStdString());
-	else if( InterpolTypeComboBox->currentText()==QString("BSpline") ) m_scriptwriter->setInterpolOption(m_BSplineComboBox->currentText().toStdString());
+  m_scriptwriter->setInterpolType(InterpolTypeComboBox->currentText().toStdString());
+  if( InterpolTypeComboBox->currentText()==QString("Windowed Sinc") ) m_scriptwriter->setInterpolOption(m_windowComboBox->currentText().toStdString());
+  else if( InterpolTypeComboBox->currentText()==QString("BSpline") ) m_scriptwriter->setInterpolOption(m_BSplineComboBox->currentText().toStdString());
 
-	m_scriptwriter->setTensInterpol(TensInterpolComboBox->currentText().toStdString());
-	if( TensInterpolComboBox->currentText()==QString("Non Log Euclidean") ) m_scriptwriter->setInterpolLogOption(m_nologComboBox->currentText().toStdString());
+  m_scriptwriter->setTensInterpol(TensInterpolComboBox->currentText().toStdString());
+  if( TensInterpolComboBox->currentText()==QString("Non Log Euclidean") ) m_scriptwriter->setInterpolLogOption(m_nologComboBox->currentText().toStdString());
 
-	m_scriptwriter->setTensorTfm(TensTfmComboBox->currentText().toStdString());
+  m_scriptwriter->setTensorTfm(TensTfmComboBox->currentText().toStdString());
 
 /* Final Resamp options */
 
-	m_scriptwriter->setDTIRegExtraPath(DTIRegExtraPathlineEdit->text().toStdString());
+  m_scriptwriter->setDTIRegExtraPath(DTIRegExtraPathlineEdit->text().toStdString());
 
-	std::vector < std::string > DTIRegOptions;
+  std::vector < std::string > DTIRegOptions;
 
-	DTIRegOptions.push_back(RegMethodcomboBox->currentText().toStdString());
+  DTIRegOptions.push_back(RegMethodcomboBox->currentText().toStdString());
 
-	if( RegMethodcomboBox->currentText()==QString("ANTS") ) 
-	{
-		DTIRegOptions.push_back(m_ARegTypeComboBox->currentText().toStdString());
-		DTIRegOptions.push_back(m_TfmStepLine->text().toStdString());
-		DTIRegOptions.push_back(m_IterLine->text().toStdString());
-		DTIRegOptions.push_back(m_SimMetComboBox->currentText().toStdString());
+  if( RegMethodcomboBox->currentText()==QString("ANTS") ) 
+  {
+    DTIRegOptions.push_back(m_ARegTypeComboBox->currentText().toStdString());
+    DTIRegOptions.push_back(m_TfmStepLine->text().toStdString());
+    DTIRegOptions.push_back(m_IterLine->text().toStdString());
+    DTIRegOptions.push_back(m_SimMetComboBox->currentText().toStdString());
 
-		std::ostringstream out;
-		out << m_SimParamDble->value();
-		std::string SimParam_str = out.str();
-		DTIRegOptions.push_back(SimParam_str);
+    std::ostringstream out;
+    out << m_SimParamDble->value();
+    std::string SimParam_str = out.str();
+    DTIRegOptions.push_back(SimParam_str);
 
-		std::ostringstream out1;
-		out1 << m_GSigmaDble->value();
-		std::string GSigma_str = out1.str();
-		DTIRegOptions.push_back(GSigma_str);
+    std::ostringstream out1;
+    out1 << m_GSigmaDble->value();
+    std::string GSigma_str = out1.str();
+    DTIRegOptions.push_back(GSigma_str);
 
-		if(m_SmoothOffCheck->isChecked()) DTIRegOptions.push_back("1");
-		else DTIRegOptions.push_back("0");
-	}
-	else //BRAINS
-	{
-		DTIRegOptions.push_back(m_BRegTypeComboBox->currentText().toStdString());
-		DTIRegOptions.push_back(m_TfmModeComboBox->currentText().toStdString());
+    if(m_SmoothOffCheck->isChecked()) DTIRegOptions.push_back("1");
+    else DTIRegOptions.push_back("0");
+  }
+  else //BRAINS
+  {
+    DTIRegOptions.push_back(m_BRegTypeComboBox->currentText().toStdString());
+    DTIRegOptions.push_back(m_TfmModeComboBox->currentText().toStdString());
 
-		std::ostringstream out1;
-		out1 << m_NbPyrLevSpin->value();
-		std::string NbPyrLev_str = out1.str();
-		DTIRegOptions.push_back(NbPyrLev_str);
+    std::ostringstream out1;
+    out1 << m_NbPyrLevSpin->value();
+    std::string NbPyrLev_str = out1.str();
+    DTIRegOptions.push_back(NbPyrLev_str);
 
-		DTIRegOptions.push_back(m_PyrLevItLine->text().toStdString());
-	}
+    DTIRegOptions.push_back(m_PyrLevItLine->text().toStdString());
+  }
 
-	m_scriptwriter->setDTIRegOptions(DTIRegOptions);
-	DTIRegOptions.clear();
+  m_scriptwriter->setDTIRegOptions(DTIRegOptions);
+  DTIRegOptions.clear();
 
 /* Software paths */
 /* Checking if all the programs have been given */
-	if(ImagemathPath->text().isEmpty() || ResampPath->text().isEmpty() || CropDTIPath->text().isEmpty() || dtiprocPath->text().isEmpty() || BRAINSFitPath->text().isEmpty() || GAPath->text().isEmpty() || dtiavgPath->text().isEmpty() || DTIRegPath->text().isEmpty() || unuPath->text().isEmpty() || MriWatcherPath->text().isEmpty()) // if any path is missing => check in the config file and in the PATH
-	{
-		const char * value = itksys::SystemTools::GetEnv("DTIAtlasBuilderSoftPath"); // C function = const char * getenv(const char *)
-		if (value) LoadConfig( QString(value) ); // replace the paths by the paths given in the config file
+  if(ImagemathPath->text().isEmpty() || ResampPath->text().isEmpty() || CropDTIPath->text().isEmpty() || dtiprocPath->text().isEmpty() || BRAINSFitPath->text().isEmpty() || GAPath->text().isEmpty() || dtiavgPath->text().isEmpty() || DTIRegPath->text().isEmpty() || unuPath->text().isEmpty() || MriWatcherPath->text().isEmpty()) // if any path is missing => check in the config file and in the PATH
+  {
+    const char * value = itksys::SystemTools::GetEnv("DTIAtlasBuilderSoftPath"); // C function = const char * getenv(const char *)
+    if (value) LoadConfig( QString(value) ); // replace the paths by the paths given in the config file
 
-		std::string programPath;
-		std::string notFound;
+    std::string programPath;
+    std::string notFound;
 
-		if(ImagemathPath->text().isEmpty())
-		{
-			programPath = itksys::SystemTools::FindProgram("ImageMath",m_FindProgramDTIABExecDirVec);
-			if(programPath.empty()) notFound = notFound + "> ImageMath\n";
-			else ImagemathPath->setText(QString(programPath.c_str()));
-		}
-		if(ResampPath->text().isEmpty())
-		{
-			programPath = itksys::SystemTools::FindProgram("ResampleDTIlogEuclidean",m_FindProgramDTIABExecDirVec);
-			if(programPath.empty()) notFound = notFound + "> ResampleDTIlogEuclidean\n";
-			else ResampPath->setText(QString(programPath.c_str()));
-		}
-		if(CropDTIPath->text().isEmpty())
-		{
-			programPath = itksys::SystemTools::FindProgram("CropDTI",m_FindProgramDTIABExecDirVec);
-			if(programPath.empty()) notFound = notFound + "> CropDTI\n";
-			else CropDTIPath->setText(QString(programPath.c_str()));
-		}
-		if(dtiprocPath->text().isEmpty())
-		{
-			programPath = itksys::SystemTools::FindProgram("dtiprocess",m_FindProgramDTIABExecDirVec);
-			if(programPath.empty()) notFound = notFound + "> dtiprocess\n";
-			else dtiprocPath->setText(QString(programPath.c_str()));
-		}
-		if(BRAINSFitPath->text().isEmpty())
-		{
-			programPath = itksys::SystemTools::FindProgram("BRAINSFit",m_FindProgramDTIABExecDirVec);
-			if(programPath.empty()) notFound = notFound + "> BRAINSFit\n";
-			else BRAINSFitPath->setText(QString(programPath.c_str()));
-		}
-		if(GAPath->text().isEmpty())
-		{
-			programPath = itksys::SystemTools::FindProgram("GreedyAtlas",m_FindProgramDTIABExecDirVec);
-			if(programPath.empty()) notFound = notFound + "> GreedyAtlas\n";
-			else GAPath->setText(QString(programPath.c_str()));
-		}
-		if(dtiavgPath->text().isEmpty())
-		{
-			programPath = itksys::SystemTools::FindProgram("dtiaverage",m_FindProgramDTIABExecDirVec);
-			if(programPath.empty()) notFound = notFound + "> dtiaverage\n";
-			else dtiavgPath->setText(QString(programPath.c_str()));
-		}
-		if(DTIRegPath->text().isEmpty())
-		{
-			programPath = itksys::SystemTools::FindProgram("DTI-Reg_1.1.2",m_FindProgramDTIABExecDirVec);
-			if(programPath.empty()) programPath = itksys::SystemTools::FindProgram("DTI-Reg",m_FindProgramDTIABExecDirVec); // if 1.1.2 not found, look for "DTI-Reg"
-			if(programPath.empty()) notFound = notFound + "> DTI-Reg\n";
-			else DTIRegPath->setText(QString(programPath.c_str()));
-		}
-		if(unuPath->text().isEmpty())
-		{
-			programPath = itksys::SystemTools::FindProgram("unu",m_FindProgramDTIABExecDirVec);
-			if(programPath.empty()) notFound = notFound + "> unu\n";
-			else unuPath->setText(QString(programPath.c_str()));
-		}
-		if(MriWatcherPath->text().isEmpty())
-		{
-			programPath = itksys::SystemTools::FindProgram("MriWatcher",m_FindProgramDTIABExecDirVec);
-			if(programPath.empty()) DisableQC(); // notFound = notFound + "> MriWatcher (Program will work, but QC will not be available)\n";
-			else MriWatcherPath->setText(QString(programPath.c_str()));
-		}
+    if(ImagemathPath->text().isEmpty())
+    {
+      programPath = itksys::SystemTools::FindProgram("ImageMath",m_FindProgramDTIABExecDirVec);
+      if(programPath.empty()) notFound = notFound + "> ImageMath\n";
+      else ImagemathPath->setText(QString(programPath.c_str()));
+    }
+    if(ResampPath->text().isEmpty())
+    {
+      programPath = itksys::SystemTools::FindProgram("ResampleDTIlogEuclidean",m_FindProgramDTIABExecDirVec);
+      if(programPath.empty()) notFound = notFound + "> ResampleDTIlogEuclidean\n";
+      else ResampPath->setText(QString(programPath.c_str()));
+    }
+    if(CropDTIPath->text().isEmpty())
+    {
+      programPath = itksys::SystemTools::FindProgram("CropDTI",m_FindProgramDTIABExecDirVec);
+      if(programPath.empty()) notFound = notFound + "> CropDTI\n";
+      else CropDTIPath->setText(QString(programPath.c_str()));
+    }
+    if(dtiprocPath->text().isEmpty())
+    {
+      programPath = itksys::SystemTools::FindProgram("dtiprocess",m_FindProgramDTIABExecDirVec);
+      if(programPath.empty()) notFound = notFound + "> dtiprocess\n";
+      else dtiprocPath->setText(QString(programPath.c_str()));
+    }
+    if(BRAINSFitPath->text().isEmpty())
+    {
+      programPath = itksys::SystemTools::FindProgram("BRAINSFit",m_FindProgramDTIABExecDirVec);
+      if(programPath.empty()) notFound = notFound + "> BRAINSFit\n";
+      else BRAINSFitPath->setText(QString(programPath.c_str()));
+    }
+    if(GAPath->text().isEmpty())
+    {
+      programPath = itksys::SystemTools::FindProgram("GreedyAtlas",m_FindProgramDTIABExecDirVec);
+      if(programPath.empty()) notFound = notFound + "> GreedyAtlas\n";
+      else GAPath->setText(QString(programPath.c_str()));
+    }
+    if(dtiavgPath->text().isEmpty())
+    {
+      programPath = itksys::SystemTools::FindProgram("dtiaverage",m_FindProgramDTIABExecDirVec);
+      if(programPath.empty()) notFound = notFound + "> dtiaverage\n";
+      else dtiavgPath->setText(QString(programPath.c_str()));
+    }
+    if(DTIRegPath->text().isEmpty())
+    {
+      programPath = itksys::SystemTools::FindProgram("DTI-Reg_1.1.2",m_FindProgramDTIABExecDirVec);
+      if(programPath.empty()) programPath = itksys::SystemTools::FindProgram("DTI-Reg",m_FindProgramDTIABExecDirVec); // if 1.1.2 not found, look for "DTI-Reg"
+      if(programPath.empty()) notFound = notFound + "> DTI-Reg\n";
+      else DTIRegPath->setText(QString(programPath.c_str()));
+    }
+    if(unuPath->text().isEmpty())
+    {
+      programPath = itksys::SystemTools::FindProgram("unu",m_FindProgramDTIABExecDirVec);
+      if(programPath.empty()) notFound = notFound + "> unu\n";
+      else unuPath->setText(QString(programPath.c_str()));
+    }
+    if(MriWatcherPath->text().isEmpty())
+    {
+      programPath = itksys::SystemTools::FindProgram("MriWatcher",m_FindProgramDTIABExecDirVec);
+      if(programPath.empty()) DisableQC(); // notFound = notFound + "> MriWatcher (Program will work, but QC will not be available)\n";
+      else MriWatcherPath->setText(QString(programPath.c_str()));
+    }
 
-		if( !notFound.empty() )
-		{
-			if(!m_noGUI)
-			{
-				std::string text = "The following programs are missing.\nPlease enter the path manually:\n" + notFound;
-				QMessageBox::critical(this, "Program missing", QString(text.c_str()) );
-			}
-			else std::cout<<"| The following programs are missing. Please modify the configuration file or enter the path manually in the GUI:\n" << notFound <<std::endl;
-			return -1;
-		}
-	}
+    if( !notFound.empty() )
+    {
+      if(!m_noGUI)
+      {
+        std::string text = "The following programs are missing.\nPlease enter the path manually:\n" + notFound;
+        QMessageBox::critical(this, "Program missing", QString(text.c_str()) );
+      }
+      else std::cout<<"| The following programs are missing. Please modify the configuration file or enter the path manually in the GUI:\n" << notFound <<std::endl;
+      return -1;
+    }
+  }
 
-	if(testGA()==-1) return -1;
-	if(testDTIReg()==-1) return -1;
+  if(testGA()==-1) return -1;
+  if(testDTIReg()==-1) return -1;
 
 /* Checking if the given files are executable */
-	if(! itksys::SystemTools::GetPermissions(ImagemathPath->text().toStdString().c_str(), ITKmode_X_OK))
-	{
-		if(!m_noGUI)
-		{
-			std::string text = "The file \'" + ImagemathPath->text().toStdString() + "\' is not executable";
-			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
-		}
-		else std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
-		return -1;
-	}
-	if(! itksys::SystemTools::GetPermissions(ResampPath->text().toStdString().c_str(), ITKmode_X_OK) )
-	{
-		if(!m_noGUI)
-		{
-			std::string text = "The file \'" + ResampPath->text().toStdString() + "\' is not executable";
-			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
-		}
-		else std::cout<<"| The file \'" << ResampPath->text().toStdString() << "\' is not executable" << std::endl;
-		return -1;
-	}
-	if(! itksys::SystemTools::GetPermissions(CropDTIPath->text().toStdString().c_str(), ITKmode_X_OK) )
-	{
-		if(!m_noGUI)
-		{
-			std::string text = "The file \'" + CropDTIPath->text().toStdString() + "\' is not executable";
-			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
-		}
-		else std::cout<<"| The file \'" << CropDTIPath->text().toStdString() << "\' is not executable" << std::endl;
-		return -1;
-	}
-	if(! itksys::SystemTools::GetPermissions(dtiprocPath->text().toStdString().c_str(), ITKmode_X_OK) )
-	{
-		if(!m_noGUI)
-		{
-			std::string text = "The file \'" + dtiprocPath->text().toStdString() + "\' is not executable";
-			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
-		}
-		else std::cout<<"| The file \'" << dtiprocPath->text().toStdString() << "\' is not executable" << std::endl;
-		return -1;
-	}
-	if(! itksys::SystemTools::GetPermissions(BRAINSFitPath->text().toStdString().c_str(), ITKmode_X_OK) )
-	{
-		if(!m_noGUI)
-		{
-			std::string text = "The file \'" + BRAINSFitPath->text().toStdString() + "\' is not executable";
-			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
-		}
-		else std::cout<<"| The file \'" << BRAINSFitPath->text().toStdString() << "\' is not executable" << std::endl;
-		return -1;
-	}
-	if(! itksys::SystemTools::GetPermissions(GAPath->text().toStdString().c_str(), ITKmode_X_OK) )
-	{
-		if(!m_noGUI)
-		{
-			std::string text = "The file \'" + GAPath->text().toStdString() + "\' is not executable";
-			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
-		}
-		else std::cout<<"| The file \'" << GAPath->text().toStdString() << "\' is not executable" << std::endl;
-		return -1;
-	}
-	if(! itksys::SystemTools::GetPermissions(dtiavgPath->text().toStdString().c_str(), ITKmode_X_OK) )
-	{
-		if(!m_noGUI)
-		{
-			std::string text = "The file \'" + dtiavgPath->text().toStdString() + "\' is not executable";
-			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
-		}
-		else std::cout<<"| The file \'" << dtiavgPath->text().toStdString() << "\' is not executable" << std::endl;
-		return -1;
-	}
-	if(! itksys::SystemTools::GetPermissions(DTIRegPath->text().toStdString().c_str(), ITKmode_X_OK) )
-	{
-		if(!m_noGUI)
-		{
-			std::string text = "The file \'" + DTIRegPath->text().toStdString() + "\' is not executable";
-			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
-		}
-		else std::cout<<"| The file \'" << DTIRegPath->text().toStdString() << "\' is not executable" << std::endl;
-		return -1;
-	}
-	if(! itksys::SystemTools::GetPermissions(unuPath->text().toStdString().c_str(), ITKmode_X_OK) )
-	{
-		if(!m_noGUI)
-		{
-			std::string text = "The file \'" + unuPath->text().toStdString() + "\' is not executable";
-			QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
-		}
-		else std::cout<<"| The file \'" << unuPath->text().toStdString() << "\' is not executable" << std::endl;
-		return -1;
-	}
+  if(! itksys::SystemTools::GetPermissions(ImagemathPath->text().toStdString().c_str(), ITKmode_X_OK))
+  {
+    if(!m_noGUI)
+    {
+      std::string text = "The file \'" + ImagemathPath->text().toStdString() + "\' is not executable";
+      QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+    }
+    else std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
+    return -1;
+  }
+  if(! itksys::SystemTools::GetPermissions(ResampPath->text().toStdString().c_str(), ITKmode_X_OK) )
+  {
+    if(!m_noGUI)
+    {
+      std::string text = "The file \'" + ResampPath->text().toStdString() + "\' is not executable";
+      QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+    }
+    else std::cout<<"| The file \'" << ResampPath->text().toStdString() << "\' is not executable" << std::endl;
+    return -1;
+  }
+  if(! itksys::SystemTools::GetPermissions(CropDTIPath->text().toStdString().c_str(), ITKmode_X_OK) )
+  {
+    if(!m_noGUI)
+    {
+      std::string text = "The file \'" + CropDTIPath->text().toStdString() + "\' is not executable";
+      QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+    }
+    else std::cout<<"| The file \'" << CropDTIPath->text().toStdString() << "\' is not executable" << std::endl;
+    return -1;
+  }
+  if(! itksys::SystemTools::GetPermissions(dtiprocPath->text().toStdString().c_str(), ITKmode_X_OK) )
+  {
+    if(!m_noGUI)
+    {
+      std::string text = "The file \'" + dtiprocPath->text().toStdString() + "\' is not executable";
+      QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+    }
+    else std::cout<<"| The file \'" << dtiprocPath->text().toStdString() << "\' is not executable" << std::endl;
+    return -1;
+  }
+  if(! itksys::SystemTools::GetPermissions(BRAINSFitPath->text().toStdString().c_str(), ITKmode_X_OK) )
+  {
+    if(!m_noGUI)
+    {
+      std::string text = "The file \'" + BRAINSFitPath->text().toStdString() + "\' is not executable";
+      QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+    }
+    else std::cout<<"| The file \'" << BRAINSFitPath->text().toStdString() << "\' is not executable" << std::endl;
+    return -1;
+  }
+  if(! itksys::SystemTools::GetPermissions(GAPath->text().toStdString().c_str(), ITKmode_X_OK) )
+  {
+    if(!m_noGUI)
+    {
+      std::string text = "The file \'" + GAPath->text().toStdString() + "\' is not executable";
+      QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+    }
+    else std::cout<<"| The file \'" << GAPath->text().toStdString() << "\' is not executable" << std::endl;
+    return -1;
+  }
+  if(! itksys::SystemTools::GetPermissions(dtiavgPath->text().toStdString().c_str(), ITKmode_X_OK) )
+  {
+    if(!m_noGUI)
+    {
+      std::string text = "The file \'" + dtiavgPath->text().toStdString() + "\' is not executable";
+      QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+    }
+    else std::cout<<"| The file \'" << dtiavgPath->text().toStdString() << "\' is not executable" << std::endl;
+    return -1;
+  }
+  if(! itksys::SystemTools::GetPermissions(DTIRegPath->text().toStdString().c_str(), ITKmode_X_OK) )
+  {
+    if(!m_noGUI)
+    {
+      std::string text = "The file \'" + DTIRegPath->text().toStdString() + "\' is not executable";
+      QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+    }
+    else std::cout<<"| The file \'" << DTIRegPath->text().toStdString() << "\' is not executable" << std::endl;
+    return -1;
+  }
+  if(! itksys::SystemTools::GetPermissions(unuPath->text().toStdString().c_str(), ITKmode_X_OK) )
+  {
+    if(!m_noGUI)
+    {
+      std::string text = "The file \'" + unuPath->text().toStdString() + "\' is not executable";
+      QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+    }
+    else std::cout<<"| The file \'" << unuPath->text().toStdString() << "\' is not executable" << std::endl;
+    return -1;
+  }
 
-	if(MriWatcherPath->text().isEmpty()) DisableQC();
-	else if(! itksys::SystemTools::GetPermissions(MriWatcherPath->text().toStdString().c_str(), ITKmode_X_OK) != 0)
-	{
-		if(!m_noGUI)
-		{
-			std::string text = "The file \'" + MriWatcherPath->text().toStdString() + "\' is not executable: program will work, but QC will not be available";
-			QMessageBox::warning(this, "Non executable File", QString(text.c_str()) );
-		}
-		else std::cout<<"| The file \'" << MriWatcherPath->text().toStdString() << "\' is not executable: program will work, but QC will not be available" << std::endl;
-		DisableQC();
-//		return -1;
-	}
+  if(MriWatcherPath->text().isEmpty()) DisableQC();
+  else if(! itksys::SystemTools::GetPermissions(MriWatcherPath->text().toStdString().c_str(), ITKmode_X_OK) != 0)
+  {
+    if(!m_noGUI)
+    {
+      std::string text = "The file \'" + MriWatcherPath->text().toStdString() + "\' is not executable: program will work, but QC will not be available";
+      QMessageBox::warning(this, "Non executable File", QString(text.c_str()) );
+    }
+    else std::cout<<"| The file \'" << MriWatcherPath->text().toStdString() << "\' is not executable: program will work, but QC will not be available" << std::endl;
+    DisableQC();
+//    return -1;
+  }
 
-	std::vector < std::string > SoftPath;
+  std::vector < std::string > SoftPath;
 
-	SoftPath.push_back(ImagemathPath->text().toStdString());
-	SoftPath.push_back(ResampPath->text().toStdString());
-	SoftPath.push_back(CropDTIPath->text().toStdString());
-	SoftPath.push_back(dtiprocPath->text().toStdString());
-	SoftPath.push_back(BRAINSFitPath->text().toStdString());
-	SoftPath.push_back(GAPath->text().toStdString());
-	SoftPath.push_back(dtiavgPath->text().toStdString());
-	SoftPath.push_back(DTIRegPath->text().toStdString());
-	SoftPath.push_back(unuPath->text().toStdString());
+  SoftPath.push_back(ImagemathPath->text().toStdString());
+  SoftPath.push_back(ResampPath->text().toStdString());
+  SoftPath.push_back(CropDTIPath->text().toStdString());
+  SoftPath.push_back(dtiprocPath->text().toStdString());
+  SoftPath.push_back(BRAINSFitPath->text().toStdString());
+  SoftPath.push_back(GAPath->text().toStdString());
+  SoftPath.push_back(dtiavgPath->text().toStdString());
+  SoftPath.push_back(DTIRegPath->text().toStdString());
+  SoftPath.push_back(unuPath->text().toStdString());
 
-	m_scriptwriter->setSoftPath(SoftPath);
-	SoftPath.clear();
+  m_scriptwriter->setSoftPath(SoftPath);
+  SoftPath.clear();
 
 /* Find Python */ // m_PythonPath member because needed in LaunchScriptRunner()
-	m_PythonPath = ""; // in case it has been used before
-	if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION) // Use the python executable copied from the Slicer build tree (python-build/bin/python) to the ExternalBin folder
-	{
-		m_PythonPath = m_DTIABSlicerExtensionExternalBinDir + "/python";
-		if(! itksys::SystemTools::GetPermissions(m_PythonPath.c_str(), ITKmode_X_OK) ) m_PythonPath=""; // If Slicer Extension and testing, ExternalBin folder does not exist so just leave it // itksys::SystemTools::GetPermissions() returns true if ok, -1 if not ok
-	}
-	if( m_PythonPath.empty() ) // Find and display Python version used // If not slicer ext -> empty, if slicer ext and test -> empty
-	{
-		m_PythonPath = itksys::SystemTools::FindProgram("python",m_FindProgramDTIABExecDirVec);
-		if(m_PythonPath.empty())
-		{
-			if(!m_noGUI)
-			{
-				std::string PythonNotFoundtext = "Python has not been found. Please install python before running DTIAtlasBuilder.";
-				QMessageBox::critical(this, "Python not found", QString(PythonNotFoundtext.c_str()) );
-			}
-			else std::cout<<"| Python has not been found. Please install python before running DTIAtlasBuilder." << std::endl;
-			return -1;
-		}
-	}
+  m_PythonPath = ""; // in case it has been used before
+  if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION) // Use the python executable copied from the Slicer build tree (python-build/bin/python) to the ExternalBin folder
+  {
+    m_PythonPath = m_DTIABSlicerExtensionExternalBinDir + "/python";
+    if(! itksys::SystemTools::GetPermissions(m_PythonPath.c_str(), ITKmode_X_OK) ) m_PythonPath=""; // If Slicer Extension and testing, ExternalBin folder does not exist so just leave it // itksys::SystemTools::GetPermissions() returns true if ok, -1 if not ok
+  }
+  if( m_PythonPath.empty() ) // Find and display Python version used // If not slicer ext -> empty, if slicer ext and test -> empty
+  {
+    m_PythonPath = itksys::SystemTools::FindProgram("python",m_FindProgramDTIABExecDirVec);
+    if(m_PythonPath.empty())
+    {
+      if(!m_noGUI)
+      {
+        std::string PythonNotFoundtext = "Python has not been found. Please install python before running DTIAtlasBuilder.";
+        QMessageBox::critical(this, "Python not found", QString(PythonNotFoundtext.c_str()) );
+      }
+      else std::cout<<"| Python has not been found. Please install python before running DTIAtlasBuilder." << std::endl;
+      return -1;
+    }
+  }
 
-	m_scriptwriter->setPythonPath(m_PythonPath);
+  m_scriptwriter->setPythonPath(m_PythonPath);
 
 /* Voxel Size and Cropping*/
-	if(m_scriptwriter->CheckVoxelSize()==1) 
-	{
-		if(!m_noGUI) QMessageBox::critical(this, "Different Voxel Sizes", "Error: The voxel size of the images\nare not the same,\nplease change dataset"); // returns 0 if voxel size OK , otherwise 1
-		else std::cout<<"| Error: The voxel size of the images are not the same, please change dataset" << std::endl;
-		return -1;
-	}
-	m_NeedToBeCropped=m_scriptwriter->setCroppingSize( SafetyMargincheckBox->isChecked() ); // returns 0 if no cropping , 1 if cropping needed
-	if( m_NeedToBeCropped==1 && !SafetyMargincheckBox->isChecked() )
-	{
-		if(!m_noGUI) QMessageBox::warning(this, "Cropping", "Warning: The images do not have the same size, \nso some of them will be cropped");
-		else std::cout<<"| Warning: The images do not have the same size, so some of them will be cropped" << std::endl;
-	}
+  if(m_scriptwriter->CheckVoxelSize()==1) 
+  {
+    if(!m_noGUI) QMessageBox::critical(this, "Different Voxel Sizes", "Error: The voxel size of the images\nare not the same,\nplease change dataset"); // returns 0 if voxel size OK , otherwise 1
+    else std::cout<<"| Error: The voxel size of the images are not the same, please change dataset" << std::endl;
+    return -1;
+  }
+  m_NeedToBeCropped=m_scriptwriter->setCroppingSize( SafetyMargincheckBox->isChecked() ); // returns 0 if no cropping , 1 if cropping needed
+  if( m_NeedToBeCropped==1 && !SafetyMargincheckBox->isChecked() )
+  {
+    if(!m_noGUI) QMessageBox::warning(this, "Cropping", "Warning: The images do not have the same size, \nso some of them will be cropped");
+    else std::cout<<"| Warning: The images do not have the same size, so some of them will be cropped" << std::endl;
+  }
 
 /* Other Options */
-	if(OverwritecheckBox->isChecked()) m_scriptwriter->setOverwrite(1);
-	else m_scriptwriter->setOverwrite(0);
+  if(OverwritecheckBox->isChecked()) m_scriptwriter->setOverwrite(1);
+  else m_scriptwriter->setOverwrite(0);
 
-	m_scriptwriter->setnbLoops(NbLoopsSpinBox->value());
+  m_scriptwriter->setnbLoops(NbLoopsSpinBox->value());
 
-	m_scriptwriter->setBFAffineTfmMode(BFAffineTfmModecomboBox->currentText().toStdString());
+  m_scriptwriter->setBFAffineTfmMode(BFAffineTfmModecomboBox->currentText().toStdString());
 
-	m_scriptwriter->setGridProcess( GridProcesscheckBox->isChecked() ); // isChecked() returns true or false
-	m_scriptwriter->setGridCommand( GridProcessCmdLineEdit->text().toStdString() );
+  m_scriptwriter->setGridProcess( GridProcesscheckBox->isChecked() ); // isChecked() returns true or false
+  m_scriptwriter->setGridCommand( GridProcessCmdLineEdit->text().toStdString() );
 
-	if( GridProcesscheckBox->isChecked() ) m_scriptwriter->setNbThreads(1); // Not used in script, but fct needs to be called to initialize var
-	else m_scriptwriter->setNbThreads( NbThreadsSpinBox->value() );
+  if( GridProcesscheckBox->isChecked() ) m_scriptwriter->setNbThreads(1); // Not used in script, but fct needs to be called to initialize var
+  else m_scriptwriter->setNbThreads( NbThreadsSpinBox->value() );
 
 /* Launch writing */
-	m_scriptwriter->WriteScript(); // Master Function : get pid to send a signal to Qt process to move progress bar
+  m_scriptwriter->WriteScript(); // Master Function : get pid to send a signal to Qt process to move progress bar
 
 /* XML file for GreedyAtlas */
-	GenerateXMLForGA();
+  GenerateXMLForGA();
 
 /* Save CSV and parameters */
-	SaveCSVResults(m_NeedToBeCropped,NbLoopsSpinBox->value());
-	SaveParameters(m_OutputPath + QString("/DTIAtlas/DTIAtlasBuilderParameters.txt"), m_OutputPath + QString("/DTIAtlas/DTIAtlasBuilderDataset.csv"));
+  SaveCSVResults(m_NeedToBeCropped,NbLoopsSpinBox->value());
+  SaveParameters(m_OutputPath + QString("/DTIAtlas/DTIAtlasBuilderParameters.txt"), m_OutputPath + QString("/DTIAtlas/DTIAtlasBuilderDataset.csv"));
 
 /* Generate Preprocess script file */
-	std::cout<<"| Generating Pre processing script file..."; // command line display
+  std::cout<<"| Generating Pre processing script file..."; // command line display
 
-	QString ScriptPath;
-	ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/DTIAtlasBuilder_Preprocess.script");
-	QFile filePreP(ScriptPath);
+  QString ScriptPath;
+  ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/DTIAtlasBuilder_Preprocess.script");
+  QFile filePreP(ScriptPath);
 
-	if ( filePreP.open( IO_WriteOnly | IO_Translate ) )
-	{
-		//file.setPermissions(QFile::ExeOwner); //make the file executable for the owner
-		QTextStream stream( &filePreP );
-		stream << QString((m_scriptwriter->getScript_Preprocess()).c_str()) << endl;
-		std::cout<<"DONE"<<std::endl; // command line display
-	}
-	else qDebug( "Could not create file");
+  if ( filePreP.open( IO_WriteOnly | IO_Translate ) )
+  {
+    //file.setPermissions(QFile::ExeOwner); //make the file executable for the owner
+    QTextStream stream( &filePreP );
+    stream << QString((m_scriptwriter->getScript_Preprocess()).c_str()) << endl;
+    std::cout<<"DONE"<<std::endl; // command line display
+  }
+  else qDebug( "Could not create file");
 
 /* Generate Atlas Building script file */
-	std::cout<<"| Generating Atlas Building script file..."; // command line display
+  std::cout<<"| Generating Atlas Building script file..."; // command line display
 
-	ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/DTIAtlasBuilder_AtlasBuilding.script");
-	QFile fileAtlas(ScriptPath);
+  ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/DTIAtlasBuilder_AtlasBuilding.script");
+  QFile fileAtlas(ScriptPath);
 
-	if ( fileAtlas.open( IO_WriteOnly | IO_Translate ) )
-	{
-		//file.setPermissions(QFile::ExeOwner); //make the file executable for the owner
-		QTextStream stream( &fileAtlas );
-		stream << QString((m_scriptwriter->getScript_AtlasBuilding()).c_str()) << endl;
-		std::cout<<"DONE"<<std::endl; // command line display
-	}
-	else qDebug( "Could not create file");
+  if ( fileAtlas.open( IO_WriteOnly | IO_Translate ) )
+  {
+    //file.setPermissions(QFile::ExeOwner); //make the file executable for the owner
+    QTextStream stream( &fileAtlas );
+    stream << QString((m_scriptwriter->getScript_AtlasBuilding()).c_str()) << endl;
+    std::cout<<"DONE"<<std::endl; // command line display
+  }
+  else qDebug( "Could not create file");
 
 /* Generate Main script file */
-	std::cout<<"| Generating Main script file..."; // command line display
+  std::cout<<"| Generating Main script file..."; // command line display
 
-	ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/DTIAtlasBuilder_Main.script");
-	QFile fileMain(ScriptPath);
+  ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/DTIAtlasBuilder_Main.script");
+  QFile fileMain(ScriptPath);
 
-	if ( fileMain.open( IO_WriteOnly | IO_Translate ) )
-	{
-		//file.setPermissions(QFile::ExeOwner); // make the file executable for the owner
-		QTextStream stream( &fileMain );
-		stream << QString((m_scriptwriter->getScript_Main()).c_str()) << endl;
-		std::cout<<"DONE"<<std::endl; // command line display
-	}
-	else qDebug( "Could not create file");
+  if ( fileMain.open( IO_WriteOnly | IO_Translate ) )
+  {
+    //file.setPermissions(QFile::ExeOwner); // make the file executable for the owner
+    QTextStream stream( &fileMain );
+    stream << QString((m_scriptwriter->getScript_Main()).c_str()) << endl;
+    std::cout<<"DONE"<<std::endl; // command line display
+  }
+  else qDebug( "Could not create file");
 
 /* Generate Server script file */
-	if( GridProcesscheckBox->isChecked() )
-	{
-	 	std::cout<<"| Generating Server script file..."; // command line display
+  if( GridProcesscheckBox->isChecked() )
+  {
+     std::cout<<"| Generating Server script file..."; // command line display
 
-		ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/RunCommandOnServer.script");
-		QFile fileMain(ScriptPath);
+    ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/RunCommandOnServer.script");
+    QFile fileMain(ScriptPath);
 
-		if ( fileMain.open( IO_WriteOnly | IO_Translate ) )
-		{
-			//file.setPermissions(QFile::ExeOwner); // make the file executable for the owner
-			QTextStream stream( &fileMain );
+    if ( fileMain.open( IO_WriteOnly | IO_Translate ) )
+    {
+      //file.setPermissions(QFile::ExeOwner); // make the file executable for the owner
+      QTextStream stream( &fileMain );
 
-			stream << "#!/usr/bin/python" << endl << endl;
+      stream << "#!/usr/bin/python" << endl << endl;
 
-			stream << "import os" << endl ;
-			stream << "import sys # to get the arguments" << endl << endl;
+      stream << "import os" << endl ;
+      stream << "import sys # to get the arguments" << endl << endl;
 
-			stream << "# arguments: [file to create] [commands to execute]" << endl;
-			stream << "# example : RunCommandOnServer.script file.txt \"ls\" \"du -sh\" \"nautilus .\"" << endl << endl;
+      stream << "# arguments: [file to create] [commands to execute]" << endl;
+      stream << "# example : RunCommandOnServer.script file.txt \"ls\" \"du -sh\" \"nautilus .\"" << endl << endl;
 
-			stream << "os.putenv(\"ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS\",\"1\") # to prevent programs from using too many cores on the cluster" << endl << endl;
+      stream << "os.putenv(\"ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS\",\"1\") # to prevent programs from using too many cores on the cluster" << endl << endl;
 
-			stream << "i=2 # sys.argv[0] is the name of the executable and sys.argv[1] is the name of the file to create" << endl;
-			stream << "while i < len(sys.argv):" << endl;
-				stream << "\tCommand = sys.argv[i]" << endl;
-				stream << "\tprint(\"Running Command : \" + Command)" << endl;
-				stream << "\tos.system(Command)" << endl;
-				stream << "\ti += 1"<< endl <<endl;
+      stream << "i=2 # sys.argv[0] is the name of the executable and sys.argv[1] is the name of the file to create" << endl;
+      stream << "while i < len(sys.argv):" << endl;
+        stream << "  Command = sys.argv[i]" << endl;
+        stream << "  print(\"Running Command : \" + Command)" << endl;
+        stream << "  os.system(Command)" << endl;
+        stream << "  i += 1"<< endl <<endl;
 
-			stream << "FileName=sys.argv[1]" << endl ;
-			stream << "print(\"Creating file : \" + FileName + \"\\n\")" << endl ;
-			stream << "f = open(FileName,'w')" << endl ;
-			stream << "f.close()" << endl ;
+      stream << "FileName=sys.argv[1]" << endl ;
+      stream << "print(\"Creating file : \" + FileName + \"\\n\")" << endl ;
+      stream << "f = open(FileName,'w')" << endl ;
+      stream << "f.close()" << endl ;
 
-			std::cout<<"DONE"<<std::endl; // command line display
-		}
-		else qDebug( "Could not create file");
-	}
+      std::cout<<"DONE"<<std::endl; // command line display
+    }
+    else qDebug( "Could not create file");
+  }
 
 /* Give the right to user to execute the scripts */
-/*	QProcess * chmodProcess = new QProcess;
-	program = "chmod u+x " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Preprocess.script " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_AtlasBuilding.script " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Main.script "; // 'chmod u+x = user+execute'
-	if( GridProcesscheckBox->isChecked() ) program = program + m_OutputPath.toStdString() + "/DTIAtlas/Script/RunCommandOnServer.script";
-	std::cout<<"| $ " << program << std::endl;
-	ExitCode = chmodProcess->execute( program.c_str() );
+/*  QProcess * chmodProcess = new QProcess;
+  program = "chmod u+x " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Preprocess.script " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_AtlasBuilding.script " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Main.script "; // 'chmod u+x = user+execute'
+  if( GridProcesscheckBox->isChecked() ) program = program + m_OutputPath.toStdString() + "/DTIAtlas/Script/RunCommandOnServer.script";
+  std::cout<<"| $ " << program << std::endl;
+  ExitCode = chmodProcess->execute( program.c_str() );
 */
-	itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Preprocess.script ").c_str(), ITKmode_X_OK);
-	itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_AtlasBuilding.script ").c_str(), ITKmode_X_OK);
-	itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Main.script ").c_str(), ITKmode_X_OK);
-	if( GridProcesscheckBox->isChecked() ) itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/RunCommandOnServer.script ").c_str(), ITKmode_X_OK);
-	
-	return 0;
+  itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Preprocess.script ").c_str(), ITKmode_X_OK);
+  itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_AtlasBuilding.script ").c_str(), ITKmode_X_OK);
+  itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Main.script ").c_str(), ITKmode_X_OK);
+  if( GridProcesscheckBox->isChecked() ) itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/RunCommandOnServer.script ").c_str(), ITKmode_X_OK);
+  
+  return 0;
 }
 
 int GUI::LaunchScriptRunner()
 {
-	ComputepushButton->setEnabled(false);
-	m_ScriptRunning=true;
-	ScriptRunningDisplayQLabel->setText("Script Running");
-//	progressBar->setValue(0);
+  ComputepushButton->setEnabled(false);
+  m_ScriptRunning=true;
+  ScriptRunningDisplayQLabel->setText("Script Running");
+//  progressBar->setValue(0);
 
 /* Running the Script: */ // python path found before writing script : contains already a space after the command
-	std::string program;
-	program = m_PythonPath + " " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Main.script"; // 
-	std::cout<<"| $ " << program << std::endl;
+  std::string program;
+  program = m_PythonPath + " " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Main.script"; // 
+  std::cout<<"| $ " << program << std::endl;
 
-	std::cout<<"| Script Running..."<< std::endl; // command line display
+  std::cout<<"| Script Running..."<< std::endl; // command line display
 
-	std::string LogFilePath = m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder.log";
-	m_ScriptQProcess->setStandardOutputFile(LogFilePath.c_str(), QIODevice::Append); // Truncate = overwrite // Append= write after what's written
+  std::string LogFilePath = m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder.log";
+  m_ScriptQProcess->setStandardOutputFile(LogFilePath.c_str(), QIODevice::Append); // Truncate = overwrite // Append= write after what's written
 
-	if(m_noGUI) // !! no log file in the case of nogui (execute will write the stdout in the console, as it is the same process)
-	{
-		m_ScriptQProcess->execute( program.c_str() ); // execute will stay stuck in the program and wait for the script to be done
-	}
-	else
-	{
-		m_ScriptQProcess->start( program.c_str() ); // start will just start the program in another process
-		m_ScriptRunningQTimer->start(1000); // To update display in cmd line (display dots moving forward)
-	}
+  if(m_noGUI) // !! no log file in the case of nogui (execute will write the stdout in the console, as it is the same process)
+  {
+    m_ScriptQProcess->execute( program.c_str() ); // execute will stay stuck in the program and wait for the script to be done
+  }
+  else
+  {
+    m_ScriptQProcess->start( program.c_str() ); // start will just start the program in another process
+    m_ScriptRunningQTimer->start(1000); // To update display in cmd line (display dots moving)
+  }
 
-	return 0;
+  return 0;
 /*
-	if(!m_noGUI) // If GUI, not freeze it = use fork()
-	{
-		int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
+  if(!m_noGUI) // If GUI, not freeze it = use fork()
+  {
+    int pid=fork(); // cloning the process : returns the son's pid in the father and 0 in the son
 
-		if(pid==0) // we are in the  son : the father just keeps on running (window), the son will execute the script
-		{
-			int ExitCode = system( program.c_str() ); // son freezes here during execution of the script
+    if(pid==0) // we are in the  son : the father just keeps on running (window), the son will execute the script
+    {
+      int ExitCode = system( program.c_str() ); // son freezes here during execution of the script
 
-//			sigval value;
-//			value.sival_int = ExitCode;
-//			sigqueue(getppid(),SIGUSR1, value); // send a signal to the father (main window) with the value of the exit code of the script
+//      sigval value;
+//      value.sival_int = ExitCode;
+//      sigqueue(getppid(),SIGUSR1, value); // send a signal to the father (main window) with the value of the exit code of the script
 
-			if(ExitCode==0) kill(getppid(),SIGUSR1);
-			else kill(getppid(),SIGUSR2);
+      if(ExitCode==0) kill(getppid(),SIGUSR1);
+      else kill(getppid(),SIGUSR2);
 
-			_exit(0); // son ends // exit terminates the calling process after cleanup; _exit terminates it immediately.
-		}
+      _exit(0); // son ends // exit terminates the calling process after cleanup; _exit terminates it immediately.
+    }
 
-		return 0;
-	}
+    return 0;
+  }
 */
 /* If need to not freeze the main window :
 -> wait() or waitpid() make the process wait for the end of a son => FREEZE !!
@@ -2947,51 +2947,51 @@ if(ExitCode==0) kill(getppid(),SIGUSR1); // signal to the father than execution 
 
 void GUI::UpdateScriptRunningGUIDisplay() /*SLOT*/
 {
-	if(ScriptRunningDisplayQLabel->text().size()>=19) ScriptRunningDisplayQLabel->setText("Script Running"); // display only 5 dots at a time ("Script Running" = 14)
+  if(ScriptRunningDisplayQLabel->text().size()>=19) ScriptRunningDisplayQLabel->setText("Script Running"); // display only 5 dots at a time ("Script Running" = 14)
 
-	QString ScriptRunningDisplay = ScriptRunningDisplayQLabel->text() + ".";
-	ScriptRunningDisplayQLabel->setText(ScriptRunningDisplay);
+  QString ScriptRunningDisplay = ScriptRunningDisplayQLabel->text() + ".";
+  ScriptRunningDisplayQLabel->setText(ScriptRunningDisplay);
 }
 
 void GUI::ScriptQProcessDone(int ExitCode) /*SLOT*/
 {
-	if(!m_noGUI) // no timer if no GUI
-	{
-		m_ScriptRunningQTimer->stop();
-		std::cout<<std::endl;
-	}
+  if(!m_noGUI) // no timer if no GUI
+  {
+    m_ScriptRunningQTimer->stop();
+    std::cout<<std::endl;
+  }
 
-	if(ExitCode==0) RunningCompleted();
-	else RunningFailed();
+  if(ExitCode==0) RunningCompleted();
+  else RunningFailed();
 
-	if(!m_noGUI)
-	{
-		std::string LogFileText = "| Log file written in: \"" + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder.log\"";
-		std::cout<<LogFileText<<std::endl;
-		ScriptRunningDisplayQLabel->setText(ScriptRunningDisplayQLabel->text() + QString(LogFileText.c_str()));
-	}
+  if(!m_noGUI)
+  {
+    std::string LogFileText = "| Log file written in: \"" + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder.log\"";
+    std::cout<<LogFileText<<std::endl;
+    ScriptRunningDisplayQLabel->setText(ScriptRunningDisplayQLabel->text() + QString(LogFileText.c_str()));
+  }
 }
 
 void GUI::RunningCompleted()
 {
-//	progressBar->setValue(100); // if the progress steps don't go until 100
-	ComputepushButton->setEnabled(true);
-	m_ScriptRunning=false;
-	ScriptRunningDisplayQLabel->setText("Running Completed ");
+//  progressBar->setValue(100); // if the progress steps don't go until 100
+  ComputepushButton->setEnabled(true);
+  m_ScriptRunning=false;
+  ScriptRunningDisplayQLabel->setText("Running Completed ");
 
-	if(!m_noGUI) QMessageBox::information(this, "Running Completed", "Running Completed !");
-	std::cout<<"| Running Completed !"<<std::endl; // command line display
+  if(!m_noGUI) QMessageBox::information(this, "Running Completed", "Running Completed !");
+  std::cout<<"| Running Completed !"<<std::endl; // command line display
 }
 
 void GUI::RunningFailed()
 {
-//	progressBar->setValue(100); // if the progress steps don't go until 100
-	ComputepushButton->setEnabled(true);
-	m_ScriptRunning=false;
-	ScriptRunningDisplayQLabel->setText("Running Failed ");
+//  progressBar->setValue(100); // if the progress steps don't go until 100
+  ComputepushButton->setEnabled(true);
+  m_ScriptRunning=false;
+  ScriptRunningDisplayQLabel->setText("Running Failed ");
 
-	if(!m_noGUI) QMessageBox::information(this, "Running Failed", "Running Failed...");
-	std::cout<<"| Running Failed..."<<std::endl; // command line display
+  if(!m_noGUI) QMessageBox::information(this, "Running Failed", "Running Failed...");
+  std::cout<<"| Running Failed..."<<std::endl; // command line display
 }
 
   /////////////////////////////////////////
@@ -3000,20 +3000,20 @@ void GUI::RunningFailed()
 
 void GUI::ProgressBar(int Progress) // value sent by python script in signal
 {
-//	if(!m_noGUI) progressBar->setValue( Progress ); // crashes when refreshed too quickly
-	std::cout<<Progress<<"/100 complete"<<std::endl;
+//  if(!m_noGUI) progressBar->setValue( Progress ); // crashes when refreshed too quickly
+  std::cout<<Progress<<"/100 complete"<<std::endl;
 
-/*	int nbCases=CaseListWidget->count();
-	int nbLoops=NbLoopsSpinBox->value();
-	// nbSteps = nbLoops+1 x (nbCases x (Generate FA, Normalize, Affine reg, Apply transfm, generate FA) + Compute average) + nonLinear reg + nbCases x Apply tfm + DTI average + nbCases x (1st resamp 2nd resamp) + DTI average
-	int nbSteps = (nbLoops+1)*(nbCases*5 + 1) + 1 + nbCases*1 + 1 + nbCases*2 + 1;
-	if(m_NeedToBeCropped==1) nbSteps = nbSteps + nbCases*1; // + Crop DTI
+/*  int nbCases=CaseListWidget->count();
+  int nbLoops=NbLoopsSpinBox->value();
+  // nbSteps = nbLoops+1 x (nbCases x (Generate FA, Normalize, Affine reg, Apply transfm, generate FA) + Compute average) + nonLinear reg + nbCases x Apply tfm + DTI average + nbCases x (1st resamp 2nd resamp) + DTI average
+  int nbSteps = (nbLoops+1)*(nbCases*5 + 1) + 1 + nbCases*1 + 1 + nbCases*2 + 1;
+  if(m_NeedToBeCropped==1) nbSteps = nbSteps + nbCases*1; // + Crop DTI
 
-	int progressStep;
-	if(nbSteps>=100) progressStep=1;
-	else progressStep=(int)((double)100/(double)nbSteps); // compute a %
+  int progressStep;
+  if(nbSteps>=100) progressStep=1;
+  else progressStep=(int)((double)100/(double)nbSteps); // compute a %
 
-	int progressValue = progressBar->value() + progressStep;
+  int progressValue = progressBar->value() + progressStep;
 */
 }
 
