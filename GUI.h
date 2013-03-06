@@ -54,13 +54,13 @@ class GUI : public QMainWindow, public Ui::MainWindow
     int LoadParameters(QString paramFile, bool DiscardParametersCSV); // returns -1 if fails, otherwise 0
     bool LoadParametersReturnTrueIfCorrupted(QString ReadParameter, const char* Parameter );
     bool LoadParametersLoadScaleLevelReturnTrueIfCorrupted(  QStringList nbrs, 
-                  QCheckBox* SLcheckBox, // & so we can change the value
-                  QSpinBox* SLspinBox,
-                  QSpinBox* nbIterSpinBox,
-                  QDoubleSpinBox*& alphaDoubleSpinBox,
-                  QDoubleSpinBox*& betaDoubleSpinBox,
-                  QDoubleSpinBox*& gammaDoubleSpinBox,
-                  QDoubleSpinBox*& maxPerturbationDoubleSpinBox );
+                                                             QCheckBox* SLcheckBox, // & so we can change the value
+                                                             QSpinBox* SLspinBox,
+                                                             QSpinBox* nbIterSpinBox,
+                                                             QDoubleSpinBox*& alphaDoubleSpinBox,
+                                                             QDoubleSpinBox*& betaDoubleSpinBox,
+                                                             QDoubleSpinBox*& gammaDoubleSpinBox,
+                                                             QDoubleSpinBox*& maxPerturbationDoubleSpinBox );
     void SaveParameters(QString ParamBrowseName,QString CSVFileName);
 
 /*XML FILE*/
@@ -75,6 +75,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 
 /*MAIN FUNCT*/
     int LaunchScriptWriter(); // returns -1 if failed, otherwise 0
+    void WriteChangeHistoryLogFile(std::string OldVersion);
     int LaunchScriptRunner();
 
     void RunningCompleted();
@@ -142,6 +143,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 /*MAIN FUNCT*/
     int Compute();
     void ScriptQProcessDone(int);
+    void KillScriptQProcess();
     void UpdateScriptRunningGUIDisplay();
 
 

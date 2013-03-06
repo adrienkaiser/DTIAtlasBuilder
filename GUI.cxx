@@ -68,6 +68,7 @@ itksysProcess_Delete(TestProcess);
 
 #include "GUI.h"
 #include "ScriptWriter.h"
+#include "ChangeHistory.h"
 
 // Q_OS_WIN32 Q_OS_LINUX Q_OS_MAC are Qt macros
 #if defined Q_OS_WIN32
@@ -77,6 +78,17 @@ itksysProcess_Delete(TestProcess);
 #elif defined Q_OS_LINUX
 #define Platform "linux"
 #endif
+
+/* DTIAB version check:
+Version will be written in a log file when computing
+to display a warning if a new compute is done afterwards with a newer version
+1.0 : No version file
+1.1 : Introducing version file
+      Renaming AW folder to Diffeomorphic folders (folders renamed in python script)
+      Renaming GreedyAtlas' Def Fields to HField
+      Renaming Final Def Fields to GlobalDisplacementField
+*/
+#define DTIABversion "1.2"
 
   /////////////////////////////////////////
  //            CONSTRUCTOR              //
@@ -124,6 +136,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
   {
 /* Objects connections */
   QObject::connect(ComputepushButton, SIGNAL(clicked()), this, SLOT(Compute()));
+  QObject::connect(StoppushButton, SIGNAL(clicked()), this, SLOT(KillScriptQProcess()));
   QObject::connect(BrowseCSVPushButton, SIGNAL(clicked()), this, SLOT(ReadCSVSlot()));
   QObject::connect(SaveCSVPushButton, SIGNAL(clicked()), this, SLOT(SaveCSVDatasetBrowse()));
   QObject::connect(BrowseOutputPushButton, SIGNAL(clicked()), this, SLOT(OpenOutputBrowseWindow()));
@@ -133,6 +146,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
   QObject::connect(RemovePushButton, SIGNAL(clicked()), this, SLOT(RemoveSelectedCases()));
   RemovePushButton->setEnabled(false);
   ComputepushButton->setEnabled(false);
+  StoppushButton->setEnabled(false);
 
   QObject::connect(actionLoad_parameters, SIGNAL(triggered()), this, SLOT(LoadParametersSlot()));
   QObject::connect(actionSave_parameters, SIGNAL(triggered()), this, SLOT(SaveParametersSlot()));
@@ -777,12 +791,14 @@ void GUI::closeEvent(QCloseEvent* event)
 {
   if(m_ScriptRunning)
   {
-    int ret = QMessageBox::question(this,"Quit","The script is still running. If you exit now, the script will abort.\nDo you want to exit anyway ?",QMessageBox::No | QMessageBox::Yes);
+    int ret = QMessageBox::question(this,"Quit","The script is still running. If you exit now, the script will be aborted.\nDo you want to exit anyway ?",QMessageBox::No | QMessageBox::Yes);
     if (ret == QMessageBox::No) 
     {
       event->ignore();
       return;
     }
+
+    KillScriptQProcess();
   }
 
   else
@@ -1526,17 +1542,23 @@ int GUI::LoadParameters(QString paramFile, bool DiscardParametersCSV) // Discard
 /////////////////////////////////////////
 
 void GUI::GenerateXMLForGA()
-{  
+{
+  QString  xmlFileName = m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/GreedyAtlasParameters.xml");
+
   if( ! itksys::SystemTools::GetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration").c_str(), ITKmode_F_OK) ) // Test if the main folder does not exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
   {
-    std::cout<<"| Creating Non Linear Registration directory..."<<std::endl; // command line display
-    QProcess * mkdirMainProcess = new QProcess;
-    std::string program = "mkdir " + m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration"; //// Creates the directory
-    std::cout<<"| $ " << program << std::endl;
-    mkdirMainProcess->execute( program.c_str() );
+    if( itksys::SystemTools::GetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration_AW").c_str(), ITKmode_F_OK) ) // old version of the folder => put the xml in the old folder : will be renamed in the python script to the new name
+    {
+      xmlFileName = m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration_AW/GreedyAtlasParameters.xml");
+    }
+    else
+    {
+      std::cout<<"| Creating Non Linear Registration directory..."<<std::endl; // command line display
+      std::string Dir = m_OutputPath.toStdString() + "/DTIAtlas/2_NonLinear_Registration";
+      itksys::SystemTools::MakeDirectory( Dir.c_str() );
+    }
   }
 
-  QString  xmlFileName = m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/GreedyAtlasParameters.xml");
   QFile file(xmlFileName);
   if ( file.open( IO_WriteOnly | IO_Translate ) )
   {
@@ -2151,11 +2173,6 @@ int GUI::testDTIReg() /*SLOT*/ // returns 0 if version ok, -1 if bad version
 
 void GUI::ReadMe()  /*SLOT*/ /////to UPDATE
 {
-/*  QProcess * Process = new QProcess;
-  std::string program = "gedit /home/akaiser/Desktop/Projects/DTIAtlasBuilderGUI_07-12/DTIABGUIFinal_07-18-12/src/README.md";
-  std::cout<<"| $ " << program << std::endl;
-  Process->execute( program.c_str() );
-*/
   QDialog *dlg = new QDialog(this);
   dlg->setWindowTitle ("Read Me");
 
@@ -2342,10 +2359,6 @@ int GUI::Compute() /*SLOT*/
 
 int GUI::LaunchScriptWriter()
 {
-/* Variables for the QProcesses */
-  int ExitCode=0;
-  std::string program;
-
 /* Checking and Setting the values */
 
 /* Cases */
@@ -2406,19 +2419,15 @@ int GUI::LaunchScriptWriter()
   if( ! itksys::SystemTools::GetPermissions((m_OutputPath.toStdString() + "/DTIAtlas").c_str(), ITKmode_F_OK) ) // Test if the main folder does not exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
   {
     std::cout<<"| Creating Main directory..."<<std::endl; // command line display
-    QProcess * mkdirMainProcess = new QProcess;
-    program = "mkdir " + m_OutputPath.toStdString() + "/DTIAtlas"; //  Creates the directory
-    std::cout<<"| $ " << program << std::endl;
-    ExitCode = mkdirMainProcess->execute( program.c_str() );
+    std::string Dir = m_OutputPath.toStdString() + "/DTIAtlas";
+    itksys::SystemTools::MakeDirectory( Dir.c_str() );
   }
 
   if( ! itksys::SystemTools::GetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script").c_str(), ITKmode_F_OK) ) // Test if the script folder does not exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
   {
     std::cout<<"| Creating Script directory..."<<std::endl; // command line display
-    QProcess * mkdirScriptProcess = new QProcess;
-    program = "mkdir " + m_OutputPath.toStdString() + "/DTIAtlas/Script";
-    std::cout<<"| $ " << program << std::endl;
-    ExitCode = mkdirScriptProcess->execute( program.c_str() );
+    std::string Dir = m_OutputPath.toStdString() + "/DTIAtlas/Script";
+    itksys::SystemTools::MakeDirectory( Dir.c_str() );
   }
 
 /* Template */
@@ -2788,7 +2797,7 @@ int GUI::LaunchScriptWriter()
   std::cout<<"| Generating Pre processing script file..."; // command line display
 
   QString ScriptPath;
-  ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/DTIAtlasBuilder_Preprocess.script");
+  ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/DTIAtlasBuilder_Preprocess.py");
   QFile filePreP(ScriptPath);
 
   if ( filePreP.open( IO_WriteOnly | IO_Translate ) )
@@ -2803,7 +2812,7 @@ int GUI::LaunchScriptWriter()
 /* Generate Atlas Building script file */
   std::cout<<"| Generating Atlas Building script file..."; // command line display
 
-  ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/DTIAtlasBuilder_AtlasBuilding.script");
+  ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/DTIAtlasBuilder_AtlasBuilding.py");
   QFile fileAtlas(ScriptPath);
 
   if ( fileAtlas.open( IO_WriteOnly | IO_Translate ) )
@@ -2818,7 +2827,7 @@ int GUI::LaunchScriptWriter()
 /* Generate Main script file */
   std::cout<<"| Generating Main script file..."; // command line display
 
-  ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/DTIAtlasBuilder_Main.script");
+  ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/DTIAtlasBuilder_Main.py");
   QFile fileMain(ScriptPath);
 
   if ( fileMain.open( IO_WriteOnly | IO_Translate ) )
@@ -2835,12 +2844,11 @@ int GUI::LaunchScriptWriter()
   {
      std::cout<<"| Generating Server script file..."; // command line display
 
-    ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/RunCommandOnServer.script");
+    ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/RunCommandOnServer.py");
     QFile fileMain(ScriptPath);
 
     if ( fileMain.open( IO_WriteOnly | IO_Translate ) )
     {
-      //file.setPermissions(QFile::ExeOwner); // make the file executable for the owner
       QTextStream stream( &fileMain );
 
       stream << "#!/usr/bin/python" << endl << endl;
@@ -2849,7 +2857,7 @@ int GUI::LaunchScriptWriter()
       stream << "import sys # to get the arguments" << endl << endl;
 
       stream << "# arguments: [file to create] [commands to execute]" << endl;
-      stream << "# example : RunCommandOnServer.script file.txt \"ls\" \"du -sh\" \"nautilus .\"" << endl << endl;
+      stream << "# example : RunCommandOnServer.py file.txt \"ls\" \"du -sh\" \"nautilus .\"" << endl << endl;
 
       stream << "os.putenv(\"ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS\",\"1\") # to prevent programs from using too many cores on the cluster" << endl << endl;
 
@@ -2870,37 +2878,106 @@ int GUI::LaunchScriptWriter()
     else qDebug( "Could not create file");
   }
 
-/* Give the right to user to execute the scripts */
-/*  QProcess * chmodProcess = new QProcess;
-  program = "chmod u+x " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Preprocess.script " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_AtlasBuilding.script " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Main.script "; // 'chmod u+x = user+execute'
-  if( GridProcesscheckBox->isChecked() ) program = program + m_OutputPath.toStdString() + "/DTIAtlas/Script/RunCommandOnServer.script";
-  std::cout<<"| $ " << program << std::endl;
-  ExitCode = chmodProcess->execute( program.c_str() );
-*/
-  itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Preprocess.script ").c_str(), ITKmode_X_OK);
-  itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_AtlasBuilding.script ").c_str(), ITKmode_X_OK);
-  itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Main.script ").c_str(), ITKmode_X_OK);
-  if( GridProcesscheckBox->isChecked() ) itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/RunCommandOnServer.script ").c_str(), ITKmode_X_OK);
-  
+  itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Preprocess.py ").c_str(), ITKmode_X_OK);
+  itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_AtlasBuilding.py ").c_str(), ITKmode_X_OK);
+  itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Main.py ").c_str(), ITKmode_X_OK);
+  if( GridProcesscheckBox->isChecked() ) itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/RunCommandOnServer.py ").c_str(), ITKmode_X_OK);
+
+/* version log file : read if exists and create new one */
+  QString VersionFilePath = m_OutputPath + QString("/DTIAtlas/Script/VersionUsedToCompute.log");
+  bool DisplayWarningVersion = false;
+
+  std::string OldVersion;
+  if( itksys::SystemTools::GetPermissions(VersionFilePath.toStdString().c_str(), ITKmode_F_OK) ) // version file exists -> read it
+  {
+    QFile VersionFileFound(VersionFilePath);
+    if (VersionFileFound.open(QFile::ReadOnly))
+    {
+      QTextStream Foundstream(&VersionFileFound);
+      OldVersion = Foundstream.readLine().toStdString();
+      if( OldVersion != DTIABversion ) DisplayWarningVersion =true;// warning files names changed
+    } // open file in reading
+  } // if file exists : close scope where QFile has been created => will delete the QFile object and therefore close the file
+  else
+  {
+    OldVersion="1.0";
+    DisplayWarningVersion = true; // if no version file
+  }
+
+  if( DisplayWarningVersion )
+  {
+    WriteChangeHistoryLogFile(OldVersion);
+    std::string text = "The previous compute done in this output folder has been done with an older version of DTIAtlasBuilder (" + OldVersion + "). The current version is " + DTIABversion + ".\n\
+To avoid automatic recomputing, please apply the changes described in file \"" + m_OutputPath.toStdString() + "/DTIAtlas/Script/ChangeHistory.log\".";
+
+    if(!m_noGUI)
+    {
+      int ret = QMessageBox::question(this,"Version issue", QString(text.c_str()) + "\n\nHit \"Ok\" when changes are done to compute the Atlas.",QMessageBox::Cancel | QMessageBox::Ok);
+      if (ret == QMessageBox::Cancel)
+      {
+        return -1;
+      }
+    }
+    else
+    {
+      std::cout<<"| Warning: "<< text << std::endl;
+      return -1;
+    }
+  }
+
+  // Create file (or replace)
+  QFile VersionFile(VersionFilePath);
+  if ( VersionFile.open( IO_WriteOnly | IO_Translate ) )
+  {
+    QTextStream Versionstream( &VersionFile );
+    Versionstream << DTIABversion<< endl;
+  }
+  else qDebug( "Could not create version file");
+
+
   return 0;
+}
+
+void GUI::WriteChangeHistoryLogFile(std::string OldVersion) // write file for changes from old version so current version
+{
+  QString ChangeHistoryFilePath = m_OutputPath + "/DTIAtlas/Script/ChangeHistory.log";
+  QFile ChangeHistoryFile(ChangeHistoryFilePath);
+  if( ChangeHistoryFile.open( IO_WriteOnly | IO_Translate ) )
+  {
+    QTextStream ChangeHistorystream( &ChangeHistoryFile );
+
+    ChangeHistorystream << "# This file contains all changes done in the filenames from version " << QString(OldVersion.c_str()) << " to version " << QString(DTIABversion) << "."<< endl; // DTIABversion is a macro so a const char*
+    ChangeHistorystream << "# You need all these changes to be applied to your output folder before running DTIAtlasBuilder."<< endl<< endl;
+
+    if(OldVersion == "1.0")
+    {
+      ChangeHistorystream << OneZerotoOneOne<< endl;
+      ChangeHistorystream << OneOnetoOneTwo<< endl;
+    }
+    else if(OldVersion == "1.1")
+    {
+      ChangeHistorystream << OneOnetoOneTwo<< endl;
+    }
+  }
+  else qDebug( "Could not create Change History file");
 }
 
 int GUI::LaunchScriptRunner()
 {
   ComputepushButton->setEnabled(false);
+  StoppushButton->setEnabled(true);
   m_ScriptRunning=true;
-  ScriptRunningDisplayQLabel->setText("Script Running");
 //  progressBar->setValue(0);
 
 /* Running the Script: */ // python path found before writing script : contains already a space after the command
   std::string program;
-  program = m_PythonPath + " " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Main.script"; // 
+  program = m_PythonPath + " " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Main.py"; // 
   std::cout<<"| $ " << program << std::endl;
 
   std::cout<<"| Script Running..."<< std::endl; // command line display
 
   std::string LogFilePath = m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder.log";
-  m_ScriptQProcess->setStandardOutputFile(LogFilePath.c_str(), QIODevice::Append); // Truncate = overwrite // Append= write after what's written
+  m_ScriptQProcess->setStandardOutputFile(LogFilePath.c_str(), QIODevice::Truncate); // Truncate = overwrite // Append= write after what's written
 
   if(m_noGUI) // !! no log file in the case of nogui (execute will write the stdout in the console, as it is the same process)
   {
@@ -2911,6 +2988,10 @@ int GUI::LaunchScriptRunner()
     m_ScriptQProcess->start( program.c_str() ); // start will just start the program in another process
     m_ScriptRunningQTimer->start(1000); // To update display in cmd line (display dots moving)
   }
+  // If needed, m_ScriptQProcess->pid()
+
+  std::string text = "Script Running";
+  ScriptRunningDisplayQLabel->setText( QString( text.c_str() ) );
 
   return 0;
 /*
@@ -2945,15 +3026,37 @@ if(ExitCode==0) kill(getppid(),SIGUSR1); // signal to the father than execution 
 */
 }
 
+void GUI::KillScriptQProcess() /* SLOT */
+{
+  StoppushButton->setEnabled(false);
+  m_ScriptQProcess->kill(); // kill the running process
+  std::cout<<"| Main Script Aborted."<<std::endl;
+
+/* Kill other processes by  PID : read PID.log file */
+  QString PIDlogFilePath = m_OutputPath + QString("/DTIAtlas/Script/PID.log");
+  if( itksys::SystemTools::GetPermissions(PIDlogFilePath.toStdString().c_str(), ITKmode_F_OK) ) // PID file exists -> read it
+  {
+    QFile PIDfile(PIDlogFilePath);
+    if( PIDfile.open(QFile::ReadOnly) )
+    {
+      QTextStream PIDstream(&PIDfile);
+      int PID = PIDstream.readLine().toInt();
+      while( PID != 0 ) // if end of file, the value in PID will be 0
+      {
+        std::cout<<"| Killing: "<<PID<<std::endl;
+        // Kill PID
+
+        PID = PIDstream.readLine().toInt();
+      } // while file not at end
+    } // open file in reading
+  } // if file exists
+}
+
 void GUI::UpdateScriptRunningGUIDisplay() /*SLOT*/ // called by QTimer every second
 {
   if(ScriptRunningDisplayQLabel->text().size()>=19)
   {
-    std::ostringstream ossPID;
-    ossPID << m_ScriptQProcess->pid();
-    std::string PID_str = ossPID.str();
-
-    std::string text = "To stop the workflow, kill: " + PID_str + " | Script Running";
+    std::string text = "Script Running";
     ScriptRunningDisplayQLabel->setText( QString( text.c_str() ) ); // display only 5 dots at a time ("Script Running" = 14)
   }
 
@@ -2966,8 +3069,12 @@ void GUI::ScriptQProcessDone(int ExitCode) /*SLOT*/ // called
   if(!m_noGUI) // no timer if no GUI
   {
     m_ScriptRunningQTimer->stop();
-    std::cout<<std::endl;
   }
+
+//  progressBar->setValue(100); // if the progress steps don't go until 100
+  ComputepushButton->setEnabled(true);
+  StoppushButton->setEnabled(false);
+  m_ScriptRunning=false;
 
   if(ExitCode==0) RunningCompleted();
   else RunningFailed();
@@ -2982,9 +3089,6 @@ void GUI::ScriptQProcessDone(int ExitCode) /*SLOT*/ // called
 
 void GUI::RunningCompleted()
 {
-//  progressBar->setValue(100); // if the progress steps don't go until 100
-  ComputepushButton->setEnabled(true);
-  m_ScriptRunning=false;
   ScriptRunningDisplayQLabel->setText("Running Completed ");
 
   std::string RunningCompletedText = "Running Completed !\nFinal Atlas is in \"" + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/FinalAtlasDTI.nrrd\"\nFinal Displacement Fields for each case are in \"" + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/Second_Resampling/CaseX_GlobalDisplacementField.nrrd\"";
@@ -2995,9 +3099,6 @@ void GUI::RunningCompleted()
 
 void GUI::RunningFailed()
 {
-//  progressBar->setValue(100); // if the progress steps don't go until 100
-  ComputepushButton->setEnabled(true);
-  m_ScriptRunning=false;
   ScriptRunningDisplayQLabel->setText("Running Failed ");
 
   if(!m_noGUI) QMessageBox::information(this, "Running Failed", "Running Failed...");

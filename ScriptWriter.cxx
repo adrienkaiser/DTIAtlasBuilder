@@ -45,7 +45,12 @@ void ScriptWriter::Preprocess ()
   Script = Script + "#!/usr/bin/python\n\n";
   Script = Script + "import os # To run a shell command : os.system(\"[shell command]\")\n";
   Script = Script + "import sys # to return an exit code\n";
-  Script = Script + "import shutil # to remove a non empty directory\n";
+  Script = Script + "import shutil # to remove a non empty directory\n\n";
+
+  Script = Script + "PIDlogFile = \"" + m_OutputPath + "/DTIAtlas/Script/PID.log\"\n";
+  Script = Script + "PIDfile = open( PIDlogFile, 'a') # open in Append mode\n";
+  Script = Script + "PIDfile.write( str(os.getpid()) + \"\\n\" )\n";
+  Script = Script + "PIDfile.close()\n\n";
 
   Script = Script + "print(\"\\n============ Pre processing =============\")\n\n";
 
@@ -139,7 +144,7 @@ void ScriptWriter::Preprocess ()
   Script = Script + "RescaleTemp= OutputPath + \"/FATemplate_Rescaled.nrrd\"\n";
   Script = Script + "RescaleTempCommand= \"" + m_SoftPath[0] + " \" + AtlasFAref + \" -outfile \" + RescaleTemp + \" -rescale 0,10000\"\n";
 
-if( m_useGridProcess ) Script = Script + "RescaleTempCommand= \"" + m_GridCommand + " " + m_PythonPath + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + FilesFolder + \"/file \\'\" + RescaleTempCommand  + \"\\'\"\n";
+if( m_useGridProcess ) Script = Script + "RescaleTempCommand= \"" + m_GridCommand + " " + m_PythonPath + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.py \" + FilesFolder + \"/file \\'\" + RescaleTempCommand  + \"\\'\"\n";
 
   Script = Script + "print(\"\\n[Rescaling FA template] => $ \" + RescaleTempCommand)\n";
 
@@ -198,7 +203,7 @@ else        Script = Script + "  GeneFACase1Template=1\n";
     {
     Script = Script + "# Run Case1 template commands on grid\n";
     Script = Script + "if CropDTICase1Template or GeneFACase1Template :\n";
-      Script = Script + "  GridCase1TemplateCommand= \"" + m_GridCommand + " " + m_PythonPath + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + FilesFolder + \"/file\"\n";
+      Script = Script + "  GridCase1TemplateCommand= \"" + m_GridCommand + " " + m_PythonPath + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.py \" + FilesFolder + \"/file\"\n";
       Script = Script + "  if CropDTICase1Template : GridCase1TemplateCommand = GridCase1TemplateCommand + \" \'\" + CropCommand + \"\'\"\n";
       Script = Script + "  if GeneFACase1Template  : GridCase1TemplateCommand = GridCase1TemplateCommand + \" \'\" + GeneFACommand + \"\'\"\n";
       Script = Script + "  print(\"[Case 1] => Submitting : \" + GridCase1TemplateCommand)\n";
@@ -332,7 +337,7 @@ if( m_useGridProcess )
   Script = Script + "\n# Run grid process command for case X, containing all operations\n";
       Script = Script + "    if len(GridProcessCaseCommandsArray)!=0 : # There are operations to run\n";
 
-        Script = Script + "      GridAffineCommand= \"" + m_GridCommand + " " + m_PythonPath + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + FilesFolder + \"/Case\" + str(case+1)\n";
+        Script = Script + "      GridAffineCommand= \"" + m_GridCommand + " " + m_PythonPath + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.py \" + FilesFolder + \"/Case\" + str(case+1)\n";
 
         Script = Script + "      GridCmd = 0\n";
         Script = Script + "      while GridCmd < len(GridProcessCaseCommandsArray):\n";
@@ -375,7 +380,7 @@ if( m_useGridProcess )  Script = Script + "  TestGridProcess( FilesFolder, len(a
         Script = Script + "      AverageCommand= AverageCommand + FAforAVG\n";
         Script = Script + "      case += 1\n";
 
-if( m_useGridProcess )  Script = Script + "    AverageCommand= \"" + m_GridCommand + " " + m_PythonPath + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + FilesFolder + \"/file \\'\" + AverageCommand  + \"\\'\"\n";
+if( m_useGridProcess )  Script = Script + "    AverageCommand= \"" + m_GridCommand + " " + m_PythonPath + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.py \" + FilesFolder + \"/file \\'\" + AverageCommand  + \"\\'\"\n";
       Script = Script + "    print(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [Computing FA Average of registered images] => $ \" + AverageCommand)\n";
       Script = Script + "    nbStepsDone += 1\n";
 
@@ -418,7 +423,12 @@ void ScriptWriter::AtlasBuilding()
   Script = Script + "#!/usr/bin/python\n\n";
   Script = Script + "import os # To run a shell command : os.system(\"[shell command]\")\n";
   Script = Script + "import sys # to return an exit code\n";
-  Script = Script + "import shutil # to remove a non empty directory\n";
+  Script = Script + "import shutil # to remove a non empty directory\n\n";
+
+  Script = Script + "PIDlogFile = \"" + m_OutputPath + "/DTIAtlas/Script/PID.log\"\n";
+  Script = Script + "PIDfile = open( PIDlogFile, 'a') # open in Append mode\n";
+  Script = Script + "PIDfile.write( str(os.getpid()) + \"\\n\" )\n";
+  Script = Script + "PIDfile.close()\n\n";
 
   Script = Script + "print(\"\\n============ Atlas Building =============\")\n\n";
 
@@ -485,11 +495,11 @@ void ScriptWriter::AtlasBuilding()
 
     GridApostrophe = " + \"\\'\"";
     std::string File = "FilesFolder + \"/Case\" + str(case+1)";
-    GridProcessCmd = "\"" + m_GridCommand + " " + m_PythonPath + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + " + File + " + \" \"" + GridApostrophe + " + ";
+    GridProcessCmd = "\"" + m_GridCommand + " " + m_PythonPath + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.py \" + " + File + " + \" \"" + GridApostrophe + " + ";
     GridProcessFileExistCmd1 = "    f = open( " + File + ", 'w')\n    f.close()\n"; // if the image already exists, create the "semaphore" file
 
     std::string FileNoCase = "FilesFolder + \"/file\""; //  for the commands executed only once = not once per case
-    GridProcessCmdNoCase = "\"" + m_GridCommand + " " + m_PythonPath + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + " + FileNoCase + " + \" \"" + GridApostrophe + " + ";
+    GridProcessCmdNoCase = "\"" + m_GridCommand + " " + m_PythonPath + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.py \" + " + FileNoCase + " + \" \"" + GridApostrophe + " + ";
     GridProcessFileExistCmdNoCase = "  f = open( " + FileNoCase + ", 'w')\n  f.close()\n";
 
     GridProcessFileExistIndent = "\n  "; // if the file already exists, several commands in the else (create file), so change line and indent
@@ -498,22 +508,39 @@ void ScriptWriter::AtlasBuilding()
   }
 
 /* Create directory for temporary files and final */
+
+
+  Script = Script + "FinalPath= \"" + m_OutputPath + "/DTIAtlas/3_Diffeomorphic_Atlas\"\n";
+
+
   Script = Script + "# Create directory for temporary files and final\n";
   Script = Script + "if not os.path.isdir(DeformPath):\n";
-    Script = Script + "  print(\"\\n=> Creation of the Deformation transform directory = \" + DeformPath)\n";
-    Script = Script + "  os.mkdir(DeformPath)\n\n";
+  Script = Script + "  OldDeformPath= \"" + m_OutputPath + "/DTIAtlas/2_NonLinear_Registration_AW\"\n";
+  Script = Script + "  if os.path.isdir(OldDeformPath):\n";
+  Script = Script + "    os.rename(OldDeformPath,DeformPath)\n";
+  Script = Script + "  else:\n";
+  Script = Script + "    print(\"\\n=> Creation of the Deformation transform directory = \" + DeformPath)\n";
+  Script = Script + "    os.mkdir(DeformPath)\n\n";
+
   Script = Script + "if not os.path.isdir(FinalPath):\n";
-    Script = Script + "  print(\"\\n=> Creation of the Final Atlas directory = \" + FinalPath)\n";
-    Script = Script + "  os.mkdir(FinalPath)\n\n";
+  Script = Script + "  OldFinalPath= \"" + m_OutputPath + "/DTIAtlas/3_AW_Atlas\"\n";
+  Script = Script + "  if os.path.isdir(OldFinalPath):\n";
+  Script = Script + "    os.rename(OldFinalPath,FinalPath)\n";
+  Script = Script + "  else:\n";
+  Script = Script + "    print(\"\\n=> Creation of the Final Atlas directory = \" + FinalPath)\n";
+  Script = Script + "    os.mkdir(FinalPath)\n\n";
+
   Script = Script + "if not os.path.isdir(FinalResampPath):\n";
-    Script = Script + "  print(\"\\n=> Creation of the Final Resampling directory = \" + FinalResampPath)\n";
-    Script = Script + "  os.mkdir(FinalResampPath)\n\n";
+  Script = Script + "  print(\"\\n=> Creation of the Final Resampling directory = \" + FinalResampPath)\n";
+  Script = Script + "  os.mkdir(FinalResampPath)\n\n";
+
   Script = Script + "if not os.path.isdir(FinalResampPath + \"/First_Resampling\"):\n";
-    Script = Script + "  print(\"\\n=> Creation of the First Final Resampling directory = \" + FinalResampPath + \"/First_Resampling\")\n";
-    Script = Script + "  os.mkdir(FinalResampPath + \"/First_Resampling\")\n\n";
+  Script = Script + "  print(\"\\n=> Creation of the First Final Resampling directory = \" + FinalResampPath + \"/First_Resampling\")\n";
+  Script = Script + "  os.mkdir(FinalResampPath + \"/First_Resampling\")\n\n";
+
   Script = Script + "if not os.path.isdir(FinalResampPath + \"/Second_Resampling\"):\n";
-    Script = Script + "  print(\"\\n => Creation of the Second Final Resampling directory = \" + FinalResampPath + \"/Second_Resampling\")\n";
-    Script = Script + "  os.mkdir(FinalResampPath + \"/Second_Resampling\")\n\n";
+  Script = Script + "  print(\"\\n => Creation of the Second Final Resampling directory = \" + FinalResampPath + \"/Second_Resampling\")\n";
+  Script = Script + "  os.mkdir(FinalResampPath + \"/Second_Resampling\")\n\n";
 
 /* Cases variables: */
   Script = Script + "# Cases variables\n";
@@ -654,7 +681,7 @@ else    Script = Script + "  if not os.path.isfile(FinalDTI) :\n";
       Script = Script + "    GridProcessCommandsArray.append(CaseDbleToFloatCommand)\n";
 
       Script = Script + "    if len(GridProcessCommandsArray)>=50 or case==len(allcases)-1 : # launch a script if more than 50 operations or if last case\n";
-        Script = Script + "      GridProcessCmd= \"" + m_GridCommand + " " + m_PythonPath + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.script \" + FilesFolder + \"/Case\" + str(NbGridCommandsRan+1)\n";
+        Script = Script + "      GridProcessCmd= \"" + m_GridCommand + " " + m_PythonPath + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.py \" + FilesFolder + \"/Case\" + str(NbGridCommandsRan+1)\n";
         Script = Script + "      GridCmd = 0\n";
         Script = Script + "      while GridCmd < len(GridProcessCommandsArray):\n";
           Script = Script + "        GridProcessCmd = GridProcessCmd + \" \'\" + GridProcessCommandsArray[GridCmd] + \"\'\"\n";
@@ -1024,16 +1051,19 @@ void ScriptWriter::MainScript()
   Script = Script + "os.putenv(\"ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS\",\"" + m_NbThreadsString + "\") # to set the nb of cores to use : propagated to the other scripts via os.system()\n\n";
   }
 
+  Script = Script + "PIDlogFile = OutputPath + \"/Script/PID.log\"\n";
+  Script = Script + "if os.path.isfile( PIDlogFile ) : os.remove( PIDlogFile )\n\n";
+
   Script = Script + "time1=time.time()\n\n";
 
 /* Call the other scripts */
   Script = Script + "# Call the Preprocess script\n";
-  Script = Script + "PrePScriptCommand= \"" + m_PythonPath + " \" + OutputPath + \"/Script/DTIAtlasBuilder_Preprocess.script\"\n"; // PythonPath contains already a space after the command
+  Script = Script + "PrePScriptCommand= \"" + m_PythonPath + " \" + OutputPath + \"/Script/DTIAtlasBuilder_Preprocess.py\"\n"; // PythonPath contains already a space after the command
   Script = Script + "print(\"\\n=> $ \" + PrePScriptCommand)\n";
   Script = Script + "if os.system(PrePScriptCommand)!=0 : ErrorList.append(\'=> Errors detected in preprocessing\')\n\n";
 
   Script = Script + "# Call the Atlas Building script\n";
-  Script = Script + "AtlasBuildingCommand= \"" + m_PythonPath + " \" + OutputPath + \"/Script/DTIAtlasBuilder_AtlasBuilding.script\"\n";
+  Script = Script + "AtlasBuildingCommand= \"" + m_PythonPath + " \" + OutputPath + \"/Script/DTIAtlasBuilder_AtlasBuilding.py\"\n";
   Script = Script + "print(\"\\n=> $ \" + AtlasBuildingCommand)\n";
   Script = Script + "if os.system(AtlasBuildingCommand)!=0 : ErrorList.append(\'=> Errors detected in atlas building\')\n\n";
 
