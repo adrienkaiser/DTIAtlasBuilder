@@ -3040,13 +3040,19 @@ void GUI::KillScriptQProcess() /* SLOT */
     if( PIDfile.open(QFile::ReadOnly) )
     {
       QTextStream PIDstream(&PIDfile);
-      int PID = PIDstream.readLine().toInt();
-      while( PID != 0 ) // if end of file, the value in PID will be 0
+      QString PID = PIDstream.readLine();
+      while( ! PID.isEmpty() ) // end of file = PID empty
       {
-        std::cout<<"| Killing: "<<PID<<std::endl;
-        // Kill PID
+        std::cout<<"| Killing: "<< PID.toStdString() <<std::endl;
+        if(Platform == "mac" || Platform == "linux") // Kill PID
+        {
+          std::string KillCommand = "kill " + PID.toStdString();
+          QProcess * KillProcess = new QProcess;
+          KillProcess->execute( KillCommand.c_str() );
+        }
 
-        PID = PIDstream.readLine().toInt();
+        PID = PIDstream.readLine();
+
       } // while file not at end
     } // open file in reading
   } // if file exists
