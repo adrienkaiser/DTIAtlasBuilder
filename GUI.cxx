@@ -2907,12 +2907,12 @@ int GUI::LaunchScriptWriter()
   if( DisplayWarningVersion )
   {
     WriteChangeHistoryLogFile(OldVersion);
-    std::string text = "The previous compute done in this output folder has been done with an older version of DTIAtlasBuilder (" + OldVersion + "). The current version is " + DTIABversion + ".\n\
+    std::string text = "The previous computation done in this output folder has been done with an older version of DTIAtlasBuilder (" + OldVersion + "). The current version is " + DTIABversion + ".\n\
 To avoid automatic recomputing, please apply the changes described in file \"" + m_OutputPath.toStdString() + "/DTIAtlas/Script/ChangeHistory.log\".";
 
     if(!m_noGUI)
     {
-      int ret = QMessageBox::question(this,"Version issue", QString(text.c_str()) + "\n\nHit \"Ok\" when changes are done to compute the Atlas.",QMessageBox::Cancel | QMessageBox::Ok);
+      int ret = QMessageBox::question(this,"Version issue", QString(text.c_str()) + "\n\nHit \"Ok\" to recompute the Atlas.\nHit \"Cancel\" to return and apply the changes manually.",QMessageBox::Cancel | QMessageBox::Ok);
       if (ret == QMessageBox::Cancel)
       {
         return -1;
