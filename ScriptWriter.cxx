@@ -87,6 +87,7 @@ void ScriptWriter::Preprocess ()
   if( m_useGridProcess )
   {
     Script = Script + "\n# Call script to run command on server\n";
+    Script = Script + "import time # To test existence of files only every minute\n";
     Script = Script + "FilesFolder = \"" + m_OutputPath + "/DTIAtlas/GridProcessingFiles\"\n";
     Script = Script + "if os.path.isdir(FilesFolder): shutil.rmtree(FilesFolder) # remove directory to get rid of any previous file\n";
     Script = Script + "os.mkdir(FilesFolder)\n";
@@ -95,24 +96,25 @@ void ScriptWriter::Preprocess ()
     //Test Function
     Script = Script + "\n# Function that tests if all cases have been processed on the grid\n";
     Script = Script + "def TestGridProcess ( FilesFolder, NbCases , NoCase1): # if NbCases == 0, then just search the file \'file\' (unique command)\n";
-      Script = Script + "  if NbCases>0 : print(\"\\n| Waiting for all cases (\" + str(NbCases-NoCase1) + \") to be processed on grid...\") # NoCase1 is 0 or 1\n";
-      Script = Script + "  filesOK = 0\n";
-      Script = Script + "  OldNbFilesOK = 0\n";
-      Script = Script + "  while not filesOK :\n";
-        Script = Script + "    filesOK = 1\n";
-        Script = Script + "    if NbCases>0 :\n";
-          Script = Script + "      NbfilesOK = 0\n";
-          Script = Script + "      case = NoCase1 # NoCase1 is 0 or 1 (bool)\n";
-          Script = Script + "      while case < NbCases:\n";
-            Script = Script + "        if not os.path.isfile( FilesFolder + \"/Case\" + str(case+1) ) : filesOK = 0\n";
-            Script = Script + "        else : NbfilesOK = NbfilesOK + 1\n";
-            Script = Script + "        case += 1\n";
-          Script = Script + "      if NbfilesOK != OldNbFilesOK : print(\"| [\" + str(NbfilesOK) + \"\\t / \" + str(NbCases-NoCase1) + \" ] cases processed\")\n";
-          Script = Script + "      OldNbFilesOK=NbfilesOK\n";
-        Script = Script + "    elif not os.path.isfile( FilesFolder + \"/file\" ) : filesOK = 0\n";
-      Script = Script + "  print(\"\\n=> All files processed\")\n";
-      Script = Script + "  shutil.rmtree(FilesFolder) # clear directory and recreate it\n";
-      Script = Script + "  os.mkdir(FilesFolder)\n";
+    Script = Script + "  if NbCases>0 : print(\"\\n| Waiting for all cases (\" + str(NbCases-NoCase1) + \") to be processed on grid...\") # NoCase1 is 0 or 1\n";
+    Script = Script + "  filesOK = 0\n";
+    Script = Script + "  OldNbFilesOK = 0\n";
+    Script = Script + "  while not filesOK :\n";
+    Script = Script + "    filesOK = 1\n";
+    Script = Script + "    if NbCases>0 :\n";
+    Script = Script + "      NbfilesOK = 0\n";
+    Script = Script + "      case = NoCase1 # NoCase1 is 0 or 1 (bool)\n";
+    Script = Script + "      while case < NbCases:\n";
+    Script = Script + "        if not os.path.isfile( FilesFolder + \"/Case\" + str(case+1) ) : filesOK = 0\n";
+    Script = Script + "        else : NbfilesOK = NbfilesOK + 1\n";
+    Script = Script + "        case += 1\n";
+    Script = Script + "      if NbfilesOK != OldNbFilesOK : print(\"| [\" + str(NbfilesOK) + \"\\t / \" + str(NbCases-NoCase1) + \" ] cases processed\")\n";
+    Script = Script + "      OldNbFilesOK=NbfilesOK\n";
+    Script = Script + "    elif not os.path.isfile( FilesFolder + \"/file\" ) : filesOK = 0\n";
+    Script = Script + "    time.sleep(60) # Test only every minute\n";
+    Script = Script + "  print(\"\\n=> All files processed\")\n";
+    Script = Script + "  shutil.rmtree(FilesFolder) # clear directory and recreate it\n";
+    Script = Script + "  os.mkdir(FilesFolder)\n";
   }
 
 /* Create directory for temporary files */
@@ -469,29 +471,31 @@ void ScriptWriter::AtlasBuilding()
   if( m_useGridProcess )
   {
     Script = Script + "# Call script to run command on server\n";
+    Script = Script + "import time # To test existence of files only every minute\n";
     Script = Script + "FilesFolder = \"" + m_OutputPath + "/DTIAtlas/GridProcessingFiles\"\n\n";
 
     //Test Function
     Script = Script + "# Function that tests if all cases have been processed on the grid\n";
     Script = Script + "def TestGridProcess ( FilesFolder, NbCases ): # if NbCases == 0, then just search the file \'file\' (unique command)\n";
-      Script = Script + "  if NbCases>0 : print(\"\\n| Waiting for all cases (\" + str(NbCases) + \") to be processed on grid...\") # NoCase1 is 0 or 1\n";
-      Script = Script + "  filesOK = 0\n";
-      Script = Script + "  OldNbFilesOK = 0\n";
-      Script = Script + "  while not filesOK :\n";
-        Script = Script + "    filesOK = 1\n";
-        Script = Script + "    if NbCases>0 : \n";
-          Script = Script + "      NbfilesOK = 0\n";
-          Script = Script + "      case = 0\n";
-          Script = Script + "      while case < NbCases:\n";
-            Script = Script + "        if not os.path.isfile( FilesFolder + \"/Case\" + str(case+1) ) : filesOK = 0\n";
-            Script = Script + "        else : NbfilesOK = NbfilesOK + 1\n";
-            Script = Script + "        case += 1\n";
-          Script = Script + "      if NbfilesOK != OldNbFilesOK : print(\"| [\" + str(NbfilesOK) + \"\\t / \" + str(NbCases) + \" ] cases processed\")\n";
-          Script = Script + "      OldNbFilesOK=NbfilesOK\n";
-        Script = Script + "    elif not os.path.isfile( FilesFolder + \"/file\" ) : filesOK = 0\n";
-      Script = Script + "  print(\"\\n=> All files processed\")\n";
-      Script = Script + "  shutil.rmtree(FilesFolder) # clear directory and recreate it\n";
-      Script = Script + "  os.mkdir(FilesFolder)\n\n";
+    Script = Script + "  if NbCases>0 : print(\"\\n| Waiting for all cases (\" + str(NbCases) + \") to be processed on grid...\") # NoCase1 is 0 or 1\n";
+    Script = Script + "  filesOK = 0\n";
+    Script = Script + "  OldNbFilesOK = 0\n";
+    Script = Script + "  while not filesOK :\n";
+    Script = Script + "    filesOK = 1\n";
+    Script = Script + "    if NbCases>0 : \n";
+    Script = Script + "      NbfilesOK = 0\n";
+    Script = Script + "      case = 0\n";
+    Script = Script + "      while case < NbCases:\n";
+    Script = Script + "        if not os.path.isfile( FilesFolder + \"/Case\" + str(case+1) ) : filesOK = 0\n";
+    Script = Script + "        else : NbfilesOK = NbfilesOK + 1\n";
+    Script = Script + "        case += 1\n";
+    Script = Script + "      if NbfilesOK != OldNbFilesOK : print(\"| [\" + str(NbfilesOK) + \"\\t / \" + str(NbCases) + \" ] cases processed\")\n";
+    Script = Script + "      OldNbFilesOK=NbfilesOK\n";
+    Script = Script + "    elif not os.path.isfile( FilesFolder + \"/file\" ) : filesOK = 0\n";
+    Script = Script + "    time.sleep(60) # Test only every minute\n";
+    Script = Script + "  print(\"\\n=> All files processed\")\n";
+    Script = Script + "  shutil.rmtree(FilesFolder) # clear directory and recreate it\n";
+    Script = Script + "  os.mkdir(FilesFolder)\n\n";
 
     GridApostrophe = " + \"\\'\"";
     std::string File = "FilesFolder + \"/Case\" + str(case+1)";
@@ -743,10 +747,10 @@ if( m_useGridProcess ) Script = Script + "if NbGridCommandsRan!=0 : TestGridProc
 
 if(m_Overwrite==0) Script = Script + "else : " + GridProcessFileExistIndent + "print(\"=> The file \\'\" + DTIAverage + \"\\' already exists so the command will not be executed\")\n" + GridProcessFileExistCmdNoCase;
 
-if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # stays in the function until all process is done : 0 makes the function look for \'file\'\n\n";
+if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # stays in the function until all process is done : 0 makes the function look for \'file\'\n";
 
 /* Computing global deformation fields */
-  Script = Script + "# Computing global deformation fields\n";
+  Script = Script + "\n# Computing global deformation fields\n";
 /* Threads
   if( m_DTIRegOptions[0].compare("ANTS")==0 )
   {
@@ -911,10 +915,10 @@ if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, len(allc
 
 if(m_Overwrite==0) Script = Script + "else : " + GridProcessFileExistIndent + "print(\"=> The file \\'\" + DTIAverage2 + \"\\' already exists so the command will not be executed\")\n" + GridProcessFileExistCmdNoCase;
 
-if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # stays in the function until all process is done : 0 makes the function look for \'file\'\n\n";
+if( m_useGridProcess ) Script = Script + "TestGridProcess( FilesFolder, 0 ) # stays in the function until all process is done : 0 makes the function look for \'file\'\n";
 
 /* Recomputing global deformation fields */
-  Script = Script + "# Recomputing global deformation fields\n";
+  Script = Script + "\n# Recomputing global deformation fields\n";
   Script = Script + "case = 0\n";
   Script = Script + "while case < len(allcases):\n";
     if(m_NeedToBeCropped==1) Script = Script + "  origDTI2= AffinePath + \"/Case\" + str(case+1) + \"_croppedDTI.nrrd\"\n";
