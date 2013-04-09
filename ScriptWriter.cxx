@@ -75,14 +75,18 @@ void ScriptWriter::Preprocess ()
 
   if(m_RegType==1)
   {
-    Script = Script + "AtlasFAref= OutputPath + \"/Case1_FA.nrrd\" #the reference will be the first case for the first loop\n";
+    Script = Script + "AtlasFAref= OutputPath + \"/Case1_FA.nrrd\" #the reference will be the first case for the first loop\n\n";
   }
   else
   {
-    Script = Script + "AtlasFAref= \"" + m_TemplatePath + "\" #the reference will be the given template for the first loop\n";
+    Script = Script + "AtlasFAref= \"" + m_TemplatePath + "\" #the reference will be the given template for the first loop\n\n";
   }
 
-  Script = Script + "ErrorList=[] #empty list\n\n";
+  /* Function to display error and quit */
+  Script = Script + "def DisplayErrorAndQuit ( Error ):\n";
+  Script = Script + "  print \'\\n\\nERROR DETECTED IN WORKFLOW:\',Error\n";
+  Script = Script + "  print \'ABORT\'\n";
+  Script = Script + "  sys.exit(1)\n\n";
 
   // nbSteps = (nbCases x CropDTI) + nbCases x Generate FA + (nbCases-1) x (Normalize, Affine reg, Apply transfm, generate FA) (1st loop if no template) + (nbLoops) x nbCases x (Normalize, Affine reg, Apply transfm, generate FA) + nbLoops x Compute average (not for the last loop) + nonLinear reg + nbCases x Apply tfm + DTI average + nbCases x (1st resamp 2nd resamp) + DTI average
   int nbSteps = m_CasesPath.size()*1; // nbCases x Generate FA
@@ -187,7 +191,7 @@ void ScriptWriter::Preprocess ()
     {
       Script = Script + "if not os.path.isfile(RescaleTemp) :\n";
     }
-    Script = Script + "  if os.system(RescaleTempCommand)!=0 : ErrorList.append(\'ImageMath: Rescaling FA template\')\n";
+    Script = Script + "  if os.system(RescaleTempCommand)!=0 : DisplayErrorAndQuit(\'ImageMath: Rescaling FA template\')\n";
 
     if( m_useGridProcess )
     {
@@ -227,7 +231,7 @@ void ScriptWriter::Preprocess ()
       }
       if( ! m_useGridProcess )
       {
-        Script = Script + "  if os.system(CropCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] CropDTI: Cropping DTI image\')\n";
+        Script = Script + "  if os.system(CropCommand)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] CropDTI: Cropping DTI image\')\n";
       }
       else
       {
@@ -261,7 +265,7 @@ void ScriptWriter::Preprocess ()
     }
     if( ! m_useGridProcess )
     {
-      Script = Script + "  if os.system(GeneFACommand)!=0 : ErrorList.append(\'[Case 1] dtiprocess: Generating FA of DTI image\')\n";
+      Script = Script + "  if os.system(GeneFACommand)!=0 : DisplayErrorAndQuit(\'[Case 1] dtiprocess: Generating FA of DTI image\')\n";
     }
     else
     {
@@ -278,7 +282,7 @@ void ScriptWriter::Preprocess ()
       Script = Script + "  if CropDTICase1Template : GridCase1TemplateCommand = GridCase1TemplateCommand + \" \'\" + CropCommand + \"\'\"\n";
       Script = Script + "  if GeneFACase1Template  : GridCase1TemplateCommand = GridCase1TemplateCommand + \" \'\" + GeneFACommand + \"\'\"\n";
       Script = Script + "  print(\"[Case 1] => Submitting : \" + GridCase1TemplateCommand)\n";
-      Script = Script + "  if os.system(GridCase1TemplateCommand)!=0 : ErrorList.append(\'[Case 1] Grid processing script\') # Run script and collect error if so\n";
+      Script = Script + "  if os.system(GridCase1TemplateCommand)!=0 : DisplayErrorAndQuit(\'[Case 1] Grid processing script\') # Run script and collect error if so\n";
       Script = Script + "  TestGridProcess( FilesFolder, 0, 0) # stays in the function until all process is done : 0 makes the function look only for \'file\'\n\n";
     }
   } //else of if(m_RegType==0)
@@ -329,7 +333,7 @@ void ScriptWriter::Preprocess ()
     }
     if( ! m_useGridProcess )
     {
-      Script = Script + "        if os.system(CropCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] CropDTI: Cropping DTI image\')\n";
+      Script = Script + "        if os.system(CropCommand)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] CropDTI: Cropping DTI image\')\n";
     }
     else
     {
@@ -364,7 +368,7 @@ void ScriptWriter::Preprocess ()
   }
   if( ! m_useGridProcess )
   {
-    Script = Script + "        if os.system(GeneFACommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] dtiprocess: Generating FA of DTI image\')\n";
+    Script = Script + "        if os.system(GeneFACommand)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] dtiprocess: Generating FA of DTI image\')\n";
   }
 
   else
@@ -391,7 +395,7 @@ void ScriptWriter::Preprocess ()
   }
   if( ! m_useGridProcess )
   {
-    Script = Script + "      if os.system(NormFACommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] ImageMath: Normalizing FA image\')\n";
+    Script = Script + "      if os.system(NormFACommand)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] ImageMath: Normalizing FA image\')\n";
   }
   else
   {
@@ -427,7 +431,7 @@ void ScriptWriter::Preprocess ()
   }
   if( ! m_useGridProcess )
   {
-    Script = Script + "      if os.system(AffineCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] BRAINSFit: Affine Registration of FA image\')\n";
+    Script = Script + "      if os.system(AffineCommand)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] BRAINSFit: Affine Registration of FA image\')\n";
   }
   else
   {
@@ -461,7 +465,7 @@ void ScriptWriter::Preprocess ()
   }
   if( ! m_useGridProcess )
   {
-    Script = Script + "      if os.system(ImplementCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] ResampleDTIlogEuclidean: Implementing the Affine Registration on FA image\')\n";
+    Script = Script + "      if os.system(ImplementCommand)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] ResampleDTIlogEuclidean: Implementing the Affine Registration on FA image\')\n";
   }
   else
   {
@@ -488,7 +492,7 @@ void ScriptWriter::Preprocess ()
   }
   if( ! m_useGridProcess )
   {
-    Script = Script + "      if os.system(GeneLoopFACommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] dtiprocess: Generating FA of affine registered images\')\n";
+    Script = Script + "      if os.system(GeneLoopFACommand)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] dtiprocess: Generating FA of affine registered images\')\n";
   }
   else
   {
@@ -511,7 +515,7 @@ void ScriptWriter::Preprocess ()
 
     Script = Script + "      print(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [Case \" + str(case+1) + \"] => Submitting : \" + GridAffineCommand)\n";
     Script = Script + "      if os.system(GridAffineCommand)!=0 : # Run script and collect error if so\n";
-    Script = Script + "        ErrorList.append(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] Grid processing script\')\n";
+    Script = Script + "        DisplayErrorAndQuit(\'[Loop \' + str(n) + \'][Case \' + str(case+1) + \'] Grid processing script\')\n";
 
     Script = Script + "    else : # No operations to run for this case\n";
     Script = Script + "      print(\"=> No operations to run for case \" + str(case+1))\n";
@@ -563,7 +567,7 @@ void ScriptWriter::Preprocess ()
   {
     Script = Script + "    if not os.path.isfile(FAAverage) :\n";
   }
-  Script = Script + "      if os.system(AverageCommand)!=0 : ErrorList.append(\'[Loop \' + str(n) + \'] dtiaverage: Computing FA Average of registered images\')\n";
+  Script = Script + "      if os.system(AverageCommand)!=0 : DisplayErrorAndQuit(\'[Loop \' + str(n) + \'] dtiaverage: Computing FA Average of registered images\')\n";
   if( m_useGridProcess )
   {
     Script = Script + "      TestGridProcess( FilesFolder, 0, 0) # stays in the function until all process is done : 0 makes the function look for \'file\'\n";
@@ -578,14 +582,7 @@ void ScriptWriter::Preprocess ()
 
   Script = Script + "print(\"\\n============ End of Pre processing =============\")\n\n";
 
-  Script = Script + "# Display errors\n";
-  Script = Script + "if len(ErrorList) >0 :\n";
-  Script = Script + "  print(\"\\n=> \" + str(len(ErrorList)) + \" errors detected during the followind operations:\")\n";
-  Script = Script + "  for error in ErrorList : print(\'\\n\' + error)\n";
-  Script = Script + "  sys.exit(1)\n";
-  Script = Script + "else:\n";
-  Script = Script + "  print(\"\\n=> No errors detected during preprocessing\")\n";
-  Script = Script + "  sys.exit(0)\n";
+  Script = Script + "sys.exit(0)\n";
 
   m_Script_Preprocess=Script;
 }
@@ -616,9 +613,13 @@ void ScriptWriter::AtlasBuilding()
   Script = Script + "DeformPath= \"" + m_OutputPath + "/DTIAtlas/2_NonLinear_Registration\"\n";
   Script = Script + "AffinePath= \"" + m_OutputPath + "/DTIAtlas/1_Affine_Registration\"\n";
   Script = Script + "FinalPath= \"" + m_OutputPath + "/DTIAtlas/3_Diffeomorphic_Atlas\"\n";
-  Script = Script + "FinalResampPath= \"" + m_OutputPath + "/DTIAtlas/4_Final_Resampling\"\n";
+  Script = Script + "FinalResampPath= \"" + m_OutputPath + "/DTIAtlas/4_Final_Resampling\"\n\n";
 
-  Script = Script + "ErrorList=[] #empty list\n\n";
+  /* Function to display error and quit */
+  Script = Script + "def DisplayErrorAndQuit ( Error ):\n";
+  Script = Script + "  print \'\\n\\nERROR DETECTED IN WORKFLOW:\',Error\n";
+  Script = Script + "  print \'ABORT\'\n";
+  Script = Script + "  sys.exit(1)\n\n";
 
   // nbSteps = (nbCases x CropDTI) + nbCases x Generate FA + (nbCases-1) x (Normalize, Affine reg, Apply transfm, generate FA) (1st loop if no template) + (nbLoops) x nbCases x (Normalize, Affine reg, Apply transfm, generate FA) + nbLoops x Compute average (not for the last loop) + nonLinear reg + nbCases x Apply tfm + DTI average + nbCases x (1st resamp 2nd resamp) + DTI average
   int nbSteps = m_CasesPath.size()*1; // nbCases x Generate FA
@@ -781,7 +782,7 @@ void ScriptWriter::AtlasBuilding()
   {
     Script = Script + "if not os.path.isfile(DeformPath + \"/MeanImage.mhd\") :\n";
   }
-  Script = Script + "  if os.system(AtlasBCommand)!=0 : ErrorList.append(\'GreedyAtlas: Computing non-linear atlas from affine registered images\')\n";
+  Script = Script + "  if os.system(AtlasBCommand)!=0 : DisplayErrorAndQuit(\'GreedyAtlas: Computing non-linear atlas from affine registered images\')\n";
   if( m_useGridProcess )
   {
     Script = Script + "  TestGridProcess( FilesFolder, 0) # stays in the function until all process is done : 0 makes the function look for \'file\'\n\n";
@@ -892,13 +893,13 @@ void ScriptWriter::AtlasBuilding()
 
   if( ! m_useGridProcess )
   {
-    Script = Script + "    if os.system(FinalReSampCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] ResampleDTIlogEuclidean: Applying deformation fields to original DTIs\')\n";
+    Script = Script + "    if os.system(FinalReSampCommand)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] ResampleDTIlogEuclidean: Applying deformation fields to original DTIs\')\n";
 
     Script = Script + "    print(\"[Case \" + str(case+1) + \"] => $ \" + GeneDiffeomorphicCaseFACommand)\n";
-    Script = Script + "    if os.system(GeneDiffeomorphicCaseFACommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] dtiprocess: Computing Diffeomorphic FA\')\n";
+    Script = Script + "    if os.system(GeneDiffeomorphicCaseFACommand)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] dtiprocess: Computing Diffeomorphic FA\')\n";
 
     Script = Script + "    print(\"[Case \" + str(case+1) + \"] => $ \" + CaseDbleToFloatCommand + \"\\n\")\n";
-    Script = Script + "    if os.system(CaseDbleToFloatCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] unu: Converting the final DTI images from double to float DTI\')\n";
+    Script = Script + "    if os.system(CaseDbleToFloatCommand)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] unu: Converting the final DTI images from double to float DTI\')\n";
   }
   else // run up to 50 commands in the same script
   {
@@ -915,7 +916,7 @@ void ScriptWriter::AtlasBuilding()
     Script = Script + "      GridProcessCommandsArray=[] # Empty the cmds array\n";
     Script = Script + "      NbGridCommandsRan += 1\n";
     Script = Script + "      if os.system(GridProcessCmd)!=0 : # Run script and collect error if so\n";
-    Script = Script + "        ErrorList.append(\'[] Applying deformation fields to original DTIs\')\n";
+    Script = Script + "        DisplayErrorAndQuit(\'[] Applying deformation fields to original DTIs\')\n";
   }
 
   Script = Script + "  else : print(\"=> The file \\'\" + FinalDTI + \"\\' already exists so the command will not be executed\")\n"; // not used if overwrite because "if 1 :"
@@ -962,18 +963,18 @@ void ScriptWriter::AtlasBuilding()
 
   if( ! m_useGridProcess )
   {
-    Script = Script + "  if os.system(AverageCommand)!=0 : ErrorList.append(\'dtiaverage: Computing the final DTI average\')\n";
+    Script = Script + "  if os.system(AverageCommand)!=0 : DisplayErrorAndQuit(\'dtiaverage: Computing the final DTI average\')\n";
 
     Script = Script + "  print(\"[Computing some images from the final DTI with dtiprocess] => $ \" + GeneFACommand)\n";
-    Script = Script + "  if os.system(GeneFACommand)!=0 : ErrorList.append(\'dtiprocess: Computing Diffeomorphic FA, color FA, MD, RD and AD\')\n";
+    Script = Script + "  if os.system(GeneFACommand)!=0 : DisplayErrorAndQuit(\'dtiprocess: Computing Diffeomorphic FA, color FA, MD, RD and AD\')\n";
 
     Script = Script + "  print(\"[Computing some images from the final DTI with dtiprocess] => $ \" + DbleToFloatCommand)\n";
-    Script = Script + "  if os.system(DbleToFloatCommand)!=0 : ErrorList.append(\'unu: Converting the final DTI atlas from double to float DTI\')\n";
+    Script = Script + "  if os.system(DbleToFloatCommand)!=0 : DisplayErrorAndQuit(\'unu: Converting the final DTI atlas from double to float DTI\')\n";
   }
   else // run all commands in the same time in the script
   {
     Script = Script + "  AverageGridCommand=" + GridProcessCmdNoCase + "AverageCommand + \"\\' \" + \"\\'\" + GeneFACommand + \"\\' \" + \"\\'\" + DbleToFloatCommand + \"\\'\"\n";
-    Script = Script + "  if os.system(AverageGridCommand)!=0 : ErrorList.append(\'Computing the final DTI average\')\n";
+    Script = Script + "  if os.system(AverageGridCommand)!=0 : DisplayErrorAndQuit(\'Computing the final DTI average\')\n";
   }
 
   if(m_Overwrite==0)
@@ -998,17 +999,16 @@ void ScriptWriter::AtlasBuilding()
   Script = Script + "def thread_executeANTS (program) : # function to use for the htread is ANTS chosen\n";
   Script = Script + "  global nbRunningThreads # to be able to use the variable nbRunningThreads as a global one\n";
   Script = Script + "  global nbCPUs # to be able to use the variable nbCPUs as a global one\n";
-  Script = Script + "  global ErrorList # to be able to use the variable ErrorList as a global one\n";
   Script = Script + "  nbRunningThreads = nbRunningThreads + 1\n";
 //  Script = Script + "  print(str(nbRunningThreads) + \" threads running, \" + str(nbCPUs) + \" CPUs on the machine\")\n";
 //  Script = Script + "  print(\"Executing: \" + program)\n";
-  Script = Script + "  if os.system(program)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] DTI-Reg: Computing global deformation fields\')\n";
+  Script = Script + "  if os.system(program)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] DTI-Reg: Computing global deformation fields\')\n";
   Script = Script + "  nbRunningThreads = nbRunningThreads - 1;\n\n";
 //  Script = Script + "  print(str(nbRunningThreads) + \" threads running, \" + str(nbCPUs) + \" CPUs on the machine\")\n";
   }
 */
 
-/*MULTITHREADING  if( m_DTIRegOptions[0].compare("BRAINS")==0 ) Script = Script + "    if os.system(GlobalDefFieldCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] DTI-Reg: Computing global deformation fields\')\n";
+/*MULTITHREADING  if( m_DTIRegOptions[0].compare("BRAINS")==0 ) Script = Script + "    if os.system(GlobalDefFieldCommand)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] DTI-Reg: Computing global deformation fields\')\n";
   if( m_DTIRegOptions[0].compare("ANTS")==0 ) //use threads for ANTS because very slow
   {
     Script = Script + "    while nbRunningThreads >= nbCPUs : pass # waiting here for a thread to be free (pass = do nothing)\n";
@@ -1101,15 +1101,15 @@ void ScriptWriter::AtlasBuilding()
 
   if( ! m_useGridProcess )
   {
-    Script = Script + "    if os.system(GlobalDefFieldCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] DTI-Reg: Computing global deformation fields\')\n";
+    Script = Script + "    if os.system(GlobalDefFieldCommand)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] DTI-Reg: Computing global deformation fields\')\n";
 
     Script = Script + "    print(\"\\n[Case \" + str(case+1) + \"] [Converting the deformed images from double to float DTI] => $ \" + GlobDbleToFloatCommand)\n";
-    Script = Script + "    if os.system(GlobDbleToFloatCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] unu: Converting the deformed images from double to float DTI\')\n";
+    Script = Script + "    if os.system(GlobDbleToFloatCommand)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] unu: Converting the deformed images from double to float DTI\')\n";
   }
   else // run all commands in the same time in the script
   {
     Script = Script + "    GlobDefFieldGridCommand=" + GridProcessCmd + "GlobalDefFieldCommand + \"\\' \" + \"\\'\" + GlobDbleToFloatCommand + \"\\'\"\n";
-    Script = Script + "    if os.system(GlobDefFieldGridCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] Computing global deformation fields\')\n";
+    Script = Script + "    if os.system(GlobDefFieldGridCommand)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] Computing global deformation fields\')\n";
   }
 
 //  Script = Script + "    libc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
@@ -1160,18 +1160,18 @@ void ScriptWriter::AtlasBuilding()
 
   if( ! m_useGridProcess )
   {
-    Script = Script + "  if os.system(AverageCommand2)!=0 : ErrorList.append(\'dtiaverage: Recomputing the final DTI average\')\n";
+    Script = Script + "  if os.system(AverageCommand2)!=0 : DisplayErrorAndQuit(\'dtiaverage: Recomputing the final DTI average\')\n";
 
     Script = Script + "  print(\"[Computing some images from the final DTI with dtiprocess] => $ \" + GeneFACommand2)\n";
-    Script = Script + "  if os.system(GeneFACommand2)!=0 : ErrorList.append(\'dtiprocess: Recomputing final FA, color FA, MD, RD and AD\')\n";
+    Script = Script + "  if os.system(GeneFACommand2)!=0 : DisplayErrorAndQuit(\'dtiprocess: Recomputing final FA, color FA, MD, RD and AD\')\n";
 
     Script = Script + "  print(\"[Computing some images from the final DTI with dtiprocess] => $ \" + DbleToFloatCommand2)\n";
-    Script = Script + "  if os.system(DbleToFloatCommand2)!=0 : ErrorList.append(\'unu: Converting the final resampled DTI atlas from double to float DTI\')\n";
+    Script = Script + "  if os.system(DbleToFloatCommand2)!=0 : DisplayErrorAndQuit(\'unu: Converting the final resampled DTI atlas from double to float DTI\')\n";
   }
   else // run all commands in the same time in the script
   {
     Script = Script + "  Average2GridCommand=" + GridProcessCmdNoCase + "AverageCommand2 + \"\\' \" + \"\\'\" + GeneFACommand2 + \"\\' \" + \"\\'\" + DbleToFloatCommand2 + \"\\'\"\n";
-    Script = Script + "  if os.system(Average2GridCommand)!=0 : ErrorList.append(\'Recomputing the final DTI average\')\n";
+    Script = Script + "  if os.system(Average2GridCommand)!=0 : DisplayErrorAndQuit(\'Recomputing the final DTI average\')\n";
   }
 
   if(m_Overwrite==0)
@@ -1269,18 +1269,18 @@ void ScriptWriter::AtlasBuilding()
 
   if( ! m_useGridProcess )
   {
-    Script = Script + "    if os.system(GlobalDefFieldCommand2)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] DTI-Reg: Computing global deformation fields\')\n";
+    Script = Script + "    if os.system(GlobalDefFieldCommand2)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] DTI-Reg: Computing global deformation fields\')\n";
 
     Script = Script + "    print(\"\\n[Case \" + str(case+1) + \"] [Converting the deformed images from double to float DTI] => $ \" + GlobDbleToFloatCommand2)\n";
-    Script = Script + "    if os.system(GlobDbleToFloatCommand2)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] unu: Converting the deformed images from double to float DTI\')\n";
+    Script = Script + "    if os.system(GlobDbleToFloatCommand2)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] unu: Converting the deformed images from double to float DTI\')\n";
 
     Script = Script + "    print(\"\\n[Case \" + str(case+1) + \"] [Computing DTIReg FA] => $ \" + GeneDTIRegCaseFACommand)\n";
-    Script = Script + "    if os.system(GeneDTIRegCaseFACommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] dtiprocess: Computing DTIReg FA\')\n";
+    Script = Script + "    if os.system(GeneDTIRegCaseFACommand)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] dtiprocess: Computing DTIReg FA\')\n";
   }
   else // run all commands in the same time in the script
   {
     Script = Script + "    GlobDefField2GridCommand=" + GridProcessCmd + "GlobalDefFieldCommand2 + \"\\' \" + \"\\'\" + GlobDbleToFloatCommand2 + \"\\' \" + \"\\'\" + GeneDTIRegCaseFACommand + \"\\'\"\n";
-    Script = Script + "    if os.system(GlobDefField2GridCommand)!=0 : ErrorList.append(\'[Case \' + str(case+1) + \'] Recomputing global deformation fields\')\n";
+    Script = Script + "    if os.system(GlobDefField2GridCommand)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] Recomputing global deformation fields\')\n";
   }
 
 //  Script = Script + "    libc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
@@ -1297,14 +1297,7 @@ void ScriptWriter::AtlasBuilding()
 
   Script = Script + "print(\"\\n============ End of Atlas Building =============\")\n\n";
 
-  Script = Script + "# Display errors\n";
-  Script = Script + "if len(ErrorList) >0 :\n";
-  Script = Script + "  print(\"\\n=> \" + str(len(ErrorList)) + \" errors detected during the followind operations:\")\n";
-  Script = Script + "  for error in ErrorList : print(\'\\n\' + error)\n";
-  Script = Script + "  sys.exit(1)\n";
-  Script = Script + "else:\n";
-  Script = Script + "  print(\"\\n=> No errors detected during Atlas building\")\n";
-  Script = Script + "  sys.exit(0)\n";
+  Script = Script + "sys.exit(0)\n";
 
   m_Script_AtlasBuilding=Script;
 }
@@ -1330,9 +1323,13 @@ void ScriptWriter::MainScript()
 
   Script = Script + "print(\"\\n=============== Main Script ================\")\n\n";
 
-  Script = Script + "OutputPath= \"" + m_OutputPath + "/DTIAtlas\"\n";
+  Script = Script + "OutputPath= \"" + m_OutputPath + "/DTIAtlas\"\n\n";
 
-  Script = Script + "ErrorList=[] #empty list\n\n";
+  /* Function to display error and quit */
+  Script = Script + "def DisplayErrorAndQuit ( Error ):\n";
+  Script = Script + "  print \'\\n\\nERROR DETECTED IN WORKFLOW:\',Error\n";
+  Script = Script + "  print \'ABORT\'\n";
+  Script = Script + "  sys.exit(1)\n\n";
 
   if( ! m_useGridProcess ) // if grid process, var defined in the grid script
   {
@@ -1348,18 +1345,14 @@ void ScriptWriter::MainScript()
   Script = Script + "# Call the Preprocess script\n";
   Script = Script + "PrePScriptCommand= \"" + m_PythonPath + " \" + OutputPath + \"/Script/DTIAtlasBuilder_Preprocess.py\"\n"; // PythonPath contains already a space after the command
   Script = Script + "print(\"\\n=> $ \" + PrePScriptCommand)\n";
-  Script = Script + "if os.system(PrePScriptCommand)!=0 : ErrorList.append(\'=> Errors detected in preprocessing\')\n\n";
+  Script = Script + "if os.system(PrePScriptCommand)!=0 : DisplayErrorAndQuit(\'=> Errors detected in preprocessing\')\n\n";
 
   Script = Script + "# Call the Atlas Building script\n";
   Script = Script + "AtlasBuildingCommand= \"" + m_PythonPath + " \" + OutputPath + \"/Script/DTIAtlasBuilder_AtlasBuilding.py\"\n";
   Script = Script + "print(\"\\n=> $ \" + AtlasBuildingCommand)\n";
-  Script = Script + "if os.system(AtlasBuildingCommand)!=0 : ErrorList.append(\'=> Errors detected in atlas building\')\n\n";
+  Script = Script + "if os.system(AtlasBuildingCommand)!=0 : DisplayErrorAndQuit(\'=> Errors detected in atlas building\')\n\n";
 
   Script = Script + "print(\"\\n============ End of execution =============\\n\")\n\n";
-
-  Script = Script + "# Display errors\n";
-  Script = Script + "for error in ErrorList : print(error + \'\\n\')\n";
-  Script = Script + "if len(ErrorList)==0 : print(\"=> No errors detected during execution\\n\")\n\n";
 
   Script = Script + "# Display execution time\n";
   Script = Script + "time2=time.time()\n";
@@ -1368,8 +1361,7 @@ void ScriptWriter::MainScript()
   Script = Script + "elif timeTot<3600 : print(\"| Execution time = \" + str(int(timeTot)) + \"s = \" + str(int(timeTot/60)) + \"m \" + str( int(timeTot) - (int(timeTot/60)*60) ) + \"s\")\n";
   Script = Script + "else : print(\"| Execution time = \" + str(int(timeTot)) + \"s = \" + str(int(timeTot/3600)) + \"h \" + str( int( (int(timeTot) - int(timeTot/3600)*3600) /60) ) + \"m \" + str( int(timeTot) - (int(timeTot/60)*60) ) + \"s\")\n\n";
 
-  Script = Script + "if len(ErrorList)==0 : sys.exit(0)\n";
-  Script = Script + "else : sys.exit(1)\n";
+  Script = Script + "sys.exit(0)\n";
 
   m_Script_Main=Script;
 }

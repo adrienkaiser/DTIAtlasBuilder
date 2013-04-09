@@ -2359,6 +2359,8 @@ int GUI::Compute() /*SLOT*/
 
 int GUI::LaunchScriptWriter()
 {
+  bool FirstComputeInOutputFolder = false; // to avoid confusion with absence of version file (normal if first compute)
+
 /* Checking and Setting the values */
 
 /* Cases */
@@ -2428,6 +2430,7 @@ int GUI::LaunchScriptWriter()
     std::cout<<"| Creating Script directory..."<<std::endl; // command line display
     std::string Dir = m_OutputPath.toStdString() + "/DTIAtlas/Script";
     itksys::SystemTools::MakeDirectory( Dir.c_str() );
+    FirstComputeInOutputFolder  = true;
   }
 
 /* Template */
@@ -2898,7 +2901,7 @@ int GUI::LaunchScriptWriter()
       if( OldVersion != DTIABversion ) DisplayWarningVersion =true;// warning files names changed
     } // open file in reading
   } // if file exists : close scope where QFile has been created => will delete the QFile object and therefore close the file
-  else
+  else if ( ! FirstComputeInOutputFolder )  // if first compute : normal that no version file
   {
     OldVersion="1.0";
     DisplayWarningVersion = true; // if no version file
@@ -2986,7 +2989,7 @@ int GUI::LaunchScriptRunner()
   else
   {
     m_ScriptQProcess->start( program.c_str() ); // start will just start the program in another process
-    m_ScriptRunningQTimer->start(1000); // To update display in cmd line (display dots moving)
+    m_ScriptRunningQTimer->start(1000); // To update display in cmd line every second (display dots moving)
   }
   // If needed, m_ScriptQProcess->pid()
 
@@ -3068,6 +3071,9 @@ void GUI::UpdateScriptRunningGUIDisplay() /*SLOT*/ // called by QTimer every sec
 
   QString ScriptRunningDisplay = ScriptRunningDisplayQLabel->text() + ".";
   ScriptRunningDisplayQLabel->setText(ScriptRunningDisplay);
+
+  /* TODO: Search the log file for keywords to know where the processing is */
+
 }
 
 void GUI::ScriptQProcessDone(int ExitCode) /*SLOT*/ // called
