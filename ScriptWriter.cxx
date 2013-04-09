@@ -13,6 +13,80 @@
 #include "ScriptWriter.h"
 
   /////////////////////////////////////////
+ //     SUB  WRITING FUNCTIONS          //
+/////////////////////////////////////////
+// to avoid having to write twice the same and reduce writing functions size
+
+std::string pyTestGridProcess ( bool NoCase1 )
+{
+  std::string Script = "\n# Function that tests if all cases have been processed on the grid\n";
+  if( NoCase1 )
+  {
+    Script = Script + "def TestGridProcess ( FilesFolder, NbCases , NoCase1): # if NbCases == 0, then just search the file \'file\' (unique command)\n";
+    Script = Script + "  if NbCases>0 : print(\"\\n| Waiting for all cases (\" + str(NbCases-NoCase1) + \") to be processed on grid...\") # NoCase1 is 0 or 1\n";
+  }
+  else
+  {
+    Script = Script + "def TestGridProcess ( FilesFolder, NbCases ): # if NbCases == 0, then just search the file \'file\' (unique command)\n";
+    Script = Script + "  if NbCases>0 : print(\"\\n| Waiting for all cases (\" + str(NbCases) + \") to be processed on grid...\")\n";
+  }
+  Script = Script + "  filesOK = 0\n";
+  Script = Script + "  OldNbFilesOK = 0\n";
+  Script = Script + "  while not filesOK :\n";
+  Script = Script + "    filesOK = 1\n";
+  Script = Script + "    if NbCases>0 :\n";
+  Script = Script + "      NbfilesOK = 0\n";
+  if( NoCase1 )
+  {
+    Script = Script + "      case = int(NoCase1) # NoCase1 is 0 or 1 (bool)\n";
+  }
+  else
+  {
+    Script = Script + "      case = 0\n";
+  }
+  Script = Script + "      while case < NbCases:\n";
+  Script = Script + "        if not os.path.isfile( FilesFolder + \"/Case\" + str(case+1) ) : filesOK = 0\n";
+  Script = Script + "        else : NbfilesOK = NbfilesOK + 1\n";
+  Script = Script + "        case += 1\n";
+  Script = Script + "      if NbfilesOK != OldNbFilesOK : print(\"| [\" + str(NbfilesOK) + \"\\t / \" + str(NbCases-NoCase1) + \" ] cases processed\")\n";
+  Script = Script + "      OldNbFilesOK=NbfilesOK\n";
+  Script = Script + "    elif not os.path.isfile( FilesFolder + \"/file\" ) : filesOK = 0\n";
+  Script = Script + "    time.sleep(60) # Test only every minute\n";
+  Script = Script + "  print(\"\\n=> All files processed\")\n";
+  Script = Script + "  shutil.rmtree(FilesFolder) # clear directory and recreate it\n";
+  Script = Script + "  os.mkdir(FilesFolder)\n";
+
+  return Script;
+}
+
+std::string ScriptWriter::pyExecuteCommandPreprocessCase ( std::string NameOfFileVarToTest, std::string NameOfCmdVarToExec, std::string ErrorTxtToDisplay, std::string SpacesBeforeFirstIf )
+{
+  std::string Script="";
+
+  if(m_Overwrite==1)
+  {
+    Script = Script + SpacesBeforeFirstIf + "if 1 :\n";
+  }
+  else
+  {
+    Script = Script + SpacesBeforeFirstIf + "if not os.path.isfile(" + NameOfFileVarToTest + ") :\n";
+  }
+
+  if( ! m_useGridProcess )
+  {
+    Script = Script + SpacesBeforeFirstIf + "  if os.system(" + NameOfCmdVarToExec + ")!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] " + ErrorTxtToDisplay + "\')\n";
+  }
+  else
+  {
+    Script = Script + SpacesBeforeFirstIf + "  GridProcessCaseCommandsArray.append(" + NameOfCmdVarToExec + ") # Executed eventually\n";
+  }
+
+  Script = Script + SpacesBeforeFirstIf + "else : print(\"=> The file \\'\" + " + NameOfFileVarToTest + " + \"\\' already exists so the command will not be executed\")\n"; // not used if overwrite because "if 1 :"
+
+  return Script;
+}
+
+  /////////////////////////////////////////
  //         WRITING FUNCTIONS           //
 /////////////////////////////////////////
 
@@ -125,27 +199,7 @@ void ScriptWriter::Preprocess ()
     Script = Script + "print(\"\\n=> Creation of the directory for the grid processing = \" + FilesFolder)\n";
 
     //Test Function
-    Script = Script + "\n# Function that tests if all cases have been processed on the grid\n";
-    Script = Script + "def TestGridProcess ( FilesFolder, NbCases , NoCase1): # if NbCases == 0, then just search the file \'file\' (unique command)\n";
-    Script = Script + "  if NbCases>0 : print(\"\\n| Waiting for all cases (\" + str(NbCases-NoCase1) + \") to be processed on grid...\") # NoCase1 is 0 or 1\n";
-    Script = Script + "  filesOK = 0\n";
-    Script = Script + "  OldNbFilesOK = 0\n";
-    Script = Script + "  while not filesOK :\n";
-    Script = Script + "    filesOK = 1\n";
-    Script = Script + "    if NbCases>0 :\n";
-    Script = Script + "      NbfilesOK = 0\n";
-    Script = Script + "      case = NoCase1 # NoCase1 is 0 or 1 (bool)\n";
-    Script = Script + "      while case < NbCases:\n";
-    Script = Script + "        if not os.path.isfile( FilesFolder + \"/Case\" + str(case+1) ) : filesOK = 0\n";
-    Script = Script + "        else : NbfilesOK = NbfilesOK + 1\n";
-    Script = Script + "        case += 1\n";
-    Script = Script + "      if NbfilesOK != OldNbFilesOK : print(\"| [\" + str(NbfilesOK) + \"\\t / \" + str(NbCases-NoCase1) + \" ] cases processed\")\n";
-    Script = Script + "      OldNbFilesOK=NbfilesOK\n";
-    Script = Script + "    elif not os.path.isfile( FilesFolder + \"/file\" ) : filesOK = 0\n";
-    Script = Script + "    time.sleep(60) # Test only every minute\n";
-    Script = Script + "  print(\"\\n=> All files processed\")\n";
-    Script = Script + "  shutil.rmtree(FilesFolder) # clear directory and recreate it\n";
-    Script = Script + "  os.mkdir(FilesFolder)\n";
+    Script = Script + pyTestGridProcess( true ); // bool NoCase1
   }
 
 /* Create directory for temporary files */
@@ -197,8 +251,7 @@ void ScriptWriter::Preprocess ()
     {
       Script = Script + "  TestGridProcess( FilesFolder, 0, 0) # stays in the function until all process is done : 0 makes the function look only for \'file\'\n";
     }
-    Script = Script + "else :\n"; // not used if overwrite because "if 1 :"
-    Script = Script + "  print(\"=> The file \\'\" + RescaleTemp + \"\\' already exists so the command will not be executed\")\n";
+    Script = Script + "else : print(\"=> The file \\'\" + RescaleTemp + \"\\' already exists so the command will not be executed\")\n";
 
     Script = Script + "AtlasFAref= RescaleTemp\n\n";
 
@@ -231,7 +284,7 @@ void ScriptWriter::Preprocess ()
       }
       if( ! m_useGridProcess )
       {
-        Script = Script + "  if os.system(CropCommand)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] CropDTI: Cropping DTI image\')\n";
+        Script = Script + "  if os.system(CropCommand)!=0 : DisplayErrorAndQuit(\'[Case 1] CropDTI: Cropping DTI image\')\n";
       }
       else
       {
@@ -323,23 +376,8 @@ void ScriptWriter::Preprocess ()
     Script = Script + "      print(\"[Case \" + str(case+1) + \"] [Cropping DTI Image] => $ \" + CropCommand)\n";
     Script = Script + "      nbStepsDone += 1\n";
     
-    if(m_Overwrite==1)
-    {
-      Script = Script + "      if 1 :\n";
-    }
-    else
-    {
-      Script = Script + "      if not os.path.isfile(croppedDTI) :\n";
-    }
-    if( ! m_useGridProcess )
-    {
-      Script = Script + "        if os.system(CropCommand)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] CropDTI: Cropping DTI image\')\n";
-    }
-    else
-    {
-      Script = Script + "        GridProcessCaseCommandsArray.append(CropCommand) # Executed eventually\n";
-    }
-    Script = Script + "      else : print(\"=> The file \\'\" + croppedDTI + \"\\' already exists so the command will not be executed\")\n"; // not used if overwrite because "if 1 :"
+    Script = Script + pyExecuteCommandPreprocessCase("croppedDTI", "CropCommand", "CropDTI: Cropping DTI image", "      ");
+
   } //if(m_NeedToBeCropped==1)
 
 /* Generating FA */
@@ -358,24 +396,7 @@ void ScriptWriter::Preprocess ()
   Script = Script + "      print(\"[Case \" + str(case+1) + \"] [Generating FA] => $ \" + GeneFACommand)\n";
   Script = Script + "      nbStepsDone += 1\n";
 
-  if(m_Overwrite==1)
-  {
-    Script = Script + "      if 1 :\n";
-  }
-  else
-  {
-    Script = Script + "      if not os.path.isfile(FA) :\n";
-  }
-  if( ! m_useGridProcess )
-  {
-    Script = Script + "        if os.system(GeneFACommand)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] dtiprocess: Generating FA of DTI image\')\n";
-  }
-
-  else
-  {
-    Script = Script + "        GridProcessCaseCommandsArray.append(GeneFACommand) # Executed eventually\n";
-  }
-  Script = Script + "      else : print(\"=> The file \\'\" + FA + \"\\' already exists so the command will not be executed\")\n"; // not used if overwrite because "if 1 :"
+  Script = Script + pyExecuteCommandPreprocessCase("FA", "GeneFACommand", "dtiprocess: Generating FA of DTI image", "      ");
 
 /* Normalization */
   Script = Script + "\n# Normalization\n";
@@ -385,23 +406,7 @@ void ScriptWriter::Preprocess ()
   Script = Script + "    print(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [Case \" + str(case+1) + \"] [Normalization] => $ \" + NormFACommand)\n";
   Script = Script + "    nbStepsDone += 1\n";
 
-  if(m_Overwrite==1)
-  {
-    Script = Script + "    if 1 :\n";
-  }
-  else
-  {
-    Script = Script + "    if not os.path.isfile(NormFA) :\n";
-  }
-  if( ! m_useGridProcess )
-  {
-    Script = Script + "      if os.system(NormFACommand)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] ImageMath: Normalizing FA image\')\n";
-  }
-  else
-  {
-    Script = Script + "      GridProcessCaseCommandsArray.append(NormFACommand) # Executed eventually\n";
-  }
-  Script = Script + "    else : print(\"=> The file \\'\" + NormFA + \"\\' already exists so the command will not be executed\")\n"; // not used if overwrite because "if 1 :"
+  Script = Script + pyExecuteCommandPreprocessCase("NormFA", "NormFACommand", "ImageMath: Normalizing FA image", "    ");
 
 /* Affine registration with BrainsFit */
   Script = Script + "\n# Affine registration with BrainsFit\n";
@@ -421,23 +426,7 @@ void ScriptWriter::Preprocess ()
   Script = Script + "    print(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [Case \" + str(case+1) + \"] [Affine registration with BrainsFit] => $ \" + AffineCommand)\n";
   Script = Script + "    nbStepsDone += 1\n";
 
-  if(m_Overwrite==1)
-  {
-    Script = Script + "    if 1 :\n";
-  }
-  else
-  {
-    Script = Script + "    if not os.path.isfile(LinearTranstfm) or not os.path.isfile(LinearTrans) :\n";
-  }
-  if( ! m_useGridProcess )
-  {
-    Script = Script + "      if os.system(AffineCommand)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] BRAINSFit: Affine Registration of FA image\')\n";
-  }
-  else
-  {
-    Script = Script + "      GridProcessCaseCommandsArray.append(AffineCommand) # Executed eventually\n";
-  }
-  Script = Script + "    else : print(\"=> The files \\'\" + LinearTranstfm + \"\\' and \\'\" + LinearTrans + \"\\' already exist so the command will not be executed\")\n"; // not used if overwrite because "if 1 :"
+  Script = Script + pyExecuteCommandPreprocessCase("LinearTranstfm", "AffineCommand", "BRAINSFit: Affine Registration of FA image", "    ");
 
 /* Implementing the affine registration */
   Script = Script + "\n# Implementing the affine registration\n";
@@ -455,23 +444,7 @@ void ScriptWriter::Preprocess ()
   Script = Script + "    print(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [Case \" + str(case+1) + \"] [Implementing the Affine registration] => $ \" + ImplementCommand)\n";
   Script = Script + "    nbStepsDone += 1\n";
 
-  if(m_Overwrite==1)
-  {
-    Script = Script + "    if 1 :\n";
-  }
-  else
-  {
-    Script = Script + "    if not os.path.isfile(LinearTransDTI) :\n";
-  }
-  if( ! m_useGridProcess )
-  {
-    Script = Script + "      if os.system(ImplementCommand)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] ResampleDTIlogEuclidean: Implementing the Affine Registration on FA image\')\n";
-  }
-  else
-  {
-    Script = Script + "      GridProcessCaseCommandsArray.append(ImplementCommand) # Executed eventually\n";
-  }
-  Script = Script + "    else : print(\"=> The file \\'\" + LinearTransDTI + \"\\' already exists so the command will not be executed\")\n"; // not used if overwrite because "if 1 :"
+  Script = Script + pyExecuteCommandPreprocessCase("LinearTransDTI", "ImplementCommand", "ResampleDTIlogEuclidean: Implementing the Affine Registration on FA image", "    ");
 
 /* Generating FA of registered images */
   Script = Script + "\n# Generating FA of registered images\n";
@@ -482,23 +455,7 @@ void ScriptWriter::Preprocess ()
   Script = Script + "    print(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [Case \" + str(case+1) + \"] [Generating FA of registered images] => $ \" + GeneLoopFACommand)\n";
   Script = Script + "    nbStepsDone += 1\n";
 
-  if(m_Overwrite==1)
-  {
-    Script = Script + "    if 1 :\n";
-  }
-  else
-  {
-    Script = Script + "    if not os.path.isfile(LoopFA) :\n";
-  }
-  if( ! m_useGridProcess )
-  {
-    Script = Script + "      if os.system(GeneLoopFACommand)!=0 : DisplayErrorAndQuit(\'[Case \' + str(case+1) + \'] dtiprocess: Generating FA of affine registered images\')\n";
-  }
-  else
-  {
-    Script = Script + "      GridProcessCaseCommandsArray.append(GeneLoopFACommand) # Executed eventually\n";
-  }
-  Script = Script + "    else : print(\"=> The file \\'\" + LoopFA + \"\\' already exists so the command will not be executed\")\n"; // not used if overwrite because "if 1 :"
+  Script = Script + pyExecuteCommandPreprocessCase("LoopFA", "GeneLoopFACommand", "dtiprocess: Generating FA of affine registered images", "    ");
 
 /* Run grid process command for case X, containing all operations */
   if( m_useGridProcess )
@@ -663,27 +620,7 @@ void ScriptWriter::AtlasBuilding()
     Script = Script + "FilesFolder = \"" + m_OutputPath + "/DTIAtlas/GridProcessingFiles\"\n\n";
 
     //Test Function
-    Script = Script + "# Function that tests if all cases have been processed on the grid\n";
-    Script = Script + "def TestGridProcess ( FilesFolder, NbCases ): # if NbCases == 0, then just search the file \'file\' (unique command)\n";
-    Script = Script + "  if NbCases>0 : print(\"\\n| Waiting for all cases (\" + str(NbCases) + \") to be processed on grid...\") # NoCase1 is 0 or 1\n";
-    Script = Script + "  filesOK = 0\n";
-    Script = Script + "  OldNbFilesOK = 0\n";
-    Script = Script + "  while not filesOK :\n";
-    Script = Script + "    filesOK = 1\n";
-    Script = Script + "    if NbCases>0 : \n";
-    Script = Script + "      NbfilesOK = 0\n";
-    Script = Script + "      case = 0\n";
-    Script = Script + "      while case < NbCases:\n";
-    Script = Script + "        if not os.path.isfile( FilesFolder + \"/Case\" + str(case+1) ) : filesOK = 0\n";
-    Script = Script + "        else : NbfilesOK = NbfilesOK + 1\n";
-    Script = Script + "        case += 1\n";
-    Script = Script + "      if NbfilesOK != OldNbFilesOK : print(\"| [\" + str(NbfilesOK) + \"\\t / \" + str(NbCases) + \" ] cases processed\")\n";
-    Script = Script + "      OldNbFilesOK=NbfilesOK\n";
-    Script = Script + "    elif not os.path.isfile( FilesFolder + \"/file\" ) : filesOK = 0\n";
-    Script = Script + "    time.sleep(60) # Test only every minute\n";
-    Script = Script + "  print(\"\\n=> All files processed\")\n";
-    Script = Script + "  shutil.rmtree(FilesFolder) # clear directory and recreate it\n";
-    Script = Script + "  os.mkdir(FilesFolder)\n\n";
+    Script = Script + pyTestGridProcess( false ); // bool NoCase1
 
     GridApostrophe = " + \"\\'\"";
     std::string File = "FilesFolder + \"/Case\" + str(case+1)";
