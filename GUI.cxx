@@ -90,6 +90,8 @@ to display a warning if a new compute is done afterwards with a newer version
 */
 #define DTIABversion "1.2"
 
+// DTIAtlasBuilder_BUILD_SLICER_EXTENSION is defined as preprocessor variable with CMake set_target_properties() in DTIAtlasBuilder.cmake
+
   /////////////////////////////////////////
  //            CONSTRUCTOR              //
 /////////////////////////////////////////
@@ -293,7 +295,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
   }
 
   // Because ANTS is in m_DTIABSlicerExtensionExternalBinDir when Slicer Ext
-  if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION) DTIRegExtraPathlineEdit->setText( QString( m_DTIABSlicerExtensionExternalBinDir.c_str() )); // DTIAtlasBuilder_BUILD_SLICER_EXTENSION is defined as constant variable when configuring
+  if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION) DTIRegExtraPathlineEdit->setText( QString( m_DTIABSlicerExtensionExternalBinDir.c_str() ));
 
   // look for the programs with the itk function
   ConfigDefault();
