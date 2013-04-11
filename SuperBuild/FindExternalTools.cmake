@@ -468,8 +468,10 @@ AddToolMacro( BRAINS ) # AddToolMacro( proj ) + uses SourceCodeArgs CMAKE_ExtraA
 set( SourceCodeArgs
   # SVN_REPOSITORY "http://advants.svn.sourceforge.net/svnroot/advants/trunk"
   # SVN_REVISION -r 1685 # 12/13/2012
-  GIT_REPOSITORY "${git_protocol}://github.com/stnava/ANTs.git"
-  GIT_TAG "6cb624225fe99047b562acb1a0cb053dc98dbc50" # 2013-01-31 Move to new repository home
+#  GIT_REPOSITORY "${git_protocol}://github.com/stnava/ANTs.git"
+#  GIT_TAG "6cb624225fe99047b562acb1a0cb053dc98dbc50" # 2013-01-31 Move to new repository home
+  GIT_REPOSITORY "${git_protocol}://github.com/adrienkaiser/ANTs.git"
+  GIT_TAG "d8b155d80b2067940c1d66deb3af9303b35d8b4a" # 2013-04-11 Move to homemade fixed repository
   )
 set( CMAKE_ExtraARGS
   -DBUILD_TESTING:BOOL=OFF
@@ -484,7 +486,6 @@ set( CMAKE_ExtraARGS
   -DUSE_VTK:BOOL=OFF
   -DVTK_DIR:PATH=${VTK_DIR}
   DEPENDS ${ITK_DEPEND} ${VTK_DEPEND}
-  PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/SuperBuild/configureboostPatched.cmake ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder-build/ANTS/SuperBuild/configureboost.cmake
   )
 set( Tools
   ANTS
