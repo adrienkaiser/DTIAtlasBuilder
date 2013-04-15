@@ -56,6 +56,7 @@ to display a warning if a new compute is done afterwards with a newer version
 #endif
 
 // DTIAtlasBuilder_BUILD_SLICER_EXTENSION is defined as preprocessor variable with CMake set_target_properties() in DTIAtlasBuilder.cmake
+#define SlicerPythonExec "${SlicerPythonExec}" // configured in DTIAtlasBuilder.cmake
 
   /////////////////////////////////////////
  //            CONSTRUCTOR              //
@@ -2647,10 +2648,10 @@ int GUI::LaunchScriptWriter()
     }
     else if((std::string)Platform == "win")
     {
-      m_PythonPath = m_DTIABSlicerExtensionExternalBinDir + "/python";
+      m_PythonPath = m_DTIABSlicerExtensionExternalBinDir + "/python.exe";
     }
 
-    if(! itksys::SystemTools::GetPermissions(m_PythonPath.c_str(), ITKmode_X_OK) ) // If not here -> Testing: use Slicer's python
+    if(! itksys::SystemTools::GetPermissions(m_PythonPath.c_str(), ITKmode_X_OK) ) // If not here -> Testing: use directly Slicer's python
     {
       m_PythonPath = SlicerPythonExec; // SlicerPythonExec is defined as preprocessor variable with CMake set_target_properties() in DTIAtlasBuilder.cmake
       if(! itksys::SystemTools::GetPermissions(m_PythonPath.c_str(), ITKmode_X_OK) ) // if still not here: use default python
