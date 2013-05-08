@@ -19,17 +19,18 @@
 
 std::string pyTestGridProcess ( bool NoCase1 )
 {
-  std::string Script = "\n# Function that tests if all cases have been processed on the grid\n";
+  std::string Script = "\n# Function that tests if all batches have been processed on the grid\n";
   if( NoCase1 )
   {
     Script = Script + "def TestGridProcess ( FilesFolder, NbCases , NoCase1): # if NbCases == 0, then just search the file \'file\' (unique command)\n";
-    Script = Script + "  if NbCases>0 : print(\"\\n| Waiting for all cases (\" + str(NbCases-NoCase1) + \") to be processed on grid...\") # NoCase1 is 0 or 1\n";
+    Script = Script + "  if NbCases>0 : print(\"\\n| Waiting for all batches (\" + str(NbCases-NoCase1) + \") to be processed on grid...\") # NoCase1 is 0 or 1\n";
   }
   else
   {
     Script = Script + "def TestGridProcess ( FilesFolder, NbCases ): # if NbCases == 0, then just search the file \'file\' (unique command)\n";
-    Script = Script + "  if NbCases>0 : print(\"\\n| Waiting for all cases (\" + str(NbCases) + \") to be processed on grid...\")\n";
+    Script = Script + "  if NbCases>0 : print(\"\\n| Waiting for all batches (\" + str(NbCases) + \") to be processed on grid...\")\n";
   }
+  Script = Script + "  else : print(\"\\n| Waiting for 1 batch to be processed on grid...\")\n";
   Script = Script + "  filesOK = 0\n";
   Script = Script + "  OldNbFilesOK = 0\n";
   Script = Script + "  while not filesOK :\n";
@@ -48,11 +49,18 @@ std::string pyTestGridProcess ( bool NoCase1 )
   Script = Script + "        if not os.path.isfile( FilesFolder + \"/Case\" + str(case+1) ) : filesOK = 0\n";
   Script = Script + "        else : NbfilesOK = NbfilesOK + 1\n";
   Script = Script + "        case += 1\n";
-  Script = Script + "      if NbfilesOK != OldNbFilesOK : print(\"| [\" + str(NbfilesOK) + \"\\t / \" + str(NbCases-NoCase1) + \" ] cases processed\")\n";
+  if( NoCase1 )
+  {
+    Script = Script + "      if NbfilesOK != OldNbFilesOK : print(\"| [\" + str(NbfilesOK) + \"\\t / \" + str(NbCases-NoCase1) + \" ] cases processed\")\n";
+  }
+  else
+  {
+    Script = Script + "      if NbfilesOK != OldNbFilesOK : print(\"| [\" + str(NbfilesOK) + \"\\t / \" + str(NbCases) + \" ] cases processed\")\n";
+  }
   Script = Script + "      OldNbFilesOK=NbfilesOK\n";
   Script = Script + "    elif not os.path.isfile( FilesFolder + \"/file\" ) : filesOK = 0\n";
   Script = Script + "    time.sleep(60) # Test only every minute\n";
-  Script = Script + "  print(\"\\n=> All files processed\")\n";
+  Script = Script + "  print(\"\\n=> All files processed\\n\")\n";
   Script = Script + "  shutil.rmtree(FilesFolder) # clear directory and recreate it\n";
   Script = Script + "  os.mkdir(FilesFolder)\n";
 
@@ -206,7 +214,7 @@ void ScriptWriter::Preprocess ()
   Script = Script + "\n# Create directory for temporary files\n";
   Script = Script + "if not os.path.isdir(OutputPath):\n";
   Script = Script + "  os.mkdir(OutputPath)\n";
-  Script = Script + "  print(\"\\n=> Creation of the affine directory = \" + OutputPath)\n";
+  Script = Script + "  print(\"\\n=> Creation of the affine directory = \" + OutputPath)\n\n";
 
 /* Defining cropping options */
   if(m_NeedToBeCropped==1)
@@ -348,7 +356,7 @@ void ScriptWriter::Preprocess ()
   Script = Script + "while n <= " + m_nbLoops_str + " :\n";
 
   Script = Script + "  if not os.path.isdir(OutputPath + \"/Loop\" + str(n)):\n";
-  Script = Script + "    print(\"\\n => Creation of the Output directory for Loop \" + str(n) + \" = \" + OutputPath + \"/Loop\" + str(n) + \"\\n\")\n";
+  Script = Script + "    print(\"\\n=> Creation of the Output directory for Loop \" + str(n) + \" = \" + OutputPath + \"/Loop\" + str(n) + \"\\n\")\n";
   Script = Script + "    os.mkdir(OutputPath + \"/Loop\" + str(n))\n\n";
 
   Script = Script + "  # Cases Loop\n";
@@ -603,7 +611,7 @@ void ScriptWriter::AtlasBuilding()
   std::ostringstream oss2;
   oss2 << nbStepsPreProc;
   std::string nbStepsPreProc_str = oss2.str();
-  Script = Script + "nbStepsDone=" + nbStepsPreProc_str  + " # because steps already done in preprocessing\n\n";
+  Script = Script + "nbStepsDone=" + nbStepsPreProc_str  + " # because steps already done in preprocessing\n";
 
 /* Call script to run command on grid */
   std::string GridApostrophe = "";
@@ -617,7 +625,7 @@ void ScriptWriter::AtlasBuilding()
   {
     Script = Script + "# Call script to run command on server\n";
     Script = Script + "import time # To test existence of files only every minute\n";
-    Script = Script + "FilesFolder = \"" + m_OutputPath + "/DTIAtlas/GridProcessingFiles\"\n\n";
+    Script = Script + "FilesFolder = \"" + m_OutputPath + "/DTIAtlas/GridProcessingFiles\"\n";
 
     //Test Function
     Script = Script + pyTestGridProcess( false ); // bool NoCase1
@@ -639,7 +647,7 @@ void ScriptWriter::AtlasBuilding()
 /* Create directory for temporary files and final */
 
 
-  Script = Script + "FinalPath= \"" + m_OutputPath + "/DTIAtlas/3_Diffeomorphic_Atlas\"\n";
+  Script = Script + "\nFinalPath= \"" + m_OutputPath + "/DTIAtlas/3_Diffeomorphic_Atlas\"\n\n";
 
 
   Script = Script + "# Create directory for temporary files and final\n";
@@ -668,7 +676,7 @@ void ScriptWriter::AtlasBuilding()
   Script = Script + "  os.mkdir(FinalResampPath + \"/First_Resampling\")\n\n";
 
   Script = Script + "if not os.path.isdir(FinalResampPath + \"/Second_Resampling\"):\n";
-  Script = Script + "  print(\"\\n => Creation of the Second Final Resampling directory = \" + FinalResampPath + \"/Second_Resampling\")\n";
+  Script = Script + "  print(\"\\n=> Creation of the Second Final Resampling directory = \" + FinalResampPath + \"/Second_Resampling\")\n";
   Script = Script + "  os.mkdir(FinalResampPath + \"/Second_Resampling\")\n\n";
 
 /* Cases variables: */

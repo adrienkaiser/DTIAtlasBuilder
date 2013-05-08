@@ -135,6 +135,7 @@ if(RecompileVTK) # BRAINSStandAlone/SuperBuild/External_VTK.cmake
         -DVTK_INSTALL_LIB_DIR:PATH=${Slicer_INSTALL_LIB_DIR}
       )
     set(VTK_DIR ${CMAKE_CURRENT_BINARY_DIR}/VTK-install/lib/vtk-5.10)
+    mark_as_advanced(CLEAR VTK_DIR)
     set(VTK_DEPEND VTK)
 endif(RecompileVTK)
 
@@ -257,10 +258,12 @@ if(RecompileSEM)
     DEPENDS ${ITK_DEPEND} # either ITKv4 if recompiled, or empty
     )
   set(SlicerExecutionModel_DIR ${CMAKE_CURRENT_BINARY_DIR}/SlicerExecutionModel-build) # Use the downloaded SlicerExecutionModel for all tools
+  mark_as_advanced(CLEAR SlicerExecutionModel_DIR)
   set(GenerateCLP_DIR ${SlicerExecutionModel_DIR}/GenerateCLP)
   set(ModuleDescriptionParser_DIR ${SlicerExecutionModel_DIR}/ModuleDescriptionParser)
   set(TCLAP_DIR ${SlicerExecutionModel_DIR}/tclap)
   list(APPEND ITK_DEPEND SlicerExecutionModel)
+
 endif(RecompileSEM)
 
 # BatchMake for DTI-Reg (after ITK)
@@ -302,6 +305,7 @@ if(RecompileBatchMake)
       DEPENDS ${ITK_DEPEND}
       )
     set(BatchMake_DIR ${CMAKE_CURRENT_BINARY_DIR}/BatchMake-build)
+    mark_as_advanced(CLEAR BatchMake_DIR)
     set(BatchMake_ITK_DIR ${ITK_DIR}) # If batchmake recompiled, no include(${BatchMake_USE_FILE}) has been done so BatchMake_ITK_DIR does not exist, and we used ${ITK_DIR} to compile it.
     set(BatchMake_DEPEND BatchMake)
 endif(RecompileBatchMake)

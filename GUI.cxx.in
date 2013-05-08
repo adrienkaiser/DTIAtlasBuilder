@@ -590,7 +590,7 @@ void GUI::InitOptions()
 
 void GUI::OpenAddCaseBrowseWindow() /*SLOT*/
 {
-  QStringList CaseListBrowse=QFileDialog::getOpenFileNames(this, "Open Cases", m_lastCasePath, "NRRD Images (*.nrrd *.nhdr *.*)");
+  QStringList CaseListBrowse=QFileDialog::getOpenFileNames(this, "Open Cases", m_lastCasePath, "ITK format Images (*.nrrd *.nhdr *.nii *.nii.gz *.*)");
   CaseListWidget->addItems(CaseListBrowse);
   if(!CaseListBrowse.isEmpty())
   {
@@ -656,12 +656,18 @@ void GUI::CheckCasesIndex() /* Change ids at the begining of the lines */
 
 void GUI::OpenOutputBrowseWindow() /*SLOT*/
 {
-  QString OutputBrowse=QFileDialog::getExistingDirectory(this);
+  // If already an output folder, browse from this location
+  QString CurrentOutputFolder = "";
+  if( !OutputFolderLineEdit->text().isEmpty() )
+  {
+    CurrentOutputFolder = OutputFolderLineEdit->text();
+  }
+
+  QString OutputBrowse = QFileDialog::getExistingDirectory( this, "Find Directory", CurrentOutputFolder );
   if(!OutputBrowse.isEmpty())
   {
     OutputFolderLineEdit->setText(OutputBrowse);
   }
-  
 }
 
   /////////////////////////////////////////
@@ -684,7 +690,7 @@ void GUI::OpenDTIRegExtraPathBrowseWindow() /*SLOT*/
 
 void GUI::OpenTemplateBrowseWindow() /*SLOT*/
 {
-  QString TemplateBrowse=QFileDialog::getOpenFileName(this, "Open Atlas Template", QString(), "NRRD Image (*.nrrd *.nhdr *.*)");
+  QString TemplateBrowse=QFileDialog::getOpenFileName(this, "Open Atlas FA Template", QString(), "ITK format Images (*.nrrd *.nhdr *.nii *.nii.gz *.*)");
   if(!TemplateBrowse.isEmpty())
   {
     TemplateLineEdit->setText(TemplateBrowse);
@@ -2369,9 +2375,24 @@ int GUI::LaunchScriptWriter()
   m_OutputPath=OutputFolderLineEdit->text();
   if( ! itksys::SystemTools::GetPermissions(m_OutputPath.toStdString().c_str(), ITKmode_F_OK) ) // Test if the folder exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
   {
-    if(!m_noGUI) QMessageBox::critical(this, "No Output Folder", "The output folder does not exist");
-    else std::cout<<"| The output folder does not exist"<<std::endl;
-    return -1;
+    if(!m_noGUI)
+    {
+      int ret = QMessageBox::question(this,"No Output Folder","The output folder does not exist. Do you want to create it ?",QMessageBox::No | QMessageBox::Yes);
+      if (ret == QMessageBox::Yes) // create folder
+      {
+        std::cout<<"| Creating Output folder..."<<std::endl; // command line display
+        itksys::SystemTools::MakeDirectory( m_OutputPath.toStdString().c_str() );
+      }
+      else // no creation -> return
+      {
+        return -1;
+      }
+    }
+    else // if no gui, output folder not exist == exit
+    {
+      std::cout<<"| The output folder does not exist. Please create it."<<std::endl;
+      return -1;
+    }
   }
   if( ! itksys::SystemTools::GetPermissions(m_OutputPath.toStdString().c_str(), ITKmode_W_OK) ) // Test if the program can write in the output folder => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
   {
