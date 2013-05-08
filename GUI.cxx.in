@@ -2326,14 +2326,9 @@ int GUI::Compute() /*SLOT*/
 
 }
 
-int GUI::LaunchScriptWriter()
+bool GUI::CheckCases()
 {
-  bool FirstComputeInOutputFolder = false; // to avoid confusion with absence of version file (normal if first compute)
-
-/* Checking and Setting the values */
-
-/* Cases */
-  for(int i=0; i < CaseListWidget->count() ;i++) 
+ for(int i=0; i < CaseListWidget->count() ;i++) 
   {
     std::string CurrentCase = CaseListWidget->item(i)->text().toStdString().substr( CaseListWidget->item(i)->text().split(":").at(0).size()+2 );
     if( ! itksys::SystemTools::GetPermissions(CurrentCase.c_str(), ITKmode_F_OK) ) // Test if the case files exist => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
@@ -2344,7 +2339,7 @@ int GUI::LaunchScriptWriter()
         QMessageBox::critical(this, "Case does not exist", QString(text.c_str()) );
       }
       else std::cout<<"| This file does not exist : " << CurrentCase <<std::endl;
-      return -1;
+      return false;
     }
     int checkIm = checkImage(CurrentCase); // returns 1 if not an image, 2 if not a dti, otherwise 0
     if( checkIm == 1 ) // returns 1 if not an image, 2 if not a dti, otherwise 0
@@ -2355,7 +2350,7 @@ int GUI::LaunchScriptWriter()
         QMessageBox::critical(this, "No image", QString(text.c_str()) );
       }
       else std::cout<<"| This file is not an image : " << CurrentCase <<std::endl;
-      return -1;
+      return false;
     }
     if( checkIm == 2 ) // returns 1 if not an image, 2 if not a dti, otherwise 0
     {
@@ -2365,13 +2360,18 @@ int GUI::LaunchScriptWriter()
         QMessageBox::critical(this, "No DTI", QString(text.c_str()) );
       }
       else std::cout<<"| This image is not a DTI : " << CurrentCase <<std::endl;
-      return -1;
+      return false;
     }
     m_CasesPath.push_back( CurrentCase );
-  }
+  } // for all cases
+
   m_scriptwriter->setCasesPath(m_CasesPath); // m_CasesPath is a vector
 
-/* Output */
+  return true;
+} // CheckCases
+
+bool GUI::CheckOutput( bool& FirstComputeInOutputFolder )
+{
   m_OutputPath=OutputFolderLineEdit->text();
   if( ! itksys::SystemTools::GetPermissions(m_OutputPath.toStdString().c_str(), ITKmode_F_OK) ) // Test if the folder exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
   {
@@ -2385,20 +2385,20 @@ int GUI::LaunchScriptWriter()
       }
       else // no creation -> return
       {
-        return -1;
+        return false;
       }
     }
     else // if no gui, output folder not exist == exit
     {
       std::cout<<"| The output folder does not exist. Please create it."<<std::endl;
-      return -1;
+      return false;
     }
   }
   if( ! itksys::SystemTools::GetPermissions(m_OutputPath.toStdString().c_str(), ITKmode_W_OK) ) // Test if the program can write in the output folder => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
   {
     if(!m_noGUI) QMessageBox::critical(this, "Output Folder Unwritable", "Please give an output folder authorized in reading");
     else std::cout<<"| Please give an output folder authorized in reading"<<std::endl;
-    return -1;
+    return false;
   }
   m_scriptwriter->setOutputPath(m_OutputPath.toStdString());
 
@@ -2417,7 +2417,11 @@ int GUI::LaunchScriptWriter()
     FirstComputeInOutputFolder  = true;
   }
 
-/* Template */
+  return true;
+} // CheckOutput
+
+bool GUI::CheckTemplate()
+{
   if (!TemplateLineEdit->text().isEmpty()) 
   {
     if( ! itksys::SystemTools::GetPermissions(TemplateLineEdit->text().toStdString().c_str(), ITKmode_F_OK) ) // Test if the case files exist => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
@@ -2428,7 +2432,7 @@ int GUI::LaunchScriptWriter()
         QMessageBox::critical(this, "Template does not exist", QString(text.c_str()) );
       }
       else std::cout<<"| This template file does not exist : " << TemplateLineEdit->text().toStdString() <<std::endl;
-      return -1;
+      return false;
     }
     int checkImTemp = checkImage(TemplateLineEdit->text().toStdString()); // returns 1 if not an image, 2 if not a dti, otherwise 0
     if( checkImTemp == 1 ) // returns 1 if not an image, 2 if not a dti, otherwise 0
@@ -2439,7 +2443,7 @@ int GUI::LaunchScriptWriter()
         QMessageBox::critical(this, "No image", QString(text.c_str()) );
       }
       else std::cout<<"| This template file is not an image : " << TemplateLineEdit->text().toStdString() <<std::endl;
-      return -1;
+      return false;
     }
     if( checkImTemp == 0 ) // returns 1 if not an image, 2 if not a dti, otherwise 0 //the template has to be a FA image !!
     {
@@ -2449,15 +2453,19 @@ int GUI::LaunchScriptWriter()
         QMessageBox::critical(this, "No FA", QString(text.c_str()) );
       }
       else std::cout<<"| This template image is not a FA : " << TemplateLineEdit->text().toStdString() <<std::endl;
-      return -1;
+      return false;
     }
     m_scriptwriter->setRegType(0);
     m_scriptwriter->setTemplatePath(TemplateLineEdit->text().toStdString());
   }
 
   else m_scriptwriter->setRegType(1); // default
-  
-/* Resamp options */
+
+  return true;
+} // CheckTemplate
+
+void GUI::SetResampOptions()
+{
   m_scriptwriter->setInterpolType(InterpolTypeComboBox->currentText().toStdString());
   if( InterpolTypeComboBox->currentText()==QString("Windowed Sinc") ) m_scriptwriter->setInterpolOption(m_windowComboBox->currentText().toStdString());
   else if( InterpolTypeComboBox->currentText()==QString("BSpline") ) m_scriptwriter->setInterpolOption(m_BSplineComboBox->currentText().toStdString());
@@ -2510,75 +2518,52 @@ int GUI::LaunchScriptWriter()
 
   m_scriptwriter->setDTIRegOptions(DTIRegOptions);
   DTIRegOptions.clear();
+} // SetResampOptions
 
-/* Software paths */
-/* Checking if all the programs have been given */
-  if(ImagemathPath->text().isEmpty() || ResampPath->text().isEmpty() || CropDTIPath->text().isEmpty() || dtiprocPath->text().isEmpty() || BRAINSFitPath->text().isEmpty() || GAPath->text().isEmpty() || dtiavgPath->text().isEmpty() || DTIRegPath->text().isEmpty() || unuPath->text().isEmpty() || MriWatcherPath->text().isEmpty()) // if any path is missing => check in the config file and in the PATH
+void GUI::CheckProgram( std::string ProgramName, QLineEdit *ProgramPath, std::string& notFound )
+{
+  if( ProgramPath->text().isEmpty() )
+  {
+    std::string FoundprogramPath = itksys::SystemTools::FindProgram( ProgramName.c_str(), m_FindProgramDTIABExecDirVec );
+    if(FoundprogramPath.empty()) notFound = notFound + "> " + ProgramName + "\n";
+    else ProgramPath->setText(QString(FoundprogramPath.c_str()));
+  }
+} // CheckProgram
+
+bool GUI::CheckPrograms()
+{
+  if(  ImagemathPath->text().isEmpty()
+    || ResampPath->text().isEmpty()
+    || CropDTIPath->text().isEmpty()
+    || dtiprocPath->text().isEmpty()
+    || BRAINSFitPath->text().isEmpty()
+    || GAPath->text().isEmpty()
+    || dtiavgPath->text().isEmpty()
+    || DTIRegPath->text().isEmpty()
+    || unuPath->text().isEmpty()
+    || MriWatcherPath->text().isEmpty() ) // if any path is missing => check in the config file and in the PATH
   {
     const char * value = itksys::SystemTools::GetEnv("DTIAtlasBuilderSoftPath"); // C function = const char * getenv(const char *)
-    if (value) LoadConfig( QString(value) ); // replace the paths by the paths given in the config file
+    if (value)
+    {
+      LoadConfig( QString(value) ); // replace the paths by the paths given in the config file
+    }
 
-    std::string programPath;
     std::string notFound;
 
-    if(ImagemathPath->text().isEmpty())
+    CheckProgram( "ImageMath", ImagemathPath, notFound );
+    CheckProgram( "ResampleDTIlogEuclidean", ResampPath, notFound );
+    CheckProgram( "CropDTI", CropDTIPath, notFound );
+    CheckProgram( "dtiprocess", dtiprocPath, notFound );
+    CheckProgram( "BRAINSFit", BRAINSFitPath, notFound );
+    CheckProgram( "GreedyAtlas", GAPath, notFound );
+    CheckProgram( "dtiaverage", dtiavgPath, notFound );
+    CheckProgram( "DTI-Reg", DTIRegPath, notFound );
+    CheckProgram( "unu", unuPath, notFound );
+
+    if(MriWatcherPath->text().isEmpty()) // MriWatcher special because not in notFound -> just warning no QC
     {
-      programPath = itksys::SystemTools::FindProgram("ImageMath",m_FindProgramDTIABExecDirVec);
-      if(programPath.empty()) notFound = notFound + "> ImageMath\n";
-      else ImagemathPath->setText(QString(programPath.c_str()));
-    }
-    if(ResampPath->text().isEmpty())
-    {
-      programPath = itksys::SystemTools::FindProgram("ResampleDTIlogEuclidean",m_FindProgramDTIABExecDirVec);
-      if(programPath.empty()) notFound = notFound + "> ResampleDTIlogEuclidean\n";
-      else ResampPath->setText(QString(programPath.c_str()));
-    }
-    if(CropDTIPath->text().isEmpty())
-    {
-      programPath = itksys::SystemTools::FindProgram("CropDTI",m_FindProgramDTIABExecDirVec);
-      if(programPath.empty()) notFound = notFound + "> CropDTI\n";
-      else CropDTIPath->setText(QString(programPath.c_str()));
-    }
-    if(dtiprocPath->text().isEmpty())
-    {
-      programPath = itksys::SystemTools::FindProgram("dtiprocess",m_FindProgramDTIABExecDirVec);
-      if(programPath.empty()) notFound = notFound + "> dtiprocess\n";
-      else dtiprocPath->setText(QString(programPath.c_str()));
-    }
-    if(BRAINSFitPath->text().isEmpty())
-    {
-      programPath = itksys::SystemTools::FindProgram("BRAINSFit",m_FindProgramDTIABExecDirVec);
-      if(programPath.empty()) notFound = notFound + "> BRAINSFit\n";
-      else BRAINSFitPath->setText(QString(programPath.c_str()));
-    }
-    if(GAPath->text().isEmpty())
-    {
-      programPath = itksys::SystemTools::FindProgram("GreedyAtlas",m_FindProgramDTIABExecDirVec);
-      if(programPath.empty()) notFound = notFound + "> GreedyAtlas\n";
-      else GAPath->setText(QString(programPath.c_str()));
-    }
-    if(dtiavgPath->text().isEmpty())
-    {
-      programPath = itksys::SystemTools::FindProgram("dtiaverage",m_FindProgramDTIABExecDirVec);
-      if(programPath.empty()) notFound = notFound + "> dtiaverage\n";
-      else dtiavgPath->setText(QString(programPath.c_str()));
-    }
-    if(DTIRegPath->text().isEmpty())
-    {
-      programPath = itksys::SystemTools::FindProgram("DTI-Reg_1.1.2",m_FindProgramDTIABExecDirVec);
-      if(programPath.empty()) programPath = itksys::SystemTools::FindProgram("DTI-Reg",m_FindProgramDTIABExecDirVec); // if 1.1.2 not found, look for "DTI-Reg"
-      if(programPath.empty()) notFound = notFound + "> DTI-Reg\n";
-      else DTIRegPath->setText(QString(programPath.c_str()));
-    }
-    if(unuPath->text().isEmpty())
-    {
-      programPath = itksys::SystemTools::FindProgram("unu",m_FindProgramDTIABExecDirVec);
-      if(programPath.empty()) notFound = notFound + "> unu\n";
-      else unuPath->setText(QString(programPath.c_str()));
-    }
-    if(MriWatcherPath->text().isEmpty())
-    {
-      programPath = itksys::SystemTools::FindProgram("MriWatcher",m_FindProgramDTIABExecDirVec);
+      std::string programPath = itksys::SystemTools::FindProgram("MriWatcher",m_FindProgramDTIABExecDirVec);
       if(programPath.empty()) DisableQC(); // notFound = notFound + "> MriWatcher (Program will work, but QC will not be available)\n";
       else MriWatcherPath->setText(QString(programPath.c_str()));
     }
@@ -2591,105 +2576,45 @@ int GUI::LaunchScriptWriter()
         QMessageBox::critical(this, "Program missing", QString(text.c_str()) );
       }
       else std::cout<<"| The following programs are missing. Please modify the configuration file or enter the path manually in the GUI:\n" << notFound <<std::endl;
-      return -1;
+      return false;
     }
   }
 
-  if(testGA()==-1) return -1;
-  if(testDTIReg()==-1) return -1;
+  if(testGA()==-1) return false;
+  if(testDTIReg()==-1) return false;
 
-/* Checking if the given files are executable */
-  if(! itksys::SystemTools::GetPermissions(ImagemathPath->text().toStdString().c_str(), ITKmode_X_OK))
-  {
-    if(!m_noGUI)
-    {
-      std::string text = "The file \'" + ImagemathPath->text().toStdString() + "\' is not executable";
-      QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
-    }
-    else std::cout<<"| The file \'" << ImagemathPath->text().toStdString() << "\' is not executable" << std::endl;
-    return -1;
-  }
-  if(! itksys::SystemTools::GetPermissions(ResampPath->text().toStdString().c_str(), ITKmode_X_OK) )
-  {
-    if(!m_noGUI)
-    {
-      std::string text = "The file \'" + ResampPath->text().toStdString() + "\' is not executable";
-      QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
-    }
-    else std::cout<<"| The file \'" << ResampPath->text().toStdString() << "\' is not executable" << std::endl;
-    return -1;
-  }
-  if(! itksys::SystemTools::GetPermissions(CropDTIPath->text().toStdString().c_str(), ITKmode_X_OK) )
-  {
-    if(!m_noGUI)
-    {
-      std::string text = "The file \'" + CropDTIPath->text().toStdString() + "\' is not executable";
-      QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
-    }
-    else std::cout<<"| The file \'" << CropDTIPath->text().toStdString() << "\' is not executable" << std::endl;
-    return -1;
-  }
-  if(! itksys::SystemTools::GetPermissions(dtiprocPath->text().toStdString().c_str(), ITKmode_X_OK) )
-  {
-    if(!m_noGUI)
-    {
-      std::string text = "The file \'" + dtiprocPath->text().toStdString() + "\' is not executable";
-      QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
-    }
-    else std::cout<<"| The file \'" << dtiprocPath->text().toStdString() << "\' is not executable" << std::endl;
-    return -1;
-  }
-  if(! itksys::SystemTools::GetPermissions(BRAINSFitPath->text().toStdString().c_str(), ITKmode_X_OK) )
-  {
-    if(!m_noGUI)
-    {
-      std::string text = "The file \'" + BRAINSFitPath->text().toStdString() + "\' is not executable";
-      QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
-    }
-    else std::cout<<"| The file \'" << BRAINSFitPath->text().toStdString() << "\' is not executable" << std::endl;
-    return -1;
-  }
-  if(! itksys::SystemTools::GetPermissions(GAPath->text().toStdString().c_str(), ITKmode_X_OK) )
-  {
-    if(!m_noGUI)
-    {
-      std::string text = "The file \'" + GAPath->text().toStdString() + "\' is not executable";
-      QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
-    }
-    else std::cout<<"| The file \'" << GAPath->text().toStdString() << "\' is not executable" << std::endl;
-    return -1;
-  }
-  if(! itksys::SystemTools::GetPermissions(dtiavgPath->text().toStdString().c_str(), ITKmode_X_OK) )
-  {
-    if(!m_noGUI)
-    {
-      std::string text = "The file \'" + dtiavgPath->text().toStdString() + "\' is not executable";
-      QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
-    }
-    else std::cout<<"| The file \'" << dtiavgPath->text().toStdString() << "\' is not executable" << std::endl;
-    return -1;
-  }
-  if(! itksys::SystemTools::GetPermissions(DTIRegPath->text().toStdString().c_str(), ITKmode_X_OK) )
-  {
-    if(!m_noGUI)
-    {
-      std::string text = "The file \'" + DTIRegPath->text().toStdString() + "\' is not executable";
-      QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
-    }
-    else std::cout<<"| The file \'" << DTIRegPath->text().toStdString() << "\' is not executable" << std::endl;
-    return -1;
-  }
-  if(! itksys::SystemTools::GetPermissions(unuPath->text().toStdString().c_str(), ITKmode_X_OK) )
-  {
-    if(!m_noGUI)
-    {
-      std::string text = "The file \'" + unuPath->text().toStdString() + "\' is not executable";
-      QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
-    }
-    else std::cout<<"| The file \'" << unuPath->text().toStdString() << "\' is not executable" << std::endl;
-    return -1;
-  }
+  return true;
+} // CheckPrograms
 
+bool GUI::CheckProgramExecutable( QLineEdit *ProgramPath )
+{
+  if(! itksys::SystemTools::GetPermissions(ProgramPath->text().toStdString().c_str(), ITKmode_X_OK))
+  {
+    if(!m_noGUI)
+    {
+      std::string text = "The file \'" + ProgramPath->text().toStdString() + "\' is not executable";
+      QMessageBox::critical(this, "Non executable File", QString(text.c_str()) );
+    }
+    else std::cout<<"| The file \'" << ProgramPath->text().toStdString() << "\' is not executable" << std::endl;
+    return false;
+  }
+  return true;
+} // CheckProgramExecutable
+
+
+bool GUI::CheckProgramsExecutable()
+{
+  if( ! CheckProgramExecutable( ImagemathPath  ) ) return false;
+  if( ! CheckProgramExecutable( ResampPath     ) ) return false;
+  if( ! CheckProgramExecutable( CropDTIPath    ) ) return false;
+  if( ! CheckProgramExecutable( dtiprocPath    ) ) return false;
+  if( ! CheckProgramExecutable( BRAINSFitPath  ) ) return false;
+  if( ! CheckProgramExecutable( GAPath         ) ) return false;
+  if( ! CheckProgramExecutable( dtiavgPath     ) ) return false;
+  if( ! CheckProgramExecutable( DTIRegPath     ) ) return false;
+  if( ! CheckProgramExecutable( unuPath        ) ) return false;
+
+  // MriWatcher special because no critical -> just warning no QC
   if(MriWatcherPath->text().isEmpty()) DisableQC();
   else if(! itksys::SystemTools::GetPermissions(MriWatcherPath->text().toStdString().c_str(), ITKmode_X_OK) != 0)
   {
@@ -2699,8 +2624,7 @@ int GUI::LaunchScriptWriter()
       QMessageBox::warning(this, "Non executable File", QString(text.c_str()) );
     }
     else std::cout<<"| The file \'" << MriWatcherPath->text().toStdString() << "\' is not executable: program will work, but QC will not be available" << std::endl;
-    DisableQC();
-//    return -1;
+    DisableQC(); // return false;
   }
 
   std::vector < std::string > SoftPath;
@@ -2718,7 +2642,13 @@ int GUI::LaunchScriptWriter()
   m_scriptwriter->setSoftPath(SoftPath);
   SoftPath.clear();
 
-/* Find Python */ // m_PythonPath member because needed in LaunchScriptRunner()
+  return true;
+} // CheckProgramsExecutable
+
+bool GUI::FindPython()
+{
+  // m_PythonPath member because needed in LaunchScriptRunner()
+
   m_PythonPath = ""; // in case it has been used before
   if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION)
   {
@@ -2754,18 +2684,22 @@ int GUI::LaunchScriptWriter()
         QMessageBox::critical(this, "Python not found", QString(PythonNotFoundtext.c_str()) );
       }
       else std::cout<<"| Python has not been found. Please install python before running DTIAtlasBuilder." << std::endl;
-      return -1;
+      return false;
     }
   }
 
   m_scriptwriter->setPythonPath(m_PythonPath);
 
-/* Voxel Size and Cropping*/
+  return true;
+} // FindPython
+
+bool GUI::CheckVoxelSizeAndCropping()
+{
   if(m_scriptwriter->CheckVoxelSize()==1) 
   {
     if(!m_noGUI) QMessageBox::critical(this, "Different Voxel Sizes", "Error: The voxel size of the images\nare not the same,\nplease change dataset"); // returns 0 if voxel size OK , otherwise 1
     else std::cout<<"| Error: The voxel size of the images are not the same, please change dataset" << std::endl;
-    return -1;
+    return false;
   }
   m_NeedToBeCropped=m_scriptwriter->setCroppingSize( SafetyMargincheckBox->isChecked() ); // returns 0 if no cropping , 1 if cropping needed
   if( m_NeedToBeCropped==1 && !SafetyMargincheckBox->isChecked() )
@@ -2774,7 +2708,11 @@ int GUI::LaunchScriptWriter()
     else std::cout<<"| Warning: The images do not have the same size, so some of them will be cropped" << std::endl;
   }
 
-/* Other Options */
+  return true;
+} // CheckVoxelSizeAndCropping
+
+void GUI::SetOtherOptions()
+{
   if(OverwritecheckBox->isChecked()) m_scriptwriter->setOverwrite(1);
   else m_scriptwriter->setOverwrite(0);
 
@@ -2787,69 +2725,35 @@ int GUI::LaunchScriptWriter()
 
   if( GridProcesscheckBox->isChecked() ) m_scriptwriter->setNbThreads(1); // Not used in script, but fct needs to be called to initialize var
   else m_scriptwriter->setNbThreads( NbThreadsSpinBox->value() );
+}  // SetOtherOptions
 
-/* Launch writing */
-  m_scriptwriter->WriteScript(); // Master Function : get pid to send a signal to Qt process to move progress bar
 
-/* XML file for GreedyAtlas */
-  GenerateXMLForGA();
+void GUI::GenerateScriptFile( std::string ScriptName, std::string ScriptText )
+{
 
-/* Save CSV and parameters */
-  SaveCSVResults(m_NeedToBeCropped,NbLoopsSpinBox->value());
-  SaveParameters(m_OutputPath + QString("/DTIAtlas/DTIAtlasBuilderParameters.txt"), m_OutputPath + QString("/DTIAtlas/DTIAtlasBuilderDataset.csv"));
+  std::cout<<"| Generating " << ScriptName << " script file..."; // command line display
 
-/* Generate Preprocess script file */
-  std::cout<<"| Generating Pre processing script file..."; // command line display
+  QString ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/DTIAtlasBuilder_") + QString(ScriptName.c_str()) + QString(".py");
+  QFile file(ScriptPath);
 
-  QString ScriptPath;
-  ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/DTIAtlasBuilder_Preprocess.py");
-  QFile filePreP(ScriptPath);
-
-  if ( filePreP.open( IO_WriteOnly | IO_Translate ) )
+  if ( file.open( IO_WriteOnly | IO_Translate ) )
   {
     //file.setPermissions(QFile::ExeOwner); //make the file executable for the owner
-    QTextStream stream( &filePreP );
-    stream << QString((m_scriptwriter->getScript_Preprocess()).c_str()) << endl;
+    QTextStream stream( &file );
+    stream << QString( ScriptText.c_str() ) << endl;
     std::cout<<"DONE"<<std::endl; // command line display
+
+    itksys::SystemTools::SetPermissions( (ScriptPath.toStdString()).c_str(), ITKmode_X_OK );
   }
   else qDebug( "Could not create file");
 
-/* Generate Atlas Building script file */
-  std::cout<<"| Generating Atlas Building script file..."; // command line display
+} // GenerateScriptFile
 
-  ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/DTIAtlasBuilder_AtlasBuilding.py");
-  QFile fileAtlas(ScriptPath);
+void GUI::GenerateServerScript()
+{
+    std::cout<<"| Generating Server script file..."; // command line display
 
-  if ( fileAtlas.open( IO_WriteOnly | IO_Translate ) )
-  {
-    //file.setPermissions(QFile::ExeOwner); //make the file executable for the owner
-    QTextStream stream( &fileAtlas );
-    stream << QString((m_scriptwriter->getScript_AtlasBuilding()).c_str()) << endl;
-    std::cout<<"DONE"<<std::endl; // command line display
-  }
-  else qDebug( "Could not create file");
-
-/* Generate Main script file */
-  std::cout<<"| Generating Main script file..."; // command line display
-
-  ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/DTIAtlasBuilder_Main.py");
-  QFile fileMain(ScriptPath);
-
-  if ( fileMain.open( IO_WriteOnly | IO_Translate ) )
-  {
-    //file.setPermissions(QFile::ExeOwner); // make the file executable for the owner
-    QTextStream stream( &fileMain );
-    stream << QString((m_scriptwriter->getScript_Main()).c_str()) << endl;
-    std::cout<<"DONE"<<std::endl; // command line display
-  }
-  else qDebug( "Could not create file");
-
-/* Generate Server script file */
-  if( GridProcesscheckBox->isChecked() )
-  {
-     std::cout<<"| Generating Server script file..."; // command line display
-
-    ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/RunCommandOnServer.py");
+    QString ScriptPath = m_OutputPath + QString("/DTIAtlas/Script/RunCommandOnServer.py");
     QFile fileMain(ScriptPath);
 
     if ( fileMain.open( IO_WriteOnly | IO_Translate ) )
@@ -2879,16 +2783,39 @@ int GUI::LaunchScriptWriter()
       stream << "f.close()" << endl ;
 
       std::cout<<"DONE"<<std::endl; // command line display
+
+      itksys::SystemTools::SetPermissions( (ScriptPath.toStdString()).c_str(), ITKmode_X_OK );
     }
     else qDebug( "Could not create file");
+
+} // GenerateServerScript
+
+void GUI::WriteChangeHistoryLogFile(std::string OldVersion) // write file for changes from old version so current version
+{
+  QString ChangeHistoryFilePath = m_OutputPath + "/DTIAtlas/Script/ChangeHistory.log";
+  QFile ChangeHistoryFile(ChangeHistoryFilePath);
+  if( ChangeHistoryFile.open( IO_WriteOnly | IO_Translate ) )
+  {
+    QTextStream ChangeHistorystream( &ChangeHistoryFile );
+
+    ChangeHistorystream << "# This file contains all changes done in the filenames from version " << QString(OldVersion.c_str()) << " to version " << QString(DTIABversion) << "."<< endl; // DTIABversion is a macro so a const char*
+    ChangeHistorystream << "# You need all these changes to be applied to your output folder before running DTIAtlasBuilder."<< endl<< endl;
+
+    if(OldVersion == "1.0")
+    {
+      ChangeHistorystream << OneZerotoOneOne<< endl;
+      ChangeHistorystream << OneOnetoOneTwo<< endl;
+    }
+    else if(OldVersion == "1.1")
+    {
+      ChangeHistorystream << OneOnetoOneTwo<< endl;
+    }
   }
+  else qDebug( "Could not create Change History file");
+}
 
-  itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Preprocess.py ").c_str(), ITKmode_X_OK);
-  itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_AtlasBuilding.py ").c_str(), ITKmode_X_OK);
-  itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Main.py ").c_str(), ITKmode_X_OK);
-  if( GridProcesscheckBox->isChecked() ) itksys::SystemTools::SetPermissions((m_OutputPath.toStdString() + "/DTIAtlas/Script/RunCommandOnServer.py ").c_str(), ITKmode_X_OK);
-
-/* version log file : read if exists and create new one */
+bool GUI::CheckVersionLogFile( bool FirstComputeInOutputFolder )
+{
   QString VersionFilePath = m_OutputPath + QString("/DTIAtlas/Script/VersionUsedToCompute.log");
   bool DisplayWarningVersion = false;
 
@@ -2920,13 +2847,13 @@ To avoid automatic recomputing, please apply the changes described in file \"" +
       int ret = QMessageBox::question(this,"Version issue", QString(text.c_str()) + "\n\nHit \"Ok\" to recompute the Atlas.\nHit \"Cancel\" to return and apply the changes manually.",QMessageBox::Cancel | QMessageBox::Ok);
       if (ret == QMessageBox::Cancel)
       {
-        return -1;
+        return false;
       }
     }
     else
     {
       std::cout<<"| Warning: "<< text << std::endl;
-      return -1;
+      return false;
     }
   }
 
@@ -2939,32 +2866,83 @@ To avoid automatic recomputing, please apply the changes described in file \"" +
   }
   else qDebug( "Could not create version file");
 
+  return true;
+
+} // CheckVersionLogFile
+
+
+/*
+    MASTER FUNCTION
+*/
+int GUI::LaunchScriptWriter()
+{
+  bool FirstComputeInOutputFolder = false; // to avoid confusion with absence of version file (normal if first compute)
+
+/* Checking and Setting the values */
+  if( ! CheckCases() )
+  {
+    return -1;
+  }
+
+  if( ! CheckOutput( FirstComputeInOutputFolder ) )
+  {
+    return -1;
+  }
+
+  if( ! CheckTemplate() )
+  {
+    return -1;
+  }
+
+  SetResampOptions();
+
+/* Software paths */
+  if( ! CheckPrograms() ) // Checking if all the programs have been given
+  {
+    return -1;
+  }
+
+  if( ! CheckProgramsExecutable() ) // Checking if the given files are executable
+  {
+    return -1;
+  }
+
+/* Find Python */
+  if( ! FindPython() )
+  {
+    return -1;
+  }
+
+  if( ! CheckVoxelSizeAndCropping() )
+  {
+    return -1;
+  }
+
+  SetOtherOptions();
+
+/* Launch writing */
+  m_scriptwriter->WriteScript(); // Master Function : get pid to send a signal to Qt process to move progress bar
+
+  GenerateXMLForGA();
+
+  SaveCSVResults(m_NeedToBeCropped,NbLoopsSpinBox->value());
+  SaveParameters(m_OutputPath + QString("/DTIAtlas/DTIAtlasBuilderParameters.txt"), m_OutputPath + QString("/DTIAtlas/DTIAtlasBuilderDataset.csv"));
+
+  GenerateScriptFile( "Preprocess", m_scriptwriter->getScript_Preprocess() );
+  GenerateScriptFile( "AtlasBuilding", m_scriptwriter->getScript_AtlasBuilding() );
+  GenerateScriptFile( "Main", m_scriptwriter->getScript_AtlasBuilding() );
+
+  if( GridProcesscheckBox->isChecked() )
+  {
+    GenerateServerScript();
+  }
+
+  if( ! CheckVersionLogFile( FirstComputeInOutputFolder ) ) // read if exists and create new one
+  {
+    return -1;
+  }
 
   return 0;
-}
-
-void GUI::WriteChangeHistoryLogFile(std::string OldVersion) // write file for changes from old version so current version
-{
-  QString ChangeHistoryFilePath = m_OutputPath + "/DTIAtlas/Script/ChangeHistory.log";
-  QFile ChangeHistoryFile(ChangeHistoryFilePath);
-  if( ChangeHistoryFile.open( IO_WriteOnly | IO_Translate ) )
-  {
-    QTextStream ChangeHistorystream( &ChangeHistoryFile );
-
-    ChangeHistorystream << "# This file contains all changes done in the filenames from version " << QString(OldVersion.c_str()) << " to version " << QString(DTIABversion) << "."<< endl; // DTIABversion is a macro so a const char*
-    ChangeHistorystream << "# You need all these changes to be applied to your output folder before running DTIAtlasBuilder."<< endl<< endl;
-
-    if(OldVersion == "1.0")
-    {
-      ChangeHistorystream << OneZerotoOneOne<< endl;
-      ChangeHistorystream << OneOnetoOneTwo<< endl;
-    }
-    else if(OldVersion == "1.1")
-    {
-      ChangeHistorystream << OneOnetoOneTwo<< endl;
-    }
-  }
-  else qDebug( "Could not create Change History file");
 }
 
 int GUI::LaunchScriptRunner()
