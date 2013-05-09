@@ -751,7 +751,7 @@ void GUI::DisplayResampQC() /*SLOT*/
   std::string path;
   for(int i=0; i < CaseListWidget->count() ;i++) 
   {
-    path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/4_Final_Resampling/Second_Resampling/" + itksys::SystemTools::GetFilenameWithoutExtension( CaseListWidget->item(i)->text().toStdString() ) + "_FinalDeformedFA.nrrd";
+    path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/4_Final_Resampling/FinalTensors/" + itksys::SystemTools::GetFilenameWithoutExtension( CaseListWidget->item(i)->text().toStdString() ) + "_FinalDeformedFA.nrrd";
     if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
   }
   path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/4_Final_Resampling/FinalAtlasFA.nrrd";
@@ -951,8 +951,8 @@ void GUI::SaveCSVResults(int Crop, int nbLoops) // Crop = 0 if no cropping , 1 i
       stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/") << CaseID << QString("_HField.mhd"); // Diffeomorphic Deformation H field to Affine space
       stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/2_NonLinear_Registration/") << CaseID << QString("_InverseHField.mhd"); // Diffeomorphic Inverse Deformation H field to Affine space
       stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/3_Diffeomorphic_Atlas/") << CaseID << QString("_DiffeomorphicDTI.nrrd"); // Diffeomorphic DTI
-      stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/4_Final_Resampling/Second_Resampling/") << CaseID << QString("_GlobalDisplacementField.nrrd"); // Diffeomorphic Deformation Displacement field to Original space
-      stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/4_Final_Resampling/Second_Resampling/") << CaseID << QString("_FinalDeformedDTI.nrrd"); // DTI-Reg Final DTI
+      stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/4_Final_Resampling/FinalDeformationFields/") << CaseID << QString("_GlobalDisplacementField.nrrd"); // Diffeomorphic Deformation Displacement field to Original space
+      stream << m_CSVseparator << m_OutputPath + QString("/DTIAtlas/4_Final_Resampling/FinalTensors/") << CaseID << QString("_FinalDeformedDTI.nrrd"); // DTI-Reg Final DTI
       stream << endl;
     }
 
@@ -3030,7 +3030,7 @@ void GUI::RunningCompleted()
 {
   ScriptRunningDisplayQLabel->setText("Running Completed ");
 
-  std::string RunningCompletedText = "Running Completed !\nFinal Atlas is in \"" + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/FinalAtlasDTI.nrrd\"\nFinal Displacement Fields for each case are in \"" + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/Second_Resampling/<case>_GlobalDisplacementField.nrrd\"";
+  std::string RunningCompletedText = "Running Completed !\nFinal Atlas is in \"" + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/FinalAtlasDTI.nrrd\"\nFinal Displacement Fields for each case are in \"" + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/FinalDeformationFields/<case>_GlobalDisplacementField.nrrd\"";
 
   if(!m_noGUI) QMessageBox::information(this, "Running Completed", QString(RunningCompletedText.c_str()));
   std::cout<< RunningCompletedText <<std::endl; // command line display

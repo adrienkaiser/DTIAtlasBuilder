@@ -574,7 +574,7 @@ void ScriptWriter::AtlasBuilding()
   Script = Script + "#!/usr/bin/python\n\n";
   Script = Script + "import os # To run a shell command : os.system(\"[shell command]\")\n";
   Script = Script + "import sys # to return an exit code\n";
-  Script = Script + "import shutil # to remove a non empty directory\n\n";
+  Script = Script + "import shutil # to remove a non empty directory and copy files\n\n";
 
   Script = Script + "PIDlogFile = \"" + m_OutputPath + "/DTIAtlas/Script/PID.log\"\n";
   Script = Script + "PIDfile = open( PIDlogFile, 'a') # open in Append mode\n";
@@ -655,10 +655,6 @@ void ScriptWriter::AtlasBuilding()
 
 /* Create directory for temporary files and final */
 
-
-  Script = Script + "\nFinalPath= \"" + m_OutputPath + "/DTIAtlas/3_Diffeomorphic_Atlas\"\n\n";
-
-
   Script = Script + "# Create directory for temporary files and final\n";
   Script = Script + "if not os.path.isdir(DeformPath):\n";
   Script = Script + "  OldDeformPath= \"" + m_OutputPath + "/DTIAtlas/2_NonLinear_Registration_AW\"\n";
@@ -687,6 +683,14 @@ void ScriptWriter::AtlasBuilding()
   Script = Script + "if not os.path.isdir(FinalResampPath + \"/Second_Resampling\"):\n";
   Script = Script + "  print(\"\\n=> Creation of the Second Final Resampling directory = \" + FinalResampPath + \"/Second_Resampling\")\n";
   Script = Script + "  os.mkdir(FinalResampPath + \"/Second_Resampling\")\n\n";
+
+  Script = Script + "if not os.path.isdir(FinalResampPath + \"/FinalTensors\"):\n";
+  Script = Script + "  print(\"\\n=> Creation of the Final Tensors directory = \" + FinalResampPath + \"/FinalTensors\")\n";
+  Script = Script + "  os.mkdir(FinalResampPath + \"/FinalTensors\")\n\n";
+
+  Script = Script + "if not os.path.isdir(FinalResampPath + \"/FinalDeformationFields\"):\n";
+  Script = Script + "  print(\"\\n=> Creation of the Final Deformation Fields directory = \" + FinalResampPath + \"/FinalDeformationFields\\n\")\n";
+  Script = Script + "  os.mkdir(FinalResampPath + \"/FinalDeformationFields\")\n\n";
 
 /* Cases variables: */
   Script = Script + "# Cases variables\n";
@@ -1253,6 +1257,24 @@ void ScriptWriter::AtlasBuilding()
   {
     Script = Script + "TestGridProcess( FilesFolder, len(allcases) ) # stays in the function until all process is done : 0 makes the function look for \'file\'\n\n";
   }
+
+/* Moving final images to final folders */
+  Script = Script + "\n# Moving final images to final folders\n";
+  Script = Script + "case = 0\n";
+  Script = Script + "while case < len(allcases):\n";
+  Script = Script + "  GlobalDefField2 = FinalResampPath + \"/Second_Resampling/\" + allcasesIDs[case] + \"_GlobalDisplacementField.nrrd\"\n";
+  Script = Script + "  NewGlobalDefField2 = FinalResampPath + \"/FinalDeformationFields/\" + allcasesIDs[case] + \"_GlobalDisplacementField.nrrd\"\n";
+  Script = Script + "  if os.path.isfile(GlobalDefField2) :\n";
+  Script = Script + "    shutil.copy(GlobalDefField2, NewGlobalDefField2)\n";
+  Script = Script + "  FinalDef2 = FinalResampPath + \"/Second_Resampling/\" + allcasesIDs[case] + \"_FinalDeformedDTI.nrrd\"\n";
+  Script = Script + "  NewFinalDef2 = FinalResampPath + \"/FinalTensors/\" + allcasesIDs[case] + \"_FinalDeformedDTI.nrrd\"\n";
+  Script = Script + "  if os.path.isfile(FinalDef2) :\n";
+  Script = Script + "    shutil.copy(FinalDef2, NewFinalDef2)\n";
+  Script = Script + "  DTIRegCaseFA = FinalResampPath + \"/Second_Resampling/\" + allcasesIDs[case] + \"_FinalDeformedFA.nrrd\"\n";
+  Script = Script + "  NewDTIRegCaseFA = FinalResampPath + \"/FinalTensors/\" + allcasesIDs[case] + \"_FinalDeformedFA.nrrd\"\n";
+  Script = Script + "  if os.path.isfile(DTIRegCaseFA) :\n";
+  Script = Script + "    shutil.copy(DTIRegCaseFA, NewDTIRegCaseFA)\n";
+  Script = Script + "  case += 1\n\n";
 
   Script = Script + "print(\"\\n============ End of Atlas Building =============\")\n\n";
 
