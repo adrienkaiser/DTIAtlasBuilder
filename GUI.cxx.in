@@ -39,12 +39,10 @@ to display a warning if a new compute is done afterwards with a newer version
       Renaming GreedyAtlas' Def Fields to HField
       Renaming Final Def Fields to GlobalDisplacementField
 */
-#define DTIABversion "1.2"
 
 /* homemade */
 #include "GUI.h"
 #include "ScriptWriter.h"
-#include "ChangeHistory.h"
 
 // Q_OS_WIN32 Q_OS_LINUX Q_OS_MAC are Qt macros
 #if defined Q_OS_WIN32
@@ -2767,87 +2765,6 @@ void GUI::GenerateServerScript()
 
 } // GenerateServerScript
 
-void GUI::WriteChangeHistoryLogFile(std::string OldVersion) // write file for changes from old version so current version
-{
-  QString ChangeHistoryFilePath = m_OutputPath + "/DTIAtlas/Script/ChangeHistory.log";
-  QFile ChangeHistoryFile(ChangeHistoryFilePath);
-  if( ChangeHistoryFile.open( IO_WriteOnly | IO_Translate ) )
-  {
-    QTextStream ChangeHistorystream( &ChangeHistoryFile );
-
-    ChangeHistorystream << "# This file contains all changes done in the filenames from version " << QString(OldVersion.c_str()) << " to version " << QString(DTIABversion) << "."<< endl; // DTIABversion is a macro so a const char*
-    ChangeHistorystream << "# You need all these changes to be applied to your output folder before running DTIAtlasBuilder."<< endl<< endl;
-
-    if(OldVersion == "1.0")
-    {
-      ChangeHistorystream << OneZerotoOneOne<< endl;
-      ChangeHistorystream << OneOnetoOneTwo<< endl;
-    }
-    else if(OldVersion == "1.1")
-    {
-      ChangeHistorystream << OneOnetoOneTwo<< endl;
-    }
-  }
-  else qDebug( "Could not create Change History file");
-}
-
-bool GUI::CheckVersionLogFile( bool FirstComputeInOutputFolder )
-{
-  QString VersionFilePath = m_OutputPath + QString("/DTIAtlas/Script/VersionUsedToCompute.log");
-  bool DisplayWarningVersion = false;
-
-  std::string OldVersion;
-  if( itksys::SystemTools::GetPermissions(VersionFilePath.toStdString().c_str(), ITKmode_F_OK) ) // version file exists -> read it
-  {
-    QFile VersionFileFound(VersionFilePath);
-    if (VersionFileFound.open(QFile::ReadOnly))
-    {
-      QTextStream Foundstream(&VersionFileFound);
-      OldVersion = Foundstream.readLine().toStdString();
-      if( OldVersion != DTIABversion ) DisplayWarningVersion =true;// warning files names changed
-    } // open file in reading
-  } // if file exists : close scope where QFile has been created => will delete the QFile object and therefore close the file
-  else if ( ! FirstComputeInOutputFolder )  // if first compute : normal that no version file
-  {
-    OldVersion="1.0";
-    DisplayWarningVersion = true; // if no version file
-  }
-
-  if( DisplayWarningVersion )
-  {
-    WriteChangeHistoryLogFile(OldVersion);
-    std::string text = "The previous computation done in this output folder has been done with an older version of DTIAtlasBuilder (" + OldVersion + "). The current version is " + DTIABversion + ".\n\
-To avoid automatic recomputing, please apply the changes described in file \"" + m_OutputPath.toStdString() + "/DTIAtlas/Script/ChangeHistory.log\".";
-
-    if(!m_noGUI)
-    {
-      int ret = QMessageBox::question(this,"Version issue", QString(text.c_str()) + "\n\nHit \"Ok\" to recompute the Atlas.\nHit \"Cancel\" to return and apply the changes manually.",QMessageBox::Cancel | QMessageBox::Ok);
-      if (ret == QMessageBox::Cancel)
-      {
-        return false;
-      }
-    }
-    else
-    {
-      std::cout<<"| Warning: "<< text << std::endl;
-      return false;
-    }
-  }
-
-  // Create file (or replace)
-  QFile VersionFile(VersionFilePath);
-  if ( VersionFile.open( IO_WriteOnly | IO_Translate ) )
-  {
-    QTextStream Versionstream( &VersionFile );
-    Versionstream << DTIABversion<< endl;
-  }
-  else qDebug( "Could not create version file");
-
-  return true;
-
-} // CheckVersionLogFile
-
-
 /*
     MASTER FUNCTION
 */
@@ -2914,11 +2831,6 @@ int GUI::LaunchScriptWriter()
     GenerateServerScript();
   }
 
-  if( ! CheckVersionLogFile( FirstComputeInOutputFolder ) ) // read if exists and create new one
-  {
-    return -1;
-  }
-
   return 0;
 }
 
@@ -2963,29 +2875,28 @@ void GUI::KillScriptQProcess() /* SLOT */
   std::cout<<"| Main Script Aborted."<<std::endl;
 
 /* Kill other processes by  PID : read PID.log file */
-  QString PIDlogFilePath = m_OutputPath + QString("/DTIAtlas/Script/PID.log");
-  if( itksys::SystemTools::GetPermissions(PIDlogFilePath.toStdString().c_str(), ITKmode_F_OK) ) // PID file exists -> read it
+  if((std::string)Platform == "mac" || (std::string)Platform == "linux") // Kill PID
   {
-    QFile PIDfile(PIDlogFilePath);
-    if( PIDfile.open(QFile::ReadOnly) )
+    QString PIDlogFilePath = m_OutputPath + QString("/DTIAtlas/Script/PID.log");
+    if( itksys::SystemTools::GetPermissions(PIDlogFilePath.toStdString().c_str(), ITKmode_F_OK) ) // PID file exists -> read it
     {
-      QTextStream PIDstream(&PIDfile);
-      QString PID = PIDstream.readLine();
-      while( ! PID.isEmpty() ) // end of file = PID empty
+      QFile PIDfile(PIDlogFilePath);
+      if( PIDfile.open(QFile::ReadOnly) )
       {
-        std::cout<<"| Killing: "<< PID.toStdString() <<std::endl;
-        if((std::string)Platform == "mac" || (std::string)Platform == "linux") // Kill PID
+        QTextStream PIDstream(&PIDfile);
+        QString PID = PIDstream.readLine();
+        while( ! PID.isEmpty() ) // end of file = PID empty
         {
+          std::cout<<"| Killing: "<< PID.toStdString() <<std::endl;
           std::string KillCommand = "kill " + PID.toStdString();
           QProcess * KillProcess = new QProcess;
           KillProcess->execute( KillCommand.c_str() );
-        }
 
-        PID = PIDstream.readLine();
-
-      } // while file not at end
-    } // open file in reading
-  } // if file exists
+          PID = PIDstream.readLine();
+        } // while file not at end
+      } // open file in reading
+    } // if file exists
+  } // if mac or windows
 }
 
 void GUI::UpdateScriptRunningGUIDisplay() /*SLOT*/ // called by QTimer every second
