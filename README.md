@@ -10,6 +10,10 @@ A tool to create an atlas from several DTI images
 
 Find the tool on [NITRC](http://www.nitrc.org/projects/dtiatlasbuilder "DTIAtlasBuilder on NITRC") and [GitHub](http://github.com/NIRALUser/DTIAtlasBuilder "DTIAtlasBuilder on GitHub")
 
+Binary package available on the [NITRC download page](http://www.nitrc.org/frs/?group_id=636)
+
+Usage tutorial available [from NITRC](http://www.nitrc.org/docman/view.php/636/1189/DTIAtlasBuilder_Tutorial.pdf)
+
 ##External Requirements
 
 These Softwares need to be installed before executing the tool :

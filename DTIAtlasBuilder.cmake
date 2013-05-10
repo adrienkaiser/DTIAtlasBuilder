@@ -115,7 +115,7 @@ macro( InstallToolMacro Proj CLI)
        find_program( path_to_${tool} # Here all tools will be found because DTIAB is compiled after all tools
        NAMES ${tool}
        PATHS ${CMAKE_CURRENT_BINARY_DIR}/${Proj}-build/bin  # Here ${CMAKE_CURRENT_BINARY_DIR} is the inner build directory (build/DTIAtlasBuilder-build)
-       PATH_SUFFIXES Debug Release RelWithDebInfo MinSizeRel # For Windows
+       PATH_SUFFIXES Debug Release RelWithDebInfo MinSizeRel # For Windows, it can be any one of these
        NO_DEFAULT_PATH
        NO_SYSTEM_ENVIRONMENT_PATH
       )
