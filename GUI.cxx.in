@@ -127,6 +127,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
     QObject::connect(AffineQCButton, SIGNAL(clicked()), this, SLOT(DisplayAffineQC()));
     QObject::connect(DeformQCButton, SIGNAL(clicked()), this, SLOT(DisplayDeformQC()));
     QObject::connect(ResampQCButton, SIGNAL(clicked()), this, SLOT(DisplayResampQC()));
+    QObject::connect(CleanOutputPushButton, SIGNAL(clicked()), this, SLOT(CleanOutputFolder()));
 
 /* Browse software path Buttons */
     QSignalMapper *SoftButtonMapper = new QSignalMapper();
@@ -668,6 +669,37 @@ void GUI::OpenOutputBrowseWindow() /*SLOT*/
   }
 }
 
+void GUI::CleanOutputFolder() /*SLOT*/
+{
+  // Remove all useless temporary images
+
+  int ret = QMessageBox::warning(this, "Remove Files", QString("This action will remove the content of all these folders:\n- <output folder>/DTIAtlas/1_Affine_Registration\n- <output folder>/DTIAtlas/2_NonLinear_Registration\n- <output folder>/DTIAtlas/3_Diffeomorphic_Atlas\n- <output folder>/DTIAtlas/4_Final_Resampling/First_Resampling\n\nDo you really want to remove them?"), QMessageBox::No | QMessageBox::Yes );
+
+  if (ret == QMessageBox::Yes) 
+  {
+    std::cout<<"| Cleaning output folder...";
+
+    std::vector< std::string > PathsToRemove;
+    PathsToRemove.push_back(OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/1_Affine_Registration");
+    PathsToRemove.push_back(OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/2_NonLinear_Registration");
+    PathsToRemove.push_back(OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/3_Diffeomorphic_Atlas");
+    PathsToRemove.push_back(OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/4_Final_Resampling/First_Resampling");
+
+    for( unsigned int i = 0 ; i < PathsToRemove.size() ; ++i )
+    {
+      if( itksys::SystemTools::GetPermissions( PathsToRemove[i].c_str(), ITKmode_F_OK ) )
+      {
+        itksys::SystemTools::RemoveADirectory( PathsToRemove[i].c_str() );
+      }
+    }
+
+//  itksys::SystemTools::RemoveFile(const char* source);
+
+    std::cout<<"DONE"<<std::endl;
+
+  } //   if (ret == QMessageBox::Yes) 
+}
+
   /////////////////////////////////////////
  //               DTI-Reg               //
 /////////////////////////////////////////
@@ -679,7 +711,6 @@ void GUI::OpenDTIRegExtraPathBrowseWindow() /*SLOT*/
   {
     DTIRegExtraPathlineEdit->setText(DTIRegExtraPathBrowse);
   }
-  
 }
 
   /////////////////////////////////////////
@@ -2120,8 +2151,13 @@ void GUI::ReadMe()  /*SLOT*/ /////to UPDATE
   QDialog *dlg = new QDialog(this);
   dlg->setWindowTitle ("Read Me");
 
-  std::string info = "DTIAtlasBuilder\n===============\n\nA tool to create an atlas from several DTI images\n\nThese Softwares need to be installed before executing the tool :\n- ImageMath\n- ResampleDTIlogEuclidean\n- CropDTI\n- dtiprocess\n- BRAINSFit\n- GreedyAtlas\n- dtiaverage\n- DTI-Reg\n- unu\n- MriWatcher\n\n For any question, suggestion or remark, please contact akaiser@unc.edu.";
-  QLabel *InfoLabel = new QLabel (info.c_str(), this);
+  std::string info = "<p><b>DTIAtlasBuilder</b><br>";
+  info = info + "<i>A tool to create an atlas from several DTI images</i><br><br>";
+  info = info + "Homepage: <a href=\"http://www.nitrc.org/projects/dtiatlasbuilder\" target=\"_blank\">On NITRC</a><br><br>";
+  info = info + "For any question, suggestion or remark, please contact <a href=\"mailto:akaiser@unc.edu\" target=\"_blank\">akaiser@unc.edu</a>.<br><br>";
+  info = info + "Read the <a href=\"http://github.com/NIRALUser/DTIAtlasBuilder/blob/master/README.md\" target=\"_blank\">full Read Me</a>.<br><br></p>";
+
+  QLabel *InfoLabel = new QLabel ( info.c_str(), this );
   QVBoxLayout *VLayout = new QVBoxLayout();
   VLayout->addWidget(InfoLabel);
 
@@ -2648,7 +2684,7 @@ bool GUI::FindPython()
     }
   } // if(DTIAtlasBuilder_BUILD_SLICER_EXTENSION)
 
-  if( m_PythonPath.empty() ) // Find Python version used // If not slicer ext -> empty, if slicer ext and test -> empty
+  if( m_PythonPath.empty() ) // Find Python version used // If not slicer ext -> empty, if slicer ext and test and not found -> empty
   {
     m_PythonPath = itksys::SystemTools::FindProgram("python",m_FindProgramDTIABExecDirVec);
     if(m_PythonPath.empty())
@@ -2838,6 +2874,7 @@ int GUI::LaunchScriptRunner()
 {
   ComputepushButton->setEnabled(false);
   StoppushButton->setEnabled(true);
+  CleanOutputPushButton->setEnabled(false);
   m_ScriptRunning=true;
 //  progressBar->setValue(0);
 
@@ -2924,6 +2961,7 @@ void GUI::ScriptQProcessDone(int ExitCode) /*SLOT*/ // called
 //  progressBar->setValue(100); // if the progress steps don't go until 100
   ComputepushButton->setEnabled(true);
   StoppushButton->setEnabled(false);
+  CleanOutputPushButton->setEnabled(true);
   m_ScriptRunning=false;
 
   if(ExitCode==0) RunningCompleted();

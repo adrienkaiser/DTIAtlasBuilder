@@ -43,7 +43,7 @@ else() # Unix
 endif()
 configure_file(DTIAtlasBuilder.xml.in ${CMAKE_CURRENT_BINARY_DIR}/DTIAtlasBuilder.xml)
 
-# Send python path to the program by preprocessor definition: For testing, c++ program needs to know where Slicer's python is
+# Send python path to the program by configuring GUI.cxx: For testing, c++ program needs to know where Slicer's python is
 if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
   # Python # Needed to use the python compiled with Slicer # "PYTHON_EXECUTABLE" given in SlicerConfig.cmake when find_package(Slicer REQUIRED)
   set(SlicerPythonExec ${PYTHON_EXECUTABLE})

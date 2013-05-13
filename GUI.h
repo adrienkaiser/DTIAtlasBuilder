@@ -107,6 +107,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 
 /*OUTPUT*/
     void OpenOutputBrowseWindow();
+    void CleanOutputFolder();
 
 /*DTIREG*/
     void OpenDTIRegExtraPathBrowseWindow();
