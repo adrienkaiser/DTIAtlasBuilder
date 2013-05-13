@@ -2979,7 +2979,7 @@ void GUI::RunningCompleted()
 {
   ScriptRunningDisplayQLabel->setText("Running Completed ");
 
-  std::string RunningCompletedText = "Running Completed !\nFinal Atlas is in \"" + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/FinalAtlasDTI.nrrd\"\nFinal Displacement Fields for each case are in \"" + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/FinalDeformationFields/<case>_GlobalDisplacementField.nrrd\"";
+  std::string RunningCompletedText = "Running Completed !\n\nFinal Atlas is in:\n\"" + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/FinalAtlasDTI.nrrd\"\n\nFinal Displacement Fields for each case are in:\n\"" + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/FinalDeformationFields/<case>_GlobalDisplacementField.nrrd\"";
 
   if(!m_noGUI) QMessageBox::information(this, "Running Completed", QString(RunningCompletedText.c_str()));
   std::cout<< RunningCompletedText <<std::endl; // command line display

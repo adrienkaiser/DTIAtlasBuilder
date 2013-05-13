@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 CMAKE_POLICY(VERSION 2.8)
 
+#======================================================================================
 # As the external project gives this CMakeLists the paths to the needed libraries (*_DIR), find_package will just use the existing *_DIR
 find_package(ITK REQUIRED)
 if(ITK_FOUND)
@@ -24,6 +25,36 @@ if(QT_USE_FILE)
 else(QT_USE_FILE)
   message(FATAL_ERROR, "QT not found. Please set QT_DIR.")
 endif(QT_USE_FILE)
+
+#======================================================================================
+# For Slicer Extension -> will create target "ExperimentalUpload" inside inner build. !! Needs to be before add testing
+if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
+  # Unset variables because Slicer will try to set it again and ERROR
+  set( ITK_DIR_TMP ${ITK_DIR} )
+  unset( ITK_DIR CACHE )
+  unset( ITK_DIR )
+  set( ITK_LIBRARIES_TMP ${ITK_LIBRARIES} )
+  unset( ITK_LIBRARIES CACHE )
+  unset( ITK_LIBRARIES )
+  set( SlicerExecutionModel_DIR_TMP ${SlicerExecutionModel_DIR} )
+  unset( SlicerExecutionModel_DIR )
+  unset( SlicerExecutionModel_DIR CACHE )
+
+  find_package(Slicer REQUIRED)
+  include(${Slicer_USE_FILE})
+
+  set( ITK_DIR ${ITK_DIR_TMP} CACHE PATH "ITK PATH" FORCE )
+  set( ITK_LIBRARIES ${ITK_LIBRARIES_TMP} CACHE PATH "ITK PATH" FORCE )
+  set( SlicerExecutionModel_DIR ${SlicerExecutionModel_DIR_TMP} CACHE PATH "SlicerExecutionModel PATH" FORCE )
+
+  # Create sym links during install step
+  if(APPLE)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/InstallApple/lib DESTINATION ${INSTALL_DIR}/..)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/InstallApple/Frameworks DESTINATION ${INSTALL_DIR}/..)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/InstallApple/AppleCreateLinkLibs.sh DESTINATION ${INSTALL_DIR}/../share)
+  endif(APPLE)
+
+endif( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
 
 #======================================================================================
 # Compile step for DTIAtlasBuilder
@@ -63,36 +94,6 @@ add_executable(DTIAtlasBuilder ${DTIABsources})  # add the files contained by "D
 set_target_properties(DTIAtlasBuilder PROPERTIES COMPILE_FLAGS "-DDTIAtlasBuilder_BUILD_SLICER_EXTENSION=${SlicerExtCXXVar}")# Add preprocessor definitions
 target_link_libraries(DTIAtlasBuilder ${QT_LIBRARIES} ${ITK_LIBRARIES})
 install(TARGETS DTIAtlasBuilder DESTINATION ${INSTALL_DIR}) # same if Slicer Ext or not
-
-#======================================================================================
-# For Slicer Extension -> will create target "ExperimentalUpload" inside inner build. !! Needs to be before add testing
-if( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
-  # Unset variables because Slicer will try to set it again and ERROR
-  set( ITK_DIR_TMP ${ITK_DIR} )
-  unset( ITK_DIR CACHE )
-  unset( ITK_DIR )
-  set( ITK_LIBRARIES_TMP ${ITK_LIBRARIES} )
-  unset( ITK_LIBRARIES CACHE )
-  unset( ITK_LIBRARIES )
-  set( SlicerExecutionModel_DIR_TMP ${SlicerExecutionModel_DIR} )
-  unset( SlicerExecutionModel_DIR )
-  unset( SlicerExecutionModel_DIR CACHE )
-
-  find_package(Slicer REQUIRED)
-  include(${Slicer_USE_FILE})
-
-  set( ITK_DIR ${ITK_DIR_TMP} CACHE PATH "ITK PATH" FORCE )
-  set( ITK_LIBRARIES ${ITK_LIBRARIES_TMP} CACHE PATH "ITK PATH" FORCE )
-  set( SlicerExecutionModel_DIR ${SlicerExecutionModel_DIR_TMP} CACHE PATH "SlicerExecutionModel PATH" FORCE )
-
-  # Create sym links during install step
-  if(APPLE)
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/InstallApple/lib DESTINATION ${INSTALL_DIR}/..)
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/InstallApple/Frameworks DESTINATION ${INSTALL_DIR}/..)
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/InstallApple/AppleCreateLinkLibs.sh DESTINATION ${INSTALL_DIR}/../share)
-  endif(APPLE)
-
-endif( DTIAtlasBuilder_BUILD_SLICER_EXTENSION )
 
 #===== Macro install tool ===============================================
 macro( InstallToolMacro Proj CLI)
