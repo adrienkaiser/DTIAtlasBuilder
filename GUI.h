@@ -41,6 +41,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
     void InitOptions();
 
 /*CASES*/
+    void AddCaseToListWidget(QStringList CaseList);
     void CheckCasesIndex();
 
 /* QC */
@@ -166,6 +167,10 @@ class GUI : public QMainWindow, public Ui::MainWindow
   signals: // none
 
   protected :
+
+/*CASES*/
+    void dragEnterEvent(QDragEnterEvent*event);
+    void dropEvent(QDropEvent* event);
 
 /*EXIT*/
     void closeEvent(QCloseEvent* event);

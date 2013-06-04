@@ -5,6 +5,10 @@
 #include <QFile>
 #include <QTextStream>
 #include <QCloseEvent>
+#include <QDropEvent>
+#include <QDragEnterEvent>
+#include <QMimeData>
+#include <QUrl>
 #include <QSignalMapper>
 #include <QDialog>
 #include <QLabel>
@@ -64,6 +68,8 @@ to display a warning if a new compute is done afterwards with a newer version
 GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, bool overwrite, bool noGUI, bool Testing, std::string commandRan) : QMainWindow()
 {
   setupUi(this);
+
+  this->setAcceptDrops(true);
 
   m_ErrorDetectedInConstructor=false;
 
@@ -592,11 +598,41 @@ void GUI::InitOptions()
  //                CASES                //
 /////////////////////////////////////////
 
+void GUI::dragEnterEvent(QDragEnterEvent *event)
+{
+  event->acceptProposedAction();
+}
+
+void GUI::dropEvent(QDropEvent* event)
+{
+  const QMimeData* mimeData = event->mimeData();
+
+  // check for needed mime type, a file or a list of files
+  if( mimeData->hasUrls() )
+  {
+    QStringList pathList;
+    QList<QUrl> urlList = mimeData->urls();
+ 
+    // extract the local paths of the files
+    for (int i = 0; i < urlList.size(); ++i)
+    {
+      pathList.append( urlList.at(i).toLocalFile() );
+    }
+ 
+    AddCaseToListWidget(pathList);
+  } // if mimedata hasurls
+}
+
 void GUI::OpenAddCaseBrowseWindow() /*SLOT*/
 {
-  QStringList CaseListBrowse=QFileDialog::getOpenFileNames(this, "Open Cases", m_lastCasePath, "ITK format Images (*.nrrd *.nhdr *.nii *.nii.gz *.*)");
-  CaseListWidget->addItems(CaseListBrowse);
-  if(!CaseListBrowse.isEmpty())
+  QStringList CaseListBrowse = QFileDialog::getOpenFileNames(this, "Open Cases", m_lastCasePath, "ITK format Images (*.nrrd *.nhdr *.nii *.nii.gz *.*)");
+  AddCaseToListWidget(CaseListBrowse);
+}
+
+void GUI::AddCaseToListWidget(QStringList CaseList)
+{
+  CaseListWidget->addItems(CaseList);
+  if(!CaseList.isEmpty())
   {
     if ( CaseListWidget->count()>0 )
     {
@@ -605,7 +641,7 @@ void GUI::OpenAddCaseBrowseWindow() /*SLOT*/
     }
     m_ParamSaved=0;
     SelectCasesLabel->setText( QString("") );
-    m_lastCasePath = CaseListBrowse.last();
+    m_lastCasePath = CaseList.last();
 
     CheckCasesIndex();
   }
