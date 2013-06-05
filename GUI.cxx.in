@@ -634,20 +634,27 @@ void GUI::dropEvent(QDropEvent* event)
     // extract the local paths of the files
     for (int i = 0; i < urlList.size(); ++i)
     {
-      pathList.append( urlList.at(i).toLocalFile() );
+      if ( itksys::SystemTools::GetFilenameLastExtension( urlList.at(i).toLocalFile().toStdString() ) == ".csv" ) // load possible csv file(s)
+      {
+        ReadCSV( urlList.at(i).toLocalFile() );
+      }
+      else
+      {
+        pathList.append( urlList.at(i).toLocalFile() );
+      }
     }
  
-    AddCaseToListWidget(pathList);
+    AddCasesToListWidget(pathList);
   } // if mimedata hasurls
 }
 
 void GUI::OpenAddCaseBrowseWindow() /*SLOT*/
 {
   QStringList CaseListBrowse = QFileDialog::getOpenFileNames(this, "Open Cases", m_lastCasePath, "ITK format Images (*.nrrd *.nhdr *.nii *.nii.gz *.*)");
-  AddCaseToListWidget(CaseListBrowse);
+  AddCasesToListWidget(CaseListBrowse);
 }
 
-void GUI::AddCaseToListWidget(QStringList CaseList)
+void GUI::AddCasesToListWidget(QStringList CaseList)
 {
   CaseListWidget->addItems(CaseList);
   if(!CaseList.isEmpty())
@@ -2214,7 +2221,7 @@ void GUI::ReadMe()  /*SLOT*/ /////to UPDATE
   info = info + "<i>A tool to create an atlas from several DTI images</i><br><br>";
   info = info + "Homepage: <a href=\"http://www.nitrc.org/projects/dtiatlasbuilder\" target=\"_blank\">On NITRC</a><br><br>";
   info = info + "For any question, suggestion or remark, please contact <a href=\"mailto:akaiser@unc.edu\" target=\"_blank\">akaiser@unc.edu</a>.<br><br>";
-  info = info + "Read the <a href=\"http://github.com/NIRALUser/DTIAtlasBuilder/blob/master/README.md\" target=\"_blank\">full Read Me</a>.<br><br></p>";
+  info = info + "Read the <a href=\"http://github.com/NIRALUser/DTIAtlasBuilder/blob/master/README.md\" target=\"_blank\">full Read Me</a>.</p>";
 
   QLabel *InfoLabel = new QLabel ( info.c_str(), this );
   QVBoxLayout *VLayout = new QVBoxLayout();
@@ -2233,7 +2240,8 @@ void GUI::KeyShortcuts()  /*SLOT*/
   std::string info = "<p>Keyboard Shortcuts:<br><br>";
   info = info + "<b>RETURN</b> or <b>ENTER</b> : Compute<br>";
   info = info + "<b>PLUS</b> or <b>Drag & Drop</b> : Add cases<br>";
-  info = info + "<b>MINUS</b> or <b>DELETE</b> : Remove cases<br></p>";
+  info = info + "<b>MINUS</b> or <b>DELETE</b> : Remove cases<br><br>";
+  info = info + "It is also possible to <b>drag and drop</b> a dataset <b>CSV file</b>.</p>";
 
   QLabel *InfoLabel = new QLabel ( info.c_str(), this );
   QVBoxLayout *VLayout = new QVBoxLayout();

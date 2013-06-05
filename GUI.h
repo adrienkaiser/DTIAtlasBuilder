@@ -41,7 +41,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
     void InitOptions();
 
 /*CASES*/
-    void AddCaseToListWidget(QStringList CaseList);
+    void AddCasesToListWidget(QStringList CaseList);
     void CheckCasesIndex();
 
 /* QC */
