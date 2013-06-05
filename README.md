@@ -8,7 +8,7 @@ Current stable release: [**1.2**](http://github.com/NIRALUser/DTIAtlasBuilder/tr
 
 A tool to create an atlas from several DTI images
 
-<img width="30%" src="http://adrienkaiser.fr/data/dtiabshortpipe.png"/>
+<img width="100%" src="http://adrienkaiser.fr/data/dtiabshortpipe.png"/>
 
 ##Where is it?
 
