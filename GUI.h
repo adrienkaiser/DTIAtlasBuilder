@@ -143,6 +143,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 
 /*READ ME*/
     void ReadMe();
+    void KeyShortcuts();
 
 /*RESAMP PARAM*/
     void InterpolTypeComboBoxChanged(int);

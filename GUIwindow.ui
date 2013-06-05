@@ -1735,6 +1735,7 @@ paths configured.</string>
      <string>Help</string>
     </property>
     <addaction name="actionRead_Me"/>
+    <addaction name="actionKeyboard_Shortcuts"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuHelp"/>
@@ -1783,6 +1784,11 @@ paths configured.</string>
   <action name="actionSave_Software_Configuration">
    <property name="text">
     <string>Save Software Configuration</string>
+   </property>
+  </action>
+  <action name="actionKeyboard_Shortcuts">
+   <property name="text">
+    <string>Keyboard Shortcuts</string>
    </property>
   </action>
  </widget>

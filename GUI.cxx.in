@@ -4,6 +4,7 @@
 #include <QProcess>
 #include <QFile>
 #include <QTextStream>
+#include <QShortcut>
 #include <QCloseEvent>
 #include <QDropEvent>
 #include <QDragEnterEvent>
@@ -106,6 +107,12 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
   {
 /* Objects connections */
     QObject::connect(ComputepushButton, SIGNAL(clicked()), this, SLOT(Compute()));
+    // Compute button triggered when user presses ENTER key
+    QShortcut* EnterShortcut = new QShortcut(QKeySequence(Qt::Key_Return), this); // ENTER on main keyboard (RETURN)
+    QObject::connect(EnterShortcut, SIGNAL(activated()), ComputepushButton, SLOT(click()));
+    QShortcut* NumPadEnterShortcut = new QShortcut(QKeySequence(Qt::Key_Enter), this); // ENTER on num pad
+    QObject::connect(NumPadEnterShortcut, SIGNAL(activated()), ComputepushButton, SLOT(click()));
+
     QObject::connect(StoppushButton, SIGNAL(clicked()), this, SLOT(KillScriptQProcess()));
     QObject::connect(BrowseCSVPushButton, SIGNAL(clicked()), this, SLOT(ReadCSVSlot()));
     QObject::connect(SaveCSVPushButton, SIGNAL(clicked()), this, SLOT(SaveCSVDatasetBrowse()));
@@ -113,7 +120,17 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
     QObject::connect(BrowseDTIRegExtraPathPushButton, SIGNAL(clicked()), this, SLOT(OpenDTIRegExtraPathBrowseWindow()));
     QObject::connect(TemplateBrowsePushButton, SIGNAL(clicked()), this, SLOT(OpenTemplateBrowseWindow()));
     QObject::connect(AddPushButton, SIGNAL(clicked()), this, SLOT(OpenAddCaseBrowseWindow()));
+    // Remove button triggered when user presses PLUS key
+    QShortcut* PlusShortcut = new QShortcut(QKeySequence(Qt::Key_Plus), this);
+    QObject::connect(PlusShortcut, SIGNAL(activated()), AddPushButton, SLOT(click()));
+
     QObject::connect(RemovePushButton, SIGNAL(clicked()), this, SLOT(RemoveSelectedCases()));
+    // Remove button triggered when user presses DEL or MINUS key
+    QShortcut* DelShortcut = new QShortcut(QKeySequence(Qt::Key_Delete), this); // DELETE key
+    QObject::connect(DelShortcut, SIGNAL(activated()), RemovePushButton, SLOT(click()));
+    QShortcut* MinusShortcut = new QShortcut(QKeySequence(Qt::Key_Minus), this); // MINUS key
+    QObject::connect(MinusShortcut, SIGNAL(activated()), RemovePushButton, SLOT(click()));
+
     RemovePushButton->setEnabled(false);
     ComputepushButton->setEnabled(false);
     StoppushButton->setEnabled(false);
@@ -124,6 +141,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
     QObject::connect(actionLoad_Software_Configuration, SIGNAL(triggered()), this, SLOT(LoadConfigSlot()));
     QObject::connect(actionSave_Software_Configuration, SIGNAL(triggered()), this, SLOT(SaveConfig()));
     QObject::connect(actionRead_Me, SIGNAL(triggered()), this, SLOT(ReadMe()));
+    QObject::connect(actionKeyboard_Shortcuts, SIGNAL(triggered()), this, SLOT(KeyShortcuts()));
 
     QObject::connect(InterpolTypeComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(InterpolTypeComboBoxChanged(int)));
     QObject::connect(TensInterpolComboBox, SIGNAL(currentIndexChanged (int)), this, SLOT(TensorInterpolComboBoxChanged(int)));
@@ -2197,6 +2215,25 @@ void GUI::ReadMe()  /*SLOT*/ /////to UPDATE
   info = info + "Homepage: <a href=\"http://www.nitrc.org/projects/dtiatlasbuilder\" target=\"_blank\">On NITRC</a><br><br>";
   info = info + "For any question, suggestion or remark, please contact <a href=\"mailto:akaiser@unc.edu\" target=\"_blank\">akaiser@unc.edu</a>.<br><br>";
   info = info + "Read the <a href=\"http://github.com/NIRALUser/DTIAtlasBuilder/blob/master/README.md\" target=\"_blank\">full Read Me</a>.<br><br></p>";
+
+  QLabel *InfoLabel = new QLabel ( info.c_str(), this );
+  QVBoxLayout *VLayout = new QVBoxLayout();
+  VLayout->addWidget(InfoLabel);
+
+  dlg->setLayout(VLayout);
+
+  dlg->setVisible(!dlg->isVisible()); // display the window
+}
+
+void GUI::KeyShortcuts()  /*SLOT*/
+{
+  QDialog *dlg = new QDialog(this);
+  dlg->setWindowTitle ("Keyboard Shortcuts");
+
+  std::string info = "<p>Keyboard Shortcuts:<br><br>";
+  info = info + "<b>RETURN</b> or <b>ENTER</b> : Compute<br>";
+  info = info + "<b>PLUS</b> or <b>Drag & Drop</b> : Add cases<br>";
+  info = info + "<b>MINUS</b> or <b>DELETE</b> : Remove cases<br></p>";
 
   QLabel *InfoLabel = new QLabel ( info.c_str(), this );
   QVBoxLayout *VLayout = new QVBoxLayout();
