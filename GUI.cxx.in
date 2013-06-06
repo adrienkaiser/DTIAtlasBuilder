@@ -656,7 +656,13 @@ void GUI::OpenAddCaseBrowseWindow() /*SLOT*/
 
 void GUI::AddCasesToListWidget(QStringList CaseList)
 {
-  CaseListWidget->addItems(CaseList);
+  // Add REAL PATH of cases to list
+  for(unsigned int i=0; i<CaseList.count() ; i++)
+  {
+    std::string CaseRealPath = itksys::SystemTools::GetRealPath( CaseList.at(i).toStdString().c_str() );
+    CaseListWidget->addItem( QString( CaseRealPath.c_str() ) );
+  }
+
   if(!CaseList.isEmpty())
   {
     if ( CaseListWidget->count()>0 )
@@ -999,7 +1005,11 @@ int GUI::ReadCSV(QString CSVfile)
           if(line != "")
           {
             QStringList list = line.split(m_CSVseparator);
-            if( list.at(0) != "id" && list.at(0) != "")  CaseListWidget->addItem( list.at(1) ); //display in the Widget so that some can be removed
+            if( list.at(0) != "id" && list.at(0) != "")
+            {
+              std::string CaseRealPath = itksys::SystemTools::GetRealPath( list.at(1).toStdString().c_str() );
+              CaseListWidget->addItem( QString( CaseRealPath.c_str() ) ); // add REAL PATH to the list
+            }
           }
         }
         CheckCasesIndex();
