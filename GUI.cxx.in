@@ -698,10 +698,42 @@ void GUI::RemoveSelectedCases() /*SLOT*/
   }
 }
 
-void GUI::CheckCasesIndex() /* Change ids at the begining of the lines */
+void GUI::CheckCasesIndex() /* Check doubles Change ids at the begining of the lines */
 {
-  std::string text;
+  // Check and remove possible doubles in the list
+  std::vector< std::string > UniqueCaseVector; // contains only one of each
+  unsigned int NbUniqueCases = CaseListWidget->count();
+  bool DoublesRemoved = false;
+  for(unsigned int i=0; i<NbUniqueCases; i++)
+  {
+    // get current case path
+    std::string CurrentCase;
+    if( CaseListWidget->item(i)->text().contains(": ") ) // keep only path, no ids
+    {
+      CurrentCase = CaseListWidget->item(i)->text().toStdString().substr( CaseListWidget->item(i)->text().split(":").at(0).size()+2 );
+      // substr: keep only what is after "id: " (.size() returns the nb of digits of the id and +2 is for ": " after the id number)
+    }
+    else // newly added cases do not have the ids yet
+    {
+      CurrentCase = CaseListWidget->item(i)->text().toStdString();
+    }    
 
+    // search and remove
+    if( std::find( UniqueCaseVector.begin(), UniqueCaseVector.end(), CurrentCase ) != UniqueCaseVector.end() ) // not the only one: if found => != end
+    {
+      CaseListWidget->takeItem(i); //remove current
+      i--;
+      NbUniqueCases--;
+      DoublesRemoved = true;
+    }
+    else // first one
+    {
+      UniqueCaseVector.push_back( CurrentCase );
+    }
+  }
+
+  // Check IDs at the beginning of the lines
+  std::string text;
   for(int i=0; i < CaseListWidget->count() ;i++)
   {
     std::ostringstream outi;
@@ -713,6 +745,20 @@ void GUI::CheckCasesIndex() /* Change ids at the begining of the lines */
 
     CaseListWidget->item(i)->setText( QString( text.c_str() ) );
   }
+
+  // Warning about doubles removed AFTER ids updated otherwise show in the list without ids while the warning window is open
+  if( DoublesRemoved ) // NbUniqueCases has been changed <=> cases have been removed: warning
+  {
+    std::string WarningText = "Some of the cases just added already existed in the list so the doubles have been removed";
+    if( !m_noGUI && !m_Testing ) 
+    {
+      QMessageBox::warning(this, "Doubles removed", QString(WarningText.c_str()) );
+    }
+    else
+    {
+    std::cout<<"| " << WarningText <<std::endl;
+    }
+  } // if some doubles have been removed
 }
 
   /////////////////////////////////////////
@@ -2427,7 +2473,7 @@ bool GUI::CheckCases()
 {
  for(int i=0; i < CaseListWidget->count() ;i++) 
   {
-    std::string CurrentCase = CaseListWidget->item(i)->text().toStdString().substr( CaseListWidget->item(i)->text().split(":").at(0).size()+2 );
+    std::string CurrentCase = CaseListWidget->item(i)->text().toStdString().substr( CaseListWidget->item(i)->text().split(":").at(0).size()+2 ); // substr: keep only what is after "id: " (.size() returns the nb of digits of the id and +2 is for ": " after the id number)
     if( ! itksys::SystemTools::GetPermissions(CurrentCase.c_str(), ITKmode_F_OK) ) // Test if the case files exist => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
     {
       if(!m_noGUI && !m_Testing)
