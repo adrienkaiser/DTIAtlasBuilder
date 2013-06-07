@@ -3005,7 +3005,7 @@ int GUI::LaunchScriptRunner()
   StoppushButton->setEnabled(true);
   CleanOutputPushButton->setEnabled(false);
   m_ScriptRunning=true;
-//  progressBar->setValue(0);
+  progressBar->setMaximum(0); // Setting max and min to zero to behave as a busy indicator
 
 /* Running the Script: */ // python path found before writing script : contains already a space after the command
   std::string program;
@@ -3087,7 +3087,8 @@ void GUI::ScriptQProcessDone(int ExitCode) /*SLOT*/ // called
     m_ScriptRunningQTimer->stop();
   }
 
-//  progressBar->setValue(100); // if the progress steps don't go until 100
+  progressBar->setMaximum(100); // Stop behaving as a busy indicator
+  progressBar->setValue(100);
   ComputepushButton->setEnabled(true);
   StoppushButton->setEnabled(false);
   CleanOutputPushButton->setEnabled(true);

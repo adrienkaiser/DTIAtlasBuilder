@@ -7,14 +7,15 @@
     <x>0</x>
     <y>0</y>
     <width>1196</width>
-    <height>640</height>
+    <height>645</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>DTI Atlas Builder 1.2</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="DTIAtlasBuilder.qrc"><normaloff>:/Data/DTIAtlasBuilderIcon.jpeg</normaloff>:/Data/DTIAtlasBuilderIcon.jpeg</iconset>
+   <iconset>
+    <normaloff>:/Data/DTIAtlasBuilderIcon.jpeg</normaloff>:/Data/DTIAtlasBuilderIcon.jpeg</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="minimumSize">
@@ -47,49 +48,49 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_7">
            <item>
+            <layout class="QVBoxLayout" name="verticalLayout_17">
+             <item>
+              <widget class="QLabel" name="label_15">
+               <property name="text">
+                <string>Select Cases :</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="SelectCasesLabel">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
             <layout class="QHBoxLayout" name="SelectCaseshorizontalLayout">
              <item>
-              <layout class="QVBoxLayout" name="verticalLayout_3">
-               <item>
-                <widget class="QLabel" name="label_15">
-                 <property name="text">
-                  <string>Select Cases :</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="SelectCasesLabel">
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QListWidget" name="CaseListWidget">
-                 <property name="dragDropMode">
-                  <enum>QAbstractItemView::NoDragDrop</enum>
-                 </property>
-                 <property name="defaultDropAction">
-                  <enum>Qt::CopyAction</enum>
-                 </property>
-                 <property name="selectionMode">
-                  <enum>QAbstractItemView::MultiSelection</enum>
-                 </property>
-                 <property name="iconSize">
-                  <size>
-                   <width>4</width>
-                   <height>4</height>
-                  </size>
-                 </property>
-                 <property name="viewMode">
-                  <enum>QListView::ListMode</enum>
-                 </property>
-                 <property name="sortingEnabled">
-                  <bool>false</bool>
-                 </property>
-                </widget>
-               </item>
-              </layout>
+              <widget class="QListWidget" name="CaseListWidget">
+               <property name="dragDropMode">
+                <enum>QAbstractItemView::NoDragDrop</enum>
+               </property>
+               <property name="defaultDropAction">
+                <enum>Qt::CopyAction</enum>
+               </property>
+               <property name="selectionMode">
+                <enum>QAbstractItemView::MultiSelection</enum>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>4</width>
+                 <height>4</height>
+                </size>
+               </property>
+               <property name="viewMode">
+                <enum>QListView::ListMode</enum>
+               </property>
+               <property name="sortingEnabled">
+                <bool>false</bool>
+               </property>
+              </widget>
              </item>
              <item>
               <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -1683,6 +1684,46 @@ paths configured.</string>
         </property>
         <property name="sizeType">
          <enum>QSizePolicy::Expanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_15">
+      <item>
+       <spacer name="horizontalSpacer_18">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QProgressBar" name="progressBar">
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_19">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
