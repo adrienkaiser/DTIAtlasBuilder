@@ -263,12 +263,15 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
   m_FromConstructor=1; // do not test GA path if 'Default' called from constructor -> test at the end of constructor
 
 /* SET the soft config */
-  // set the path to the executable directory for FindProgram
-  std::string DTIABExecutablePath= itksys::SystemTools::GetRealPath( itksys::SystemTools::GetFilenamePath(commandRan).c_str() ); // get the place where the running executable is
-  if(DTIABExecutablePath=="")
+  // get the directory where the running executable is
+  std::string DTIABExecutablePath = itksys::SystemTools::GetRealPath( itksys::SystemTools::GetFilenamePath(commandRan).c_str() );
+  if( DTIABExecutablePath=="" ) // if DTIAtlasBuilder called without path (e.g. $ DTIAtlasBuilder) => either found in the PATH or in the current dir => FindProgram will find it
   {
-    DTIABExecutablePath= itksys::SystemTools::GetCurrentWorkingDirectory(); // If called by itself ($ DTIAtlasBuilder) = either in the PATH or in the current directory : will be found either way by find_program
+    DTIABExecutablePath = itksys::SystemTools::GetFilenamePath( itksys::SystemTools::FindProgram( itksys::SystemTools::GetFilenameName(commandRan).c_str() ).c_str() );
+    // get the name of the executable used (i.e. DTIAtlasBuilder, DTIAtlasBuilder_vX.X (GetFilenameName), then search it in the PATH or current dir (FindProgram) and get the parent dir (GetFilenamePath)
   }
+
+  // set the path to the executable directory for FindProgram
   m_FindProgramDTIABExecDirVec.push_back(DTIABExecutablePath); // FindProgram will search in the executable directory too
 
   // If DTIAB is built as an SlicerExtension, give the path to the folder containing external non cli tools
@@ -2192,7 +2195,7 @@ int GUI::testGA() /*SLOT*/ // returns 0 if version ok, -1 if bad version
   std::string program;
   program = GAPath->text().toStdString() + " --version";
 
-  std::cout<<"| Testing the version of GreedyAtlas...";
+  std::cout<<"| Checking the version of GreedyAtlas...";
 
   Process->start( program.c_str() ); // try to find the version => returns nothing if not the right version
 
@@ -2222,7 +2225,7 @@ int GUI::testDTIReg() /*SLOT*/ // returns 0 if version ok, -1 if bad version
   std::string program;
   program = DTIRegPath->text().toStdString() + " --version";
 
-  std::cout<<"| Testing the version of DTI-Reg...";
+  std::cout<<"| Checking the version of DTI-Reg...";
 
   Process->start( program.c_str() ); // try to find the version => returns nothing if not the right version
 

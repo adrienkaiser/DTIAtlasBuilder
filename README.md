@@ -1,4 +1,4 @@
-<p align="right"><img width="20%" src="http://www.nitrc.org/project/screenshot.php?group_id=636&screenshot_id=607"/></p>
+<p align="right"><img width="15%" src="http://www.nitrc.org/project/screenshot.php?group_id=636&screenshot_id=607"/></p>
 
 #DTIAtlasBuilder
 
