@@ -41,6 +41,8 @@ class GUI : public QMainWindow, public Ui::MainWindow
     void InitOptions();
 
 /*CASES*/
+    bool FileIsParameterFile( std::string );
+    bool FileIsSoftConfigFile( std::string );
     void AddCasesToListWidget(QStringList CaseList);
     void CheckCasesIndex();
 
@@ -75,7 +77,8 @@ class GUI : public QMainWindow, public Ui::MainWindow
     int checkImage(std::string Image); // returns 1 if not an image, 2 if not a dti, otherwise 0
 
 /*MAIN FUNCT*/
-    bool CheckCases();
+    bool CheckCase( std::string, bool );
+    bool CheckAllCases();
     bool CheckOutput( bool& ); // FirstComputeInOutputFolder
     bool CheckTemplate();
     void SetResampOptions();

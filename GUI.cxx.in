@@ -624,6 +624,58 @@ void GUI::dragEnterEvent(QDragEnterEvent *event)
   event->acceptProposedAction();
 }
 
+bool GUI::FileIsParameterFile( std::string filepath ) // TODO
+{
+  if( itksys::SystemTools::GetFilenameLastExtension( filepath ) != ".txt" )
+  {
+    return false;
+  }
+
+  QFile file(filepath.c_str());
+  if (file.open(QFile::ReadOnly))
+  {
+    QTextStream stream(&file);
+    QString line = stream.readLine();
+    QStringList list = line.split("=");
+    if( ! list.at(0).contains("DTIAtlasBuilderParameterFileVersion") )
+    {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool GUI::FileIsSoftConfigFile( std::string filepath ) // TODO
+{
+  if( itksys::SystemTools::GetFilenameLastExtension( filepath ) != ".txt" )
+  {
+    return false;
+  }
+
+  QFile file(filepath.c_str());
+  if (file.open(QFile::ReadOnly))
+  {
+    QTextStream stream(&file);
+
+    QString line = stream.readLine();
+    QStringList list = line.split("=");
+    if( ! list.at(0).contains("ImageMath") )
+    {
+      return false;
+    }
+
+    line = stream.readLine();
+    list = line.split("=");
+    if( ! list.at(0).contains("ResampleDTIlogEuclidean") )
+    {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 void GUI::dropEvent(QDropEvent* event)
 {
   const QMimeData* mimeData = event->mimeData();
@@ -637,19 +689,29 @@ void GUI::dropEvent(QDropEvent* event)
     // extract the local paths of the files
     for (int i = 0; i < urlList.size(); ++i)
     {
-      if ( itksys::SystemTools::GetFilenameLastExtension( urlList.at(i).toLocalFile().toStdString() ) == ".csv" ) // load possible csv file(s)
+      QString CurrentFile = urlList.at(i).toLocalFile();
+      if ( itksys::SystemTools::GetFilenameLastExtension( CurrentFile.toStdString() ) == ".csv" ) // load possible csv file(s)
       {
-        ReadCSV( urlList.at(i).toLocalFile() );
+        ReadCSV( CurrentFile );
       }
-      else
+      else if ( FileIsParameterFile( CurrentFile.toStdString() ) ) // load possible parameter file(s)
       {
-        pathList.append( urlList.at(i).toLocalFile() );
+        LoadParameters(CurrentFile,false);
+      }
+      else if ( FileIsSoftConfigFile( CurrentFile.toStdString() ) ) // load possible soft config file(s)
+      {
+        LoadConfig(CurrentFile);
+      }
+      else // other file -> maybe image: will be check in AddCasesToListWidget()
+      {
+        pathList.append( CurrentFile );
       }
     }
  
     AddCasesToListWidget(pathList);
   } // if mimedata hasurls
-}
+
+} // dropEvent
 
 void GUI::OpenAddCaseBrowseWindow() /*SLOT*/
 {
@@ -657,13 +719,27 @@ void GUI::OpenAddCaseBrowseWindow() /*SLOT*/
   AddCasesToListWidget(CaseListBrowse);
 }
 
-void GUI::AddCasesToListWidget(QStringList CaseList)
+void GUI::AddCasesToListWidget(QStringList CaseList) // called when drag&dropping any file or adding files with the + button
 {
+  bool SomeFilesAreNotImages = false;
+
   // Add REAL PATH of cases to list
   for(unsigned int i=0; i<CaseList.count() ; i++)
   {
     std::string CaseRealPath = itksys::SystemTools::GetRealPath( CaseList.at(i).toStdString().c_str() );
-    CaseListWidget->addItem( QString( CaseRealPath.c_str() ) );
+    if( CheckCase( CaseRealPath, true ) ) // true for no display if error: just not add file
+    {
+      CaseListWidget->addItem( QString( CaseRealPath.c_str() ) );
+    }
+    else
+    {
+      SomeFilesAreNotImages = true; // to display warning
+    }
+  }
+
+  if( SomeFilesAreNotImages && !m_noGUI && !m_Testing )
+  {
+    QMessageBox::warning(this, "Not DTI Images", "Some of the files added to the list were not DTI images.\nThese files have not been loaded into the list." );
   }
 
   if(!CaseList.isEmpty())
@@ -707,7 +783,7 @@ void GUI::RemoveSelectedCases() /*SLOT*/
   }
 }
 
-void GUI::CheckCasesIndex() /* Check doubles Change ids at the begining of the lines */
+void GUI::CheckCasesIndex() /* Check duplicates Change ids at the begining of the lines */
 {
   // Check IDs at the beginning of the lines
   std::string text;
@@ -723,10 +799,10 @@ void GUI::CheckCasesIndex() /* Check doubles Change ids at the begining of the l
     CaseListWidget->item(i)->setText( QString( text.c_str() ) );
   }
 
-  // Check and remove possible doubles in the list
+  // Check and remove possible duplicates in the list
   std::vector< std::string > UniqueCaseVector; // contains only one of each
   unsigned int NbUniqueCases = CaseListWidget->count();
-  bool RemoveDoublesWarningDisplayed = false; // to display popup only once
+  bool RemoveDuplicatesWarningDisplayed = false; // to display popup only once
   for(unsigned int i=0; i<NbUniqueCases; i++)
   {
     std::string CurrentCase = CaseListWidget->item(i)->text().toStdString().substr( CaseListWidget->item(i)->text().split(":").at(0).size()+2 );
@@ -735,11 +811,11 @@ void GUI::CheckCasesIndex() /* Check doubles Change ids at the begining of the l
     // search and remove
     if( std::find( UniqueCaseVector.begin(), UniqueCaseVector.end(), CurrentCase ) != UniqueCaseVector.end() ) // not the only one: if found => != end
     {
-      if( !m_noGUI && !m_Testing && !RemoveDoublesWarningDisplayed ) // for the first double found, ask if want to remove, if no break
+      if( !m_noGUI && !m_Testing && !RemoveDuplicatesWarningDisplayed ) // for the first duplicate found, ask if want to remove, if no break
       {
-        int ret = QMessageBox::question(this,"Remove doubles","Doubled cases have been detected in the list.\nDo you want to remove these doubles?",QMessageBox::No | QMessageBox::Yes);
+        int ret = QMessageBox::warning(this,"Remove duplicates","Duplicated cases have been detected in the list.\nDo you want to remove these duplicates?",QMessageBox::No | QMessageBox::Yes);
         if(ret == QMessageBox::No) break; // if no remove break the for loop HERE so nothing removed
-        RemoveDoublesWarningDisplayed = true;
+        RemoveDuplicatesWarningDisplayed = true;
       }
 
       CaseListWidget->takeItem(i); //remove current
@@ -973,12 +1049,13 @@ int GUI::ReadCSV(QString CSVfile)
     else if (ret == QMessageBox::Cancel) return 0;
   }
 
+  bool SomeFilesAreNotImages = false;
+
   if(!CSVfile.isEmpty())
   {
 
     if( itksys::SystemTools::GetPermissions(CSVfile.toStdString().c_str(), ITKmode_F_OK) ) // Test if the csv file exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
     {
-
       QFile file(CSVfile);
 
       if (file.open(QFile::ReadOnly))
@@ -995,7 +1072,14 @@ int GUI::ReadCSV(QString CSVfile)
             if( list.at(0) != "id" && list.at(0) != "")
             {
               std::string CaseRealPath = itksys::SystemTools::GetRealPath( list.at(1).toStdString().c_str() );
-              CaseListWidget->addItem( QString( CaseRealPath.c_str() ) ); // add REAL PATH to the list
+              if( CheckCase( CaseRealPath, true ) ) // true for no display if error: just not add file
+              {
+                CaseListWidget->addItem( QString( CaseRealPath.c_str() ) ); // add REAL PATH to the list
+              }
+              else
+              {
+                SomeFilesAreNotImages = true; // to display warning
+              }
             }
           }
         }
@@ -1021,6 +1105,11 @@ int GUI::ReadCSV(QString CSVfile)
       }
     }
     else std::cout<<"| The given CSV file does not exist"<<std::endl; // command line display
+  }
+
+  if( SomeFilesAreNotImages && !m_noGUI && !m_Testing )
+  {
+    QMessageBox::warning(this, "Not DTI Images", "Some of the files added to the list were not DTI images.\nThese files have not been loaded into the list." );
   }
 
   return 0;
@@ -2284,7 +2373,8 @@ void GUI::KeyShortcuts()  /*SLOT*/
   info = info + "<b>RETURN</b> or <b>ENTER</b> : Compute<br>";
   info = info + "<b>PLUS</b> or <b>Drag & Drop</b> : Add cases<br>";
   info = info + "<b>MINUS</b> or <b>DELETE</b> : Remove cases<br><br>";
-  info = info + "It is also possible to <b>drag and drop</b> a dataset <b>CSV file</b>.</p>";
+  info = info + "It is also possible to <b>drag and drop</b> dataset <b>CSV</b> files,<br>";
+  info = info + "<b>parameters</b> files and <b>software configuration</b> files.</p>";
 
   QLabel *InfoLabel = new QLabel ( info.c_str(), this );
   QVBoxLayout *VLayout = new QVBoxLayout();
@@ -2466,49 +2556,65 @@ int GUI::Compute() /*SLOT*/
 
 }
 
-bool GUI::CheckCases()
+bool GUI::CheckCase( std::string CasePath, bool NoErrorPopup ) // called when hitting compute and loading files
 {
- for(int i=0; i < CaseListWidget->count() ;i++) 
+  // check if file exists
+  if( ! itksys::SystemTools::GetPermissions(CasePath.c_str(), ITKmode_F_OK) ) // Test if the case files exist => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
   {
-    std::string CurrentCase = CaseListWidget->item(i)->text().toStdString().substr( CaseListWidget->item(i)->text().split(":").at(0).size()+2 ); // substr: keep only what is after "id: " (.size() returns the nb of digits of the id and +2 is for ": " after the id number)
-    if( ! itksys::SystemTools::GetPermissions(CurrentCase.c_str(), ITKmode_F_OK) ) // Test if the case files exist => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
+    if(!m_noGUI && !m_Testing && !NoErrorPopup)
     {
-      if(!m_noGUI && !m_Testing)
-      {
-        std::string text = "This file does not exist :\n" + CurrentCase;
-        QMessageBox::critical(this, "Case does not exist", QString(text.c_str()) );
-      }
-      else std::cout<<"| This file does not exist : " << CurrentCase <<std::endl;
-      return false;
+      std::string text = "This file does not exist :\n" + CasePath;
+      QMessageBox::critical(this, "Case does not exist", QString(text.c_str()) );
     }
-    int checkIm = checkImage(CurrentCase); // returns 1 if not an image, 2 if not a dti, otherwise 0
-    if( checkIm == 1 ) // returns 1 if not an image, 2 if not a dti, otherwise 0
+    else if(!NoErrorPopup) std::cout<<"| This file does not exist : " << CasePath <<std::endl;
+    return false;
+  }
+
+  // check if image
+  int checkIm = checkImage(CasePath); // returns 1 if not an image, 2 if not a dti, otherwise 0
+  if( checkIm == 1 ) // returns 1 if not an image, 2 if not a dti, otherwise 0
+  {
+    if(!m_noGUI && !m_Testing && !NoErrorPopup)
     {
-      if(!m_noGUI && !m_Testing)
-      {
-        std::string text = "This file is not an image :\n" + CurrentCase;
-        QMessageBox::critical(this, "No image", QString(text.c_str()) );
-      }
-      else std::cout<<"| This file is not an image : " << CurrentCase <<std::endl;
-      return false;
+      std::string text = "This file is not an image :\n" + CasePath;
+      QMessageBox::critical(this, "Not Image", QString(text.c_str()) );
     }
-    if( checkIm == 2 ) // returns 1 if not an image, 2 if not a dti, otherwise 0
+    else if(!NoErrorPopup) std::cout<<"| This file is not an image : " << CasePath <<std::endl;
+    return false;
+  }
+  if( checkIm == 2 ) // returns 1 if not an image, 2 if not a dti, otherwise 0
+  {
+    if(!m_noGUI && !m_Testing && !NoErrorPopup)
     {
-      if(!m_noGUI && !m_Testing)
-      {
-        std::string text = "This image is not a DTI :\n" + CurrentCase;
-        QMessageBox::critical(this, "No DTI", QString(text.c_str()) );
-      }
-      else std::cout<<"| This image is not a DTI : " << CurrentCase <<std::endl;
+      std::string text = "This image is not a DTI :\n" + CasePath;
+      QMessageBox::critical(this, "Not DTI Image", QString(text.c_str()) );
+    }
+    else if(!NoErrorPopup) std::cout<<"| This image is not a DTI : " << CasePath <<std::endl;
+    return false;
+  }
+
+  return true;
+
+} // CheckCase
+
+bool GUI::CheckAllCases()
+{
+  for(int i=0; i < CaseListWidget->count() ;i++) 
+  {
+    std::string CurrentCase = CaseListWidget->item(i)->text().toStdString().substr( CaseListWidget->item(i)->text().split(":").at(0).size()+2 );
+    // substr: keep only what is after "id: " (.size() returns the nb of digits of the id and +2 is for ": " after the id number)
+
+    if( ! CheckCase( CurrentCase, false ) ) // returns false if bad file
+    {
       return false;
     }
     m_CasesPath.push_back( CurrentCase );
-  } // for all cases
+  }
 
   m_scriptwriter->setCasesPath(m_CasesPath); // m_CasesPath is a vector
 
   return true;
-} // CheckCases
+}
 
 bool GUI::CheckOutput( bool& FirstComputeInOutputFolder )
 {
@@ -2938,7 +3044,7 @@ int GUI::LaunchScriptWriter()
   bool FirstComputeInOutputFolder = false; // to avoid confusion with absence of version file (normal if first compute)
 
 /* Checking and Setting the values */
-  if( ! CheckCases() )
+  if( ! CheckAllCases() )
   {
     return -1;
   }
