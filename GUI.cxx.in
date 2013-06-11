@@ -134,6 +134,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
     RemovePushButton->setEnabled(false);
     ComputepushButton->setEnabled(false);
     StoppushButton->setEnabled(false);
+    DisableQC(); // will be enable when cases are loaded
 
     QObject::connect(actionLoad_parameters, SIGNAL(triggered()), this, SLOT(LoadParametersSlot()));
     QObject::connect(actionSave_parameters, SIGNAL(triggered()), this, SLOT(SaveParametersSlot()));
@@ -152,6 +153,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
     QObject::connect(DTIRegPath, SIGNAL(editingFinished()), this, SLOT(testDTIReg())); // test the version of DTI-Reg automatically when the text is changed manually ( not by a setText() )
 
     QObject::connect(GridProcesscheckBox, SIGNAL(stateChanged(int)), this, SLOT(GridProcesscheckBoxHasChanged(int)));
+    QObject::connect(OutputFolderLineEdit, SIGNAL(textChanged(QString)), this, SLOT(OutputFolderLineEditHasChanged(QString)));
 
     QObject::connect(AffineQCButton, SIGNAL(clicked()), this, SLOT(DisplayAffineQC()));
     QObject::connect(DeformQCButton, SIGNAL(clicked()), this, SLOT(DisplayDeformQC()));
@@ -257,7 +259,6 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
     QObject::connect(m_SmoothOffCheck, SIGNAL(stateChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
     QObject::connect(NbThreadsSpinBox, SIGNAL(valueChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
     QObject::connect(GridProcesscheckBox, SIGNAL(stateChanged(int)), this, SLOT(WidgetHasChangedParamNoSaved()));
-
   } //if(!m_noGUI)
 
   m_FromConstructor=1; // do not test GA path if 'Default' called from constructor -> test at the end of constructor
@@ -619,11 +620,6 @@ void GUI::InitOptions()
  //                CASES                //
 /////////////////////////////////////////
 
-void GUI::dragEnterEvent(QDragEnterEvent *event)
-{
-  event->acceptProposedAction();
-}
-
 bool GUI::FileIsParameterFile( std::string filepath ) // TODO
 {
   if( itksys::SystemTools::GetFilenameLastExtension( filepath ) != ".txt" )
@@ -676,6 +672,11 @@ bool GUI::FileIsSoftConfigFile( std::string filepath ) // TODO
   return true;
 }
 
+void GUI::dragEnterEvent(QDragEnterEvent *event)
+{
+  event->acceptProposedAction();
+}
+
 void GUI::dropEvent(QDropEvent* event)
 {
   const QMimeData* mimeData = event->mimeData();
@@ -708,7 +709,7 @@ void GUI::dropEvent(QDropEvent* event)
       }
     }
  
-    AddCasesToListWidget(pathList);
+    AddCasesToListWidget(pathList, QString(""));
   } // if mimedata hasurls
 
 } // dropEvent
@@ -716,10 +717,10 @@ void GUI::dropEvent(QDropEvent* event)
 void GUI::OpenAddCaseBrowseWindow() /*SLOT*/
 {
   QStringList CaseListBrowse = QFileDialog::getOpenFileNames(this, "Open Cases", m_lastCasePath, "ITK format Images (*.nrrd *.nhdr *.nii *.nii.gz *.*)");
-  AddCasesToListWidget(CaseListBrowse);
+  AddCasesToListWidget(CaseListBrowse, QString(""));
 }
 
-void GUI::AddCasesToListWidget(QStringList CaseList) // called when drag&dropping any file or adding files with the + button
+void GUI::AddCasesToListWidget(QStringList CaseList, QString CSVfiletext) // called when drag&dropping any file or adding files with the + button or loading CSV file
 {
   bool SomeFilesAreNotImages = false;
 
@@ -739,18 +740,23 @@ void GUI::AddCasesToListWidget(QStringList CaseList) // called when drag&droppin
 
   if( SomeFilesAreNotImages && !m_noGUI && !m_Testing )
   {
-    QMessageBox::warning(this, "Not DTI Images", "Some of the files added to the list were not DTI images.\nThese files have not been loaded into the list." );
+    QMessageBox::warning(this, "Not DTI Images", "Some of the files added were not DTI images.\nThese files have not been loaded into the list." );
   }
 
   if(!CaseList.isEmpty())
   {
-    if ( CaseListWidget->count()>0 )
+    if( CaseListWidget->count()>0 )
     {
       RemovePushButton->setEnabled(true);
       ComputepushButton->setEnabled(true);
+
+      if( ! OutputFolderLineEdit->text().isEmpty() )
+      {
+        EnableQC();
+      }
     }
     m_ParamSaved=0;
-    SelectCasesLabel->setText( QString("") );
+    SelectCasesLabel->setText( CSVfiletext );
     m_lastCasePath = CaseList.last();
 
     CheckCasesIndex();
@@ -775,6 +781,7 @@ void GUI::RemoveSelectedCases() /*SLOT*/
     {
       RemovePushButton->setEnabled(false);
       ComputepushButton->setEnabled(false);
+      DisableQC();
     }
     m_ParamSaved=0;
     SelectCasesLabel->setText( QString("") );
@@ -915,62 +922,110 @@ void GUI::DisplayAffineQC() /*SLOT*/
 {
   std::ostringstream out;
   out << NbLoopsSpinBox->value();
-  std::string nbLoops_str = out.str();
 
   std::string program = MriWatcherPath->text().toStdString() + " --viewAll";
+  std::string pathList="";
   std::string path;
   for(int i=0; i < CaseListWidget->count() ;i++) 
   {
-    path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/1_Affine_Registration/Loop" + nbLoops_str + "/" + itksys::SystemTools::GetFilenameWithoutExtension( CaseListWidget->item(i)->text().toStdString() ) + "_Loop" + nbLoops_str + "_FinalFA.nrrd";
-    if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
+    path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/1_Affine_Registration/Loop" + out.str() + "/" + itksys::SystemTools::GetFilenameWithoutExtension( CaseListWidget->item(i)->text().toStdString() ) + "_Loop" + out.str() + "_FinalFA.nrrd";
+    if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) pathList = pathList + " " + path;
   }
   std::ostringstream out1;
   out1 << NbLoopsSpinBox->value()-1;
-  std::string nbLoops1_str = out1.str();
-  path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/1_Affine_Registration/Loop" + nbLoops1_str + "/Loop" + nbLoops1_str + "_FAAverage.nrrd";
-  if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
+  path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/1_Affine_Registration/Loop" + out1.str() + "/Loop" + out1.str() + "_FAAverage.nrrd";
+  if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) pathList = pathList + " " + path;
 
-  // Display cmd line
-  std::cout<<"| $ "<<program.c_str()<<std::endl;
+  if( pathList != "" )
+  {
+    program = program + pathList;
+    std::cout<<"| Starting: "<<program<<std::endl;
 
-  QProcess* QCQProcess = new QProcess;
-  QCQProcess->start(program.c_str());
+    QProcess* QCQProcess = new QProcess;
+    QCQProcess->start(program.c_str());
+  }
+  else
+  {
+    if(!m_noGUI && !m_Testing) 
+    {
+      std::string text = "None of the images to be displayed have been found.\nPlease check that these files exist:\n" + OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/1_Affine_Registration/Loop" + out.str() + "/*_Loop" + out.str() + "_FinalFA.nrrd";
+      QMessageBox::warning(this, "No images found", text.c_str() );
+    }
+    else
+    {
+      std::cout<<"| None of the images to be displayed have been found. Please check that these files exist: "<< OutputFolderLineEdit->text().toStdString() << "/DTIAtlas/1_Affine_Registration/Loop" << out.str() << "/*_Loop" << out.str() << "_FinalFA.nrrd" <<std::endl;
+    }
+  }
 }
 
 void GUI::DisplayDeformQC() /*SLOT*/
 {
   std::string program = MriWatcherPath->text().toStdString() + " --viewAll";
+  std::string pathList="";
   std::string path;
   for(int i=0; i < CaseListWidget->count() ;i++) 
   {
     path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/3_Diffeomorphic_Atlas/" + itksys::SystemTools::GetFilenameWithoutExtension( CaseListWidget->item(i)->text().toStdString() ) + "_DiffeomorphicFA.nrrd";
-    if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
+    if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) pathList = pathList + " " + path;
   }
   path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/3_Diffeomorphic_Atlas/DiffeomorphicAtlasFA.nrrd";
-  if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
+  if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) pathList = pathList + " " + path;
 
-  std::cout<<"| $ " << program << std::endl;
+  if( pathList != "" )
+  {
+    program = program + pathList;
+    std::cout<<"| Starting: "<<program<<std::endl;
 
-  QProcess* QCQProcess = new QProcess;
-  QCQProcess->start(program.c_str());
+    QProcess* QCQProcess = new QProcess;
+    QCQProcess->start(program.c_str());
+  }
+  else
+  {
+    if(!m_noGUI && !m_Testing) 
+    {
+      std::string text = "None of the images to be displayed have been found.\nPlease check that these files exist:\n" + OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/3_Diffeomorphic_Atlas/*_DiffeomorphicFA.nrrd";
+      QMessageBox::warning(this, "No images found", text.c_str() );
+    }
+    else
+    {
+      std::cout<<"| None of the images to be displayed have been found. Please check that these files exist: "<< OutputFolderLineEdit->text().toStdString() << "/DTIAtlas/3_Diffeomorphic_Atlas/*_DiffeomorphicFA.nrrd" <<std::endl;
+    }
+  }
 }
 
 void GUI::DisplayResampQC() /*SLOT*/
 {
   std::string program = MriWatcherPath->text().toStdString() + " --viewAll";
+  std::string pathList="";
   std::string path;
   for(int i=0; i < CaseListWidget->count() ;i++) 
   {
     path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/4_Final_Resampling/FinalTensors/" + itksys::SystemTools::GetFilenameWithoutExtension( CaseListWidget->item(i)->text().toStdString() ) + "_FinalDeformedFA.nrrd";
-    if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
+    if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) pathList = pathList + " " + path;
   }
   path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/4_Final_Resampling/FinalAtlasFA.nrrd";
-  if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) program = program + " " + path;
+  if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) pathList = pathList + " " + path;
 
-  std::cout<<"| $ " << program << std::endl;
+  if( pathList != "" )
+  {
+    program = program + pathList;
+    std::cout<<"| Starting: "<<program<<std::endl;
 
-  QProcess* QCQProcess = new QProcess;
-  QCQProcess->start(program.c_str());
+    QProcess* QCQProcess = new QProcess;
+    QCQProcess->start(program.c_str());
+  }
+  else
+  {
+    if(!m_noGUI && !m_Testing) 
+    {
+      std::string text = "None of the images to be displayed have been found.\nPlease check that these files exist:\n" + OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/4_Final_Resampling/FinalTensors/*_FinalDeformedFA.nrrd";
+      QMessageBox::warning(this, "No images found", text.c_str() );
+    }
+    else
+    {
+      std::cout<<"| None of the images to be displayed have been found. Please check that these files exist: "<< OutputFolderLineEdit->text().toStdString() << "/DTIAtlas/4_Final_Resampling/FinalTensors/*_FinalDeformedFA.nrrd" <<std::endl;
+    }
+  }
 }
 
 void GUI::DisableQC() // disable QC buttons
@@ -978,6 +1033,13 @@ void GUI::DisableQC() // disable QC buttons
   AffineQCButton->setEnabled(false);
   DeformQCButton->setEnabled(false);
   ResampQCButton->setEnabled(false);
+}
+
+void GUI::EnableQC() // enable QC buttons
+{
+  AffineQCButton->setEnabled(true);
+  DeformQCButton->setEnabled(true);
+  ResampQCButton->setEnabled(true);
 }
 
   /////////////////////////////////////////
@@ -1049,11 +1111,10 @@ int GUI::ReadCSV(QString CSVfile)
     else if (ret == QMessageBox::Cancel) return 0;
   }
 
-  bool SomeFilesAreNotImages = false;
+  QStringList CSVCaseList;
 
   if(!CSVfile.isEmpty())
   {
-
     if( itksys::SystemTools::GetPermissions(CSVfile.toStdString().c_str(), ITKmode_F_OK) ) // Test if the csv file exists => itksys::SystemTools::GetPermissions() returns true if ITKmode_F(file)_OK
     {
       QFile file(CSVfile);
@@ -1071,45 +1132,27 @@ int GUI::ReadCSV(QString CSVfile)
             QStringList list = line.split(m_CSVseparator);
             if( list.at(0) != "id" && list.at(0) != "")
             {
-              std::string CaseRealPath = itksys::SystemTools::GetRealPath( list.at(1).toStdString().c_str() );
-              if( CheckCase( CaseRealPath, true ) ) // true for no display if error: just not add file
-              {
-                CaseListWidget->addItem( QString( CaseRealPath.c_str() ) ); // add REAL PATH to the list
-              }
-              else
-              {
-                SomeFilesAreNotImages = true; // to display warning
-              }
+              CSVCaseList.append( list.at(1) );
             }
           }
         }
-        CheckCasesIndex();
   
-        if (ret == QMessageBox::Yes) SelectCasesLabel->setText( QString("Current CSV file : ") + CSVfile );
-        else  SelectCasesLabel->setText( QString("") );
+        if (ret == QMessageBox::Yes) AddCasesToListWidget(CSVCaseList, QString("Current CSV file : ") + CSVfile);
+        else AddCasesToListWidget(CSVCaseList, QString(""));
 
-        m_ParamSaved=0;
         std::cout<<"DONE"<<std::endl; // command line display
       } 
       else
       {
-        SelectCasesLabel->setText( QString("Could not open CSV File"));
         qDebug( "Could not open csv file");
         return -1;
       }
-
-      if ( CaseListWidget->count()>0 )
-      {
-        RemovePushButton->setEnabled(true);
-        ComputepushButton->setEnabled(true);
-      }
     }
-    else std::cout<<"| The given CSV file does not exist"<<std::endl; // command line display
-  }
-
-  if( SomeFilesAreNotImages && !m_noGUI && !m_Testing )
-  {
-    QMessageBox::warning(this, "Not DTI Images", "Some of the files added to the list were not DTI images.\nThese files have not been loaded into the list." );
+    else
+    {
+      std::cout<<"| The given CSV file does not exist"<<std::endl; // command line display
+      return -1;
+    }
   }
 
   return 0;
@@ -2476,6 +2519,18 @@ void GUI::GridProcesscheckBoxHasChanged(int state) /*SLOT*/ // called when Gid P
   else  NbThreadsSpinBox->setEnabled(true);
 }
 
+void GUI::OutputFolderLineEditHasChanged( QString NewOutputFolder )
+{
+  if( NewOutputFolder!="" && CaseListWidget->count()>0 )
+  {
+    EnableQC();
+  }
+  else
+  {
+    DisableQC();
+  }
+}
+
   /////////////////////////////////////////
  //           CHECK IMAGE OK            //
 /////////////////////////////////////////
@@ -3116,7 +3171,7 @@ int GUI::LaunchScriptRunner()
 /* Running the Script: */ // python path found before writing script : contains already a space after the command
   std::string program;
   program = m_PythonPath + " " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder_Main.py"; // 
-  std::cout<<"| $ " << program << std::endl;
+  std::cout<<"| Starting: " << program << std::endl;
 
   std::cout<<"| Script Running..."<< std::endl; // command line display
 
@@ -3215,10 +3270,15 @@ void GUI::RunningCompleted()
 {
   ScriptRunningDisplayQLabel->setText("Running Completed ");
 
-  std::string RunningCompletedText = "Running Completed !\n\nFinal Atlas is in:\n\"" + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/FinalAtlasDTI.nrrd\"\n\nFinal Displacement Fields for each case are in:\n\"" + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/FinalDeformationFields/<case>_GlobalDisplacementField.nrrd\"";
+  std::cout<< "| Running Completed !"<<std::endl;
+  std::cout<< "| Final Atlas is in: \"" << m_OutputPath.toStdString() << "/DTIAtlas/4_Final_Resampling/FinalAtlasDTI.nrrd\""<<std::endl;
+  std::cout<< "| Final Displacement Fields for each case are in: \"" << m_OutputPath.toStdString() << "/DTIAtlas/4_Final_Resampling/FinalDeformationFields/<case>_GlobalDisplacementField.nrrd\"" <<std::endl;
 
-  if(!m_noGUI && !m_Testing) QMessageBox::information(this, "Running Completed", QString(RunningCompletedText.c_str()));
-  std::cout<< RunningCompletedText <<std::endl; // command line display
+  if(!m_noGUI && !m_Testing)
+  {
+    std::string RunningCompletedTextPopup = "Running Completed !\n\nFinal Atlas is in:\n\"" + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/FinalAtlasDTI.nrrd\"\n\nFinal Displacement Fields for each case are in:\n\"" + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/FinalDeformationFields/<case>_GlobalDisplacementField.nrrd\"";
+    QMessageBox::information(this, "Running Completed", QString(RunningCompletedTextPopup.c_str()));
+  }
 }
 
 void GUI::RunningFailed()

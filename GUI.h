@@ -43,11 +43,12 @@ class GUI : public QMainWindow, public Ui::MainWindow
 /*CASES*/
     bool FileIsParameterFile( std::string );
     bool FileIsSoftConfigFile( std::string );
-    void AddCasesToListWidget(QStringList CaseList);
+    void AddCasesToListWidget(QStringList, QString);
     void CheckCasesIndex();
 
 /* QC */
-    void DisableQC(); // <=> disable QC buttons
+    void DisableQC();
+    void EnableQC();
 
 /*DATASET*/
     int ReadCSV(QString CSVfile); // returns -1 if fails, otherwise 0
@@ -160,6 +161,7 @@ class GUI : public QMainWindow, public Ui::MainWindow
 /*WIDGETCHANGE*/
     void WidgetHasChangedParamNoSaved();
     void GridProcesscheckBoxHasChanged(int);
+    void OutputFolderLineEditHasChanged(QString);
 
 /*MAIN FUNCT*/
     int Compute();
