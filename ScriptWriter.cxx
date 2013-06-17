@@ -199,7 +199,7 @@ void ScriptWriter::WriteScript()
   }
   if(m_RegType==1)
   {
-    std::cout<<"| Using Case 1 as reference in the first Registration Loop"<<std::endl; // command line display
+    std::cout<<"| Using Case 1 (" << m_CasesIDs[0] << ") as reference in the first Registration Loop"<<std::endl; // command line display
   }
   else
   {
@@ -272,29 +272,6 @@ void ScriptWriter::Preprocess ()
   /* Function that checks if file exist and replace old names by new names if needed */
   Script = Script + pyCheckFileExists();
 
-  // nbSteps = (nbCases x CropDTI) + nbCases x Generate FA + (nbCases-1) x (Normalize, Affine reg, Apply transfm, generate FA) (1st loop if no template) + (nbLoops) x nbCases x (Normalize, Affine reg, Apply transfm, generate FA) + nbLoops x Compute average (not for the last loop) + nonLinear reg + nbCases x Apply tfm + DTI average + nbCases x (1st resamp 2nd resamp) + DTI average
-  int nbSteps = m_CasesPath.size()*1; // nbCases x Generate FA
-  if(m_NeedToBeCropped==1)
-  {
-    nbSteps = nbSteps + m_CasesPath.size()*1; // (nbCases x CropDTI)
-  }
-  if(m_RegType==1)
-  {
-    nbSteps = nbSteps + (m_CasesPath.size()-1)*4; // (nbCases-1) x (Normalize, Affine reg, Apply transfm, generate FA) (1st loop if no template)
-  }
-  else
-  {
-    nbSteps = nbSteps + m_CasesPath.size()*4; // nbCases x (Normalize, Affine reg, Apply transfm, generate FA) (1st loop if template)
-  }
-  nbSteps = nbSteps + m_nbLoops*(m_CasesPath.size()*4) + m_nbLoops*1; // (nbLoops) x nbCases x (Normalize, Affine reg, Apply transfm, generate FA) + nbLoops x Compute average (not for the last loop)
-  nbSteps = nbSteps + 1 + m_CasesPath.size()*1 + 1 + m_CasesPath.size()*2 + 1; // nonLinear reg + nbCases x Apply tfm + DTI average + nbCases x (1st resamp 2nd resamp) + DTI average
-
-  std::ostringstream oss1;
-  oss1 << nbSteps;
-  std::string nbSteps_str = oss1.str();
-  Script = Script + "nbSteps=" + nbSteps_str  + " # for the progress bar\n";
-  Script = Script + "nbStepsDone=0\n";
-
 /* Call script to run command on grid */
   std::ostringstream oss;
   oss << m_RegType; // m_RegType = 0 if template (-> NoCase1=0) |  = 1 if case1=ref (-> NoCase1=1) => NoCase1 = (string) m_RegType
@@ -317,22 +294,6 @@ void ScriptWriter::Preprocess ()
   Script = Script + "if not os.path.isdir(OutputPath):\n";
   Script = Script + "  os.mkdir(OutputPath)\n";
   Script = Script + "  print(\"\\n=> Creation of the affine directory = \" + OutputPath)\n\n";
-
-/* Defining cropping options */
-  if(m_NeedToBeCropped==1)
-  {
-    std::string CropSize_str [3];
-    std::ostringstream out1;
-    out1 << m_CropSize[0];
-    CropSize_str[0] = out1.str();
-    std::ostringstream out2;
-    out2 << m_CropSize[1];
-    CropSize_str[1] = out2.str();
-    std::ostringstream out3;
-    out3 << m_CropSize[2];
-    CropSize_str[2] = out3.str();
-    Script = Script + "CropSize=[\"" + CropSize_str[0] + "\",\"" + CropSize_str[1] + "\",\"" + CropSize_str[2] + "\"]\n\n";
-  }
 
 /* Rescaling template */
   if(m_RegType==0) // with template
@@ -371,19 +332,33 @@ void ScriptWriter::Preprocess ()
   {
     Script = Script + "print(\"\")\n";
     Script = Script + "# Creating template by processing Case 1 DTI\n";
-    if( m_useGridProcess )
+
+    // Filter DTI
+    Script = Script + "\n# Filter case 1 DTI\n";
+    Script = Script + "FilteredDTI= OutputPath + \"/" + m_CasesIDs[0] + "_filteredDTI.nrrd\"\n";
+    Script = Script + "FilterDTICommand= \"" + m_SoftPath[1] + " \" + allcases[0] + \" \" + FilteredDTI + \" --correction zero\"\n";
+    Script = Script + "print(\"[" + m_CasesIDs[0] + "] [Filter DTI] => $ \" + FilterDTICommand)\n";
+    if(m_Overwrite==1)
     {
-      Script = Script + "CropDTICase1Template=0\n";
-      Script = Script + "GeneFACase1Template=0\n";
+      Script = Script + "if 1 :\n";
     }
+    else
+    {
+      Script = Script + "if not CheckFileExists(FilteredDTI, 0, \"" + m_CasesIDs[0] + "\" ) :\n";
+    }
+    if( ! m_useGridProcess )
+    {
+      Script = Script + "  if os.system(FilterDTICommand)!=0 : DisplayErrorAndQuit(\'[" + m_CasesIDs[0] + "] ResampleDTIlogEuclidean: Filter DTI to remove negative values\')\n";
+    }
+    Script = Script + "else : print(\"=> The file \\'\" + FilteredDTI + \"\\' already exists so the command will not be executed\")\n"; // not used if overwrite because "if 1 :"
+
     // Cropping case 1 DTI image
     if(m_NeedToBeCropped==1)
     {
       Script = Script + "\n# Cropping case 1 DTI\n";
       Script = Script + "croppedDTI= OutputPath + \"/" + m_CasesIDs[0] + "_croppedDTI.nrrd\"\n";
-      Script = Script + "CropCommand= \"" + m_SoftPath[2] + " \" + allcases[0] + \" -o \" + croppedDTI + \" -size \" + CropSize[0] + \",\" + CropSize[1] + \",\" + CropSize[2] + \" -v\"\n";
+      Script = Script + "CropCommand= \"" + m_SoftPath[2] + " \" + FilteredDTI + \" -o \" + croppedDTI + \" -size " + m_CropSize[0] + "," + m_CropSize[1] + "," + m_CropSize[2] + " -v\"\n";
       Script = Script + "print(\"[" + m_CasesIDs[0] + "] [Cropping DTI Image] => $ \" + CropCommand)\n";
-
       if(m_Overwrite==1)
       {
         Script = Script + "if 1 :\n";
@@ -396,12 +371,7 @@ void ScriptWriter::Preprocess ()
       {
         Script = Script + "  if os.system(CropCommand)!=0 : DisplayErrorAndQuit(\'[" + m_CasesIDs[0] + "] CropDTI: Cropping DTI image\')\n";
       }
-      else
-      {
-        Script = Script + "  CropDTICase1Template=1\n";
-      }
       Script = Script + "else : print(\"=> The file \\'\" + croppedDTI + \"\\' already exists so the command will not be executed\")\n"; // not used if overwrite because "if 1 :"
-
     } //if(m_NeedToBeCropped==1)
 
     // Generating case 1 FA 
@@ -430,10 +400,6 @@ void ScriptWriter::Preprocess ()
     {
       Script = Script + "  if os.system(GeneFACommand)!=0 : DisplayErrorAndQuit(\'[" + m_CasesIDs[0] + "] dtiprocess: Generating FA of DTI image\')\n";
     }
-    else
-    {
-      Script = Script + "  GeneFACase1Template=1\n";
-    }
     Script = Script + "else : print(\"=> The file \\'\" + FA + \"\\' already exists so the command will not be executed\")\n\n"; // not used if overwrite because "if 1 :"
 
     // Execute commands here if grid processing (to process them together)
@@ -442,13 +408,17 @@ void ScriptWriter::Preprocess ()
       Script = Script + "# Run Case1 template commands on grid\n";
       Script = Script + "if CropDTICase1Template or GeneFACase1Template :\n";
       Script = Script + "  GridCase1TemplateCommand= \"" + m_GridCommand + " " + m_PythonPath + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.py \" + FilesFolder + \"/file\"\n";
-      Script = Script + "  if CropDTICase1Template : GridCase1TemplateCommand = GridCase1TemplateCommand + \" \'\" + CropCommand + \"\'\"\n";
-      Script = Script + "  if GeneFACase1Template  : GridCase1TemplateCommand = GridCase1TemplateCommand + \" \'\" + GeneFACommand + \"\'\"\n";
+      Script = Script + "  GridCase1TemplateCommand = GridCase1TemplateCommand + \" \'\" + FilterDTICommand + \"\'\"\n";
+      if(m_NeedToBeCropped==1)
+      {
+        Script = Script + "  GridCase1TemplateCommand = GridCase1TemplateCommand + \" \'\" + CropCommand + \"\'\"\n";
+      }
+      Script = Script + "  GridCase1TemplateCommand = GridCase1TemplateCommand + \" \'\" + GeneFACommand + \"\'\"\n";
       Script = Script + "  print(\"[" + m_CasesIDs[0] + "] => Submitting : \" + GridCase1TemplateCommand)\n";
       Script = Script + "  if os.system(GridCase1TemplateCommand)!=0 : DisplayErrorAndQuit(\'[" + m_CasesIDs[0] + "] Grid processing script\') # Run script and collect error if so\n";
       Script = Script + "  TestGridProcess( FilesFolder, 0, 0) # stays in the function until all process is done : 0 makes the function look only for \'file\'\n\n";
     }
-  } //else of if(m_RegType==0)
+  } // if case 1 as reference ( else of if(m_RegType==0) )
 
   Script = Script + "print(\"\")\n";
 
@@ -476,15 +446,23 @@ void ScriptWriter::Preprocess ()
     Script = Script + "    GridProcessCaseCommandsArray=[] # Empty the cmds array\n";
   }
 
+  Script = Script + "\n    if n==0: # Filtering and Cropping DTI and Generating FA are only part of the first loop\n";
+/* Filter DTI */
+  Script = Script + "# Filter DTI\n";
+  Script = Script + "      # ResampleDTIlogEuclidean does by default a correction of tensor values by setting the negative values to zero\n";
+  Script = Script + "      FilteredDTI= OutputPath + \"/\" + allcasesIDs[case] + \"_filteredDTI.nrrd\"\n";
+  Script = Script + "      FilterDTICommand= \"" + m_SoftPath[1] + " \" + allcases[case] + \" \" + FilteredDTI + \" --correction zero\"\n";
+  Script = Script + "      print(\"[\" + allcasesIDs[case] + \"] [Filter DTI] => $ \" + FilterDTICommand)\n";
+
+  Script = Script + pyExecuteCommandPreprocessCase("FilteredDTI", "FilterDTICommand", "ResampleDTIlogEuclidean: Filter DTI to remove negative values", "      ");
+
 /* Cropping DTI image */
   if(m_NeedToBeCropped==1)
   {
     Script = Script + "\n# Cropping DTI image\n";
-    Script = Script + "    if n==0: # Cropping is only part of the first loop\n";
     Script = Script + "      croppedDTI= OutputPath + \"/\" + allcasesIDs[case] + \"_croppedDTI.nrrd\"\n";
-    Script = Script + "      CropCommand= \"" + m_SoftPath[2] + " \" + allcases[case] + \" -o \" + croppedDTI + \" -size \" + CropSize[0] + \",\" + CropSize[1] + \",\" + CropSize[2] + \" -v\"\n";
+    Script = Script + "      CropCommand= \"" + m_SoftPath[2] + " \" + FilteredDTI + \" -o \" + croppedDTI + \" -size " + m_CropSize[0] + "," + m_CropSize[1] + "," + m_CropSize[2] + " -v\"\n";
     Script = Script + "      print(\"[\" + allcasesIDs[case] + \"] [Cropping DTI Image] => $ \" + CropCommand)\n";
-    Script = Script + "      nbStepsDone += 1\n";
     
     Script = Script + pyExecuteCommandPreprocessCase("croppedDTI", "CropCommand", "CropDTI: Cropping DTI image", "      ");
 
@@ -492,7 +470,6 @@ void ScriptWriter::Preprocess ()
 
 /* Generating FA */
   Script = Script + "\n# Generating FA\n";
-  Script = Script + "    if n==0: # Generating FA is only part of the first loop\n";
   if(m_NeedToBeCropped==1)
   {
     Script = Script + "      DTI= OutputPath + \"/\" + allcasesIDs[case] + \"_croppedDTI.nrrd\"\n";
@@ -504,7 +481,6 @@ void ScriptWriter::Preprocess ()
   Script = Script + "      FA= OutputPath + \"/\" + allcasesIDs[case] + \"_FA.nrrd\"\n";
   Script = Script + "      GeneFACommand= \"" + m_SoftPath[3] + " --dti_image \" + DTI + \" -f \" + FA\n";
   Script = Script + "      print(\"[\" + allcasesIDs[case] + \"] [Generating FA] => $ \" + GeneFACommand)\n";
-  Script = Script + "      nbStepsDone += 1\n";
 
   Script = Script + pyExecuteCommandPreprocessCase("FA", "GeneFACommand", "dtiprocess: Generating FA of DTI image", "      ");
 
@@ -514,7 +490,6 @@ void ScriptWriter::Preprocess ()
   Script = Script + "    NormFA= OutputPath + \"/Loop\" + str(n) + \"/\" + allcasesIDs[case] + \"_Loop\" + str(n) + \"_NormFA.nrrd\"\n";
   Script = Script + "    NormFACommand= \"" + m_SoftPath[0] + " \" + FA + \" -outfile \" + NormFA + \" -matchHistogram \" + AtlasFAref\n";
   Script = Script + "    print(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [\" + allcasesIDs[case] + \"] [Normalization] => $ \" + NormFACommand)\n";
-  Script = Script + "    nbStepsDone += 1\n";
 
   Script = Script + pyExecuteCommandPreprocessCase("NormFA", "NormFACommand", "ImageMath: Normalizing FA image", "    ");
 
@@ -534,7 +509,6 @@ void ScriptWriter::Preprocess ()
   Script = Script + "    else : AffineCommand= AffineCommand + \" --initializeTransformMode " + m_BFAffineTfmMode + "\"\n";
 
   Script = Script + "    print(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [\" + allcasesIDs[case] + \"] [Affine registration with BrainsFit] => $ \" + AffineCommand)\n";
-  Script = Script + "    nbStepsDone += 1\n";
   Script = Script + "    CheckFileExists( LinearTrans, case, allcasesIDs[case] ) # Not for checking but to rename _LinearTrans_FA if old version\n";
     
   Script = Script + pyExecuteCommandPreprocessCase("LinearTranstfm", "AffineCommand", "BRAINSFit: Affine Registration of FA image", "    ");
@@ -553,7 +527,6 @@ void ScriptWriter::Preprocess ()
   }
   Script = Script + "    ImplementCommand= \"" + m_SoftPath[1] + " \" + originalDTI + \" \" + LinearTransDTI + \" -f \" + LinearTranstfm + \" -R \" + AtlasFAref\n";
   Script = Script + "    print(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [\" + allcasesIDs[case] + \"] [Implementing the Affine registration] => $ \" + ImplementCommand)\n";
-  Script = Script + "    nbStepsDone += 1\n";
 
   Script = Script + pyExecuteCommandPreprocessCase("LinearTransDTI", "ImplementCommand", "ResampleDTIlogEuclidean: Implementing the Affine Registration on FA image", "    ");
 
@@ -564,7 +537,6 @@ void ScriptWriter::Preprocess ()
   Script = Script + "    else : LoopFA= OutputPath + \"/Loop\" + str(n) + \"/\" + allcasesIDs[case] + \"_Loop\" + str(n) + \"_FA.nrrd\"\n";
   Script = Script + "    GeneLoopFACommand= \"" + m_SoftPath[3] + " --dti_image \" + LinearTransDTI + \" -f \" + LoopFA\n";
   Script = Script + "    print(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [\" + allcasesIDs[case] + \"] [Generating FA of registered images] => $ \" + GeneLoopFACommand)\n";
-  Script = Script + "    nbStepsDone += 1\n";
 
   Script = Script + pyExecuteCommandPreprocessCase("LoopFA", "GeneLoopFACommand", "dtiprocess: Generating FA of affine registered images", "    ");
 
@@ -625,7 +597,6 @@ void ScriptWriter::Preprocess ()
     Script = Script + "    AverageCommand= \"" + m_GridCommand + " " + m_PythonPath + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.py \" + FilesFolder + \"/file \\'\" + AverageCommand  + \"\\'\"\n";
   }
   Script = Script + "    print(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [Computing FA Average of registered images] => $ \" + AverageCommand)\n";
-  Script = Script + "    nbStepsDone += 1\n";
 
   if(m_Overwrite==1)
   {
@@ -691,33 +662,6 @@ void ScriptWriter::AtlasBuilding()
 
   /* Function that checks if file exist and replace old names by new names if needed */
   Script = Script + pyCheckFileExists();
-
-  // nbSteps = (nbCases x CropDTI) + nbCases x Generate FA + (nbCases-1) x (Normalize, Affine reg, Apply transfm, generate FA) (1st loop if no template) + (nbLoops) x nbCases x (Normalize, Affine reg, Apply transfm, generate FA) + nbLoops x Compute average (not for the last loop) + nonLinear reg + nbCases x Apply tfm + DTI average + nbCases x (1st resamp 2nd resamp) + DTI average
-  int nbSteps = m_CasesPath.size()*1; // nbCases x Generate FA
-  if(m_NeedToBeCropped==1)
-  {
-    nbSteps = nbSteps + m_CasesPath.size()*1; // (nbCases x CropDTI)
-  }
-  if(m_RegType==1)
-  {
-    nbSteps = nbSteps + (m_CasesPath.size()-1)*4; // (nbCases-1) x (Normalize, Affine reg, Apply transfm, generate FA) (1st loop if no template)
-  }
-  else
-  {
-    nbSteps = nbSteps + m_CasesPath.size()*4; // nbCases x (Normalize, Affine reg, Apply transfm, generate FA) (1st loop if template)
-  }
-  nbSteps = nbSteps + m_nbLoops*(m_CasesPath.size()*4) + m_nbLoops*1; // (nbLoops) x nbCases x (Normalize, Affine reg, Apply transfm, generate FA) + nbLoops x Compute average (not for the last loop)
-  int nbStepsPreProc = nbSteps;
-  nbSteps = nbSteps + 1 + m_CasesPath.size()*1 + 1 + m_CasesPath.size()*2 + 1; // nonLinear reg + nbCases x Apply tfm + DTI average + nbCases x (1st resamp 2nd resamp) + DTI average
-
-  std::ostringstream oss1;
-  oss1 << nbSteps;
-  std::string nbSteps_str = oss1.str();
-  Script = Script + "nbSteps=" + nbSteps_str  + " # for the progress bar\n";
-  std::ostringstream oss2;
-  oss2 << nbStepsPreProc;
-  std::string nbStepsPreProc_str = oss2.str();
-  Script = Script + "nbStepsDone=" + nbStepsPreProc_str  + " # because steps already done in preprocessing\n";
 
 /* Call script to run command on grid */
   std::string GridApostrophe = "";
@@ -833,7 +777,6 @@ void ScriptWriter::AtlasBuilding()
   Script = Script + "ParsedFile= DeformPath + \"/ParsedXML.xml\"\n";
   Script = Script + "AtlasBCommand= " + GridProcessCmdNoCase + "\"" + m_SoftPath[5] + " -f \" + XMLFile + \" -o \" + ParsedFile" + GridApostrophe + "\n";
   Script = Script + "print(\"[Computing the Deformation Fields with GreedyAtlas] => $ \" + AtlasBCommand)\n";
-  Script = Script + "nbStepsDone += 1\n";
   if(m_Overwrite==1)
   {
     Script = Script + "if 1 :\n";
@@ -947,7 +890,6 @@ void ScriptWriter::AtlasBuilding()
   if(m_TensTfm.compare("Finite Strain (FS)")==0) Script = Script + "  FinalReSampCommand = FinalReSampCommand + \" -T FS\"\n";
 
   Script = Script + "  print(\"\\n[\" + allcasesIDs[case] + \"] [Applying deformation fields to original DTIs] => $ \" + FinalReSampCommand)\n";
-  Script = Script + "  nbStepsDone += 1\n";
   if(m_Overwrite==1)
   {
     Script = Script + "  if 1 :\n";
@@ -1010,7 +952,6 @@ void ScriptWriter::AtlasBuilding()
   Script = Script + "  case += 1\n";
   Script = Script + "AverageCommand = AverageCommand + \"--tensor_output \" + DTIAverage\n";
   Script = Script + "print(\"\\n[Computing the Diffeomorphic DTI average] => $ \" + AverageCommand)\n";
-  Script = Script + "nbStepsDone += 1\n";
   if(m_Overwrite==1)
   {
     Script = Script + "if 1 : \n";
@@ -1157,7 +1098,6 @@ void ScriptWriter::AtlasBuilding()
     Script = Script + "  GlobalDefFieldCommand= GlobalDefFieldCommand + \" --ANTSOutbase \" + ANTSTempFileBase\n"; // no --outputTfm for ANTS because --ANTSOutbase is used for the tfm
   }
   Script = Script + "  print(\"\\n[\" + allcasesIDs[case] + \"] [Computing global deformation fields] => $ \" + GlobalDefFieldCommand)\n";
-  Script = Script + "  nbStepsDone += 1\n";
 
   if(m_Overwrite==1)
   {
@@ -1183,7 +1123,6 @@ void ScriptWriter::AtlasBuilding()
     Script = Script + "    if os.system(GlobDefFieldGridCommand)!=0 : DisplayErrorAndQuit(\'[\' + allcasesIDs[case] + \'] Computing global deformation fields\')\n";
   }
 
-//  Script = Script + "    libc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
   if(m_Overwrite==0)
   {
     Script = Script + "  else : " + GridProcessFileExistIndent1 + "print(\"=> The file \\'\" + FinalDef + \"\\' already exists so the command will not be executed\")\n" + GridProcessFileExistCmd1;
@@ -1208,7 +1147,6 @@ void ScriptWriter::AtlasBuilding()
   Script = Script + "  case += 1\n";
   Script = Script + "AverageCommand2 = AverageCommand2 + \"--tensor_output \" + DTIAverage2\n";
   Script = Script + "print(\"\\n[Recomputing the final DTI average] => $ \" + AverageCommand2)\n";
-  Script = Script + "nbStepsDone += 1\n";
   if(m_Overwrite==1)
   {
     Script = Script + "if 1 : \n";
@@ -1324,7 +1262,6 @@ void ScriptWriter::AtlasBuilding()
     Script = Script + "  GlobalDefFieldCommand2= GlobalDefFieldCommand2 + \" --ANTSOutbase \" + ANTSTempFileBase2\n"; // no --outputTfm for ANTS because --ANTSOutbase is used for the tfm
   }
   Script = Script + "  print(\"\\n[\" + allcasesIDs[case] + \"] [Recomputing global deformation fields] => $ \" + GlobalDefFieldCommand2)\n";
-  Script = Script + "  nbStepsDone += 1\n";
   if(m_Overwrite==1)
   {
     Script = Script + "  if 1 :\n";
@@ -1356,7 +1293,6 @@ void ScriptWriter::AtlasBuilding()
     Script = Script + "    if os.system(GlobDefField2GridCommand)!=0 : DisplayErrorAndQuit(\'[\' + allcasesIDs[case] + \'] Recomputing global deformation fields\')\n";
   }
 
-//  Script = Script + "    libc.sigqueue(" + MainPID_str + ", signal.SIGUSR2, int(float(100*nbStepsDone)/float(nbSteps))) # send a signal to the progress bar, with the progress value in it\n";
   if(m_Overwrite==0)
   {
     Script = Script + "  else : " + GridProcessFileExistIndent1 + "print(\"=> The file \\'\" + FinalDef2 + \"\\' already exists so the command will not be executed\")\n" + GridProcessFileExistCmd1;
@@ -1557,9 +1493,16 @@ int ScriptWriter::setCroppingSize( bool SafetyMargin ) // returns 0 if no croppi
 
   if(m_NeedToBeCropped==1)
   {
-    m_CropSize[0] = MaxSize[0];
-    m_CropSize[1] = MaxSize[1];
-    m_CropSize[2] = MaxSize[2];
+    std::ostringstream out1;
+    out1 << MaxSize[0];
+    m_CropSize[0] = out1.str();
+    std::ostringstream out2;
+    out2 << MaxSize[1];
+    m_CropSize[1] = out2.str();
+    std::ostringstream out3;
+    out3 << MaxSize[2];
+    m_CropSize[2] = out3.str();
+
     std::cout<<"| Crop size computed : ["<<m_CropSize[0]<<";"<<m_CropSize[1]<<";"<<m_CropSize[2]<<"]"<<std::endl;
     return 1;
   }
