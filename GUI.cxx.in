@@ -134,6 +134,7 @@ GUI::GUI(std::string ParamFile, std::string ConfigFile, std::string CSVFile, boo
     RemovePushButton->setEnabled(false);
     ComputepushButton->setEnabled(false);
     StoppushButton->setEnabled(false);
+    CleanOutputPushButton->setEnabled(false);
     DisableQC(); // will be enable when cases are loaded
 
     QObject::connect(actionLoad_parameters, SIGNAL(triggered()), this, SLOT(LoadParametersSlot()));
@@ -861,7 +862,8 @@ void GUI::CleanOutputFolder() /*SLOT*/
 {
   // Remove all useless temporary images
 
-  int ret = QMessageBox::warning(this, "Remove Files", QString("This action will remove the content of all these folders:\n- <output folder>/DTIAtlas/1_Affine_Registration\n- <output folder>/DTIAtlas/2_NonLinear_Registration\n- <output folder>/DTIAtlas/3_Diffeomorphic_Atlas\n- <output folder>/DTIAtlas/4_Final_Resampling/First_Resampling\n\nDo you really want to remove them?"), QMessageBox::No | QMessageBox::Yes );
+  std::string PopupText = "This action will remove the content of all these folders:\n" + OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/1_Affine_Registration\n" + OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/2_NonLinear_Registration\n" + OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/3_Diffeomorphic_Atlas\n" + OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/4_Final_Resampling/First_Resampling\n\nDo you really want to remove them?";
+  int ret = QMessageBox::warning(this, "Remove Files", QString( PopupText.c_str() ), QMessageBox::No | QMessageBox::Yes );
 
   if (ret == QMessageBox::Yes) 
   {
@@ -1805,7 +1807,7 @@ void GUI::GenerateXMLForGA()
   QFile file(xmlFileName);
   if ( file.open( QFile::WriteOnly ) )
   {
-    std::cout<<"| Saving XML file for GreedyAtlas..."<<std::endl; // command line display
+    std::cout<<"| Saving XML file for GreedyAtlas..."; // command line display
     QTextStream stream( &file );
 
     stream <<"<!--top-level node-->"<< endl;
@@ -1946,6 +1948,8 @@ void GUI::GenerateXMLForGA()
     stream <<"  <OutputPrefix val=\"" << m_OutputPath << "/DTIAtlas/2_NonLinear_Registration/\" />"<< endl;
     stream <<"  <OutputSuffix val=\"mhd\" />"<< endl;
     stream <<"</ParameterFile>"<< endl;
+
+    std::cout<<"DONE"<<std::endl; // command line display
   } // if ( file.open() )
   else qDebug( "Could not create xml file");
 
@@ -2521,13 +2525,18 @@ void GUI::GridProcesscheckBoxHasChanged(int state) /*SLOT*/ // called when Gid P
 
 void GUI::OutputFolderLineEditHasChanged( QString NewOutputFolder )
 {
-  if( NewOutputFolder!="" && CaseListWidget->count()>0 )
+  if( NewOutputFolder!="" )
   {
-    EnableQC();
+    if( CaseListWidget->count()>0 )
+    {
+      EnableQC();
+    }
+    CleanOutputPushButton->setEnabled(true);
   }
   else
   {
     DisableQC();
+    CleanOutputPushButton->setEnabled(false);
   }
 }
 
@@ -2588,9 +2597,10 @@ int GUI::Compute() /*SLOT*/
       {
         int WritingOutStatus = LaunchScriptWriter();
 
-        std::cout<<"| Clearing previous cases in vectors..."<<std::endl; // command line display
+        std::cout<<"| Clearing previous cases in vectors..."; // command line display
         m_CasesPath.clear();
         m_scriptwriter->clearCasesPath();
+        std::cout<<"DONE"<<std::endl; // command line display
 
         if(WritingOutStatus==-1) 
         {
@@ -3158,7 +3168,7 @@ int GUI::LaunchScriptWriter()
   }
 
   return 0;
-}
+} // LaunchScriptWriter()
 
 int GUI::LaunchScriptRunner()
 {
@@ -3260,7 +3270,7 @@ void GUI::ScriptQProcessDone(int ExitCode) /*SLOT*/ // called
 
   if(!m_noGUI)
   {
-    std::string LogFileText = "| Log file written in: \"" + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder.log\"";
+    std::string LogFileText = "| Log file written in: " + m_OutputPath.toStdString() + "/DTIAtlas/Script/DTIAtlasBuilder.log";
     std::cout<<LogFileText<<std::endl;
     ScriptRunningDisplayQLabel->setText(ScriptRunningDisplayQLabel->text() + QString(LogFileText.c_str()));
   }
@@ -3271,12 +3281,12 @@ void GUI::RunningCompleted()
   ScriptRunningDisplayQLabel->setText("Running Completed ");
 
   std::cout<< "| Running Completed !"<<std::endl;
-  std::cout<< "| Final Atlas is in: \"" << m_OutputPath.toStdString() << "/DTIAtlas/4_Final_Resampling/FinalAtlasDTI.nrrd\""<<std::endl;
-  std::cout<< "| Final Displacement Fields for each case are in: \"" << m_OutputPath.toStdString() << "/DTIAtlas/4_Final_Resampling/FinalDeformationFields/<case>_GlobalDisplacementField.nrrd\"" <<std::endl;
+  std::cout<< "| Final Atlas is in: " << m_OutputPath.toStdString() << "/DTIAtlas/4_Final_Resampling/FinalAtlasDTI.nrrd"<<std::endl;
+  std::cout<< "| Final Displacement Fields for each case are in: " << m_OutputPath.toStdString() << "/DTIAtlas/4_Final_Resampling/FinalDeformationFields/<case>_GlobalDisplacementField.nrrd" <<std::endl;
 
   if(!m_noGUI && !m_Testing)
   {
-    std::string RunningCompletedTextPopup = "Running Completed !\n\nFinal Atlas is in:\n\"" + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/FinalAtlasDTI.nrrd\"\n\nFinal Displacement Fields for each case are in:\n\"" + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/FinalDeformationFields/<case>_GlobalDisplacementField.nrrd\"";
+    std::string RunningCompletedTextPopup = "Running Completed !\n\nFinal Atlas is in:\n" + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/FinalAtlasDTI.nrrd\n\nFinal Displacement Fields for each case are in:\n" + m_OutputPath.toStdString() + "/DTIAtlas/4_Final_Resampling/FinalDeformationFields/<case>_GlobalDisplacementField.nrrd";
     QMessageBox::information(this, "Running Completed", QString(RunningCompletedTextPopup.c_str()));
   }
 }
@@ -3287,14 +3297,5 @@ void GUI::RunningFailed()
 
   if(!m_noGUI && !m_Testing) QMessageBox::information(this, "Running Failed", "Running Failed...");
   std::cout<<"| Running Failed..."<<std::endl; // command line display
-}
-
-  /////////////////////////////////////////
- //            PROGRESS BAR             //
-/////////////////////////////////////////
-
-void GUI::ProgressBar(int Progress) // value sent by python script in signal
-{
-  std::cout<<Progress<<"/100 complete"<<std::endl;
 }
 
