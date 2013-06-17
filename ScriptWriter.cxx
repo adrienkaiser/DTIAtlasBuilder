@@ -208,10 +208,6 @@ void ScriptWriter::WriteScript()
   std::cout<<"| Number of loops in the Registration Loop : "<<m_nbLoops<<std::endl; // command line display
   std::cout<<"| Writing begin: "; // command line display (no endl)
 
-  std::ostringstream out;
-  out << m_nbLoops;
-  m_nbLoops_str = out.str();
-
   Preprocess();
   AtlasBuilding();
   MainScript();
@@ -573,7 +569,14 @@ void ScriptWriter::Preprocess ()
 
 /* FA Average of registered images with ImageMath */
   Script = Script + "\n# FA Average of registered images with ImageMath\n";
-  Script = Script + "  if n != " + m_nbLoops_str + " : # this will not be done for the last lap\n";
+  if ( m_nbLoops!=0 ) // if no looping, compute average for the only preprocessing for QC (if 1:)
+  {
+    Script = Script + "  if n != " + m_nbLoops_str + " : # this will not be done for the last lap\n";
+  }
+  else
+  {
+    Script = Script + "  if 1 :\n";
+  }
   Script = Script + "    FAAverage = OutputPath + \"/Loop\" + str(n) + \"/Loop\" + str(n) + \"_FAAverage.nrrd\"\n";
   if(m_RegType==1) //use case 1 as loop 1 ref
   {
@@ -842,14 +845,7 @@ void ScriptWriter::AtlasBuilding()
   }
   if(m_nbLoops==0)
   {
-    if(m_RegType==1)
-    {
-      Script = Script + "  Ref= AffinePath + \"/" + m_CasesIDs[0] + "_FA.nrrd\"\n";
-    }
-    else
-    {
-      Script = Script + "  Ref= \"" + m_TemplatePath + "\"\n";
-    }
+    Script = Script + "  Ref = AffinePath + \"/Loop0/Loop0_FAAverage.nrrd\"\n"; // if no looping ((m_nbLoops==0), an average is computed anyway for QC
   }
   else
   {
@@ -1570,6 +1566,10 @@ void ScriptWriter::setRegType(int RegType)
 void ScriptWriter::setnbLoops(int nbLoops)
 {
   m_nbLoops = nbLoops;
+
+  std::ostringstream out;
+  out << m_nbLoops;
+  m_nbLoops_str = out.str();
 }
 
 void ScriptWriter::setTemplatePath(std::string TemplatePath)

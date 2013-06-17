@@ -933,9 +933,16 @@ void GUI::DisplayAffineQC() /*SLOT*/
     path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/1_Affine_Registration/Loop" + out.str() + "/" + itksys::SystemTools::GetFilenameWithoutExtension( CaseListWidget->item(i)->text().toStdString() ) + "_Loop" + out.str() + "_FinalFA.nrrd";
     if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) pathList = pathList + " " + path;
   }
-  std::ostringstream out1;
-  out1 << NbLoopsSpinBox->value()-1;
-  path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/1_Affine_Registration/Loop" + out1.str() + "/Loop" + out1.str() + "_FAAverage.nrrd";
+  if(NbLoopsSpinBox->value()>0)
+  {
+    std::ostringstream out1;
+    out1 << NbLoopsSpinBox->value()-1;
+    path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/1_Affine_Registration/Loop" + out1.str() + "/Loop" + out1.str() + "_FAAverage.nrrd";
+  }
+  else // if no looping (NbLoopsSpinBox->value()==0), an average is computed anyway for QC
+  {
+    path = OutputFolderLineEdit->text().toStdString() + "/DTIAtlas/1_Affine_Registration/Loop0/Loop0_FAAverage.nrrd";
+  }
   if( itksys::SystemTools::GetPermissions(path.c_str(), ITKmode_F_OK) ) pathList = pathList + " " + path;
 
   if( pathList != "" )
