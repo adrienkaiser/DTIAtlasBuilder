@@ -62,7 +62,6 @@ class ScriptWriter
     std::string m_OutputPath;
     int m_RegType; //=0 for using template and =1 for using existing first case
     int m_nbLoops;
-    std::string m_nbLoops_str;
     std::string m_TemplatePath;
     std::string m_CropSize [3]; //x,y,z
     int m_NeedToBeCropped; //=0 if not and =1 if need to be cropped

@@ -12,6 +12,13 @@
 
 #include "ScriptWriter.h"
 
+std::string IntToStr(int IntVar)
+{
+  std::ostringstream oss;
+  oss << IntVar;
+  return oss.str();
+}
+
   /////////////////////////////////////////
  //     SUB  WRITING FUNCTIONS          //
 /////////////////////////////////////////
@@ -269,9 +276,7 @@ void ScriptWriter::Preprocess ()
   Script = Script + pyCheckFileExists();
 
 /* Call script to run command on grid */
-  std::ostringstream oss;
-  oss << m_RegType; // m_RegType = 0 if template (-> NoCase1=0) |  = 1 if case1=ref (-> NoCase1=1) => NoCase1 = (string) m_RegType
-  std::string NoCase1 = oss.str();
+  std::string NoCase1 = IntToStr(m_RegType); // m_RegType = 0 if template (-> NoCase1=0) |  = 1 if case1=ref (-> NoCase1=1) => NoCase1 = (string) m_RegType
   if( m_useGridProcess )
   {
     Script = Script + "\n# Call script to run command on server\n";
@@ -421,7 +426,7 @@ void ScriptWriter::Preprocess ()
 /* Affine Registration and Normalization Loop */
   Script = Script + "\n# Affine Registration and Normalization Loop\n";
   Script = Script + "n = 0\n";
-  Script = Script + "while n <= " + m_nbLoops_str + " :\n";
+  Script = Script + "while n <= " + IntToStr(m_nbLoops) + " :\n";
 
   Script = Script + "  if not os.path.isdir(OutputPath + \"/Loop\" + str(n)):\n";
   Script = Script + "    print(\"\\n=> Creation of the Output directory for Loop \" + str(n) + \" = \" + OutputPath + \"/Loop\" + str(n) + \"\\n\")\n";
@@ -485,7 +490,7 @@ void ScriptWriter::Preprocess ()
   Script = Script + "    FA= OutputPath + \"/\" + allcasesIDs[case] + \"_FA.nrrd\"\n";
   Script = Script + "    NormFA= OutputPath + \"/Loop\" + str(n) + \"/\" + allcasesIDs[case] + \"_Loop\" + str(n) + \"_NormFA.nrrd\"\n";
   Script = Script + "    NormFACommand= \"" + m_SoftPath[0] + " \" + FA + \" -outfile \" + NormFA + \" -matchHistogram \" + AtlasFAref\n";
-  Script = Script + "    print(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [\" + allcasesIDs[case] + \"] [Normalization] => $ \" + NormFACommand)\n";
+  Script = Script + "    print(\"[LOOP \" + str(n) + \"/" + IntToStr(m_nbLoops) + "] [\" + allcasesIDs[case] + \"] [Normalization] => $ \" + NormFACommand)\n";
 
   Script = Script + pyExecuteCommandPreprocessCase("NormFA", "NormFACommand", "ImageMath: Normalizing FA image", "    ");
 
@@ -504,7 +509,7 @@ void ScriptWriter::Preprocess ()
   Script = Script + "    elif n==0 and CheckFileExists( InitLinearTransTxt, case, allcasesIDs[case] ) : AffineCommand= AffineCommand + \" --initialTransform \" + InitLinearTransTxt\n";
   Script = Script + "    else : AffineCommand= AffineCommand + \" --initializeTransformMode " + m_BFAffineTfmMode + "\"\n";
 
-  Script = Script + "    print(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [\" + allcasesIDs[case] + \"] [Affine registration with BrainsFit] => $ \" + AffineCommand)\n";
+  Script = Script + "    print(\"[LOOP \" + str(n) + \"/" + IntToStr(m_nbLoops) + "] [\" + allcasesIDs[case] + \"] [Affine registration with BrainsFit] => $ \" + AffineCommand)\n";
   Script = Script + "    CheckFileExists( LinearTrans, case, allcasesIDs[case] ) # Not for checking but to rename _LinearTrans_FA if old version\n";
     
   Script = Script + pyExecuteCommandPreprocessCase("LinearTranstfm", "AffineCommand", "BRAINSFit: Affine Registration of FA image", "    ");
@@ -522,17 +527,17 @@ void ScriptWriter::Preprocess ()
     Script = Script + "    originalDTI= allcases[case]\n";
   }
   Script = Script + "    ImplementCommand= \"" + m_SoftPath[1] + " \" + originalDTI + \" \" + LinearTransDTI + \" -f \" + LinearTranstfm + \" -R \" + AtlasFAref\n";
-  Script = Script + "    print(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [\" + allcasesIDs[case] + \"] [Implementing the Affine registration] => $ \" + ImplementCommand)\n";
+  Script = Script + "    print(\"[LOOP \" + str(n) + \"/" + IntToStr(m_nbLoops) + "] [\" + allcasesIDs[case] + \"] [Implementing the Affine registration] => $ \" + ImplementCommand)\n";
 
   Script = Script + pyExecuteCommandPreprocessCase("LinearTransDTI", "ImplementCommand", "ResampleDTIlogEuclidean: Implementing the Affine Registration on FA image", "    ");
 
 /* Generating FA of registered images */
   Script = Script + "\n# Generating FA of registered images\n";
   Script = Script + "    LinearTransDTI= OutputPath + \"/Loop\" + str(n) + \"/\" + allcasesIDs[case] + \"_Loop\" + str(n) + \"_LinearTrans_DTI.nrrd\"\n";
-  Script = Script + "    if n == " + m_nbLoops_str + " : LoopFA= OutputPath + \"/Loop" + m_nbLoops_str + "/\" + allcasesIDs[case] + \"_Loop" + m_nbLoops_str + "_FinalFA.nrrd\" # the last FA will be the Final output\n";
+  Script = Script + "    if n == " + IntToStr(m_nbLoops) + " : LoopFA= OutputPath + \"/Loop" + IntToStr(m_nbLoops) + "/\" + allcasesIDs[case] + \"_Loop" + IntToStr(m_nbLoops) + "_FinalFA.nrrd\" # the last FA will be the Final output\n";
   Script = Script + "    else : LoopFA= OutputPath + \"/Loop\" + str(n) + \"/\" + allcasesIDs[case] + \"_Loop\" + str(n) + \"_FA.nrrd\"\n";
   Script = Script + "    GeneLoopFACommand= \"" + m_SoftPath[3] + " --dti_image \" + LinearTransDTI + \" -f \" + LoopFA\n";
-  Script = Script + "    print(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [\" + allcasesIDs[case] + \"] [Generating FA of registered images] => $ \" + GeneLoopFACommand)\n";
+  Script = Script + "    print(\"[LOOP \" + str(n) + \"/" + IntToStr(m_nbLoops) + "] [\" + allcasesIDs[case] + \"] [Generating FA of registered images] => $ \" + GeneLoopFACommand)\n";
 
   Script = Script + pyExecuteCommandPreprocessCase("LoopFA", "GeneLoopFACommand", "dtiprocess: Generating FA of affine registered images", "    ");
 
@@ -549,7 +554,7 @@ void ScriptWriter::Preprocess ()
     Script = Script + "        GridAffineCommand = GridAffineCommand + \" \'\" + GridProcessCaseCommandsArray[GridCmd] + \"\'\"\n";
     Script = Script + "        GridCmd += 1\n";
 
-    Script = Script + "      print(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [\" + allcasesIDs[case] + \"] => Submitting : \" + GridAffineCommand)\n";
+    Script = Script + "      print(\"[LOOP \" + str(n) + \"/" + IntToStr(m_nbLoops) + "] [\" + allcasesIDs[case] + \"] => Submitting : \" + GridAffineCommand)\n";
     Script = Script + "      if os.system(GridAffineCommand)!=0 : # Run script and collect error if so\n";
     Script = Script + "        DisplayErrorAndQuit(\'[Loop \' + str(n) + \'][\' + allcasesIDs[case] + \'] Grid processing script\')\n";
 
@@ -571,7 +576,7 @@ void ScriptWriter::Preprocess ()
   Script = Script + "\n# FA Average of registered images with ImageMath\n";
   if ( m_nbLoops!=0 ) // if no looping, compute average for the only preprocessing for QC (if 1:)
   {
-    Script = Script + "  if n != " + m_nbLoops_str + " : # this will not be done for the last lap\n";
+    Script = Script + "  if n != " + IntToStr(m_nbLoops) + " : # this will not be done for the last lap\n";
   }
   else
   {
@@ -599,7 +604,7 @@ void ScriptWriter::Preprocess ()
   {
     Script = Script + "    AverageCommand= \"" + m_GridCommand + " " + m_PythonPath + " " + m_OutputPath + "/DTIAtlas/Script/RunCommandOnServer.py \" + FilesFolder + \"/file \\'\" + AverageCommand  + \"\\'\"\n";
   }
-  Script = Script + "    print(\"[LOOP \" + str(n) + \"/" + m_nbLoops_str + "] [Computing FA Average of registered images] => $ \" + AverageCommand)\n";
+  Script = Script + "    print(\"[LOOP \" + str(n) + \"/" + IntToStr(m_nbLoops) + "] [Computing FA Average of registered images] => $ \" + AverageCommand)\n";
 
   if(m_Overwrite==1)
   {
@@ -739,10 +744,10 @@ void ScriptWriter::AtlasBuilding()
 /* Cases variables: */
   Script = Script + "# Cases variables\n";
   // alltfms
-  Script = Script + "alltfms = [AffinePath + \"/Loop" + m_nbLoops_str + "/" + m_CasesIDs[0] + "_Loop" + m_nbLoops_str + "_LinearTrans.txt\"";
+  Script = Script + "alltfms = [AffinePath + \"/Loop" + IntToStr(m_nbLoops) + "/" + m_CasesIDs[0] + "_Loop" + IntToStr(m_nbLoops) + "_LinearTrans.txt\"";
   for (unsigned int i=1;i<m_CasesPath.size();i++) 
   {
-    Script = Script + ", AffinePath + \"/Loop" + m_nbLoops_str + "/" + m_CasesIDs[i] + "_Loop" + m_nbLoops_str + "_LinearTrans.txt\"";
+    Script = Script + ", AffinePath + \"/Loop" + IntToStr(m_nbLoops) + "/" + m_CasesIDs[i] + "_Loop" + IntToStr(m_nbLoops) + "_LinearTrans.txt\"";
   }  
   Script = Script+ "]\n\n";
 
@@ -796,9 +801,9 @@ void ScriptWriter::AtlasBuilding()
 
   Script = Script + "  case = 0\n";
   Script = Script + "  while case < len(allcases): # Renaming\n";
-  Script = Script + "    originalImage=DeformPath + \"/\" + allcasesIDs[case] + \"_Loop" + m_nbLoops_str + "_FinalFADefToMean.mhd\"\n";
-  Script = Script + "    originalHField=DeformPath + \"/\" + allcasesIDs[case] + \"_Loop" + m_nbLoops_str + "_FinalFADefFieldImToMean.mhd\"\n";
-  Script = Script + "    originalInvHField=DeformPath + \"/\" + allcasesIDs[case] + \"_Loop" + m_nbLoops_str + "_FinalFADefFieldMeanToIm.mhd\"\n";
+  Script = Script + "    originalImage=DeformPath + \"/\" + allcasesIDs[case] + \"_Loop" + IntToStr(m_nbLoops) + "_FinalFADefToMean.mhd\"\n";
+  Script = Script + "    originalHField=DeformPath + \"/\" + allcasesIDs[case] + \"_Loop" + IntToStr(m_nbLoops) + "_FinalFADefFieldImToMean.mhd\"\n";
+  Script = Script + "    originalInvHField=DeformPath + \"/\" + allcasesIDs[case] + \"_Loop" + IntToStr(m_nbLoops) + "_FinalFADefFieldMeanToIm.mhd\"\n";
   Script = Script + "    NewImage= DeformPath + \"/\" + allcasesIDs[case] + \"_NonLinearTrans_FA.mhd\"\n";
   Script = Script + "    NewHField=DeformPath + \"/\" + allcasesIDs[case] + \"_HField.mhd\"\n";
   Script = Script + "    NewInvHField=DeformPath + \"/\" + allcasesIDs[case] + \"_InverseHField.mhd\"\n";
@@ -849,10 +854,7 @@ void ScriptWriter::AtlasBuilding()
   }
   else
   {
-    std::ostringstream out;
-    out << m_nbLoops-1;
-    std::string nbLoops1_str = out.str();
-    Script = Script + "  Ref = AffinePath + \"/Loop" + nbLoops1_str + "/Loop" + nbLoops1_str + "_FAAverage.nrrd\"\n"; // an average image has been generated in the loops of affine reg for reference
+    Script = Script + "  Ref = AffinePath + \"/Loop" + IntToStr(m_nbLoops-1) + "/Loop" + IntToStr(m_nbLoops-1) + "_FAAverage.nrrd\"\n"; // an average image has been generated in the loops of affine reg for reference
   }
   Script = Script + "  HField= DeformPath + \"/\" + allcasesIDs[case] + \"_HField.mhd\"\n";
   Script = Script + "  FinalReSampCommand=\"" + m_SoftPath[1] + " -R \" + Ref + \" -H \" + HField + \" -f \" + alltfms[case] + \" \" + originalDTI + \" \" + FinalDTI\n";
@@ -1489,15 +1491,9 @@ int ScriptWriter::setCroppingSize( bool SafetyMargin ) // returns 0 if no croppi
 
   if(m_NeedToBeCropped==1)
   {
-    std::ostringstream out1;
-    out1 << MaxSize[0];
-    m_CropSize[0] = out1.str();
-    std::ostringstream out2;
-    out2 << MaxSize[1];
-    m_CropSize[1] = out2.str();
-    std::ostringstream out3;
-    out3 << MaxSize[2];
-    m_CropSize[2] = out3.str();
+    m_CropSize[0] = IntToStr(MaxSize[0]);
+    m_CropSize[1] = IntToStr(MaxSize[1]);
+    m_CropSize[2] = IntToStr(MaxSize[2]);
 
     std::cout<<"| Crop size computed : ["<<m_CropSize[0]<<";"<<m_CropSize[1]<<";"<<m_CropSize[2]<<"]"<<std::endl;
     return 1;
@@ -1566,10 +1562,6 @@ void ScriptWriter::setRegType(int RegType)
 void ScriptWriter::setnbLoops(int nbLoops)
 {
   m_nbLoops = nbLoops;
-
-  std::ostringstream out;
-  out << m_nbLoops;
-  m_nbLoops_str = out.str();
 }
 
 void ScriptWriter::setTemplatePath(std::string TemplatePath)
@@ -1663,9 +1655,7 @@ void ScriptWriter::setPythonPath(std::string PythonPath)
 
 void ScriptWriter::setNbThreads(int NbThreads) // if( NbThreadsSpinBox->value() != 0 ) // 0 <=> automatic = no limit option given
 {
-  std::ostringstream outNThreads;
-  outNThreads << NbThreads;
-  m_NbThreadsString = outNThreads.str();
+  m_NbThreadsString = IntToStr(NbThreads);
 /*Multi threading option used to set env var at the beginning of the main script */
 }
 
