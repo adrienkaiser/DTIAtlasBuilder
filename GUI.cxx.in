@@ -2293,8 +2293,9 @@ int GUI::testGA() /*SLOT*/ // returns 0 if version ok, -1 if bad version
 
   std::cout<<"| Checking the version of GreedyAtlas...";
 
+  Process->setProcessChannelMode(QProcess::MergedChannels);
   Process->start( program.c_str() ); // try to find the version => returns nothing if not the right version
-
+  Process->waitForFinished();
   Process->waitForReadyRead();
   QByteArray BA =  Process->readAllStandardOutput(); // int BA.size() // std::string s = BA.data(); std::cout<<s<<std::endl;
 
@@ -2323,8 +2324,9 @@ int GUI::testDTIReg() /*SLOT*/ // returns 0 if version ok, -1 if bad version
 
   std::cout<<"| Checking the version of DTI-Reg...";
 
+  Process->setProcessChannelMode(QProcess::MergedChannels);
   Process->start( program.c_str() ); // try to find the version => returns nothing if not the right version
-
+  Process->waitForFinished();
   Process->waitForReadyRead();
   QByteArray BA =  Process->readAllStandardOutput();
 
@@ -2939,18 +2941,40 @@ bool GUI::FindPython()
     m_PythonPath = itksys::SystemTools::FindProgram("python",m_FindProgramDTIABExecDirVec);
     if(m_PythonPath.empty())
     {
+      std::string PythonNotFoundtext = "Python has not been found. Please install python before running DTIAtlasBuilder.";
       if(!m_noGUI && !m_Testing)
       {
-        std::string PythonNotFoundtext = "Python has not been found. Please install python before running DTIAtlasBuilder.";
         QMessageBox::critical(this, "Python not found", QString(PythonNotFoundtext.c_str()) );
       }
-      else std::cout<<"| Python has not been found. Please install python before running DTIAtlasBuilder." << std::endl;
+      else std::cout<<"| "<< PythonNotFoundtext << std::endl;
       return false;
     }
   }
 
-  m_scriptwriter->setPythonPath(m_PythonPath);
+  // Check python version (need > 2.5)
+  QProcess * Process = new QProcess;
+  std::string program = m_PythonPath + " --version";
+  std::cout<<"| Checking the version of python...";
+  Process->setProcessChannelMode(QProcess::MergedChannels);
+  Process->start( program.c_str(), QIODevice::ReadWrite  );
+  Process->waitForFinished();
+  Process->waitForReadyRead();
+  QString PythonVersion = QString( Process->readAllStandardOutput().data() ).split(" ").at(1).split("\n").at(0); // "Python X.X.X\n"
+  std::cout<<"DONE"<<std::endl;
 
+  if( PythonVersion.isEmpty() || PythonVersion.split(".").at(0).toInt()<2 || (PythonVersion.split(".").at(0).toInt()<3 && PythonVersion.split(".").at(1).toInt()<5) )
+  {
+    std::string PythonBadVersiontext = "The version of python found (" + m_PythonPath + ", version " + PythonVersion.toStdString() + ") is too old. DTIAtlasBuilder needs a version older than 2.5.";
+    if(!m_noGUI && !m_Testing)
+    {
+      QMessageBox::critical(this, "Python version issue", QString(PythonBadVersiontext.c_str()) );
+    }
+    else std::cout<<"| "<< PythonBadVersiontext << std::endl;
+    return false;
+  }
+
+  std::cout<<"| Found python version "<< PythonVersion.toStdString() << std::endl;
+  m_scriptwriter->setPythonPath(m_PythonPath);
   return true;
 } // FindPython
 
